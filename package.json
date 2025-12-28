@@ -1,0 +1,54 @@
+{
+  "name": "ttorang-frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "prettier": "prettier --check '**/*.{ts,tsx,js,mjs,cjs,jsx,json}'",
+    "prettier:fix": "prettier --write '**/*.{ts,tsx,js,mjs,cjs,jsx,json}'",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.18",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tailwindcss": "^4.1.18",
+    "zustand": "^5.0.9"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.2.0",
+    "@commitlint/config-conventional": "^20.2.0",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.0",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.50.1",
+    "@typescript-eslint/parser": "^8.50.1",
+    "@vitejs/plugin-react-swc": "^4.2.2",
+    "eslint": "^8",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-check-file": "^2.8.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "3.7.4",
+    "typescript": "~5.9.3",
+    "vite": "^7.2.4"
+  }
+}
