@@ -33,3 +33,52 @@
 |  `design`  | UI/UX 디자인 변경  |
 |  `chore`   | 빌드, 설정 등 기타 |
 |   `docs`   | 문서 작업          |
+
+## 네이밍 컨벤션
+
+### 폴더 / 파일
+
+| 대상            |     규칙     | 예시                               |
+| :-------------- | :----------: | :--------------------------------- |
+| 폴더명          | `kebab-case` | `navigation-bar`, `server-actions` |
+| 일반 파일 (.ts) | `camelCase`  | `calculate.ts`, `apiClient.ts`     |
+| 컴포넌트 (.tsx) | `PascalCase` | `Button.tsx`, `ProductList.tsx`    |
+
+### 변수 / 함수
+
+| 대상   |        규칙        | 예시                                |
+| :----- | :----------------: | :---------------------------------- |
+| 변수명 |    `camelCase`     | `userName`, `itemCount`             |
+| 함수명 |    `camelCase`     | `fetchProducts()`, `handleSubmit()` |
+| 상수명 | `UPPER_SNAKE_CASE` | `MAX_COUNT`, `API_URL`              |
+
+### 컴포넌트
+
+| 대상            |        규칙         | 예시                   |
+| :-------------- | :-----------------: | :--------------------- |
+| 컴포넌트명      |    `PascalCase`     | `Header`, `LoginForm`  |
+| 페이지 컴포넌트 | `PascalCase + Page` | `MainPage`, `CartPage` |
+
+### Export 규칙
+
+**컴포넌트**: 하단에 `default export`
+
+```tsx
+const ProductList = () => {
+  return <div>상품 리스트</div>;
+};
+
+export default ProductList;
+```
+
+**유틸 함수**: 각 함수를 `named export`
+
+```ts
+export const fetchItems = () => {
+  /* ... */
+};
+
+export const updateUser = () => {
+  /* ... */
+};
+```
