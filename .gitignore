@@ -10,6 +10,9 @@ lerna-debug.log*
 node_modules
 dist
 bun.lock
+.env
+.env.local
+.env.*.local
 dist-ssr
 *.local
 
