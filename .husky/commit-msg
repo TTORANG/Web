@@ -1,0 +1,76 @@
+#!/bin/sh
+
+commit_msg=$(cat "$1")
+first_line=$(echo "$commit_msg" | head -n 1)
+
+# 허용된 타입
+allowed_types="feat|fix|docs|style|refactor|test|chore|design|ci|perf"
+
+# 1. 타입 형식 체크 (type: 형식인지)
+if ! echo "$first_line" | grep -qE "^[a-zA-Z]+:"; then
+  echo ""
+  echo "❌ 커밋 메시지 형식이 올바르지 않습니다."
+  echo ""
+  echo "올바른 형식: type: 메시지 (#이슈번호)"
+  echo "예시: feat: 로그인 기능 구현 (#123)"
+  echo ""
+  exit 1
+fi
+
+# 2. 타입 추출
+type=$(echo "$first_line" | sed 's/:.*//')
+
+# 3. 대문자 타입 체크
+if echo "$type" | grep -qE "[A-Z]"; then
+  echo ""
+  echo "❌ 커밋 타입은 소문자만 사용해야 합니다."
+  echo ""
+  echo "잘못된 예: Feat, FEAT, FIX"
+  echo "올바른 예: feat, fix, docs"
+  echo ""
+  exit 1
+fi
+
+# 4. 허용된 타입인지 체크
+if ! echo "$type" | grep -qE "^($allowed_types)$"; then
+  echo ""
+  echo "❌ '$type'은(는) 허용되지 않는 커밋 타입입니다."
+  echo ""
+  echo "허용된 타입:"
+  echo "  feat     - 새로운 기능"
+  echo "  fix      - 버그 수정"
+  echo "  docs     - 문서 변경"
+  echo "  style    - 코드 포맷팅 (로직 변경 없음)"
+  echo "  refactor - 리팩토링"
+  echo "  test     - 테스트 추가/수정"
+  echo "  chore    - 빌드, 설정 등 기타"
+  echo "  design   - UI/UX 디자인 변경"
+  echo "  ci       - CI/CD 관련 변경"
+  echo "  perf     - 성능 개선"
+  echo ""
+  exit 1
+fi
+
+# 5. 이슈 번호 체크
+if ! echo "$first_line" | grep -qE "\(#[0-9]+\)$"; then
+  echo ""
+  echo "❌ 커밋 메시지에 이슈 번호가 없습니다."
+  echo ""
+  echo "올바른 형식: type: 메시지 (#이슈번호)"
+  echo "예시: feat: 로그인 기능 구현 (#123)"
+  echo ""
+  exit 1
+fi
+
+# 6. 헤더 길이 체크 (100자)
+length=${#first_line}
+if [ "$length" -gt 100 ]; then
+  echo ""
+  echo "❌ 커밋 메시지가 너무 깁니다. (현재: ${length}자)"
+  echo ""
+  echo "커밋 헤더는 100자 이내로 작성해주세요."
+  echo ""
+  exit 1
+fi
+
+exit 0
