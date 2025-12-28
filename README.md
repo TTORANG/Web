@@ -18,3 +18,7 @@
 |  Collaboration   |                                                       ![Notion](https://img.shields.io/badge/Notion-000000?style=for-the-badge&logo=notion&logoColor=white)                                                       |
 
 </div>
+
+## 컨벤션
+
+[컨벤션 문서 바로가기](./CONVENTION.md)
