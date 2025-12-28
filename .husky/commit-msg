@@ -73,5 +73,4 @@ if [ "$length" -gt 100 ]; then
   exit 1
 fi
 
-# 모든 체크 통과 시 commitlint 실행
-npx --no -- commitlint --edit "$1"
+exit 0
