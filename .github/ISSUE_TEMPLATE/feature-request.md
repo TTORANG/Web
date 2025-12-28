@@ -13,4 +13,4 @@ assignees: ''
 ## 📝 TODO
 
 
-## 📄 참고 사항 (Optional)
+## 💡 참고 사항 (Optional)
