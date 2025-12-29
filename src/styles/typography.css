@@ -1,0 +1,53 @@
+/* Body/M */
+.text-body-m {
+  font-family: var(--font-family);
+  font-size: var(--font-size-body-m);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height);
+  letter-spacing: var(--letter-spacing);
+}
+
+/* Body/M-Bold */
+.text-body-m-bold {
+  font-family: var(--font-family);
+  font-size: var(--font-size-body-m);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height);
+  letter-spacing: var(--letter-spacing);
+}
+
+/* Body/S */
+.text-body-s {
+  font-family: var(--font-family);
+  font-size: var(--font-size-body-s);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height);
+  letter-spacing: var(--letter-spacing);
+}
+
+/* Body/S-Bold */
+.text-body-s-bold {
+  font-family: var(--font-family);
+  font-size: var(--font-size-body-s);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height);
+  letter-spacing: var(--letter-spacing);
+}
+
+/* Others/Cap */
+.text-caption {
+  font-family: var(--font-family);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height);
+  letter-spacing: var(--letter-spacing);
+}
+
+/* Others/Cap-Bold */
+.text-caption-bold {
+  font-family: var(--font-family);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height);
+  letter-spacing: var(--letter-spacing);
+}
