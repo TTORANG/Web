@@ -1,0 +1,27 @@
+@import "tailwindcss";
+@import "./fonts.css";
+@import "./theme.css";
+@import "./typography.css";
+
+@theme {
+  --color-white: var(--color-white);
+  --color-black: var(--color-black);
+  --color-gray-100: var(--color-gray-100);
+  --color-gray-200: var(--color-gray-200);
+  --color-gray-400: var(--color-gray-400);
+  --color-gray-600: var(--color-gray-600);
+  --color-gray-800: var(--color-gray-800);
+  --color-gray-900: var(--color-gray-900);
+  --color-main: var(--color-main);
+  --color-main-variant1: var(--color-main-variant1);
+  --color-main-variant2: var(--color-main-variant2);
+  --color-error: var(--color-error);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+
+  --font-pretendard: var(--font-family);
+
+  --font-size-caption: var(--font-size-caption);
+  --font-size-body-s: var(--font-size-body-s);
+  --font-size-body-m: var(--font-size-body-m);
+}
