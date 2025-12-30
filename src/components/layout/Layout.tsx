@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 import { Header } from './Header';
 
 interface LayoutProps {
-  children?: ReactNode;
   header: ReactNode;
+  children?: ReactNode;
 }
 
 export function Layout({ children, header }: LayoutProps) {
