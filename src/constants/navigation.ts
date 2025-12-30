@@ -6,22 +6,21 @@ export const TABS = [
 
 export type Tab = (typeof TABS)[number]['key'];
 
-export const DEFAULT_TAB: Tab = 'slide';
-export const DEFAULT_SLIDE_INDEX = 1;
+export const DEFAULT_SLIDE_ID = '1';
 
 /** 탭별 경로 생성 */
-export const getTabPath = (presentationId: string, tab: Tab, slideIndex?: number): string => {
+export const getTabPath = (projectId: string, tab: Tab, slideId?: string): string => {
   switch (tab) {
     case 'slide':
-      return `/${presentationId}/slide/${slideIndex ?? DEFAULT_SLIDE_INDEX}`;
+      return `/${projectId}/slide/${slideId ?? DEFAULT_SLIDE_ID}`;
     case 'video':
-      return `/${presentationId}/video`;
+      return `/${projectId}/video`;
     case 'insight':
-      return `/${presentationId}/insight`;
+      return `/${projectId}/insight`;
   }
 };
 
-/** pathname에서 탭 추출 (/:presentationId/:tab/...) */
+/** pathname에서 탭 추출 (/:projectId/:tab/...) */
 export const getTabFromPathname = (pathname: string): Tab => {
   const segments = pathname.split('/').filter(Boolean);
   const tabSegment = segments[1];

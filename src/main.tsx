@@ -15,11 +15,11 @@ const router = createBrowserRouter([
     element: <HomePage />,
   },
   {
-    path: '/:presentationId',
+    path: '/:projectId',
     element: <App />,
     children: [
       { index: true, element: <Navigate to="slide/1" replace /> },
-      { path: 'slide/:slideIndex?', element: <SlidePage /> },
+      { path: 'slide/:slideId?', element: <SlidePage /> },
       { path: 'video', element: <VideoPage /> },
       { path: 'insight', element: <InsightPage /> },
     ],

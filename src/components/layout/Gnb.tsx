@@ -5,7 +5,7 @@ import clsx from 'clsx';
 import { TABS, getTabFromPathname, getTabPath } from '../../constants/navigation';
 
 export function Gnb() {
-  const { presentationId = '' } = useParams<{ presentationId: string }>();
+  const { projectId = '' } = useParams<{ projectId: string }>();
   const location = useLocation();
   const activeTab = getTabFromPathname(location.pathname);
 
@@ -20,7 +20,7 @@ export function Gnb() {
         return (
           <Link
             key={key}
-            to={getTabPath(presentationId, key)}
+            to={getTabPath(projectId, key)}
             role="tab"
             id={`tab-${key}`}
             aria-selected={isActive}
