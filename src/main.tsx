@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
 
-import App from './App';
+import { Layout } from './components/layout/Layout';
 import HomePage from './pages/HomePage';
 import InsightPage from './pages/InsightPage';
 import SlidePage from './pages/SlidePage';
@@ -16,7 +16,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/:projectId',
-    element: <App />,
+    element: <Layout />,
     children: [
       { index: true, element: <Navigate to="slide/1" replace /> },
       { path: 'slide/:slideId?', element: <SlidePage /> },
