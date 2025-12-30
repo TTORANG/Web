@@ -3,10 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 import { Layout } from './components/layout/Layout';
-import HomePage from './pages/HomePage';
-import InsightPage from './pages/InsightPage';
-import SlidePage from './pages/SlidePage';
-import VideoPage from './pages/VideoPage';
+import { HomePage, InsightPage, SlidePage, VideoPage } from './pages';
 import './styles/index.css';
 
 const router = createBrowserRouter([
