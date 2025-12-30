@@ -25,9 +25,9 @@
   --line-height: 1.5;
 
   /* 폰트 크기 */
-  --font-size-caption: 12px;
-  --font-size-body-s: 14px;
-  --font-size-body-m: 16px;
+  --font-size-caption: 0.75rem;
+  --font-size-body-s: 0.875rem;
+  --font-size-body-m: 1rem;
 
   /* 폰트 굵기 */
   --font-weight-regular: 400;

@@ -23,4 +23,8 @@
   --font-size-caption: var(--font-size-caption);
   --font-size-body-s: var(--font-size-body-s);
   --font-size-body-m: var(--font-size-body-m);
+
+  --spacing-15: 3.75rem;
+  --spacing-18: 4.5rem;
+  --spacing-25: 6.25rem;
 }
