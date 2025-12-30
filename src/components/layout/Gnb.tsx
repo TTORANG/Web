@@ -2,12 +2,12 @@ import clsx from 'clsx';
 
 import { TABS, type Tab } from '../../constants/navigation';
 
-interface GNBProps {
+interface GnbProps {
   activeTab?: Tab;
   onTabChange?: (tab: Tab) => void;
 }
 
-export function GNB({ activeTab = 'slide', onTabChange }: GNBProps) {
+export function Gnb({ activeTab = 'slide', onTabChange }: GnbProps) {
   return (
     <nav
       className="absolute left-1/2 flex h-15 -translate-x-1/2 items-center justify-center"
