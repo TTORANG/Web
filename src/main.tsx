@@ -3,12 +3,17 @@ import { createRoot } from 'react-dom/client';
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 import App from './App';
+import HomePage from './pages/HomePage';
 import InsightPage from './pages/InsightPage';
 import SlidePage from './pages/SlidePage';
 import VideoPage from './pages/VideoPage';
 import './styles/index.css';
 
 const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <HomePage />,
+  },
   {
     path: '/:presentationId',
     element: <App />,
@@ -19,8 +24,6 @@ const router = createBrowserRouter([
       { path: 'insight', element: <InsightPage /> },
     ],
   },
-  // 임시: 루트 접근 시 데모 발표로 리다이렉트
-  { path: '/', element: <Navigate to="/demo/slide/1" replace /> },
 ]);
 
 createRoot(document.querySelector('#root')!).render(
