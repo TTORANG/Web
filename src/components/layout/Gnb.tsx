@@ -1,15 +1,13 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 
 import clsx from 'clsx';
 
-import { DEFAULT_TAB, TABS, type Tab, getTabPath } from '../../constants/navigation';
+import { TABS, getTabFromPathname, getTabPath } from '../../constants/navigation';
 
-interface GnbProps {
-  activeTab?: Tab;
-}
-
-export function Gnb({ activeTab = DEFAULT_TAB }: GnbProps) {
+export function Gnb() {
   const { presentationId = '' } = useParams<{ presentationId: string }>();
+  const location = useLocation();
+  const activeTab = getTabFromPathname(location.pathname);
 
   return (
     <nav
