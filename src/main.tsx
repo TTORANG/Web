@@ -2,9 +2,9 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
 
-import { Layout } from './components/layout/Layout';
-import { HomePage, InsightPage, SlidePage, VideoPage } from './pages';
-import './styles/index.css';
+import { Layout } from '@/components/layout/Layout';
+import { HomePage, InsightPage, SlidePage, VideoPage } from '@/pages';
+import '@/styles/index.css';
 
 const router = createBrowserRouter([
   {
