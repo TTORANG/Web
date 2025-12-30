@@ -1,15 +1,9 @@
-export type Tab = 'slide' | 'video' | 'insight';
+import { TABS, type Tab } from '../../constants/navigation';
 
 interface GNBProps {
   activeTab?: Tab;
   onTabChange?: (tab: Tab) => void;
 }
-
-const TABS: { key: Tab; label: string }[] = [
-  { key: 'slide', label: '슬라이드' },
-  { key: 'video', label: '영상' },
-  { key: 'insight', label: '인사이트' },
-];
 
 export function GNB({ activeTab = 'slide', onTabChange }: GNBProps) {
   return (
