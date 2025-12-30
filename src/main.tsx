@@ -13,7 +13,7 @@ const router = createBrowserRouter([
     path: '/',
     element: <App />,
     children: [
-      { index: true, element: <SlidePage /> },
+      { index: true, element: <SlidePage /> }, // DEFAULT_TAB 변경 시 동기화 필요
       { path: 'slide', element: <SlidePage /> },
       { path: 'video', element: <VideoPage /> },
       { path: 'insight', element: <InsightPage /> },

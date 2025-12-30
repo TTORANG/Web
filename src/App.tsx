@@ -2,11 +2,11 @@ import { Outlet, useLocation } from 'react-router-dom';
 
 import './App.css';
 import { Gnb, Layout } from './components/layout';
-import { PATH_TO_TAB } from './constants/navigation';
+import { DEFAULT_TAB, PATH_TO_TAB } from './constants/navigation';
 
 function App() {
   const location = useLocation();
-  const activeTab = PATH_TO_TAB[location.pathname] ?? 'slide';
+  const activeTab = PATH_TO_TAB[location.pathname] ?? DEFAULT_TAB;
 
   return (
     <Layout

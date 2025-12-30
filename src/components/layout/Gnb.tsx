@@ -2,13 +2,13 @@ import { Link } from 'react-router-dom';
 
 import clsx from 'clsx';
 
-import { TABS, type Tab } from '../../constants/navigation';
+import { DEFAULT_TAB, TABS, type Tab } from '../../constants/navigation';
 
 interface GnbProps {
   activeTab?: Tab;
 }
 
-export function Gnb({ activeTab = 'slide' }: GnbProps) {
+export function Gnb({ activeTab = DEFAULT_TAB }: GnbProps) {
   return (
     <nav
       className="flex h-15 items-center justify-center"

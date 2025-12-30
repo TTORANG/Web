@@ -4,9 +4,11 @@ export const TABS = [
   { key: 'insight', label: '인사이트', path: '/insight' },
 ] as const;
 
+export type Tab = (typeof TABS)[number]['key'];
+
+export const DEFAULT_TAB: Tab = 'slide';
+
 export const PATH_TO_TAB: Record<string, Tab> = {
-  '/': 'slide',
+  '/': DEFAULT_TAB,
   ...Object.fromEntries(TABS.map((tab) => [tab.path, tab.key])),
 };
-
-export type Tab = (typeof TABS)[number]['key'];
