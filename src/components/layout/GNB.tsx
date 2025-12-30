@@ -21,7 +21,9 @@ export function GNB({ activeTab = 'slide', onTabChange }: GNBProps) {
             key={key}
             type="button"
             role="tab"
+            id={`tab-${key}`}
             aria-selected={isActive}
+            aria-controls={`tabpanel-${key}`}
             onClick={() => onTabChange?.(key)}
             className={clsx(
               `flex h-full w-25 items-end justify-center px-2.5 pb-4 pt-4 text-body-m-bold border-b-2`,
