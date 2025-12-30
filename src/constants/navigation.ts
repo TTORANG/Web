@@ -1,7 +1,14 @@
 export const TABS = [
-  { key: 'slide', label: '슬라이드' },
-  { key: 'video', label: '영상' },
-  { key: 'insight', label: '인사이트' },
+  { key: 'slide', label: '슬라이드', path: '/slide' },
+  { key: 'video', label: '영상', path: '/video' },
+  { key: 'insight', label: '인사이트', path: '/insight' },
 ] as const;
 
 export type Tab = (typeof TABS)[number]['key'];
+
+export const DEFAULT_TAB: Tab = 'slide';
+
+export const PATH_TO_TAB: Record<string, Tab> = {
+  '/': DEFAULT_TAB,
+  ...Object.fromEntries(TABS.map((tab) => [tab.path, tab.key])),
+};

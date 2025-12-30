@@ -1,32 +1,32 @@
+import { Link } from 'react-router-dom';
+
 import clsx from 'clsx';
 
-import { TABS, type Tab } from '../../constants/navigation';
+import { DEFAULT_TAB, TABS, type Tab } from '../../constants/navigation';
 
-interface GNBProps {
+interface GnbProps {
   activeTab?: Tab;
-  onTabChange?: (tab: Tab) => void;
 }
 
-export function GNB({ activeTab = 'slide', onTabChange }: GNBProps) {
+export function Gnb({ activeTab = DEFAULT_TAB }: GnbProps) {
   return (
     <nav
-      className="absolute left-1/2 flex h-15 -translate-x-1/2 items-center justify-center"
+      className="flex h-15 items-center justify-center"
       role="tablist"
       aria-label="네비게이션 메뉴"
     >
-      {TABS.map(({ key, label }) => {
+      {TABS.map(({ key, label, path }) => {
         const isActive = activeTab === key;
         return (
-          <button
+          <Link
             key={key}
-            type="button"
+            to={path}
             role="tab"
             id={`tab-${key}`}
             aria-selected={isActive}
             aria-controls={`tabpanel-${key}`}
-            onClick={() => onTabChange?.(key)}
             className={clsx(
-              `flex h-full w-25 items-end justify-center px-2.5 pb-4 pt-4 text-body-m-bold border-b-2`,
+              'flex h-full w-25 items-end justify-center px-2.5 pb-4 pt-4 text-body-m-bold border-b-2',
               {
                 'border-main text-main': isActive,
                 'border-transparent text-gray-600': !isActive,
@@ -34,7 +34,7 @@ export function GNB({ activeTab = 'slide', onTabChange }: GNBProps) {
             )}
           >
             {label}
-          </button>
+          </Link>
         );
       })}
     </nav>
