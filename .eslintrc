@@ -1,6 +1,5 @@
 {
   "root": true,
-  "ignorePatterns": ["commitlint.config.js", "vite.config.ts"], 
   "env": {
     "browser": true,
     "es2021": true
