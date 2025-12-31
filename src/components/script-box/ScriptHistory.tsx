@@ -15,7 +15,7 @@ const ScriptHistory = ({ scriptHistory }: ScriptHistoryProps) => {
       <button
         onClick={scriptHistory.toggle}
         className={`
-          h-7 pl-2 pr-1.5 rounded outline outline-1 outline-offset-[-1px]
+          h-7 pl-2 pr-1.5 rounded outline outline-1 -outline-offset-1
           inline-flex items-center gap-1
           ${
             scriptHistory.value
@@ -48,7 +48,7 @@ const ScriptHistory = ({ scriptHistory }: ScriptHistoryProps) => {
               <div className="text-zinc-700 text-base font-semibold leading-6">대본 변경 기록</div>
             </div>
 
-            <div className="max-h-[320px] overflow-y-auto">
+            <div className="max-h-80 overflow-y-auto">
               <div className="px-4 pt-3 pb-4 bg-gray-100 border-b border-zinc-200">
                 <div className="flex flex-col gap-3">
                   <div className="text-gray-500 text-xs font-semibold leading-4">현재</div>

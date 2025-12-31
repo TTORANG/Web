@@ -1,7 +1,7 @@
 import React from 'react';
 
 import replyIcon from '../../assets/icons/replyIcon.svg';
-import treshcanIcon from '../../assets/icons/treshcanIcon.svg';
+import trashcanIcon from '../../assets/icons/trashcanIcon.svg';
 
 type OpinionProps = {
   opinion: {
@@ -106,7 +106,7 @@ const Opinion = ({
                               className="flex items-center gap-1 text-red-500 text-xs font-semibold leading-4 hover:opacity-80"
                             >
                               삭제
-                              <img src={treshcanIcon} className="w-4 h-4" />
+                              <img src={trashcanIcon} className="w-4 h-4" />
                             </button>
                           )}
                         </div>

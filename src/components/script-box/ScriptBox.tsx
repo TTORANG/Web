@@ -3,7 +3,7 @@ import { useState } from 'react';
 import smallArrowIcon from '../../assets/icons/smallArrowIcon.svg';
 import { useToggle } from '../../hooks/useToggle';
 import Opinion from './Opinion';
-import ScriptBoxEmogi from './ScriptBoxEmogi';
+import ScriptBoxEmoji from './ScriptBoxEmoji';
 import ScriptHistory from './ScriptHistory';
 import SlideTitle from './SlideTitle';
 
@@ -17,11 +17,11 @@ const ScriptBox = () => {
   //
   // };
 
-  // 1. 이모지버튼 ( 그대로 유지 )
-  const [isEmogiClick, setEmogiClick] = useState(false);
+  // 1. 이모지 팝오버
+  const [isEmojiOpen, setEmojiOpen] = useState(false);
 
-  const handleEmogiClick = () => {
-    setEmogiClick((prev) => !prev);
+  const handleEmojiToggle = () => {
+    setEmojiOpen((prev) => !prev);
   };
 
   // 2. 변경기록 버튼
@@ -63,7 +63,7 @@ const ScriptBox = () => {
           {/* 우측 컨트롤 영역 */}
           <div className="flex items-center gap-4">
             {/* 이모지 카운트 영역 -> 컴포넌트로 분리 */}
-            <ScriptBoxEmogi isEmogiClick={isEmogiClick} handleEmogiClick={handleEmogiClick} />
+            <ScriptBoxEmoji isEmojiOpen={isEmojiOpen} onToggle={handleEmojiToggle} />
 
             {/* 변경기록/의견 버튼 그룹 */}
             <div className="flex items-center gap-2">

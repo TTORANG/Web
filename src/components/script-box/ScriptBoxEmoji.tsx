@@ -1,9 +1,9 @@
-type ScriptBoxEmogiProps = {
-  isEmogiClick: boolean; // 변수명 그대로 유지: isEmogiClick
-  handleEmogiClick: () => void; // 핸들러명 그대로 유지: handleEmogiClick
+type ScriptBoxEmojiProps = {
+  isEmojiOpen: boolean;
+  onToggle: () => void;
 };
 
-const ScriptBoxEmogi = ({ isEmogiClick, handleEmogiClick }: ScriptBoxEmogiProps) => {
+const ScriptBoxEmoji = ({ isEmojiOpen, onToggle }: ScriptBoxEmojiProps) => {
   return (
     <>
       {/*  (기존 그대로) 이모지 카운트 영역 */}
@@ -21,16 +21,14 @@ const ScriptBoxEmogi = ({ isEmogiClick, handleEmogiClick }: ScriptBoxEmogiProps)
       {/*  (기존 그대로) 이모지 버튼 + popover */}
       <div className="relative">
         <button
-          className="h-7 px-2 rounded  hover:bg-zinc-100"
-          // ✅ 부모에서 내려준 handleEmogiClick 그대로 연결
-          onClick={handleEmogiClick}
-          // ✅ 부모에서 내려준 isEmogiClick 그대로 연결
-          aria-expanded={isEmogiClick}
+          className="h-7 px-2 rounded hover:bg-gray-100"
+          onClick={onToggle}
+          aria-expanded={isEmojiOpen}
         >
-          ...
+          ···
         </button>
 
-        {isEmogiClick && ( // 받은 이모티콘 서버에서 뿌려줌
+        {isEmojiOpen && (
           <div
             className="
               px-4 py-3 bg-white rounded-lg
@@ -91,4 +89,4 @@ const ScriptBoxEmogi = ({ isEmogiClick, handleEmogiClick }: ScriptBoxEmogiProps)
   );
 };
 
-export default ScriptBoxEmogi;
+export default ScriptBoxEmoji;
