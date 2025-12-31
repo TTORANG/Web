@@ -5,9 +5,11 @@ import clsx from 'clsx';
 import { TABS, getTabFromPathname, getTabPath } from '@/constants/navigation';
 
 export function Gnb() {
-  const { projectId = '' } = useParams<{ projectId: string }>();
+  const { projectId } = useParams<{ projectId: string }>();
   const location = useLocation();
   const activeTab = getTabFromPathname(location.pathname);
+
+  if (!projectId) return null;
 
   return (
     <nav
