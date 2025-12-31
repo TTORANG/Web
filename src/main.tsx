@@ -1,20 +1,37 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
 
-import App from './App';
-import InsightPage from './pages/InsightPage';
-import SlidePage from './pages/SlidePage';
-import VideoPage from './pages/VideoPage';
-import './styles/index.css';
+import { LoginButton, Logo } from '@/components/common';
+import { Gnb } from '@/components/layout/Gnb';
+import { Layout } from '@/components/layout/Layout';
+import { DEFAULT_SLIDE_ID } from '@/constants/navigation';
+import { HomePage, InsightPage, SlidePage, VideoPage } from '@/pages';
+import '@/styles/index.css';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />,
+    element: <Layout right={<LoginButton />} />,
+    children: [{ index: true, element: <HomePage /> }],
+  },
+  {
+    path: '/:projectId',
+    element: (
+      <Layout
+        left={
+          <>
+            <Logo />
+            <span className="text-body-m-bold text-gray-800">내 발표</span>
+          </>
+        }
+        center={<Gnb />}
+        right={<LoginButton />}
+      />
+    ),
     children: [
-      { index: true, element: <SlidePage /> }, // DEFAULT_TAB 변경 시 동기화 필요
-      { path: 'slide', element: <SlidePage /> },
+      { index: true, element: <Navigate to={`slide/${DEFAULT_SLIDE_ID}`} replace /> },
+      { path: 'slide/:slideId', element: <SlidePage /> },
       { path: 'video', element: <VideoPage /> },
       { path: 'insight', element: <InsightPage /> },
     ],

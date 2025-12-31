@@ -1,26 +1,28 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 
 import clsx from 'clsx';
 
-import { DEFAULT_TAB, TABS, type Tab } from '../../constants/navigation';
+import { TABS, getTabFromPathname, getTabPath } from '@/constants/navigation';
 
-interface GnbProps {
-  activeTab?: Tab;
-}
+export function Gnb() {
+  const { projectId } = useParams<{ projectId: string }>();
+  const location = useLocation();
+  const activeTab = getTabFromPathname(location.pathname);
 
-export function Gnb({ activeTab = DEFAULT_TAB }: GnbProps) {
+  if (!projectId) return null;
+
   return (
     <nav
       className="flex h-15 items-center justify-center"
       role="tablist"
       aria-label="네비게이션 메뉴"
     >
-      {TABS.map(({ key, label, path }) => {
+      {TABS.map(({ key, label }) => {
         const isActive = activeTab === key;
         return (
           <Link
             key={key}
-            to={path}
+            to={getTabPath(projectId, key)}
             role="tab"
             id={`tab-${key}`}
             aria-selected={isActive}
