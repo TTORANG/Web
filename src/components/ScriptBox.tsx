@@ -20,7 +20,7 @@ const ScriptBox = () => {
   const [isEmogiClick, setEmogiClick] = useState(false);
 
   const handleEmogiClick = () => {
-    SetEmogiClick((prev) => !prev);
+    setEmogiClick((prev) => !prev);
   };
 
   // 2. 변경기록 버튼
@@ -41,14 +41,12 @@ const ScriptBox = () => {
       <div
         /* 접힘=true면 전체높이(320) 중 헤더(40)만 남기고 아래로 숨김 */
         className={`
-            fixed left-0 right-0 bottom-0 z-30  /* 변경: 화면 하단에 고정 */
+            fixed left-0 right-0 bottom-0 z-30
             mx-auto w-full
             bg-white
-
-            transition-transform duration-300 ease-out  /* 변경: 부드럽게 이동 */
-            h-[320px]                               /* 변경: 드로어 전체 높이(원하는 값으로 조절) */
+            transition-transform duration-300 ease-out
+            h-[320px]
             ${scriptBoxDock.value ? 'translate-y-[calc(100%-40px)]' : 'translate-y-0'}
-
             `}
       >
         {/* 변경: 상단바 내부 레이아웃(좌/우 정렬) */}
@@ -203,21 +201,21 @@ const ScriptBox = () => {
             <div className="flex items-center gap-2">
               <div className="relative">
                 <button
-                  onClick={scriptHistroy.toggle}
+                  onClick={scriptHistory.toggle}
                   className={`
                     h-7 pl-2 pr-1.5 rounded outline outline-1 outline-offset-[-1px]
                     inline-flex items-center gap-1
-                    ${scriptHistroy.value ? 'outline-indigo-500 text-indigo-500 bg-white' : 'outline-zinc-200 text-zinc-700 bg-white hover:bg-zinc-50'}
+                    ${scriptHistory.value ? 'outline-indigo-500 text-indigo-500 bg-white' : 'outline-zinc-200 text-zinc-700 bg-white hover:bg-zinc-50'}
                   `}
-                  aria-pressed={scriptHistroy.value}
+                  aria-pressed={scriptHistory.value}
                 >
                   <span className="text-sm font-semibold leading-5">변경 기록</span>
                   <img src={refreshIcon} className="w-4 h-4" />
                 </button>
 
-                {scriptHistroy.value && (
+                {scriptHistory.value && (
                   <>
-                    <div className="fixed inset-0 z-40" onClick={scriptHistroy.off} />
+                    <div className="fixed inset-0 z-40" onClick={scriptHistory.off} />
 
                     <div
                       className="absolute z-50
@@ -292,7 +290,7 @@ const ScriptBox = () => {
                     inline-flex items-center gap-1
                     ${opinion.value ? 'outline-indigo-500 text-indigo-500 bg-white' : 'outline-zinc-200 text-zinc-700 bg-white hover:bg-zinc-50'}
                   `}
-                  aria-pressed={opinion.value} // x토글상태인지 스크린리더에게 알려주는
+                  aria-pressed={opinion.value}
                 >
                   <span className="text-sm font-semibold leading-5">의견</span>
                   <span
@@ -369,13 +367,14 @@ const ScriptBox = () => {
                                 </div>
 
                                 <div className="flex items-center gap-4">
+                                  {/* setActiveReplyIdx: 같은 댓글 다시 누르면 닫기(toggle)
+                                   setReplyText: 새로 열 때 입력 초기화(원하면 제거) */}
                                   <button
                                     type="button"
                                     className="flex items-center gap-1 text-indigo-500 text-xs font-semibold leading-4 hover:opacity-80"
                                     onClick={() => {
-                                      // ✅ 같은 댓글을 다시 누르면 닫기(toggle)
                                       setActiveReplyIdx((prev) => (prev === idx ? null : idx));
-                                      setReplyText(''); // ✅ 새로 열 때 입력 초기화(원하면 제거)
+                                      setReplyText('');
                                     }}
                                   >
                                     답글
@@ -391,11 +390,11 @@ const ScriptBox = () => {
                                         placeholder="답글을 입력하세요"
                                         className="flex-1 h-10 px-3 rounded-lg border border-zinc-200 text-sm outline-none focus:border-indigo-500"
                                       />
+                                      {/* 서버 붙기 전: 아무 것도 안 하고 닫기만 */}
                                       <button
                                         type="button"
                                         className="h-10 px-3 rounded-lg bg-zinc-900 text-white text-sm font-semibold hover:opacity-90"
                                         onClick={() => {
-                                          // 서버 붙기 전: 아무 것도 안 하고 닫기만
                                           setActiveReplyIdx(null);
                                           setReplyText('');
                                         }}
@@ -416,9 +415,10 @@ const ScriptBox = () => {
               </div>
             </div>
 
+            {/* 전체 Script Box 내려갔다 올라오게 */}
             <button
               type="button"
-              onClick={scriptBoxDock.toggle} // 전체 ScriptBox 내려갔다 올라오게
+              onClick={scriptBoxDock.toggle}
               className="w-6 h-6 rounded hover:bg-zinc-100 flex items-center justify-center"
               aria-label="more"
               aria-expanded={!scriptBoxDock.value}
