@@ -1,9 +1,19 @@
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { DEFAULT_SLIDE_ID } from '@/constants/navigation';
+import { DEFAULT_SLIDE_ID, setLastSlideId } from '@/constants/navigation';
 
 export default function SlidePage() {
-  const { slideId = DEFAULT_SLIDE_ID } = useParams<{ slideId: string }>();
+  const { projectId = '', slideId = DEFAULT_SLIDE_ID } = useParams<{
+    projectId: string;
+    slideId: string;
+  }>();
+
+  useEffect(() => {
+    if (projectId && slideId) {
+      setLastSlideId(projectId, slideId);
+    }
+  }, [projectId, slideId]);
 
   return (
     <div role="tabpanel" id="tabpanel-slide" aria-labelledby="tab-slide" className="p-8">

@@ -11,7 +11,7 @@ import '@/styles/index.css';
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Layout right={<LoginButton />} />,
+    element: <Layout left={<Logo variant="full" />} right={<LoginButton />} />,
     children: [{ index: true, element: <HomePage /> }],
   },
   {
