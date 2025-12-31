@@ -1,4 +1,4 @@
-import refreshIcon from '../assets/icons/refreshIcon.svg';
+import refreshIcon from '../../assets/icons/refreshIcon.svg';
 
 type ScriptHistoryProps = {
   scriptHistory: {

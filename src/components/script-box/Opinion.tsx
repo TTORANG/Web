@@ -1,7 +1,7 @@
 import React from 'react';
 
-import replyIcon from '../assets/icons/replyIcon.svg';
-import treshcanIcon from '../assets/icons/treshcanIcon.svg';
+import replyIcon from '../../assets/icons/replyIcon.svg';
+import treshcanIcon from '../../assets/icons/treshcanIcon.svg';
 
 type OpinionProps = {
   opinion: {

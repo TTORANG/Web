@@ -1,6 +1,6 @@
 import React from 'react';
 
-import smallArrowIcon from '../assets/icons/smallArrowIcon.svg';
+import smallArrowIcon from '../../assets/icons/smallArrowIcon.svg';
 
 type SlideTitleProps = {
   // 변수명 그대로 유지: slideNameChange

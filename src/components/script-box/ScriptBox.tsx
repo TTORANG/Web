@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
+import smallArrowIcon from '../../assets/icons/smallArrowIcon.svg';
 import { useToggle } from '../../hooks/useToggle';
-import smallArrowIcon from '../assets/icons/smallArrowIcon.svg';
 import Opinion from './Opinion';
 import ScriptBoxEmogi from './ScriptBoxEmogi';
 import ScriptHistory from './ScriptHistory';
