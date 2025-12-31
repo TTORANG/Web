@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { DEFAULT_SLIDE_ID, setLastSlideId } from '@/constants/navigation';
+import { setLastSlideId } from '@/constants/navigation';
 
 export default function SlidePage() {
-  const { projectId = '', slideId = DEFAULT_SLIDE_ID } = useParams<{
+  const { projectId, slideId } = useParams<{
     projectId: string;
     slideId: string;
   }>();

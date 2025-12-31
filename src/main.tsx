@@ -31,7 +31,7 @@ const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <Navigate to={`slide/${DEFAULT_SLIDE_ID}`} replace /> },
-      { path: 'slide/:slideId?', element: <SlidePage /> },
+      { path: 'slide/:slideId', element: <SlidePage /> },
       { path: 'video', element: <VideoPage /> },
       { path: 'insight', element: <InsightPage /> },
     ],
