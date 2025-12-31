@@ -1,92 +1,61 @@
-type ScriptBoxEmojiProps = {
-  isEmojiOpen: boolean;
-  onToggle: () => void;
-};
+import { Popover } from '../common';
 
-const ScriptBoxEmoji = ({ isEmojiOpen, onToggle }: ScriptBoxEmojiProps) => {
-  return (
-    <>
-      {/*  (기존 그대로) 이모지 카운트 영역 */}
-      <div className="flex items-center gap-6">
-        <div className="flex items-center gap-2">
-          <div className="text-zinc-700 text-base leading-6">👍</div>
-          <div className="text-zinc-700 text-base leading-6">99+</div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="text-zinc-700 text-base leading-6">😡</div>
-          <div className="text-zinc-700 text-base leading-6">12</div>
-        </div>
-      </div>
+const EMOJI_DATA = [
+  { emoji: '👍', count: 99 },
+  { emoji: '😡', count: 12 },
+];
 
-      {/*  (기존 그대로) 이모지 버튼 + popover */}
-      <div className="relative">
-        <button
-          className="h-7 px-2 rounded hover:bg-gray-100"
-          onClick={onToggle}
-          aria-expanded={isEmojiOpen}
-        >
-          ···
-        </button>
+const EMOJI_EXTENDED_DATA = [
+  [
+    { emoji: '😏', count: 15 },
+    { emoji: '❤️', count: 28 },
+    { emoji: '😎', count: 5 },
+    { emoji: '👀', count: 182 },
+    { emoji: '🤪', count: 3 },
+  ],
+  [
+    { emoji: '💡', count: 11 },
+    { emoji: '🙈', count: 488 },
+    { emoji: '💕', count: 2 },
+    { emoji: '😂', count: 46 },
+    { emoji: '🤓', count: 36 },
+  ],
+];
 
-        {isEmojiOpen && (
-          <div
-            className="
-              px-4 py-3 bg-white rounded-lg
-              shadow-[0px_4px_20px_0px_rgba(0,0,0,0.05)]
-              inline-flex flex-col justify-start items-start gap-3
-              absolute right-0 bottom-full mb-2 origin-bottom-right z-50
-            "
-          >
-            <div className="inline-flex justify-start items-center gap-6">
-              <div className="flex justify-start items-center gap-2">
-                <div className="text-center text-zinc-700 text-base leading-6">😏</div>
-                <div className="text-center text-zinc-700 text-base leading-6">15</div>
-              </div>
-              <div className="flex justify-start items-center gap-2">
-                <div className="text-center text-zinc-700 text-base leading-6">❤️</div>
-                <div className="text-center text-zinc-700 text-base leading-6">28</div>
-              </div>
-              <div className="flex justify-start items-center gap-2">
-                <div className="text-center text-zinc-700 text-base leading-6">😎️</div>
-                <div className="text-center text-zinc-700 text-base leading-6">5</div>
-              </div>
-              <div className="flex justify-start items-center gap-2">
-                <div className="text-center text-zinc-700 text-base leading-6">👀</div>
-                <div className="text-center text-zinc-700 text-base leading-6">182</div>
-              </div>
-              <div className="flex justify-start items-center gap-2">
-                <div className="text-center text-zinc-700 text-base leading-6">🤪</div>
-                <div className="text-center text-zinc-700 text-base leading-6">3</div>
-              </div>
-            </div>
-
-            <div className="inline-flex justify-start items-center gap-6">
-              <div className="flex justify-start items-center gap-2">
-                <div className="text-center text-zinc-700 text-base leading-6">💡</div>
-                <div className="text-center text-zinc-700 text-base leading-6">11</div>
-              </div>
-              <div className="flex justify-start items-center gap-2">
-                <div className="text-center text-zinc-700 text-base leading-6">🙈️</div>
-                <div className="text-center text-zinc-700 text-base leading-6">488</div>
-              </div>
-              <div className="flex justify-start items-center gap-2">
-                <div className="text-center text-zinc-700 text-base leading-6">💕</div>
-                <div className="text-center text-zinc-700 text-base leading-6">2</div>
-              </div>
-              <div className="flex justify-start items-center gap-2">
-                <div className="text-center text-zinc-700 text-base leading-6">😂</div>
-                <div className="text-center text-zinc-700 text-base leading-6">46</div>
-              </div>
-              <div className="flex justify-start items-center gap-2">
-                <div className="text-center text-zinc-700 text-base leading-6">🤓</div>
-                <div className="text-center text-zinc-700 text-base leading-6">36</div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </>
+export default function ScriptBoxEmoji() {
+  const trigger = (
+    <button type="button" className="h-7 rounded px-2 hover:bg-gray-100" aria-label="이모지 더보기">
+      ···
+    </button>
   );
-};
 
-export default ScriptBoxEmoji;
+  return (
+    <div className="flex items-center gap-3">
+      {/* 메인 이모지 카운트 */}
+      <div className="flex items-center gap-6">
+        {EMOJI_DATA.map(({ emoji, count }) => (
+          <div key={emoji} className="flex items-center gap-2">
+            <span className="text-base leading-6 text-gray-800">{emoji}</span>
+            <span className="text-base leading-6 text-gray-800">{count > 99 ? '99+' : count}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* 이모지 더보기 팝오버 */}
+      <Popover trigger={trigger} position="top" align="end" className="px-4 py-3">
+        <div className="flex flex-col gap-3">
+          {EMOJI_EXTENDED_DATA.map((row, rowIdx) => (
+            <div key={rowIdx} className="flex items-center gap-6">
+              {row.map(({ emoji, count }) => (
+                <div key={emoji} className="flex items-center gap-2">
+                  <span className="text-center text-base leading-6 text-gray-800">{emoji}</span>
+                  <span className="text-center text-base leading-6 text-gray-800">{count}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </Popover>
+    </div>
+  );
+}

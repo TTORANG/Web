@@ -1,170 +1,180 @@
-import React from 'react';
+import { useState } from 'react';
+
+import clsx from 'clsx';
 
 import replyIcon from '../../assets/icons/replyIcon.svg';
 import trashcanIcon from '../../assets/icons/trashcanIcon.svg';
+import { Popover } from '../common';
 
-type OpinionProps = {
-  opinion: {
-    value: boolean;
-    toggle: () => void;
-    off: () => void;
+interface OpinionItem {
+  id: number;
+  author: string;
+  content: string;
+  timestamp: string;
+  isMine: boolean;
+  isReply?: boolean;
+}
+
+interface OpinionProps {
+  opinions?: OpinionItem[];
+  opinionCount?: number;
+  onDelete?: (id: number) => void;
+  onReply?: (id: number, content: string) => void;
+}
+
+export default function Opinion({
+  opinions = [
+    {
+      id: 0,
+      author: '익명 사용자',
+      content: '이 부분 설명이 명확해요!',
+      timestamp: '방금 전',
+      isMine: true,
+    },
+    {
+      id: 1,
+      author: '익명 사용자',
+      content: '이 부분 설명이 명확해요!',
+      timestamp: '1시간 전',
+      isMine: true,
+    },
+    {
+      id: 2,
+      author: '김철수',
+      content: '이 부분 설명이 명확해요!',
+      timestamp: '1시간 전',
+      isMine: false,
+      isReply: true,
+    },
+    {
+      id: 3,
+      author: '김철수',
+      content: '이 부분 설명이 명확해요!',
+      timestamp: '1시간 전',
+      isMine: false,
+    },
+  ],
+  opinionCount = 3,
+  onDelete,
+  onReply,
+}: OpinionProps) {
+  const [activeReplyId, setActiveReplyId] = useState<number | null>(null);
+  const [replyText, setReplyText] = useState('');
+
+  const handleReplySubmit = (opinionId: number) => {
+    if (replyText.trim()) {
+      onReply?.(opinionId, replyText);
+    }
+    setActiveReplyId(null);
+    setReplyText('');
   };
 
-  activeReplyIdx: number | null;
-  setActiveReplyIdx: React.Dispatch<React.SetStateAction<number | null>>;
-  replyText: string;
-  // React.SetStateAction : 상태를 바꾸는 set 함수의 타입은 이런 식으로 명시함
-  setReplyText: React.Dispatch<React.SetStateAction<string>>;
-};
+  const trigger = (
+    <button
+      type="button"
+      className={clsx(
+        'inline-flex h-7 items-center gap-1 rounded px-2',
+        'bg-white outline outline-1 outline-offset-[-1px] outline-gray-200',
+        'hover:bg-gray-100',
+      )}
+    >
+      <span className="text-sm font-semibold leading-5 text-gray-800">의견</span>
+      <span className="text-sm font-semibold leading-5 text-gray-500">{opinionCount}</span>
+    </button>
+  );
 
-const Opinion = ({
-  opinion,
-  activeReplyIdx,
-  setActiveReplyIdx,
-  replyText,
-  setReplyText,
-}: OpinionProps) => {
   return (
-    <div className="relative inline-block align-top">
-      {/* (기존 그대로) 의견 버튼 */}
-      <button
-        onClick={opinion.toggle}
-        className={`
-          h-7 px-2 rounded outline outline-1 outline-offset-[-1px]
-          inline-flex items-center gap-1
-          ${
-            opinion.value
-              ? 'outline-indigo-500 text-indigo-500 bg-white'
-              : 'outline-zinc-200 text-zinc-700 bg-white hover:bg-zinc-50'
-          }
-        `}
-        aria-pressed={opinion.value}
-      >
-        <span className="text-sm font-semibold leading-5">의견</span>
-        <span
-          className={`${
-            opinion.value ? 'text-indigo-500' : 'text-gray-500'
-          } text-sm font-semibold leading-5`}
-        >
-          3
-        </span>
-      </button>
+    <Popover
+      trigger={trigger}
+      position="top"
+      align="end"
+      className="w-96 max-w-[90vw] overflow-hidden"
+    >
+      {/* 헤더 */}
+      <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3">
+        <span className="text-base font-semibold leading-6 text-gray-800">의견</span>
+      </div>
 
-      {/* (기존 그대로) 의견 popover */}
-      {opinion.value && (
-        <>
-          {/* 바깥 클릭 시 닫기 */}
-          <div className="fixed inset-0 z-40" onClick={opinion.off} />
-
+      {/* 의견 목록 */}
+      <div className="h-80 overflow-y-auto">
+        {opinions.map((opinion) => (
           <div
-            className="absolute z-50
-              right-0 bottom-full mb-2
-              origin-bottom-right
-              w-[384px] max-w-[90vw]
-              rounded-lg overflow-hidden bg-white
-              shadow-[0px_4px_20px_0px_rgba(0,0,0,0.05)]
-            "
+            key={opinion.id}
+            className={clsx(
+              'flex items-start gap-3 bg-white py-3',
+              opinion.isReply ? 'pl-14 pr-4' : 'px-4',
+            )}
           >
-            <div className="px-4 py-3 bg-white border-b border-zinc-200 flex items-center justify-between">
-              <div className="text-zinc-700 text-base font-semibold leading-6">의견</div>
+            {/* 프로필 이미지 */}
+            <div className="flex h-20 items-start gap-2.5">
+              <div className="h-8 w-8 rounded-full bg-gray-300" />
             </div>
 
-            <div className="h-80 overflow-y-auto">
-              {[0, 1, 2, 3].map((idx) => {
-                const isMine = idx < 2;
-                const hasReply = idx === 2;
-
-                return (
-                  <div
-                    key={idx}
-                    className={`
-                      ${hasReply ? 'pl-14 pr-4' : 'px-4'}
-                      py-3 bg-white
-                      flex items-start gap-3
-                    `}
-                    title={''}
-                  >
-                    <div className="h-20 flex items-start gap-2.5">
-                      <div className="w-8 h-8 bg-zinc-300 rounded-full" />
-                    </div>
-
-                    <div className="flex-1 pt-1.5 flex flex-col gap-1">
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="max-w-48 text-zinc-700 text-sm font-semibold leading-5 line-clamp-1">
-                              {isMine ? '익명 사용자' : '김철수'}
-                            </div>
-                            <div className="text-gray-500 text-xs font-medium leading-4">
-                              {idx === 0 ? '방금 전' : '1시간 전'}
-                            </div>
-                          </div>
-
-                          {isMine && (
-                            <button
-                              type="button"
-                              className="flex items-center gap-1 text-red-500 text-xs font-semibold leading-4 hover:opacity-80"
-                            >
-                              삭제
-                              <img src={trashcanIcon} className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-
-                        <div className="text-zinc-700 text-sm font-medium leading-5">
-                          이 부분 설명이 명확해요!
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        {/* ✅ 기존 로직 그대로 유지
-                            - setActiveReplyIdx: 같은 댓글 다시 누르면 닫기(toggle)
-                            - setReplyText: 새로 열 때 입력 초기화 */}
-                        <button
-                          type="button"
-                          className="flex items-center gap-1 text-indigo-500 text-xs font-semibold leading-4 hover:opacity-80"
-                          onClick={() => {
-                            setActiveReplyIdx((prev) => (prev === idx ? null : idx));
-                            setReplyText('');
-                          }}
-                        >
-                          답글
-                          <img src={replyIcon} className="w-4 h-4" />
-                        </button>
-
-                        {/* 답글 inputBox 렌더링 */}
-                        {activeReplyIdx === idx && (
-                          <div className="mt-2 flex items-center gap-2">
-                            <input
-                              value={replyText}
-                              onChange={(e) => setReplyText(e.target.value)}
-                              placeholder="답글을 입력하세요"
-                              className="flex-1 h-10 px-3 rounded-lg border border-zinc-200 text-sm outline-none focus:border-indigo-500"
-                            />
-                            {/* 서버 붙기 전: 아무 것도 안 하고 닫기만 */}
-                            <button
-                              type="button"
-                              className="h-10 px-3 rounded-lg bg-zinc-900 text-white text-sm font-semibold hover:opacity-90"
-                              onClick={() => {
-                                setActiveReplyIdx(null);
-                                setReplyText('');
-                              }}
-                            >
-                              등록
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+            {/* 의견 내용 */}
+            <div className="flex flex-1 flex-col gap-1 pt-1.5">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="max-w-48 text-sm font-semibold leading-5 text-gray-800 line-clamp-1">
+                      {opinion.author}
+                    </span>
+                    <span className="text-xs font-medium leading-4 text-gray-500">
+                      {opinion.timestamp}
+                    </span>
                   </div>
-                );
-              })}
+
+                  {opinion.isMine && (
+                    <button
+                      type="button"
+                      onClick={() => onDelete?.(opinion.id)}
+                      className="flex items-center gap-1 text-xs font-semibold leading-4 text-red-500 hover:opacity-80"
+                    >
+                      삭제
+                      <img src={trashcanIcon} alt="" className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                <p className="text-sm font-medium leading-5 text-gray-800">{opinion.content}</p>
+              </div>
+
+              {/* 답글 버튼 */}
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveReplyId(activeReplyId === opinion.id ? null : opinion.id);
+                    setReplyText('');
+                  }}
+                  className="flex items-center gap-1 text-xs font-semibold leading-4 text-main hover:opacity-80"
+                >
+                  답글
+                  <img src={replyIcon} alt="" className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* 답글 입력 */}
+              {activeReplyId === opinion.id && (
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    placeholder="답글을 입력하세요"
+                    className="h-10 flex-1 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:border-main"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleReplySubmit(opinion.id)}
+                    className="h-10 rounded-lg bg-gray-900 px-3 text-sm font-semibold text-white hover:opacity-90"
+                  >
+                    등록
+                  </button>
+                </div>
+              )}
             </div>
           </div>
-        </>
-      )}
-    </div>
+        ))}
+      </div>
+    </Popover>
   );
-};
-
-export default Opinion;
+}
