@@ -1,18 +1,15 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 import logoFull from '@/assets/logo-full@4x.webp';
 import logoIcon from '@/assets/logo-icon@4x.webp';
 
-interface LogoProps {
-  variant?: 'full' | 'icon';
-}
-
-export function Logo({ variant = 'full' }: LogoProps) {
-  const src = variant === 'icon' ? logoIcon : logoFull;
+export function Logo() {
+  const { pathname } = useLocation();
+  const isHome = pathname === '/';
 
   return (
     <Link to="/">
-      <img src={src} alt="또랑" className="h-8" />
+      <img src={isHome ? logoFull : logoIcon} alt="또랑" className="h-8" />
     </Link>
   );
 }

@@ -11,7 +11,7 @@ import '@/styles/index.css';
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Layout left={<Logo variant="full" />} right={<LoginButton />} />,
+    element: <Layout right={<LoginButton />} />,
     children: [{ index: true, element: <HomePage /> }],
   },
   {
@@ -20,7 +20,7 @@ const router = createBrowserRouter([
       <Layout
         left={
           <>
-            <Logo variant="icon" />
+            <Logo />
             <span className="text-body-m-bold text-gray-800">내 발표</span>
           </>
         }
