@@ -17,7 +17,7 @@ const ScriptBox = () => {
   // };
 
   // 1. 이모지버튼
-  const [isEmogiClick, SetEmogiClick] = useState(false);
+  const [isEmogiClick, setEmogiClick] = useState(false);
 
   const handleEmogiClick = () => {
     SetEmogiClick((prev) => !prev);
