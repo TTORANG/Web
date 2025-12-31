@@ -23,7 +23,7 @@ export default function SlideTitle({ initialTitle = '슬라이드 1', onSave }: 
       aria-label="슬라이드 이름 변경"
       className="inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100"
     >
-      <span className="max-w-[7.5rem] line-clamp-1">{title}</span>
+      <span className="max-w-30 line-clamp-1">{title}</span>
       <img src={smallArrowIcon} alt="" aria-hidden="true" />
     </button>
   );

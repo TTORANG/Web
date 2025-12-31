@@ -22,7 +22,7 @@ export default function ScriptBox({ slideTitle = '슬라이드 1' }: ScriptBoxPr
         'fixed inset-x-0 bottom-0 z-30',
         'mx-auto w-full bg-white',
         'transition-transform duration-300 ease-out',
-        'h-[20rem]',
+        'h-80',
         isCollapsed ? 'translate-y-[calc(100%-2.5rem)]' : 'translate-y-0',
       )}
     >

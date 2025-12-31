@@ -31,7 +31,7 @@ export default function ScriptHistory({
       aria-label="대본 변경 기록 보기"
       className={clsx(
         'inline-flex h-7 items-center gap-1 rounded pl-2 pr-1.5',
-        'bg-white text-gray-800 outline outline-1 -outline-offset-1 outline-gray-200',
+        'bg-white text-gray-800 outline-1 -outline-offset-1 outline-gray-200',
         'hover:bg-gray-100',
       )}
     >
@@ -74,7 +74,7 @@ export default function ScriptHistory({
                 aria-label={`${item.timestamp} 버전으로 복원`}
                 className={clsx(
                   'inline-flex items-center gap-1 rounded py-1 pl-2 pr-1.5',
-                  'bg-white outline outline-1 outline-offset-[-1px] outline-gray-200',
+                  'bg-white outline-1 -outline-offset-1 outline-gray-200',
                   'transition hover:bg-gray-100 active:scale-[0.99]',
                 )}
               >

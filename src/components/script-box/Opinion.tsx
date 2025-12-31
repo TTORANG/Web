@@ -75,7 +75,7 @@ export default function Opinion({
       aria-label={`의견 ${opinionCount}개 보기`}
       className={clsx(
         'inline-flex h-7 items-center gap-1 rounded px-2',
-        'bg-white outline outline-1 outline-offset-[-1px] outline-gray-200',
+        'bg-white outline-1 -outline-offset-1 outline-gray-200',
         'hover:bg-gray-100',
       )}
     >
