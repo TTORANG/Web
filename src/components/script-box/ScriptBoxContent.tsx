@@ -9,7 +9,7 @@ export default function ScriptBoxContent() {
         value={script}
         onChange={(e) => setScript(e.target.value)}
         placeholder="대본을 입력하세요..."
-        className="h-full w-full resize-none border-none bg-transparent text-sm leading-relaxed text-gray-800 outline-none placeholder:text-gray-400"
+        className="h-full w-full resize-none border-none bg-transparent text-sm leading-relaxed text-gray-800 outline-none placeholder:text-gray-600"
       />
     </div>
   );

@@ -56,7 +56,7 @@ export default function ScriptHistory({
         {/* 현재 대본 */}
         <div className="border-b border-gray-200 bg-gray-100 px-4 pb-4 pt-3">
           <div className="flex flex-col gap-3">
-            <span className="text-xs font-semibold leading-4 text-gray-500">현재</span>
+            <span className="text-xs font-semibold leading-4 text-gray-600">현재</span>
             <p className="text-sm font-medium leading-5 text-gray-800">{currentScript}</p>
           </div>
         </div>
@@ -65,7 +65,7 @@ export default function ScriptHistory({
         {historyItems.map((item) => (
           <div key={item.id} className="border-b border-gray-200 bg-white px-4 pb-4 pt-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium leading-4 text-gray-500">{item.timestamp}</span>
+              <span className="text-xs font-medium leading-4 text-gray-600">{item.timestamp}</span>
               <button
                 type="button"
                 onClick={() => onRestore?.(item)}

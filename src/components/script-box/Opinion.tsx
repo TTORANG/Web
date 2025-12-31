@@ -79,7 +79,7 @@ export default function Opinion({
       )}
     >
       <span className="text-sm font-semibold leading-5 text-gray-800">의견</span>
-      <span className="text-sm font-semibold leading-5 text-gray-500">{opinionCount}</span>
+      <span className="text-sm font-semibold leading-5 text-gray-600">{opinionCount}</span>
     </button>
   );
 
@@ -107,7 +107,7 @@ export default function Opinion({
           >
             {/* 프로필 이미지 */}
             <div className="flex h-20 items-start gap-2.5">
-              <div className="h-8 w-8 rounded-full bg-gray-300" />
+              <div className="h-8 w-8 rounded-full bg-gray-400" />
             </div>
 
             {/* 의견 내용 */}
@@ -118,7 +118,7 @@ export default function Opinion({
                     <span className="max-w-48 text-sm font-semibold leading-5 text-gray-800 line-clamp-1">
                       {opinion.author}
                     </span>
-                    <span className="text-xs font-medium leading-4 text-gray-500">
+                    <span className="text-xs font-medium leading-4 text-gray-600">
                       {opinion.timestamp}
                     </span>
                   </div>
@@ -127,7 +127,7 @@ export default function Opinion({
                     <button
                       type="button"
                       onClick={() => onDelete?.(opinion.id)}
-                      className="flex items-center gap-1 text-xs font-semibold leading-4 text-red-500 hover:opacity-80"
+                      className="flex items-center gap-1 text-xs font-semibold leading-4 text-error hover:opacity-80"
                     >
                       삭제
                       <img src={trashcanIcon} alt="" className="h-4 w-4" />
