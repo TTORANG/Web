@@ -19,13 +19,19 @@ export default function ScriptBoxHeader({
   onToggleCollapse,
 }: ScriptBoxHeaderProps) {
   return (
-    <div className="flex h-10 items-center justify-between border-b border-gray-200 bg-white px-4">
-      {/* 좌측: 접기 버튼 + 슬라이드 제목 */}
-      <div className="flex items-center gap-2">
+    <div className="flex h-10 items-center justify-between border-b border-gray-200 bg-white px-5">
+      {/* 좌측: 슬라이드 제목 */}
+      <SlideTitle initialTitle={slideTitle} />
+
+      {/* 우측: 이모지, 변경기록, 의견, 접기 버튼 */}
+      <div className="flex items-center gap-3">
+        <ScriptBoxEmoji />
+        <ScriptHistory />
+        <Opinion />
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="flex h-7 w-7 items-center justify-center rounded hover:bg-gray-100"
+          className="flex h-6 w-6 items-center justify-center rounded hover:bg-gray-100 active:bg-gray-200"
           aria-expanded={!isCollapsed}
           aria-label={isCollapsed ? '대본 펼치기' : '대본 접기'}
         >
@@ -37,15 +43,6 @@ export default function ScriptBoxHeader({
             aria-hidden="true"
           />
         </button>
-
-        <SlideTitle initialTitle={slideTitle} />
-      </div>
-
-      {/* 우측: 이모지, 변경기록, 의견 */}
-      <div className="flex items-center gap-3">
-        <ScriptBoxEmoji />
-        <ScriptHistory />
-        <Opinion />
       </div>
     </div>
   );

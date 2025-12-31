@@ -22,7 +22,7 @@ export default function SlideTitle({ initialTitle = '슬라이드 1', onSave }: 
     <button
       type="button"
       aria-label="슬라이드 이름 변경"
-      className="inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100"
+      className="inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 active:bg-gray-200"
     >
       <span className="max-w-30 line-clamp-1">{title}</span>
       <SmallArrowIcon className="h-4 w-4" aria-hidden="true" />
@@ -46,7 +46,7 @@ export default function SlideTitle({ initialTitle = '슬라이드 1', onSave }: 
       <button
         type="button"
         onClick={handleSave}
-        className="h-9 rounded-full bg-main px-3 text-sm font-semibold text-white hover:opacity-90"
+        className="h-9 rounded-full bg-main px-3 text-sm font-semibold text-white active:bg-main-variant2"
       >
         저장
       </button>

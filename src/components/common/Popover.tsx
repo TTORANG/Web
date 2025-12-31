@@ -6,7 +6,7 @@ type PopoverPosition = 'top' | 'bottom';
 type PopoverAlign = 'start' | 'end';
 
 interface PopoverProps {
-  trigger: ReactNode;
+  trigger: ReactNode | ((props: { isOpen: boolean }) => ReactNode);
   children: ReactNode;
   position?: PopoverPosition;
   align?: PopoverAlign;
@@ -98,7 +98,7 @@ export function Popover({
         aria-expanded={isOpen}
         aria-controls={isOpen ? popoverId : undefined}
       >
-        {trigger}
+        {typeof trigger === 'function' ? trigger({ isOpen }) : trigger}
       </div>
 
       {isOpen && (

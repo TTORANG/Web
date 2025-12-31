@@ -1,14 +1,9 @@
 import clsx from 'clsx';
 
 import RefreshIcon from '@/assets/icons/refreshIcon.svg?react';
+import type { HistoryItem } from '@/types/script';
 
 import { Popover } from '../common';
-
-interface HistoryItem {
-  id: string;
-  timestamp: string;
-  content: string;
-}
 
 interface ScriptHistoryProps {
   currentScript?: string;
@@ -26,28 +21,28 @@ export default function ScriptHistory({
   ],
   onRestore,
 }: ScriptHistoryProps) {
-  const trigger = (
-    <button
-      type="button"
-      aria-label="대본 변경 기록 보기"
-      className={clsx(
-        'inline-flex h-7 items-center gap-1 rounded pl-2 pr-1.5',
-        'bg-white text-gray-800 outline-1 -outline-offset-1 outline-gray-200',
-        'hover:bg-gray-100',
-      )}
-    >
-      <span className="text-sm font-semibold leading-5">변경 기록</span>
-      <RefreshIcon className="h-4 w-4" aria-hidden="true" />
-    </button>
-  );
-
   return (
     <Popover
-      trigger={trigger}
+      trigger={({ isOpen }) => (
+        <button
+          type="button"
+          aria-label="대본 변경 기록 보기"
+          className={clsx(
+            'inline-flex h-7 items-center gap-1 rounded pl-2 pr-1.5',
+            'outline-1 -outline-offset-1',
+            isOpen
+              ? 'bg-white text-main outline-main'
+              : 'bg-white text-gray-800 outline-gray-200 hover:bg-gray-100 active:bg-gray-200',
+          )}
+        >
+          <span className="text-sm font-semibold leading-5">변경 기록</span>
+          <RefreshIcon className="h-4 w-4" aria-hidden="true" />
+        </button>
+      )}
       position="top"
       align="end"
       ariaLabel="대본 변경 기록"
-      className="w-96 max-w-[90vw] overflow-hidden"
+      className="w-105.25 max-w-[90vw] overflow-hidden rounded-b-lg"
     >
       {/* 헤더 */}
       <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3">
@@ -75,11 +70,11 @@ export default function ScriptHistory({
                 aria-label={`${item.timestamp} 버전으로 복원`}
                 className={clsx(
                   'inline-flex items-center gap-1 rounded py-1 pl-2 pr-1.5',
-                  'bg-white outline-1 -outline-offset-1 outline-gray-200',
-                  'transition hover:bg-gray-100 active:scale-[0.99]',
+                  'bg-white text-gray-800 outline-1 -outline-offset-1 outline-gray-200',
+                  'hover:text-gray-600 active:bg-gray-100',
                 )}
               >
-                <span className="text-xs font-semibold leading-4 text-gray-800">복원</span>
+                <span className="text-xs font-semibold leading-4">복원</span>
                 <RefreshIcon className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
