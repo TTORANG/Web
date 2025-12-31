@@ -72,6 +72,7 @@ export default function Opinion({
   const trigger = (
     <button
       type="button"
+      aria-label={`의견 ${opinionCount}개 보기`}
       className={clsx(
         'inline-flex h-7 items-center gap-1 rounded px-2',
         'bg-white outline outline-1 outline-offset-[-1px] outline-gray-200',
@@ -88,6 +89,7 @@ export default function Opinion({
       trigger={trigger}
       position="top"
       align="end"
+      ariaLabel="의견 목록"
       className="w-96 max-w-[90vw] overflow-hidden"
     >
       {/* 헤더 */}
@@ -127,10 +129,11 @@ export default function Opinion({
                     <button
                       type="button"
                       onClick={() => onDelete?.(opinion.id)}
+                      aria-label="의견 삭제"
                       className="flex items-center gap-1 text-xs font-semibold leading-4 text-error hover:opacity-80"
                     >
                       삭제
-                      <img src={trashcanIcon} alt="" className="h-4 w-4" />
+                      <img src={trashcanIcon} alt="" aria-hidden="true" className="h-4 w-4" />
                     </button>
                   )}
                 </div>
@@ -146,10 +149,12 @@ export default function Opinion({
                     setActiveReplyId(activeReplyId === opinion.id ? null : opinion.id);
                     setReplyText('');
                   }}
+                  aria-expanded={activeReplyId === opinion.id}
+                  aria-label={`${opinion.author}에게 답글 달기`}
                   className="flex items-center gap-1 text-xs font-semibold leading-4 text-main hover:opacity-80"
                 >
                   답글
-                  <img src={replyIcon} alt="" className="h-4 w-4" />
+                  <img src={replyIcon} alt="" aria-hidden="true" className="h-4 w-4" />
                 </button>
               </div>
 
@@ -160,11 +165,13 @@ export default function Opinion({
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
                     placeholder="답글을 입력하세요"
+                    aria-label="답글 입력"
                     className="h-10 flex-1 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:border-main"
                   />
                   <button
                     type="button"
                     onClick={() => handleReplySubmit(opinion.id)}
+                    aria-label="답글 등록"
                     className="h-10 rounded-lg bg-gray-900 px-3 text-sm font-semibold text-white hover:opacity-90"
                   >
                     등록

@@ -20,10 +20,11 @@ export default function SlideTitle({ initialTitle = '슬라이드 1', onSave }: 
   const trigger = (
     <button
       type="button"
+      aria-label="슬라이드 이름 변경"
       className="inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100"
     >
       <span className="max-w-[7.5rem] line-clamp-1">{title}</span>
-      <img src={smallArrowIcon} alt="" />
+      <img src={smallArrowIcon} alt="" aria-hidden="true" />
     </button>
   );
 
@@ -32,11 +33,13 @@ export default function SlideTitle({ initialTitle = '슬라이드 1', onSave }: 
       trigger={trigger}
       position="bottom"
       align="start"
+      ariaLabel="슬라이드 이름 변경"
       className="flex w-80 items-center gap-2 border border-gray-200 px-3 py-2"
     >
       <input
         value={editTitle}
         onChange={(e) => setEditTitle(e.target.value)}
+        aria-label="슬라이드 이름"
         className="h-9 flex-1 rounded-md border border-gray-200 px-3 text-sm text-gray-800 outline-none focus:border-main"
       />
       <button

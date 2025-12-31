@@ -28,6 +28,7 @@ export default function ScriptHistory({
   const trigger = (
     <button
       type="button"
+      aria-label="대본 변경 기록 보기"
       className={clsx(
         'inline-flex h-7 items-center gap-1 rounded pl-2 pr-1.5',
         'bg-white text-gray-800 outline outline-1 -outline-offset-1 outline-gray-200',
@@ -35,7 +36,7 @@ export default function ScriptHistory({
       )}
     >
       <span className="text-sm font-semibold leading-5">변경 기록</span>
-      <img src={refreshIcon} alt="" className="h-4 w-4" />
+      <img src={refreshIcon} alt="" aria-hidden="true" className="h-4 w-4" />
     </button>
   );
 
@@ -44,6 +45,7 @@ export default function ScriptHistory({
       trigger={trigger}
       position="top"
       align="end"
+      ariaLabel="대본 변경 기록"
       className="w-96 max-w-[90vw] overflow-hidden"
     >
       {/* 헤더 */}
@@ -69,6 +71,7 @@ export default function ScriptHistory({
               <button
                 type="button"
                 onClick={() => onRestore?.(item)}
+                aria-label={`${item.timestamp} 버전으로 복원`}
                 className={clsx(
                   'inline-flex items-center gap-1 rounded py-1 pl-2 pr-1.5',
                   'bg-white outline outline-1 outline-offset-[-1px] outline-gray-200',
@@ -76,7 +79,7 @@ export default function ScriptHistory({
                 )}
               >
                 <span className="text-xs font-semibold leading-4 text-gray-800">복원</span>
-                <img src={refreshIcon} alt="" className="h-4 w-4" />
+                <img src={refreshIcon} alt="" aria-hidden="true" className="h-4 w-4" />
               </button>
             </div>
             <p className="mt-2 text-sm font-medium leading-5 text-gray-800">{item.content}</p>

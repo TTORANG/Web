@@ -42,7 +42,13 @@ export default function ScriptBoxEmoji() {
       </div>
 
       {/* 이모지 더보기 팝오버 */}
-      <Popover trigger={trigger} position="top" align="end" className="px-4 py-3">
+      <Popover
+        trigger={trigger}
+        position="top"
+        align="end"
+        ariaLabel="이모지 반응 목록"
+        className="px-4 py-3"
+      >
         <div className="flex flex-col gap-3">
           {EMOJI_EXTENDED_DATA.map((row, rowIdx) => (
             <div key={rowIdx} className="flex items-center gap-6">

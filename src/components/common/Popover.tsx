@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
 
 import clsx from 'clsx';
 
@@ -11,6 +11,7 @@ interface PopoverProps {
   position?: PopoverPosition;
   align?: PopoverAlign;
   className?: string;
+  ariaLabel?: string;
 }
 
 export function Popover({
@@ -19,9 +20,13 @@ export function Popover({
   position = 'top',
   align = 'end',
   className,
+  ariaLabel,
 }: PopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const popoverId = useId();
 
   const handleToggle = useCallback(() => {
     setIsOpen((prev) => !prev);
@@ -29,6 +34,8 @@ export function Popover({
 
   const handleClose = useCallback(() => {
     setIsOpen(false);
+    // 팝오버 닫힐 때 트리거로 포커스 이동
+    triggerRef.current?.querySelector('button')?.focus();
   }, []);
 
   // Escape 키로 닫기
@@ -59,6 +66,19 @@ export function Popover({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen, handleClose]);
 
+  // 팝오버 열릴 때 첫 번째 포커스 가능한 요소로 포커스 이동
+  useEffect(() => {
+    if (!isOpen || !contentRef.current) return;
+
+    const focusableElements = contentRef.current.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+
+    if (focusableElements.length > 0) {
+      focusableElements[0].focus();
+    }
+  }, [isOpen]);
+
   const positionClasses = clsx({
     'bottom-full mb-2': position === 'top',
     'top-full mt-2': position === 'bottom',
@@ -71,10 +91,23 @@ export function Popover({
 
   return (
     <div ref={popoverRef} className="relative">
-      <div onClick={handleToggle}>{trigger}</div>
+      <div
+        ref={triggerRef}
+        onClick={handleToggle}
+        aria-haspopup="dialog"
+        aria-expanded={isOpen}
+        aria-controls={isOpen ? popoverId : undefined}
+      >
+        {trigger}
+      </div>
 
       {isOpen && (
         <div
+          ref={contentRef}
+          id={popoverId}
+          role="dialog"
+          aria-label={ariaLabel}
+          aria-modal="false"
           className={clsx(
             'absolute z-50',
             positionClasses,
