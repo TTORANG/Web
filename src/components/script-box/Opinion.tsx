@@ -4,7 +4,7 @@ import clsx from 'clsx';
 
 import ReplyIcon from '@/assets/icons/replyIcon.svg?react';
 import TrashcanIcon from '@/assets/icons/trashcanIcon.svg?react';
-import type { OpinionItem } from '@/types/script.ts';
+import type { OpinionItem } from '@/types/script';
 
 import { Popover } from '../common';
 
