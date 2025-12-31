@@ -2,8 +2,9 @@ import { useState } from 'react';
 
 import clsx from 'clsx';
 
-import replyIcon from '../../assets/icons/replyIcon.svg';
-import trashcanIcon from '../../assets/icons/trashcanIcon.svg';
+import ReplyIcon from '@/assets/icons/replyIcon.svg?react';
+import TrashcanIcon from '@/assets/icons/trashcanIcon.svg?react';
+
 import { Popover } from '../common';
 
 interface OpinionItem {
@@ -133,7 +134,7 @@ export default function Opinion({
                       className="flex items-center gap-1 text-xs font-semibold leading-4 text-error hover:opacity-80"
                     >
                       삭제
-                      <img src={trashcanIcon} alt="" aria-hidden="true" className="h-4 w-4" />
+                      <TrashcanIcon className="h-4 w-4" aria-hidden="true" />
                     </button>
                   )}
                 </div>
@@ -154,7 +155,7 @@ export default function Opinion({
                   className="flex items-center gap-1 text-xs font-semibold leading-4 text-main hover:opacity-80"
                 >
                   답글
-                  <img src={replyIcon} alt="" aria-hidden="true" className="h-4 w-4" />
+                  <ReplyIcon className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
 

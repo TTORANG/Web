@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 
-import refreshIcon from '../../assets/icons/refreshIcon.svg';
+import RefreshIcon from '@/assets/icons/refreshIcon.svg?react';
+
 import { Popover } from '../common';
 
 interface HistoryItem {
@@ -36,7 +37,7 @@ export default function ScriptHistory({
       )}
     >
       <span className="text-sm font-semibold leading-5">변경 기록</span>
-      <img src={refreshIcon} alt="" aria-hidden="true" className="h-4 w-4" />
+      <RefreshIcon className="h-4 w-4" aria-hidden="true" />
     </button>
   );
 
@@ -79,7 +80,7 @@ export default function ScriptHistory({
                 )}
               >
                 <span className="text-xs font-semibold leading-4 text-gray-800">복원</span>
-                <img src={refreshIcon} alt="" aria-hidden="true" className="h-4 w-4" />
+                <RefreshIcon className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
             <p className="mt-2 text-sm font-medium leading-5 text-gray-800">{item.content}</p>

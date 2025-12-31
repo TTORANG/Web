@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 
-import smallArrowIcon from '../../assets/icons/smallArrowIcon.svg';
+import SmallArrowIcon from '@/assets/icons/smallArrowIcon.svg?react';
+
 import Opinion from './Opinion';
 import ScriptBoxEmoji from './ScriptBoxEmoji';
 import ScriptHistory from './ScriptHistory';
@@ -28,13 +29,12 @@ export default function ScriptBoxHeader({
           aria-expanded={!isCollapsed}
           aria-label={isCollapsed ? '대본 펼치기' : '대본 접기'}
         >
-          <img
-            src={smallArrowIcon}
-            alt=""
+          <SmallArrowIcon
             className={clsx(
               'h-4 w-4 transition-transform duration-300',
               !isCollapsed && 'rotate-180',
             )}
+            aria-hidden="true"
           />
         </button>
 
