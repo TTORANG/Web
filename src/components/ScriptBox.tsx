@@ -24,7 +24,7 @@ const ScriptBox = () => {
   };
 
   // 2. 변경기록 버튼
-  const scriptHistroy = useToggle(false);
+  const scriptHistory = useToggle(false);
   // 3. 의견 버튼
   const opinion = useToggle(false);
   // 3-1. 답변 (나중에 피드백id랑 매칭해야됨)
