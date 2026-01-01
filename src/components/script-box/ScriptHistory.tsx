@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 
-import RefreshIcon from '@/assets/icons/refreshIcon.svg?react';
+import RefreshIcon from '@/assets/icons/icon-revert.svg?react';
 import type { HistoryItem } from '@/types/script';
 
 import { Popover } from '../common';

@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 
-import SmallArrowIcon from '@/assets/icons/smallArrowIcon.svg?react';
+import SmallArrowIcon from '@/assets/icons/icon-arrow-down.svg?react';
 
 import Opinion from './Opinion';
 import ScriptBoxEmoji from './ScriptBoxEmoji';

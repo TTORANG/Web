@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import SmallArrowIcon from '@/assets/icons/smallArrowIcon.svg?react';
+import SmallArrowIcon from '@/assets/icons/icon-arrow-down.svg?react';
 
 import { Popover } from '../common';
 

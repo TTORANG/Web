@@ -2,8 +2,8 @@ import { useState } from 'react';
 
 import clsx from 'clsx';
 
-import ReplyIcon from '@/assets/icons/replyIcon.svg?react';
-import TrashcanIcon from '@/assets/icons/trashcanIcon.svg?react';
+import TrashcanIcon from '@/assets/icons/icon-remove.svg?react';
+import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
 import type { OpinionItem } from '@/types/script';
 
 import { Popover } from '../common';
