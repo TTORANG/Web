@@ -1,10 +1,12 @@
-export const TABS = [
+import type { TabItem, TabKey } from '@/types/navigation';
+
+export const TABS: readonly TabItem[] = [
   { key: 'slide', label: '슬라이드' },
   { key: 'video', label: '영상' },
   { key: 'insight', label: '인사이트' },
 ] as const;
 
-export type Tab = (typeof TABS)[number]['key'];
+export type Tab = TabKey;
 
 export const DEFAULT_SLIDE_ID = '1';
 

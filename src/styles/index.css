@@ -27,4 +27,6 @@
   --spacing-15: 3.75rem;
   --spacing-18: 4.5rem;
   --spacing-25: 6.25rem;
+
+  --width-popover: 26.3125rem; /* 421px */
 }
