@@ -42,7 +42,7 @@ export default function ScriptHistory({
       position="top"
       align="end"
       ariaLabel="대본 변경 기록"
-      className="w-105.25 max-w-[90vw] overflow-hidden rounded-b-lg"
+      className="w-popover max-w-[90vw] overflow-hidden rounded-b-lg"
     >
       {/* 헤더 */}
       <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3">
