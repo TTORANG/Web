@@ -1,11 +1,13 @@
+import type { EmojiReaction } from '@/types/script';
+
 import { Popover } from '../common';
 
-const EMOJI_DATA = [
+const EMOJI_DATA: EmojiReaction[] = [
   { emoji: '👍', count: 99 },
   { emoji: '😡', count: 12 },
 ];
 
-const EMOJI_EXTENDED_DATA = [
+const EMOJI_EXTENDED_DATA: EmojiReaction[][] = [
   [
     { emoji: '😏', count: 15 },
     { emoji: '❤️', count: 28 },
@@ -24,7 +26,11 @@ const EMOJI_EXTENDED_DATA = [
 
 export default function ScriptBoxEmoji() {
   const trigger = (
-    <button type="button" className="h-7 rounded px-2 hover:bg-gray-100" aria-label="이모지 더보기">
+    <button
+      type="button"
+      className="h-7 rounded px-2 hover:bg-gray-100 active:bg-gray-200"
+      aria-label="반응 더보기"
+    >
       ···
     </button>
   );

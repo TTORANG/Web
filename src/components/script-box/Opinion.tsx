@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import clsx from 'clsx';
 
-import TrashcanIcon from '@/assets/icons/icon-remove.svg?react';
+import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
 import type { OpinionItem } from '@/types/script';
 
@@ -141,7 +141,7 @@ export default function Opinion({
                         className="flex items-center gap-1 text-xs font-semibold text-error active:opacity-80"
                       >
                         삭제
-                        <TrashcanIcon className="h-4 w-4" aria-hidden="true" />
+                        <RemoveIcon className="h-4 w-4" aria-hidden="true" />
                       </button>
                     )}
                   </div>

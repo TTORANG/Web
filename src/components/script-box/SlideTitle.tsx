@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import SmallArrowIcon from '@/assets/icons/icon-arrow-down.svg?react';
+import ArrowDownIcon from '@/assets/icons/icon-arrow-down.svg?react';
 
 import { Popover } from '../common';
 
@@ -25,7 +25,7 @@ export default function SlideTitle({ initialTitle = '슬라이드 1', onSave }: 
       className="inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 active:bg-gray-200"
     >
       <span className="max-w-30 line-clamp-1">{title}</span>
-      <SmallArrowIcon className="h-4 w-4" aria-hidden="true" />
+      <ArrowDownIcon className="h-4 w-4" aria-hidden="true" />
     </button>
   );
 

@@ -13,3 +13,8 @@ export interface OpinionItem {
   isReply?: boolean;
   parentId?: number;
 }
+
+export interface EmojiReaction {
+  emoji: string;
+  count: number;
+}
