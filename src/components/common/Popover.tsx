@@ -1,4 +1,12 @@
-import { type ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
+import {
+  type ReactElement,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from 'react';
 
 import clsx from 'clsx';
 
@@ -6,7 +14,7 @@ type PopoverPosition = 'top' | 'bottom';
 type PopoverAlign = 'start' | 'end';
 
 interface PopoverProps {
-  trigger: ReactNode | ((props: { isOpen: boolean }) => ReactNode);
+  trigger: ReactElement | ((props: { isOpen: boolean }) => ReactElement);
   children: ReactNode;
   position?: PopoverPosition;
   align?: PopoverAlign;
@@ -26,16 +34,23 @@ export function Popover({
   const popoverRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const lastFocusedElement = useRef<HTMLElement | null>(null);
   const popoverId = useId();
 
   const handleToggle = useCallback(() => {
-    setIsOpen((prev) => !prev);
+    setIsOpen((prev) => {
+      if (!prev) {
+        // 팝오버가 열릴 때 현재 포커스된 요소 저장
+        lastFocusedElement.current = document.activeElement as HTMLElement;
+      }
+      return !prev;
+    });
   }, []);
 
   const handleClose = useCallback(() => {
     setIsOpen(false);
-    // 팝오버 닫힐 때 트리거로 포커스 이동
-    triggerRef.current?.querySelector('button')?.focus();
+    // 팝오버 닫힐 때 이전에 포커스된 요소로 포커스 이동
+    lastFocusedElement.current?.focus();
   }, []);
 
   // Escape 키로 닫기
