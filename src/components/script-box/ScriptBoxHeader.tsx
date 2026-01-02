@@ -24,6 +24,7 @@ export default function ScriptBoxHeader({
       <SlideTitle initialTitle={slideTitle} isCollapsed={isCollapsed} />
 
       {/* 우측: 이모지, 변경기록, 의견, 접기 버튼 */}
+      {/* onToggleCollapse: 접힘, 펼친 상태변경 */}
       <div className="flex items-center gap-3">
         <ScriptBoxEmoji />
         <ScriptHistory />
@@ -38,7 +39,7 @@ export default function ScriptBoxHeader({
           <ArrowDownIcon
             className={clsx(
               'h-4 w-4 transition-transform duration-300',
-              !isCollapsed && 'rotate-180',
+              isCollapsed && 'rotate-180',
             )}
             aria-hidden="true"
           />
