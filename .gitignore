@@ -9,12 +9,17 @@ lerna-debug.log*
 
 node_modules
 dist
+dist-ssr
 bun.lock
+
+# 환경 변수
 .env
 .env.local
+.env.development
+.env.production
 .env.*.local
-dist-ssr
 *.local
+!.env.local.example
 
 # Editor directories and files
 .vscode/*
