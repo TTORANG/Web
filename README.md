@@ -19,6 +19,7 @@
 
 </div>
 
-## 컨벤션
+## 문서
 
-[컨벤션 문서 바로가기](./CONVENTION.md)
+- [컨벤션](./CONVENTION.md)
+- [환경 변수 설정](./docs/environment.md)
