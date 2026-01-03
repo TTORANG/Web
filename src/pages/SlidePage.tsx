@@ -14,7 +14,6 @@ export default function SlidePage() {
   }>();
 
   /**
-   *
    * 목적:
    * - 탭 이동(영상/인사이트 → 슬라이드) 후 다시 돌아왔을 때
    *   → 마지막으로 보던 슬라이드로 복원하기 위함
@@ -105,14 +104,24 @@ export default function SlidePage() {
   const currentSlide = slides.find((s) => s.id === slideId) ?? slides[0];
   const basePath = projectId ? `/${projectId}` : '';
 
+  /**
+   *  핵심 레이아웃 목표
+   * 1) 어떤 화면에서도 16:9 슬라이드가 "잘리지 않게" 전체 노출
+   * 2) 슬라이드와 ScriptBox의 폭을 항상 동일하게 유지
+   * 3) ScriptBox 토글 애니메이션 시, 슬라이드는 살짝만 내려오되(독립 이동)
+   *    ScriptBox와 겹치지 않도록 여백을 유지
+   *
+   * 접근:
+   * - 오른쪽 영역을 "세로 기준"으로 최대 폭을 계산해서(= max-width)
+   *   작은 화면에서도 슬라이드가 박스에 의해 잘리지 않도록 방어
+   * - 슬라이드/ScriptBox를 동일한 max-width 컨테이너로 감싸 폭을 강제 통일
+   */
   return (
     <div className="h-full bg-gray-100">
-      {/*  양쪽 다 바닥까지 꽉: h-full */}
-      <div className="flex h-full gap-8 px-20 py-0">
+      {/* 변경: 전체 컨텐츠에 위 여백 주기 */}
+      <div className="flex h-full gap-8 px-20 py-12 pb-0">
         {/* ================= LEFT ================= */}
-        {/* 슬라이드 썸네일 영역
-            - 여기만 스크롤 가능
-            - 슬라이드 이동은 URL 기반으로 처리 */}
+        {/*  슬라이드 리스트 영역 */}
         <aside className="w-80 min-w-80 h-full overflow-y-auto">
           <div className="flex flex-col gap-5 pr-10">
             {slides.map((s, idx) => {
@@ -122,26 +131,25 @@ export default function SlidePage() {
                 <div
                   key={s.id}
                   className={clsx(
-                    'flex items-start gap-3 rounded-xl border p-2 bg-white',
+                    'flex items-start gap-3 p-2 bg-gray-100',
                     isActive ? 'border-main' : 'border-gray-200',
                   )}
                 >
                   <div className="w-6 pt-2 text-right text-sm font-semibold text-gray-700 select-none">
                     {idx + 1}
                   </div>
-                  {/* 슬라이드 이동 링크 */}
                   <Link
                     to={`${basePath}/slide/${s.id}`}
                     aria-current={isActive ? 'true' : undefined}
                     className={clsx(
-                      'block w-full h-40 rounded-lg overflow-hidden',
+                      'block w-full h-40  overflow-hidden',
                       'focus:outline-none focus:ring-2 focus:ring-main',
                     )}
                   >
                     <div
                       className={clsx(
-                        'h-full w-full rounded-lg transition',
-                        isActive ? 'bg-gray-200' : 'bg-gray-100 hover:bg-gray-200',
+                        'h-full w-full transition',
+                        isActive ? 'bg-gray-200' : 'bg-gray-200 hover:bg-gray-200',
                       )}
                     />
                   </Link>
@@ -152,51 +160,53 @@ export default function SlidePage() {
         </aside>
 
         {/* ================= RIGHT ================= */}
-        {/* 핵심 영역:
-            - 슬라이드와 ScriptBox를 완전히 분리된 레이어로 구성
-            - ScriptBox는 항상 하단 고정
-            - 슬라이드는 ScriptBox 상태에 따라 독립적으로 이동 */}
-        <main className="flex-1 h-full overflow-hidden">
-          <div className="relative h-full">
-            {/* 슬라이드 레이어
-                - absolute로 전체 영역을 덮음
-                - ScriptBox 높이만큼 paddingBottom으로 안전 영역 확보 */}
-            <div
-              className="absolute left-0 right-0 top-0 bottom-0 flex justify-center"
-              style={{
-                paddingBottom: isScriptCollapsed ? 40 : 100,
-
-                paddingTop: 50,
-              }}
-            >
-              {/* 슬라이드 컨테이너
-                  - ScriptBox 접힘 상태에 따라 translateY로 "조금만" 이동
-                  - 레이아웃 계산이 아닌 명시적 이동을 사용 */}
+        {/* 오른쪽 영역은 슬라이드(16:9) + ScriptBox(동일폭)로 구성 */}
+        <main className="flex-1 h-full min-w-0 overflow-hidden">
+          <div className="h-full min-h-0 flex flex-col gap-6">
+            {/* ================= SLIDE ================= */}
+            <section className="flex-1 min-h-0 overflow-hidden pt-2">
+              {/* 핵심: 세로 기준으로 max-width 계산
+                 - 화면이 작으면(높이가 부족하면) 가로폭을 자동으로 줄여서
+                 - 16:9 슬라이드가 항상 "한 장"으로 온전히 노출되게 함 */}
               <div
-                className="w-[2200px] flex flex-col items-center"
-                style={{
-                  // ✅ 여기서 '독립적으로' 내려가게 만듦 (원하는 만큼만)
-                  transform: `translateY(${isScriptCollapsed ? 120 : 0}px)`,
-                  transition: 'transform 300ms ease-out',
-                }}
+                className="
+          mx-auto w-full px-2
+          max-w-[min(2200px,calc((100dvh-3.75rem-20rem-3rem)*16/9))]
+        "
               >
-                {/* 실제 슬라이드 */}
-                <div className="w-[2200px] h-[1238px] rounded-2xl bg-gray-200 shadow-sm relative">
-                  <span className="text-2xl font-bold text-gray-800 absolute top-10 left-8">
-                    {currentSlide.title}
-                  </span>
-                  <span className="text-base text-gray-600 absolute bottom-6 left-8">
-                    {currentSlide.content}
-                  </span>
+                {/* ScriptBox 토글에 반응하는 슬라이드 이동 (독립적으로 '살짝' 내려옴) */}
+
+                <div
+                  className="transition-transform duration-300 ease-out"
+                  style={{
+                    transform: `translateY(${isScriptCollapsed ? 120 : 0}px)`,
+                  }}
+                >
+                  {/* 슬라이드는 컨테이너 폭을 그대로 쓰고 16:9 유지 */}
+                  <div className="w-full aspect-video  bg-gray-200 shadow-sm relative">
+                    <span className="text-2xl font-bold text-gray-800 absolute top-10 left-8">
+                      {currentSlide.title}
+                    </span>
+                    <span className="text-base text-gray-600 absolute bottom-6 left-8">
+                      {currentSlide.content}
+                    </span>
+                  </div>
+
+                  {/* 슬라이드와 ScriptBox 사이 공백 유지 */}
+                  <div className="h-6" />
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* ScriptBox 레이어
-                - 오른쪽 컬럼 기준 absolute bottom 고정
-                - 슬라이드와 동일한 폭을 사용 */}
-            <div className="absolute bottom-0 left-0 right-0 flex justify-center">
-              <div className="w-[2200px]">
+            {/* ================= SCRIPT BOX ================= */}
+            {/* ScriptBox는 슬라이드와 "완전히 동일한 컨테이너 폭"을 사용 */}
+            <div className="shrink-0">
+              <div
+                className="
+          mx-auto w-full px-2
+          max-w-[min(2200px,calc((100dvh-3.75rem-20rem-3rem)*16/9))]
+        "
+              >
                 <ScriptBox
                   slideTitle={`슬라이드 ${slideId ?? currentSlide.id}`}
                   onCollapsedChange={setIsScriptCollapsed}
