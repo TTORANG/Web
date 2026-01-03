@@ -4,13 +4,14 @@ export default function ScriptBoxContent() {
   const [script, setScript] = useState('');
 
   return (
-    <div className="h-[calc(100%-2.5rem)] overflow-y-auto border-b border-gray-200 bg-white px-4 pb-6 pt-3">
+    // ScriptBox 전체 높이에서 헤더만큼 뺀 영역을 그대로 사용
+    <div className="h-full bg-white px-4 py-3">
       <textarea
         value={script}
         onChange={(e) => setScript(e.target.value)}
         placeholder="슬라이드 대본을 입력하세요..."
         aria-label="슬라이드 대본"
-        className="h-full w-full resize-none border-none bg-transparent text-base leading-relaxed text-gray-800 outline-none placeholder:text-gray-600"
+        className="h-full w-full resize-none border-none bg-transparent text-base leading-relaxed text-gray-800 outline-none placeholder:text-gray-600  overflow-y-auto"
       />
     </div>
   );
