@@ -8,7 +8,7 @@ if [ "$branch" = "main" ] || [ "$branch" = "develop" ]; then
 fi
 
 # 허용된 타입
-allowed_types="feat|fix|refactor|design|chore|docs"
+allowed_types="feat|fix|refactor|design|chore|docs|ci"
 
 # 1. 기본 형식 체크 (type/xxx 형식인지)
 if ! echo "$branch" | grep -qE "^[a-zA-Z]+/"; then
