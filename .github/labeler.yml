@@ -1,0 +1,53 @@
+# 컴포넌트 관련
+'component':
+  - changed-files:
+    - any-glob-to-any-file: 'src/components/**/*'
+
+# 페이지 관련
+'page':
+  - changed-files:
+    - any-glob-to-any-file: 'src/pages/**/*'
+
+# 스타일링
+'style':
+  - changed-files:
+    - any-glob-to-any-file: 'src/styles/**/*'
+    - any-glob-to-any-file: '**/*.css'
+
+# 타입 정의
+'types':
+  - changed-files:
+    - any-glob-to-any-file: 'src/types/**/*'
+
+# 상태 관리
+'store':
+  - changed-files:
+    - any-glob-to-any-file: 'src/stores/**/*'
+
+# 훅
+'hooks':
+  - changed-files:
+    - any-glob-to-any-file: 'src/hooks/**/*'
+
+# 문서
+'documentation':
+  - changed-files:
+    - any-glob-to-any-file: '**/*.md'
+    - any-glob-to-any-file: 'docs/**/*'
+
+# 설정 파일
+'config':
+  - changed-files:
+    - any-glob-to-any-file:
+      - '*.json'
+      - '*.yml'
+      - '*.yaml'
+      - '.github/**/*'
+      - 'vite.config.*'
+      - 'tsconfig.*'
+
+# 의존성
+'dependencies':
+  - changed-files:
+    - any-glob-to-any-file: 'package.json'
+    - any-glob-to-any-file: 'package-lock.json'
