@@ -3,23 +3,17 @@ import type { EmojiReaction, HistoryItem, OpinionItem } from './script';
 /**
  * 슬라이드 데이터 모델
  *
- * @see {@link ../stores/slideStore.ts} 상태 관리
- * @see {@link ../hooks/useSlideSelectors.ts} 셀렉터 훅
- * @see {@link ../constants/mockSlides.ts} 목업 데이터
+ * 프레젠테이션의 개별 슬라이드를 나타냅니다.
+ * 각 슬라이드는 대본, 의견, 수정 기록, 이모지 반응을 포함합니다.
  */
 export interface Slide {
-  /** 슬라이드 고유 ID */
   id: string;
-  /** 슬라이드 제목 */
   title: string;
-  /** 썸네일 이미지 URL */
   thumb: string;
-  /** 슬라이드 대본 */
+  /** 포커스 해제 시 히스토리에 자동 저장 */
   script: string;
-  /** 의견 목록 */
   opinions: OpinionItem[];
-  /** 대본 수정 기록 */
+  /** 최신순 정렬 */
   history: HistoryItem[];
-  /** 이모지 반응 목록 */
   emojiReactions: EmojiReaction[];
 }
