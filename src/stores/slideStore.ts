@@ -15,19 +15,48 @@ function formatTimestamp(): string {
 interface SlideState {
   slide: Slide | null;
 
-  // 초기화
+  /**
+   * 슬라이드 데이터를 초기화합니다.
+   * @param slide - 초기화할 슬라이드 데이터
+   */
   initSlide: (slide: Slide) => void;
 
-  // 일반 업데이트
+  /**
+   * 슬라이드 데이터를 부분 업데이트합니다.
+   * @param updates - 업데이트할 필드들
+   */
   updateSlide: (updates: Partial<Slide>) => void;
 
-  // 대본 관련
+  /**
+   * 대본 내용을 업데이트합니다.
+   * @param script - 새로운 대본 내용
+   */
   updateScript: (script: string) => void;
+
+  /**
+   * 현재 대본을 히스토리에 저장합니다.
+   * 대본이 비어있으면 저장하지 않습니다.
+   */
   saveToHistory: () => void;
+
+  /**
+   * 특정 시점의 대본으로 복원합니다.
+   * @param item - 복원할 히스토리 아이템
+   */
   restoreFromHistory: (item: HistoryItem) => void;
 
-  // 의견 관련
+  /**
+   * 의견을 삭제합니다.
+   * 해당 의견의 대댓글도 함께 제거됩니다.
+   * @param id - 삭제할 의견 ID
+   */
   deleteOpinion: (id: number) => void;
+
+  /**
+   * 의견에 답글을 추가합니다.
+   * @param parentId - 원본 의견 ID
+   * @param content - 답글 내용
+   */
   addReply: (parentId: number, content: string) => void;
 }
 

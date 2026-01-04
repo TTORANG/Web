@@ -1,5 +1,12 @@
 import { useCallback, useState } from 'react';
 
+/**
+ * 불리언 상태 토글을 위한 커스텀 훅
+ * @param initial - 초기 상태 값 (기본값: false)
+ * @returns [value, setValue, toggle, on, off]
+ * @example
+ * const { value: isOpen, toggle, on, off } = useToggle(false);
+ */
 export const useToggle = (initial = false) => {
   const [value, setValue] = useState(initial);
 
