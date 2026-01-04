@@ -160,7 +160,7 @@ export const useSlideStore = create<SlideState>((set) => ({
 
       // 새 답글 생성 (현재 사용자가 작성한 것으로 표시)
       const newReply = {
-        id: Date.now(), // 임시 ID, 서버 연동 시 서버에서 생성
+id: crypto.randomUUID(), // 임시 ID, 서버 연동 시 서버에서 생성
         author: '나',
         content,
         timestamp: '방금 전',
