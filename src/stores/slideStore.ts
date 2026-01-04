@@ -30,6 +30,7 @@
  * @see {@link ../types/slide.ts} Slide 타입 정의
  */
 import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
 
 import type { HistoryItem } from '@/types/script';
 import type { Slide } from '@/types/slide';
@@ -96,90 +97,119 @@ interface SlideState {
   addReply: (parentId: number, content: string) => void;
 }
 
-export const useSlideStore = create<SlideState>((set) => ({
-  slide: null,
+export const useSlideStore = create<SlideState>()(
+  devtools(
+    (set) => ({
+      slide: null,
 
-  initSlide: (slide) => {
-    set({ slide });
-  },
+      initSlide: (slide) => {
+        set({ slide }, false, 'slide/initSlide');
+      },
 
-  updateSlide: (updates) => {
-    set((state) => ({
-      slide: state.slide ? { ...state.slide, ...updates } : null,
-    }));
-  },
+      updateSlide: (updates) => {
+        set(
+          (state) => ({
+            slide: state.slide ? { ...state.slide, ...updates } : null,
+          }),
+          false,
+          'slide/updateSlide',
+        );
+      },
 
-  updateScript: (script) => {
-    set((state) => ({
-      slide: state.slide ? { ...state.slide, script } : null,
-    }));
-  },
+      updateScript: (script) => {
+        set(
+          (state) => ({
+            slide: state.slide ? { ...state.slide, script } : null,
+          }),
+          false,
+          'slide/updateScript',
+        );
+      },
 
-  saveToHistory: () => {
-    set((state) => {
-      // 슬라이드가 없거나 대본이 비어있으면 저장하지 않음
-      if (!state.slide || !state.slide.script.trim()) return state;
+      saveToHistory: () => {
+        set(
+          (state) => {
+            // 슬라이드가 없거나 대본이 비어있으면 저장하지 않음
+            if (!state.slide || !state.slide.script.trim()) return state;
 
-      const historyItem: HistoryItem = {
-        id: crypto.randomUUID(),
-        timestamp: formatTimestamp(),
-        content: state.slide.script,
-      };
+            const historyItem: HistoryItem = {
+              id: crypto.randomUUID(),
+              timestamp: formatTimestamp(),
+              content: state.slide.script,
+            };
 
-      // 새 히스토리를 맨 앞에 추가 (최신순 정렬)
-      return {
-        slide: {
-          ...state.slide,
-          history: [historyItem, ...state.slide.history],
-        },
-      };
-    });
-  },
+            // 새 히스토리를 맨 앞에 추가 (최신순 정렬)
+            return {
+              slide: {
+                ...state.slide,
+                history: [historyItem, ...state.slide.history],
+              },
+            };
+          },
+          false,
+          'slide/saveToHistory',
+        );
+      },
 
-  restoreFromHistory: (item) => {
-    set((state) => ({
-      slide: state.slide ? { ...state.slide, script: item.content } : null,
-    }));
-  },
+      restoreFromHistory: (item) => {
+        set(
+          (state) => ({
+            slide: state.slide ? { ...state.slide, script: item.content } : null,
+          }),
+          false,
+          'slide/restoreFromHistory',
+        );
+      },
 
-  deleteOpinion: (id) => {
-    set((state) => ({
-      slide: state.slide
-        ? {
-            ...state.slide,
-            // 해당 의견과 그 의견에 달린 답글(parentId가 일치하는 것)도 함께 삭제
-            opinions: state.slide.opinions.filter((o) => o.id !== id && o.parentId !== id),
-          }
-        : null,
-    }));
-  },
+      deleteOpinion: (id) => {
+        set(
+          (state) => ({
+            slide: state.slide
+              ? {
+                  ...state.slide,
+                  // 해당 의견과 그 의견에 달린 답글(parentId가 일치하는 것)도 함께 삭제
+                  opinions: state.slide.opinions.filter((o) => o.id !== id && o.parentId !== id),
+                }
+              : null,
+          }),
+          false,
+          'slide/deleteOpinion',
+        );
+      },
 
-  addReply: (parentId, content) => {
-    set((state) => {
-      if (!state.slide) return state;
+      addReply: (parentId, content) => {
+        set(
+          (state) => {
+            if (!state.slide) return state;
 
-      // 새 답글 생성 (현재 사용자가 작성한 것으로 표시)
-      const newReply = {
-        id: Date.now(), // 임시 ID, 서버 연동 시 서버에서 생성
-        author: '나',
-        content,
-        timestamp: '방금 전',
-        isMine: true,
-        isReply: true,
-        parentId,
-      };
+            // 새 답글 생성 (현재 사용자가 작성한 것으로 표시)
+            const newReply = {
+              id: Date.now(), // 임시 ID, 서버 연동 시 서버에서 생성
+              author: '나',
+              content,
+              timestamp: '방금 전',
+              isMine: true,
+              isReply: true,
+              parentId,
+            };
 
-      // 부모 의견의 위치를 찾음
-      const parentIndex = state.slide.opinions.findIndex((o) => o.id === parentId);
-      if (parentIndex === -1) return state;
+            // 부모 의견의 위치를 찾음
+            const parentIndex = state.slide.opinions.findIndex((o) => o.id === parentId);
+            if (parentIndex === -1) return state;
 
-      // 부모 의견 바로 다음에 답글 삽입 (스레드 형태로 표시하기 위함)
-      const newOpinions = [...state.slide.opinions];
-      newOpinions.splice(parentIndex + 1, 0, newReply);
+            // 부모 의견 바로 다음에 답글 삽입 (스레드 형태로 표시하기 위함)
+            const newOpinions = [...state.slide.opinions];
+            newOpinions.splice(parentIndex + 1, 0, newReply);
 
-      return {
-        slide: { ...state.slide, opinions: newOpinions },
-      };
-    });
-  },
-}));
+            return {
+              slide: { ...state.slide, opinions: newOpinions },
+            };
+          },
+          false,
+          'slide/addReply',
+        );
+      },
+    }),
+    { name: 'SlideStore' },
+  ),
+);
