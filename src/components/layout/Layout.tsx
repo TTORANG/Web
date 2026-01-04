@@ -1,3 +1,10 @@
+/**
+ * @file Layout.tsx
+ * @description 공통 레이아웃 컴포넌트
+ *
+ * 고정 헤더와 메인 콘텐츠 영역으로 구성됩니다.
+ * 헤더는 좌측(로고), 중앙(탭), 우측(로그인, 공유) 슬롯을 제공합니다.
+ */
 import type { ReactNode } from 'react';
 import { Outlet } from 'react-router-dom';
 

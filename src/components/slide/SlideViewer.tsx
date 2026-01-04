@@ -1,3 +1,10 @@
+/**
+ * @file SlideViewer.tsx
+ * @description 메인 슬라이드 뷰어
+ *
+ * 현재 선택된 슬라이드를 16:9 비율로 표시합니다.
+ * ScriptBox 접힘 상태에 따라 슬라이드 위치가 부드럽게 이동합니다.
+ */
 import type { Slide } from '@/types/slide';
 
 interface SlideViewerProps {

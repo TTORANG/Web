@@ -1,3 +1,9 @@
+/**
+ * @file ScriptBoxHeader.tsx
+ * @description ScriptBox 헤더 영역
+ *
+ * 슬라이드 제목, 이모지 반응, 변경 기록, 의견, 접기 버튼을 포함합니다.
+ */
 import clsx from 'clsx';
 
 import ArrowDownIcon from '@/assets/icons/icon-arrow-down.svg?react';

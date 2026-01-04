@@ -1,3 +1,10 @@
+/**
+ * @file SlideThumbnail.tsx
+ * @description 개별 슬라이드 썸네일 아이템
+ *
+ * SlideList 내부에서 사용되며, 슬라이드 번호와 미리보기를 표시합니다.
+ * 현재 선택된 슬라이드는 시각적으로 구분됩니다.
+ */
 import { Link } from 'react-router-dom';
 
 import clsx from 'clsx';

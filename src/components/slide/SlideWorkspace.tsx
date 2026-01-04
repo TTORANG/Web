@@ -1,3 +1,11 @@
+/**
+ * @file SlideWorkspace.tsx
+ * @description 슬라이드 작업 영역 (우측 메인 콘텐츠)
+ *
+ * SlideViewer와 ScriptBox를 통합하여 레이아웃을 동기화합니다.
+ * - 동일한 max-width를 공유하여 정렬 유지
+ * - ScriptBox 접힘 상태를 관리하고 SlideViewer에 전달
+ */
 import { useState } from 'react';
 
 import type { Slide } from '@/types/slide';
@@ -12,12 +20,6 @@ interface SlideWorkspaceProps {
   slide: Slide;
   slideId: string;
 }
-
-/**
- * 슬라이드 작업 영역
- * - SlideViewer와 ScriptBox를 통합하여 레이아웃 동기화
- * - 동일한 max-width를 공유하여 정렬 유지
- */
 export default function SlideWorkspace({ slide, slideId }: SlideWorkspaceProps) {
   const [isScriptCollapsed, setIsScriptCollapsed] = useState(false);
 

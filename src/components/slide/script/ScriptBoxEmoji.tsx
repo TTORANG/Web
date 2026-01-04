@@ -1,3 +1,9 @@
+/**
+ * @file ScriptBoxEmoji.tsx
+ * @description 이모지 반응 표시 및 더보기 팝오버
+ *
+ * 대본에 대한 이모지 반응을 표시하고, 더보기 버튼으로 전체 목록을 볼 수 있습니다.
+ */
 import { Popover } from '@/components/common';
 import type { EmojiReaction } from '@/types/script';
 

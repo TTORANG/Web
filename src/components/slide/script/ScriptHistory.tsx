@@ -1,3 +1,9 @@
+/**
+ * @file ScriptHistory.tsx
+ * @description 대본 변경 기록 팝오버
+ *
+ * 대본의 이전 버전들을 보여주고, 원하는 버전으로 복원할 수 있습니다.
+ */
 import clsx from 'clsx';
 
 import RevertIcon from '@/assets/icons/icon-revert.svg?react';

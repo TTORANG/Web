@@ -1,3 +1,10 @@
+/**
+ * @file ScriptBox.tsx
+ * @description 슬라이드 대본 박스 (메인 컨테이너)
+ *
+ * 슬라이드 하단에 위치하는 대본 편집 영역입니다.
+ * 접힘/펼침 상태를 관리하고 부모(SlideWorkspace)에게 전달합니다.
+ */
 import { useEffect, useState } from 'react';
 
 import clsx from 'clsx';
@@ -5,11 +12,6 @@ import clsx from 'clsx';
 import ScriptBoxContent from './ScriptBoxContent';
 import ScriptBoxHeader from './ScriptBoxHeader';
 
-/**
- * 목적:
- * - ScriptBox 접힘/펼침 상태를 부모에게 전달
- * - 부모는 이 상태를 받아 슬라이드를 "살짝 내려오는" UI로 동기화
- */
 interface ScriptBoxProps {
   slideTitle?: string;
   onCollapsedChange?: (collapsed: boolean) => void;

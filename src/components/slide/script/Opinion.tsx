@@ -1,3 +1,9 @@
+/**
+ * @file Opinion.tsx
+ * @description 의견 목록 팝오버
+ *
+ * 대본에 대한 팀원들의 의견을 보여주고, 답글을 달 수 있습니다.
+ */
 import { useState } from 'react';
 
 import clsx from 'clsx';

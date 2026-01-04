@@ -1,3 +1,9 @@
+/**
+ * @file ScriptBoxContent.tsx
+ * @description ScriptBox 본문 영역
+ *
+ * 슬라이드 대본을 입력하는 텍스트 영역입니다.
+ */
 import { useState } from 'react';
 
 export default function ScriptBoxContent() {

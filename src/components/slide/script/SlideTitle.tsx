@@ -1,3 +1,9 @@
+/**
+ * @file SlideTitle.tsx
+ * @description 슬라이드 제목 편집 팝오버
+ *
+ * ScriptBox 헤더에서 슬라이드 제목을 클릭하면 나타나는 편집 UI입니다.
+ */
 import { useState } from 'react';
 
 import clsx from 'clsx';

@@ -1,3 +1,10 @@
+/**
+ * @file Popover.tsx
+ * @description 재사용 가능한 팝오버 컴포넌트
+ *
+ * 트리거 요소를 클릭하면 팝오버가 열리고, 외부 클릭이나 ESC 키로 닫힙니다.
+ * 위치(top/bottom)와 정렬(start/end)을 지정할 수 있습니다.
+ */
 import {
   type ReactElement,
   type ReactNode,
