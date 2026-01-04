@@ -1,9 +1,9 @@
 import { useState } from 'react';
 
-import { ScriptBox } from '@/components/script-box';
 import type { Slide } from '@/types/slide';
 
 import SlideViewer from './SlideViewer';
+import { ScriptBox } from './script';
 
 /** 슬라이드 영역 max-width 계산 (16:9 비율 유지) */
 const SLIDE_MAX_WIDTH = 'min(2200px,calc((100dvh-3.75rem-20rem-3rem)*16/9))';

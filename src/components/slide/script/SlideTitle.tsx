@@ -3,8 +3,7 @@ import { useState } from 'react';
 import clsx from 'clsx';
 
 import ArrowDownIcon from '@/assets/icons/icon-arrow-down.svg?react';
-
-import { Popover } from '../common';
+import { Popover } from '@/components/common';
 
 interface SlideTitleProps {
   initialTitle?: string;

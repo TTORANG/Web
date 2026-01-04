@@ -1,6 +1,5 @@
+import { Popover } from '@/components/common';
 import type { EmojiReaction } from '@/types/script';
-
-import { Popover } from '../common';
 
 const EMOJI_DATA: EmojiReaction[] = [
   { emoji: '👍', count: 99 },

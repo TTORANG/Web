@@ -4,9 +4,8 @@ import clsx from 'clsx';
 
 import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
+import { Popover } from '@/components/common';
 import type { OpinionItem } from '@/types/script';
-
-import { Popover } from '../common';
 
 interface OpinionProps {
   opinions?: OpinionItem[];

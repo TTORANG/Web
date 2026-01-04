@@ -1,9 +1,8 @@
 import clsx from 'clsx';
 
 import RevertIcon from '@/assets/icons/icon-revert.svg?react';
+import { Popover } from '@/components/common';
 import type { HistoryItem } from '@/types/script';
-
-import { Popover } from '../common';
 
 interface ScriptHistoryProps {
   currentScript?: string;
