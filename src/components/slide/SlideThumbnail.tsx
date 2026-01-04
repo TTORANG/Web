@@ -22,7 +22,7 @@ export default function SlideThumbnail({ slide, index, isActive, basePath }: Sli
   return (
     <div className="flex items-start gap-2">
       {/* 번호 - 썸네일 바깥 왼쪽 */}
-      <span className="w-5 pt-1 text-right text-sm font-medium text-gray-600 select-none">
+      <span className="w-4 pt-0.5 text-right text-xs font-semibold text-gray-800 select-none">
         {index + 1}
       </span>
 

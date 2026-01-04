@@ -31,11 +31,11 @@ export default function SlideWorkspace({ slide }: SlideWorkspaceProps) {
   }, [slide, initSlide]);
 
   return (
-    <div className="h-full min-h-0 flex flex-col gap-6">
+    <div className="h-full min-h-0 flex flex-col">
       <SlideViewer isScriptCollapsed={isScriptCollapsed} />
 
       <div className="shrink-0">
-        <div className="mx-auto w-full px-2" style={{ maxWidth: SLIDE_MAX_WIDTH }}>
+        <div className="mx-auto w-full" style={{ maxWidth: SLIDE_MAX_WIDTH }}>
           <ScriptBox onCollapsedChange={setIsScriptCollapsed} />
         </div>
       </div>

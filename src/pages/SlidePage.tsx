@@ -28,7 +28,7 @@ export default function SlidePage() {
 
   return (
     <div className="h-full bg-gray-100">
-      <div className="flex h-full gap-8 px-20 py-12 pb-0">
+      <div className="flex h-full gap-12 pl-14 pr-20 pt-6">
         <SlideList slides={slides} currentSlideId={currentSlide.id} basePath={basePath} />
 
         <main className="flex-1 h-full min-w-0 overflow-hidden">

@@ -17,8 +17,8 @@ interface SlideListProps {
 
 export default function SlideList({ slides, currentSlideId, basePath }: SlideListProps) {
   return (
-    <aside className="w-52 shrink-0 h-full overflow-y-auto">
-      <div className="flex flex-col gap-4 pr-4">
+    <aside className="w-56 shrink-0 h-full overflow-y-auto">
+      <div className="flex flex-col gap-3">
         {slides.map((slide, idx) => (
           <SlideThumbnail
             key={slide.id}

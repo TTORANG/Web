@@ -18,16 +18,15 @@ const SLIDE_MAX_WIDTH = 'min(2200px,calc((100dvh-3.75rem-20rem-3rem)*16/9))';
 
 export default function SlideViewer({ isScriptCollapsed }: SlideViewerProps) {
   return (
-    <section className="flex-1 min-h-0 overflow-hidden pt-2">
-      <div className="mx-auto w-full px-2" style={{ maxWidth: SLIDE_MAX_WIDTH }}>
+    <section className="flex-1 min-h-0 overflow-hidden">
+      <div className="mx-auto w-full" style={{ maxWidth: SLIDE_MAX_WIDTH }}>
         <div
           className="transition-transform duration-300 ease-out"
           style={{
             transform: `translateY(${isScriptCollapsed ? COLLAPSED_OFFSET : 0}px)`,
           }}
         >
-          <div className="w-full aspect-video bg-gray-200 shadow-sm relative"></div>
-          <div className="h-6" />
+          <div className="w-full aspect-video bg-gray-200 shadow-sm" />
         </div>
       </div>
     </section>

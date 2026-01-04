@@ -33,25 +33,21 @@ export default function ScriptBox({ onCollapsedChange }: ScriptBoxProps) {
   return (
     <div
       className={clsx(
-        'w-full rounded-t-lg bg-white shadow-sm',
-        // 변경: 펼친 높이를 화면에 비례하도록 (작은 화면에서 과도하게 커지지 않게)
-        // 큰 모니터에서 슬라이드와 대본박스 여백 조절할 때 20rem 조절
-
-        isCollapsed ? 'h-10' : 'h-[clamp(12rem,30vh,20rem)]', // 192px ~ 320px
+        'flex flex-col w-full rounded-t-lg bg-white shadow-sm',
+        isCollapsed ? 'h-10' : 'h-[clamp(12rem,30vh,20rem)]',
       )}
     >
-      <div className="h-12 relative">
+      {/* 헤더 - 고정 높이 */}
+      <div className="shrink-0">
         <ScriptBoxHeader isCollapsed={isCollapsed} onToggleCollapse={handleToggleCollapse} />
       </div>
 
-      <div
-        className={clsx(
-          'overflow-hidden transition-[height] duration-300 ease-out',
-          isCollapsed ? 'h-10' : 'h-[clamp(12rem,30vh,20rem)]',
-        )}
-      >
-        {!isCollapsed && <ScriptBoxContent />}
-      </div>
+      {/* 콘텐츠 - 남은 공간 채움 */}
+      {!isCollapsed && (
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <ScriptBoxContent />
+        </div>
+      )}
     </div>
   );
 }
