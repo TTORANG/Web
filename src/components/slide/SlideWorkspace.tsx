@@ -9,7 +9,7 @@
  */
 import { useEffect, useState } from 'react';
 
-import { useSlideStore } from '@/stores/slideStore';
+import { useSlideActions } from '@/hooks';
 import type { Slide } from '@/types/slide';
 
 import SlideViewer from './SlideViewer';
@@ -24,7 +24,7 @@ interface SlideWorkspaceProps {
 
 export default function SlideWorkspace({ slide }: SlideWorkspaceProps) {
   const [isScriptCollapsed, setIsScriptCollapsed] = useState(false);
-  const initSlide = useSlideStore((state) => state.initSlide);
+  const { initSlide } = useSlideActions();
 
   useEffect(() => {
     initSlide(slide);

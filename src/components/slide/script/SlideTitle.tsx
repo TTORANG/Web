@@ -11,15 +11,15 @@ import clsx from 'clsx';
 
 import ArrowDownIcon from '@/assets/icons/icon-arrow-down.svg?react';
 import { Popover } from '@/components/common';
-import { useSlideStore } from '@/stores/slideStore';
+import { useSlideActions, useSlideTitle } from '@/hooks';
 
 interface SlideTitleProps {
   isCollapsed?: boolean;
 }
 
 export default function SlideTitle({ isCollapsed = false }: SlideTitleProps) {
-  const title = useSlideStore((state) => state.slide?.title ?? '');
-  const updateSlide = useSlideStore((state) => state.updateSlide);
+  const title = useSlideTitle();
+  const { updateSlide } = useSlideActions();
   const [editTitle, setEditTitle] = useState(title);
 
   useEffect(() => {
