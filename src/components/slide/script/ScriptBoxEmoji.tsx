@@ -6,10 +6,10 @@
  * Zustand store를 통해 이모지 반응 데이터를 읽습니다.
  */
 import { Popover } from '@/components/common';
-import { useSlideStore } from '@/stores/slideStore';
+import { useSlideEmojis } from '@/hooks';
 
 export default function ScriptBoxEmoji() {
-  const emojiReactions = useSlideStore((state) => state.slide?.emojiReactions ?? []);
+  const emojiReactions = useSlideEmojis();
 
   const mainEmojis = emojiReactions.slice(0, 2);
   const extendedEmojis = emojiReactions.slice(2);

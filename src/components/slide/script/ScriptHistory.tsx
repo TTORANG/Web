@@ -9,12 +9,12 @@ import clsx from 'clsx';
 
 import RevertIcon from '@/assets/icons/icon-revert.svg?react';
 import { Popover } from '@/components/common';
-import { useSlideStore } from '@/stores/slideStore';
+import { useSlideActions, useSlideHistory, useSlideScript } from '@/hooks';
 
 export default function ScriptHistory() {
-  const script = useSlideStore((state) => state.slide?.script ?? '');
-  const history = useSlideStore((state) => state.slide?.history ?? []);
-  const restoreFromHistory = useSlideStore((state) => state.restoreFromHistory);
+  const script = useSlideScript();
+  const history = useSlideHistory();
+  const { restoreFromHistory } = useSlideActions();
   return (
     <Popover
       trigger={({ isOpen }) => (

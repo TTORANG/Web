@@ -1,5 +1,8 @@
 /**
  * 대본 수정 기록 아이템
+ *
+ * @see {@link ../stores/slideStore.ts#saveToHistory} 히스토리 저장
+ * @see {@link ../stores/slideStore.ts#restoreFromHistory} 히스토리 복원
  */
 export interface HistoryItem {
   /** 기록 ID (UUID) */
@@ -12,6 +15,10 @@ export interface HistoryItem {
 
 /**
  * 의견(댓글) 아이템
+ *
+ * @see {@link ../stores/slideStore.ts#deleteOpinion} 의견 삭제
+ * @see {@link ../stores/slideStore.ts#addReply} 답글 추가
+ * @see {@link ../components/slide/script/Opinion.tsx} UI 컴포넌트
  */
 export interface OpinionItem {
   /** 의견 ID */
@@ -32,6 +39,8 @@ export interface OpinionItem {
 
 /**
  * 이모지 반응 정보
+ *
+ * @see {@link ../components/slide/script/ScriptBoxEmoji.tsx} UI 컴포넌트
  */
 export interface EmojiReaction {
   /** 이모지 캐릭터 */

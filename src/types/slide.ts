@@ -2,6 +2,10 @@ import type { EmojiReaction, HistoryItem, OpinionItem } from './script';
 
 /**
  * 슬라이드 데이터 모델
+ *
+ * @see {@link ../stores/slideStore.ts} 상태 관리
+ * @see {@link ../hooks/useSlideSelectors.ts} 셀렉터 훅
+ * @see {@link ../constants/mockSlides.ts} 목업 데이터
  */
 export interface Slide {
   /** 슬라이드 고유 ID */

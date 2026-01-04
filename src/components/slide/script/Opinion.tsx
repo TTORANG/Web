@@ -12,12 +12,11 @@ import clsx from 'clsx';
 import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
 import { Popover } from '@/components/common';
-import { useSlideStore } from '@/stores/slideStore';
+import { useSlideActions, useSlideOpinions } from '@/hooks';
 
 export default function Opinion() {
-  const opinions = useSlideStore((state) => state.slide?.opinions ?? []);
-  const deleteOpinion = useSlideStore((state) => state.deleteOpinion);
-  const addReply = useSlideStore((state) => state.addReply);
+  const opinions = useSlideOpinions();
+  const { deleteOpinion, addReply } = useSlideActions();
   const [activeReplyId, setActiveReplyId] = useState<number | null>(null);
   const [replyText, setReplyText] = useState('');
 

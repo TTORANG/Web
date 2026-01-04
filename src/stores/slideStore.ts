@@ -1,8 +1,44 @@
+/**
+ * @file slideStore.ts
+ * @description 슬라이드 상태 관리 Zustand 스토어
+ *
+ * 슬라이드별 대본, 의견, 히스토리, 이모지 반응을 관리합니다.
+ * 셀렉터 패턴을 사용하여 필요한 데이터만 구독할 수 있습니다.
+ *
+ * @example 기본 사용법
+ * ```tsx
+ * // 컴포넌트에서 셀렉터로 구독 (권장)
+ * const title = useSlideStore((s) => s.slide?.title ?? '');
+ * const updateScript = useSlideStore((s) => s.updateScript);
+ *
+ * // 또는 커스텀 훅 사용 (더 간편)
+ * import { useSlideTitle, useSlideActions } from '@/hooks/useSlideSelectors';
+ * const title = useSlideTitle();
+ * const { updateScript } = useSlideActions();
+ * ```
+ *
+ * @example 슬라이드 초기화 (SlideWorkspace에서)
+ * ```tsx
+ * const initSlide = useSlideStore((s) => s.initSlide);
+ *
+ * useEffect(() => {
+ *   initSlide(slide);
+ * }, [slide, initSlide]);
+ * ```
+ *
+ * @see {@link ../hooks/useSlideSelectors.ts} 커스텀 셀렉터 훅
+ * @see {@link ../types/slide.ts} Slide 타입 정의
+ */
 import { create } from 'zustand';
 
 import type { HistoryItem } from '@/types/script';
 import type { Slide } from '@/types/slide';
 
+/**
+ * 현재 시각을 "M월 D일 HH:mm" 형식으로 반환합니다.
+ * @returns 포맷된 타임스탬프 문자열
+ * @internal 스토어 내부에서만 사용
+ */
 function formatTimestamp(): string {
   const now = new Date();
   const month = now.getMonth() + 1;
@@ -81,6 +117,7 @@ export const useSlideStore = create<SlideState>((set) => ({
 
   saveToHistory: () => {
     set((state) => {
+      // 슬라이드가 없거나 대본이 비어있으면 저장하지 않음
       if (!state.slide || !state.slide.script.trim()) return state;
 
       const historyItem: HistoryItem = {
@@ -89,6 +126,7 @@ export const useSlideStore = create<SlideState>((set) => ({
         content: state.slide.script,
       };
 
+      // 새 히스토리를 맨 앞에 추가 (최신순 정렬)
       return {
         slide: {
           ...state.slide,
@@ -109,6 +147,7 @@ export const useSlideStore = create<SlideState>((set) => ({
       slide: state.slide
         ? {
             ...state.slide,
+            // 해당 의견과 그 의견에 달린 답글(parentId가 일치하는 것)도 함께 삭제
             opinions: state.slide.opinions.filter((o) => o.id !== id && o.parentId !== id),
           }
         : null,
@@ -119,8 +158,9 @@ export const useSlideStore = create<SlideState>((set) => ({
     set((state) => {
       if (!state.slide) return state;
 
+      // 새 답글 생성 (현재 사용자가 작성한 것으로 표시)
       const newReply = {
-        id: Date.now(),
+        id: Date.now(), // 임시 ID, 서버 연동 시 서버에서 생성
         author: '나',
         content,
         timestamp: '방금 전',
@@ -129,9 +169,11 @@ export const useSlideStore = create<SlideState>((set) => ({
         parentId,
       };
 
+      // 부모 의견의 위치를 찾음
       const parentIndex = state.slide.opinions.findIndex((o) => o.id === parentId);
       if (parentIndex === -1) return state;
 
+      // 부모 의견 바로 다음에 답글 삽입 (스레드 형태로 표시하기 위함)
       const newOpinions = [...state.slide.opinions];
       newOpinions.splice(parentIndex + 1, 0, newReply);
 

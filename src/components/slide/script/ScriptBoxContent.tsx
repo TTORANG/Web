@@ -5,12 +5,11 @@
  * 슬라이드 대본을 입력하는 텍스트 영역입니다.
  * Zustand store를 통해 대본을 읽고 업데이트합니다.
  */
-import { useSlideStore } from '@/stores/slideStore';
+import { useSlideActions, useSlideScript } from '@/hooks';
 
 export default function ScriptBoxContent() {
-  const script = useSlideStore((state) => state.slide?.script ?? '');
-  const updateScript = useSlideStore((state) => state.updateScript);
-  const saveToHistory = useSlideStore((state) => state.saveToHistory);
+  const script = useSlideScript();
+  const { updateScript, saveToHistory } = useSlideActions();
 
   return (
     <div className="h-full bg-white px-4 py-3">
