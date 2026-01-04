@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { ScriptBox } from '@/components/script-box';
-import { SlideList, SlideViewer } from '@/components/slide';
+import { SlideList, SlideWorkspace } from '@/components/slide';
 import { MOCK_SLIDES } from '@/constants/mockSlides';
 import { setLastSlideId } from '@/constants/navigation';
 
@@ -22,8 +21,6 @@ export default function SlidePage() {
     }
   }, [projectId, slideId]);
 
-  const [isScriptCollapsed, setIsScriptCollapsed] = useState(false);
-
   // 추후 API 연동 시 useSlides(projectId) 등으로 대체
   const slides = MOCK_SLIDES;
   const currentSlide = slides.find((s) => s.id === slideId) ?? slides[0];
@@ -35,18 +32,7 @@ export default function SlidePage() {
         <SlideList slides={slides} currentSlideId={currentSlide.id} basePath={basePath} />
 
         <main className="flex-1 h-full min-w-0 overflow-hidden">
-          <div className="h-full min-h-0 flex flex-col gap-6">
-            <SlideViewer slide={currentSlide} isScriptCollapsed={isScriptCollapsed} />
-
-            <div className="shrink-0">
-              <div className="mx-auto w-full px-2 max-w-[min(2200px,calc((100dvh-3.75rem-20rem-3rem)*16/9))]">
-                <ScriptBox
-                  slideTitle={`슬라이드 ${slideId ?? currentSlide.id}`}
-                  onCollapsedChange={setIsScriptCollapsed}
-                />
-              </div>
-            </div>
-          </div>
+          <SlideWorkspace slide={currentSlide} slideId={slideId ?? currentSlide.id} />
         </main>
       </div>
     </div>

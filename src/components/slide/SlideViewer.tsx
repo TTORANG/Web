@@ -8,10 +8,13 @@ interface SlideViewerProps {
 /** ScriptBox 접힐 때 슬라이드 이동 거리 (px) */
 const COLLAPSED_OFFSET = 120;
 
+/** 슬라이드 영역 max-width 계산 (16:9 비율 유지) */
+const SLIDE_MAX_WIDTH = 'min(2200px,calc((100dvh-3.75rem-20rem-3rem)*16/9))';
+
 export default function SlideViewer({ slide, isScriptCollapsed }: SlideViewerProps) {
   return (
     <section className="flex-1 min-h-0 overflow-hidden pt-2">
-      <div className="mx-auto w-full px-2 max-w-[min(2200px,calc((100dvh-3.75rem-20rem-3rem)*16/9))]">
+      <div className="mx-auto w-full px-2" style={{ maxWidth: SLIDE_MAX_WIDTH }}>
         <div
           className="transition-transform duration-300 ease-out"
           style={{
