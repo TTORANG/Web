@@ -19,7 +19,6 @@ const SLIDE_MAX_WIDTH = 'min(2200px,calc((100dvh-3.75rem-20rem-3rem)*16/9))';
 
 export default function SlideViewer({ isScriptCollapsed }: SlideViewerProps) {
   const title = useSlideStore((state) => state.slide?.title ?? '');
-  const content = useSlideStore((state) => state.slide?.content ?? '');
   return (
     <section className="flex-1 min-h-0 overflow-hidden pt-2">
       <div className="mx-auto w-full px-2" style={{ maxWidth: SLIDE_MAX_WIDTH }}>
@@ -33,7 +32,6 @@ export default function SlideViewer({ isScriptCollapsed }: SlideViewerProps) {
             <span className="text-2xl font-semibold text-gray-800 absolute top-10 left-8">
               {title}
             </span>
-            <span className="text-base text-gray-600 absolute bottom-6 left-8">{content}</span>
           </div>
           <div className="h-6" />
         </div>
