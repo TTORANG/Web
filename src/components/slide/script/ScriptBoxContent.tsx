@@ -12,7 +12,7 @@ export default function ScriptBoxContent() {
   const { updateScript, saveToHistory } = useSlideActions();
 
   return (
-    <div className="h-full bg-white px-4 py-3">
+    <div className="h-full bg-white px-5 py-3">
       <textarea
         value={script}
         onChange={(e) => updateScript(e.target.value)}
