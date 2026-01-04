@@ -44,6 +44,10 @@ export function Popover({
   const lastFocusedElement = useRef<HTMLElement | null>(null);
   const popoverId = useId();
 
+  /**
+   * 팝오버의 열림/닫힘 상태를 토글합니다.
+   * 열릴 때 현재 포커스된 요소를 저장하여 닫힐 때 복원합니다.
+   */
   const handleToggle = useCallback(() => {
     setIsOpen((prev) => {
       if (!prev) {
@@ -54,6 +58,10 @@ export function Popover({
     });
   }, []);
 
+  /**
+   * 팝오버를 닫습니다.
+   * 닫힐 때 이전에 저장된 요소로 포커스를 복원합니다.
+   */
   const handleClose = useCallback(() => {
     setIsOpen(false);
     // 팝오버 닫힐 때 이전에 포커스된 요소로 포커스 이동

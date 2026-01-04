@@ -21,6 +21,10 @@ export default function Opinion() {
   const [activeReplyId, setActiveReplyId] = useState<number | null>(null);
   const [replyText, setReplyText] = useState('');
 
+  /**
+   * 답글을 등록합니다.
+   * @param opinionId - 답글을 달 의견의 ID
+   */
   const handleReplySubmit = (opinionId: number) => {
     if (replyText.trim()) {
       addReply(opinionId, replyText);

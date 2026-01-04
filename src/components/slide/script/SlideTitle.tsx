@@ -26,6 +26,9 @@ export default function SlideTitle({ isCollapsed = false }: SlideTitleProps) {
     setEditTitle(title);
   }, [title]);
 
+  /**
+   * 변경된 제목을 `store`에 저장합니다.
+   */
   const handleSave = () => {
     updateSlide({ title: editTitle });
   };

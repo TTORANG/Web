@@ -19,6 +19,9 @@ interface ScriptBoxProps {
 export default function ScriptBox({ onCollapsedChange }: ScriptBoxProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
+  /**
+   * 대본 박스의 접힘/펼침 상태를 토글합니다.
+   */
   const handleToggleCollapse = () => {
     setIsCollapsed((prev) => !prev);
   };
