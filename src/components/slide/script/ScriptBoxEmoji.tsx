@@ -3,33 +3,17 @@
  * @description 이모지 반응 표시 및 더보기 팝오버
  *
  * 대본에 대한 이모지 반응을 표시하고, 더보기 버튼으로 전체 목록을 볼 수 있습니다.
+ * Zustand store를 통해 이모지 반응 데이터를 읽습니다.
  */
 import { Popover } from '@/components/common';
-import type { EmojiReaction } from '@/types/script';
-
-const EMOJI_DATA: EmojiReaction[] = [
-  { emoji: '👍', count: 99 },
-  { emoji: '😡', count: 12 },
-];
-
-const EMOJI_EXTENDED_DATA: EmojiReaction[][] = [
-  [
-    { emoji: '😏', count: 15 },
-    { emoji: '❤️', count: 28 },
-    { emoji: '😎', count: 5 },
-    { emoji: '👀', count: 182 },
-    { emoji: '🤪', count: 3 },
-  ],
-  [
-    { emoji: '💡', count: 11 },
-    { emoji: '🙈', count: 488 },
-    { emoji: '💕', count: 2 },
-    { emoji: '😂', count: 46 },
-    { emoji: '🤓', count: 36 },
-  ],
-];
+import { useSlideStore } from '@/stores/slideStore';
 
 export default function ScriptBoxEmoji() {
+  const emojiReactions = useSlideStore((state) => state.slide?.emojiReactions ?? []);
+
+  const mainEmojis = emojiReactions.slice(0, 2);
+  const extendedEmojis = emojiReactions.slice(2);
+  const hasExtended = extendedEmojis.length > 0;
   const trigger = (
     <button
       type="button"
@@ -40,11 +24,15 @@ export default function ScriptBoxEmoji() {
     </button>
   );
 
+  if (emojiReactions.length === 0) {
+    return null;
+  }
+
   return (
     <div className="flex items-center gap-3">
       {/* 메인 이모지 카운트 */}
       <div className="flex items-center gap-6">
-        {EMOJI_DATA.map(({ emoji, count }) => (
+        {mainEmojis.map(({ emoji, count }) => (
           <div key={emoji} className="flex items-center gap-2">
             <span className="text-base leading-6 text-gray-800">{emoji}</span>
             <span className="text-base leading-6 text-gray-800">{count > 99 ? '99+' : count}</span>
@@ -53,26 +41,24 @@ export default function ScriptBoxEmoji() {
       </div>
 
       {/* 이모지 더보기 팝오버 */}
-      <Popover
-        trigger={trigger}
-        position="top"
-        align="end"
-        ariaLabel="이모지 반응 목록"
-        className="px-4 py-3"
-      >
-        <div className="flex flex-col gap-3">
-          {EMOJI_EXTENDED_DATA.map((row, rowIdx) => (
-            <div key={rowIdx} className="flex items-center gap-6">
-              {row.map(({ emoji, count }) => (
-                <div key={emoji} className="flex items-center gap-2">
-                  <span className="text-center text-base leading-6 text-gray-800">{emoji}</span>
-                  <span className="text-center text-base leading-6 text-gray-800">{count}</span>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      </Popover>
+      {hasExtended && (
+        <Popover
+          trigger={trigger}
+          position="top"
+          align="end"
+          ariaLabel="이모지 반응 목록"
+          className="px-4 py-3"
+        >
+          <div className="flex flex-wrap items-center gap-6">
+            {extendedEmojis.map(({ emoji, count }) => (
+              <div key={emoji} className="flex items-center gap-2">
+                <span className="text-center text-base leading-6 text-gray-800">{emoji}</span>
+                <span className="text-center text-base leading-6 text-gray-800">{count}</span>
+              </div>
+            ))}
+          </div>
+        </Popover>
+      )}
     </div>
   );
 }

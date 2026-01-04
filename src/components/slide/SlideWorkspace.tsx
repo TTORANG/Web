@@ -5,9 +5,11 @@
  * SlideViewer와 ScriptBox를 통합하여 레이아웃을 동기화합니다.
  * - 동일한 max-width를 공유하여 정렬 유지
  * - ScriptBox 접힘 상태를 관리하고 SlideViewer에 전달
+ * - Zustand store로 슬라이드 상태 관리
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
+import { useSlideStore } from '@/stores/slideStore';
 import type { Slide } from '@/types/slide';
 
 import SlideViewer from './SlideViewer';
@@ -18,18 +20,23 @@ const SLIDE_MAX_WIDTH = 'min(2200px,calc((100dvh-3.75rem-20rem-3rem)*16/9))';
 
 interface SlideWorkspaceProps {
   slide: Slide;
-  slideId: string;
 }
-export default function SlideWorkspace({ slide, slideId }: SlideWorkspaceProps) {
+
+export default function SlideWorkspace({ slide }: SlideWorkspaceProps) {
   const [isScriptCollapsed, setIsScriptCollapsed] = useState(false);
+  const initSlide = useSlideStore((state) => state.initSlide);
+
+  useEffect(() => {
+    initSlide(slide);
+  }, [slide, initSlide]);
 
   return (
     <div className="h-full min-h-0 flex flex-col gap-6">
-      <SlideViewer slide={slide} isScriptCollapsed={isScriptCollapsed} />
+      <SlideViewer isScriptCollapsed={isScriptCollapsed} />
 
       <div className="shrink-0">
         <div className="mx-auto w-full px-2" style={{ maxWidth: SLIDE_MAX_WIDTH }}>
-          <ScriptBox slideTitle={`슬라이드 ${slideId}`} onCollapsedChange={setIsScriptCollapsed} />
+          <ScriptBox onCollapsedChange={setIsScriptCollapsed} />
         </div>
       </div>
     </div>

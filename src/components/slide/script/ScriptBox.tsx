@@ -13,14 +13,10 @@ import ScriptBoxContent from './ScriptBoxContent';
 import ScriptBoxHeader from './ScriptBoxHeader';
 
 interface ScriptBoxProps {
-  slideTitle?: string;
   onCollapsedChange?: (collapsed: boolean) => void;
 }
 
-export default function ScriptBox({
-  slideTitle = '슬라이드 1',
-  onCollapsedChange,
-}: ScriptBoxProps) {
+export default function ScriptBox({ onCollapsedChange }: ScriptBoxProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleToggleCollapse = () => {
@@ -42,11 +38,7 @@ export default function ScriptBox({
       )}
     >
       <div className="h-12 relative">
-        <ScriptBoxHeader
-          slideTitle={slideTitle}
-          isCollapsed={isCollapsed}
-          onToggleCollapse={handleToggleCollapse}
-        />
+        <ScriptBoxHeader isCollapsed={isCollapsed} onToggleCollapse={handleToggleCollapse} />
       </div>
 
       <div

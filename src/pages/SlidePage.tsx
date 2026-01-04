@@ -32,7 +32,7 @@ export default function SlidePage() {
         <SlideList slides={slides} currentSlideId={currentSlide.id} basePath={basePath} />
 
         <main className="flex-1 h-full min-w-0 overflow-hidden">
-          <SlideWorkspace slide={currentSlide} slideId={slideId ?? currentSlide.id} />
+          <SlideWorkspace slide={currentSlide} />
         </main>
       </div>
     </div>
