@@ -5,16 +5,11 @@
  * 현재 선택된 슬라이드를 16:9 비율로 표시합니다.
  * ScriptBox 접힘 상태에 따라 슬라이드 위치가 부드럽게 이동합니다.
  */
+import { SLIDE_COLLAPSED_OFFSET, SLIDE_MAX_WIDTH } from '@/constants/layout';
 
 interface SlideViewerProps {
   isScriptCollapsed: boolean;
 }
-
-/** ScriptBox 접힐 때 슬라이드 이동 거리 (px) */
-const COLLAPSED_OFFSET = 120;
-
-/** 슬라이드 영역 max-width 계산 (16:9 비율 유지) */
-const SLIDE_MAX_WIDTH = 'min(2200px,calc((100dvh-3.75rem-20rem-3rem)*16/9))';
 
 export default function SlideViewer({ isScriptCollapsed }: SlideViewerProps) {
   return (
@@ -23,7 +18,7 @@ export default function SlideViewer({ isScriptCollapsed }: SlideViewerProps) {
         <div
           className="transition-transform duration-300 ease-out"
           style={{
-            transform: `translateY(${isScriptCollapsed ? COLLAPSED_OFFSET : 0}px)`,
+            transform: `translateY(${isScriptCollapsed ? SLIDE_COLLAPSED_OFFSET : 0}px)`,
           }}
         >
           <div className="w-full aspect-video bg-gray-200 shadow-sm" />

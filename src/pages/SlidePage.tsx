@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { SlideList, SlideWorkspace } from '@/components/slide';
-import { MOCK_SLIDES } from '@/constants/mockSlides';
 import { setLastSlideId } from '@/constants/navigation';
+import { MOCK_SLIDES } from '@/mocks';
 
 export default function SlidePage() {
   const { projectId, slideId } = useParams<{
