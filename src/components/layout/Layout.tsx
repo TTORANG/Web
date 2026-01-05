@@ -10,6 +10,8 @@ import { Outlet } from 'react-router-dom';
 
 import { Logo } from '@/components/common';
 
+import { LoginModal } from '../auth/login-modal';
+
 interface LayoutProps {
   left?: ReactNode;
   center?: ReactNode;
@@ -31,6 +33,7 @@ export function Layout({ left, center, right }: LayoutProps) {
           <Outlet />
         </div>
       </main>
+      <LoginModal />
     </div>
   );
 }
