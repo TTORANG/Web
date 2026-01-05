@@ -20,6 +20,12 @@
 import { useShallow } from 'zustand/shallow';
 
 import { useSlideStore } from '@/stores/slideStore';
+import type { EmojiReaction, HistoryItem, OpinionItem } from '@/types/script';
+
+// 빈 배열 상수 (참조 안정성을 위해)
+const EMPTY_OPINIONS: OpinionItem[] = [];
+const EMPTY_HISTORY: HistoryItem[] = [];
+const EMPTY_EMOJIS: EmojiReaction[] = [];
 
 /**
  * 슬라이드 제목을 구독합니다.
@@ -37,19 +43,22 @@ export const useSlideScript = () => useSlideStore((state) => state.slide?.script
  * 의견 목록을 구독합니다.
  * @returns 의견 배열 (없으면 빈 배열)
  */
-export const useSlideOpinions = () => useSlideStore((state) => state.slide?.opinions ?? []);
+export const useSlideOpinions = () =>
+  useSlideStore((state) => state.slide?.opinions ?? EMPTY_OPINIONS);
 
 /**
  * 대본 수정 기록을 구독합니다.
  * @returns 히스토리 배열 (없으면 빈 배열)
  */
-export const useSlideHistory = () => useSlideStore((state) => state.slide?.history ?? []);
+export const useSlideHistory = () =>
+  useSlideStore((state) => state.slide?.history ?? EMPTY_HISTORY);
 
 /**
  * 이모지 반응 목록을 구독합니다.
  * @returns 이모지 반응 배열 (없으면 빈 배열)
  */
-export const useSlideEmojis = () => useSlideStore((state) => state.slide?.emojiReactions ?? []);
+export const useSlideEmojis = () =>
+  useSlideStore((state) => state.slide?.emojiReactions ?? EMPTY_EMOJIS);
 
 /**
  * 슬라이드 스토어의 액션들을 반환합니다.

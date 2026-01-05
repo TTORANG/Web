@@ -3,13 +3,15 @@ import { useParams } from 'react-router-dom';
 
 import { SlideList, SlideWorkspace } from '@/components/slide';
 import { setLastSlideId } from '@/constants/navigation';
-import { MOCK_SLIDES } from '@/mocks';
+import { useSlides } from '@/hooks/queries/useSlides';
 
 export default function SlidePage() {
   const { projectId, slideId } = useParams<{
     projectId: string;
     slideId: string;
   }>();
+
+  const { data: slides, isLoading, isError } = useSlides(projectId ?? '');
 
   /**
    * 탭 이동(영상/인사이트 → 슬라이드) 후 다시 돌아왔을 때
@@ -21,8 +23,22 @@ export default function SlidePage() {
     }
   }, [projectId, slideId]);
 
-  // 추후 API 연동 시 useSlides(projectId) 등으로 대체
-  const slides = MOCK_SLIDES;
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center bg-gray-100">
+        <p className="text-body-m text-gray-500">슬라이드를 불러오는 중...</p>
+      </div>
+    );
+  }
+
+  if (isError || !slides) {
+    return (
+      <div className="flex h-full items-center justify-center bg-gray-100">
+        <p className="text-body-m text-error">슬라이드를 불러오지 못했습니다.</p>
+      </div>
+    );
+  }
+
   const currentSlide = slides.find((s) => s.id === slideId) ?? slides[0];
   const basePath = projectId ? `/${projectId}` : '';
 

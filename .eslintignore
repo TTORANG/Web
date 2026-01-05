@@ -1,2 +1,4 @@
 commitlint.config.js
 vite.config.ts
+dist
+public/mockServiceWorker.js
