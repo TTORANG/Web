@@ -87,14 +87,14 @@ interface SlideState {
    * 해당 의견의 대댓글도 함께 제거됩니다.
    * @param id - 삭제할 의견 ID
    */
-  deleteOpinion: (id: number) => void;
+  deleteOpinion: (id: string) => void;
 
   /**
    * 의견에 답글을 추가합니다.
    * @param parentId - 원본 의견 ID
    * @param content - 답글 내용
    */
-  addReply: (parentId: number, content: string) => void;
+  addReply: (parentId: string, content: string) => void;
 }
 
 export const useSlideStore = create<SlideState>()(
@@ -184,7 +184,7 @@ export const useSlideStore = create<SlideState>()(
 
             // 새 답글 생성 (현재 사용자가 작성한 것으로 표시)
             const newReply = {
-              id: Date.now(), // 임시 ID, 서버 연동 시 서버에서 생성
+              id: crypto.randomUUID(),
               author: '나',
               content,
               timestamp: '방금 전',
