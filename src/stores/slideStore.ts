@@ -34,20 +34,7 @@ import { devtools } from 'zustand/middleware';
 
 import type { HistoryItem } from '@/types/script';
 import type { Slide } from '@/types/slide';
-
-/**
- * 현재 시각을 "M월 D일 HH:mm" 형식으로 반환합니다.
- * @returns 포맷된 타임스탬프 문자열
- * @internal 스토어 내부에서만 사용
- */
-function formatTimestamp(): string {
-  const now = new Date();
-  const month = now.getMonth() + 1;
-  const day = now.getDate();
-  const hours = now.getHours();
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  return `${month}월 ${day}일 ${hours}:${minutes}`;
-}
+import { formatTimestamp } from '@/utils/format';
 
 interface SlideState {
   slide: Slide | null;
