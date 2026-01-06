@@ -34,7 +34,6 @@ import { devtools } from 'zustand/middleware';
 
 import type { HistoryItem } from '@/types/script';
 import type { Slide } from '@/types/slide';
-import { formatTimestamp } from '@/utils/format';
 
 interface SlideState {
   slide: Slide | null;
@@ -121,7 +120,7 @@ export const useSlideStore = create<SlideState>()(
 
             const historyItem: HistoryItem = {
               id: crypto.randomUUID(),
-              timestamp: formatTimestamp(),
+              timestamp: new Date().toISOString(),
               content: state.slide.script,
             };
 
@@ -174,7 +173,7 @@ export const useSlideStore = create<SlideState>()(
               id: crypto.randomUUID(),
               author: '나',
               content,
-              timestamp: '방금 전',
+              timestamp: new Date().toISOString(), // ISO 문자열로 저장하여 렌더링 시 상대 시간 계산
               isMine: true,
               isReply: true,
               parentId,

@@ -10,6 +10,7 @@ import clsx from 'clsx';
 import RevertIcon from '@/assets/icons/icon-revert.svg?react';
 import { Popover } from '@/components/common';
 import { useSlideActions, useSlideHistory, useSlideScript } from '@/hooks';
+import { formatTimestamp } from '@/utils/format';
 
 export default function ScriptHistory() {
   const script = useSlideScript();
@@ -63,12 +64,12 @@ export default function ScriptHistory() {
             <div key={item.id} className="border-b border-gray-200 bg-white px-4 pb-4 pt-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium leading-4 text-gray-600">
-                  {item.timestamp}
+                  {formatTimestamp(item.timestamp)}
                 </span>
                 <button
                   type="button"
                   onClick={() => restoreFromHistory(item)}
-                  aria-label={`${item.timestamp} 버전으로 복원`}
+                  aria-label={`${formatTimestamp(item.timestamp)} 버전으로 복원`}
                   className={clsx(
                     'inline-flex items-center gap-1 rounded py-1 pl-2 pr-1.5',
                     'bg-white text-gray-800 outline-1 -outline-offset-1 outline-gray-200',
