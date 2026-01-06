@@ -93,7 +93,7 @@ export const handlers = [
     console.log(`[MSW] POST /projects/${projectId}/slides`, data);
 
     const newSlide: Slide = {
-      id: String(slides.length + 1),
+      id: crypto.randomUUID(),
       title: data.title,
       thumb: `https://via.placeholder.com/160x90?text=${slides.length + 1}`,
       script: data.script || '',
