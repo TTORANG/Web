@@ -23,6 +23,7 @@ export const useAuthStore = create<AuthState>()(
       (set) => ({
         user: null,
         accessToken: null,
+        isLoginModalOpen: false,
 
         login: (user, accessToken) => {
           set(
@@ -55,10 +56,16 @@ export const useAuthStore = create<AuthState>()(
             'auth/updateUser',
           );
         },
+
+        openLoginModal: () => {
+          set({ isLoginModalOpen: true }, false, 'auth/openLoginModal');
+        },
+
+        closeLoginModal: () => {
+          set({ isLoginModalOpen: false }, false, 'auth/closeLoginModal');
+        },
       }),
-      {
-        name: 'auth-storage',
-      },
+      { name: 'auth-storage' },
     ),
     { name: 'AuthStore' },
   ),
