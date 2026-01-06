@@ -17,14 +17,14 @@ import { useSlideActions, useSlideOpinions } from '@/hooks';
 export default function Opinion() {
   const opinions = useSlideOpinions();
   const { deleteOpinion, addReply } = useSlideActions();
-  const [activeReplyId, setActiveReplyId] = useState<number | null>(null);
+  const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
 
   /**
    * 답글을 등록합니다.
    * @param opinionId - 답글을 달 의견의 ID
    */
-  const handleReplySubmit = (opinionId: number) => {
+  const handleReplySubmit = (opinionId: string) => {
     if (replyText.trim()) {
       addReply(opinionId, replyText);
     }
