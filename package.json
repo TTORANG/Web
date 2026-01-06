@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:local": "vite --mode local",
+    "dev:local": "VITE_API_MOCKING=true vite",
     "build": "tsc -b && vite build",
     "build:dev": "tsc -b && vite build --mode development",
     "type-check": "tsc --noEmit",
@@ -17,7 +17,11 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
+    "@tanstack/react-query": "^5.90.16",
+    "@tanstack/react-query-devtools": "^5.91.2",
+    "axios": "^1.13.2",
     "clsx": "^2.1.1",
+    "dayjs": "^1.11.19",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.11.0",
@@ -51,9 +55,15 @@
     "eslint-plugin-react-refresh": "^0.4.26",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
+    "msw": "^2.12.7",
     "prettier": "3.7.4",
     "typescript": "~5.9.3",
     "vite": "^7.2.4",
     "vite-plugin-svgr": "^4.5.0"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

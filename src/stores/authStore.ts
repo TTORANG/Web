@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 
 import type { User } from '@/types/auth';
 
@@ -18,45 +18,55 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      accessToken: null,
+  devtools(
+    persist(
+      (set) => ({
+        user: null,
+        accessToken: null,
+        isLoginModalOpen: false,
 
-      isLoginModalOpen: false,
+        login: (user, accessToken) => {
+          set(
+            {
+              user,
+              accessToken,
+            },
+            false,
+            'auth/login',
+          );
+        },
 
-      login: (user, accessToken) => {
-        set({
-          user,
-          accessToken,
-          isLoginModalOpen: false,
-        });
-      },
+        logout: () => {
+          set(
+            {
+              user: null,
+              accessToken: null,
+            },
+            false,
+            'auth/logout',
+          );
+        },
 
-      logout: () => {
-        set({
-          user: null,
-          accessToken: null,
-        });
-      },
+        updateUser: (userUpdates) => {
+          set(
+            (state) => ({
+              user: state.user ? { ...state.user, ...userUpdates } : null,
+            }),
+            false,
+            'auth/updateUser',
+          );
+        },
 
-      updateUser: (userUpdates) => {
-        set((state) => ({
-          user: state.user ? { ...state.user, ...userUpdates } : null,
-        }));
-      },
+        openLoginModal: () => {
+          set({ isLoginModalOpen: true }, false, 'auth/openLoginModal');
+        },
 
-      openLoginModal: () => set({ isLoginModalOpen: true }),
-      closeLoginModal: () => set({ isLoginModalOpen: false }),
-    }),
-    {
-      name: 'auth-storage',
-
-      // 모달 열림 상태는 로컬스토리지에 저장하지 않기
-      partialize: (state) => ({
-        user: state.user,
-        accessToken: state.accessToken,
+        closeLoginModal: () => {
+          set({ isLoginModalOpen: false }, false, 'auth/closeLoginModal');
+        },
       }),
-    },
+      { name: 'auth-storage' },
+    ),
+    { name: 'AuthStore' },
   ),
 );

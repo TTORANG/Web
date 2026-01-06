@@ -15,7 +15,7 @@ export interface HistoryItem {
  * 답글은 `isReply: true`와 `parentId`로 구분되며, 부모 의견 바로 다음에 표시됩니다.
  */
 export interface OpinionItem {
-  id: number;
+  id: string;
   author: string;
   content: string;
   timestamp: string;
@@ -24,7 +24,7 @@ export interface OpinionItem {
   /** @default false */
   isReply?: boolean;
   /** isReply일 때만 존재, 부모 삭제 시 연쇄 삭제 */
-  parentId?: number;
+  parentId?: string;
 }
 
 /**

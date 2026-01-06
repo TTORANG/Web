@@ -13,18 +13,19 @@ import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
 import { Popover } from '@/components/common';
 import { useSlideActions, useSlideOpinions } from '@/hooks';
+import { formatRelativeTime } from '@/utils/format';
 
 export default function Opinion() {
   const opinions = useSlideOpinions();
   const { deleteOpinion, addReply } = useSlideActions();
-  const [activeReplyId, setActiveReplyId] = useState<number | null>(null);
+  const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
 
   /**
    * 답글을 등록합니다.
    * @param opinionId - 답글을 달 의견의 ID
    */
-  const handleReplySubmit = (opinionId: number) => {
+  const handleReplySubmit = (opinionId: string) => {
     if (replyText.trim()) {
       addReply(opinionId, replyText);
     }
@@ -99,7 +100,9 @@ export default function Opinion() {
                       <span className="max-w-50 truncate text-sm font-semibold text-gray-800">
                         {opinion.author}
                       </span>
-                      <span className="text-xs font-medium text-gray-600">{opinion.timestamp}</span>
+                      <span className="text-xs font-medium text-gray-600">
+                        {formatRelativeTime(opinion.timestamp)}
+                      </span>
                     </div>
 
                     {opinion.isMine && (

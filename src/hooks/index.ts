@@ -4,3 +4,4 @@
  */
 
 export * from './useSlideSelectors';
+export * from './queries/useSlides';
