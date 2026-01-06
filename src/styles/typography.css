@@ -1,3 +1,21 @@
+/* Body/L */
+.text-body-l {
+  font-family: var(--font-family);
+  font-size: var(--font-size-body-l);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height);
+  letter-spacing: var(--letter-spacing);
+}
+
+/* Body/L-Bold */
+.text-body-l-bold {
+  font-family: var(--font-family);
+  font-size: var(--font-size-body-l);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height);
+  letter-spacing: var(--letter-spacing);
+}
+
 /* Body/M */
 .text-body-m {
   font-family: var(--font-family);
