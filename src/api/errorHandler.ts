@@ -1,5 +1,3 @@
-import { type AxiosError, isAxiosError } from 'axios';
-
 import { useAuthStore } from '@/stores/authStore';
 import { showToast } from '@/utils/toast';
 
