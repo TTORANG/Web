@@ -14,6 +14,11 @@ import { handleApiError } from '@/api/errorHandler';
 import { useAuthStore } from '@/stores/authStore';
 
 /**
+ * API 관련 상수
+ */
+export const API_TIMEOUT_MS = 10000;
+
+/**
  * API 에러 응답 타입
  */
 export interface ApiError {
@@ -30,8 +35,8 @@ export const apiClient = axios.create({
   // 기본 URL - 환경 변수 또는 로컬 호스트 사용
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
 
-  // 타임아웃 - 10초
-  timeout: 10000,
+  // 타임아웃 설정
+  timeout: API_TIMEOUT_MS,
 
   headers: {
     'Content-Type': 'application/json',
@@ -57,7 +62,10 @@ apiClient.interceptors.request.use(
 /**
  * 응답 인터셉터
  * 서버로부터 응답을 받은 후 실행됩니다.
- * 하이브리드 에러 핸들링 전략에 따라 시스템 에러(401, 500+)만 즉시 처리합니다.
+ *
+ * 하이브리드 에러 핸들링 전략:
+ * - 401, 500+: Axios 인터셉터에서 즉시 처리 (시스템 에러)
+ * - 400, 403, 404: TanStack Query 전역 핸들러에서 처리 (비즈니스 에러)
  */
 apiClient.interceptors.response.use(
   (response) => response,
@@ -66,25 +74,11 @@ apiClient.interceptors.response.use(
     const message = error.response?.data?.message || '알 수 없는 오류가 발생했습니다';
 
     // [하이브리드 전략]
-    // 1. 시스템 에러 (401 인증, 500 서버 장애)는 Axios가 즉시 처리하여 UX를 보호합니다.
+    // 시스템 에러 (401 인증, 500 서버 장애)는 Axios가 즉시 처리하여 UX를 보호합니다.
     if (status === 401 || (status && status >= 500)) {
       handleApiError(status, message);
     }
 
-    // 2. 나머지 비즈니스 에러 (400, 403, 404 등)는 처리하지 않고 던집니다.
-    // -> TanStack Query의 전역 캐시(onError)에서 받아서 처리하도록 위임합니다.
-
     return Promise.reject(error);
   },
 );
-
-/**
- * 사용 예시:
- *
- * // GET 요청
- * const response = await apiClient.get('/slides');
- * const slides = response.data;
- *
- * // POST 요청 (데이터 전송)
- * const response = await apiClient.post('/slides', { title: '새 슬라이드' });
- */
