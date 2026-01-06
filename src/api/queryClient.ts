@@ -26,14 +26,13 @@ export const MAX_RETRIES = 1; // 실패 시 재시도 횟수
 const handleGlobalError = (error: unknown) => {
   // 1. Axios 에러인 경우
   if (isAxiosError<ApiError>(error)) {
-    const status = error.response?.status;
-    const message = error.response?.data?.message || error.message;
-
-    // [하이브리드 전략]
-    // Axios 인터셉터에서 이미 처리한 시스템 에러(401, 500 등)는 무시 (중복 토스트 방지)
-    if (status === 401 || (status && status >= 500)) {
+    // 이미 Axios 인터셉터에서 처리된 에러라면 무시 (중복 토스트 방지)
+    if (error.isHandled) {
       return;
     }
+
+    const status = error.response?.status;
+    const message = error.response?.data?.message || error.message;
 
     handleApiError(status, message);
     return;

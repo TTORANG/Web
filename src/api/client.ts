@@ -64,8 +64,8 @@ apiClient.interceptors.request.use(
  * 서버로부터 응답을 받은 후 실행됩니다.
  *
  * 하이브리드 에러 핸들링 전략:
- * - 401, 500+: Axios 인터셉터에서 즉시 처리 (시스템 에러)
- * - 400, 403, 404: TanStack Query 전역 핸들러에서 처리 (비즈니스 에러)
+ * - 401, 500+: Axios 인터셉터에서 즉시 처리하고 isHandled 플래그 설정
+ * - 그 외: TanStack Query 전역 핸들러로 위임
  */
 apiClient.interceptors.response.use(
   (response) => response,
@@ -74,9 +74,11 @@ apiClient.interceptors.response.use(
     const message = error.response?.data?.message || '알 수 없는 오류가 발생했습니다';
 
     // [하이브리드 전략]
-    // 시스템 에러 (401 인증, 500 서버 장애)는 Axios가 즉시 처리하여 UX를 보호합니다.
+    // 시스템 에러 (401 인증, 500 서버 장애)는 Axios가 즉시 처리
     if (status === 401 || (status && status >= 500)) {
       handleApiError(status, message);
+      // 다운스트림(React Query 등)에서 중복 처리하지 않도록 플래그 설정
+      error.isHandled = true;
     }
 
     return Promise.reject(error);
