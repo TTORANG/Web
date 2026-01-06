@@ -20,7 +20,8 @@
   --color-warning: #f2ce4b;
 
   /* 타이포그래피 */
-  --font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family:
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --letter-spacing: -0.02em;
   --line-height: 1.5;
 
@@ -28,6 +29,7 @@
   --font-size-caption: 0.75rem;
   --font-size-body-s: 0.875rem;
   --font-size-body-m: 1rem;
+  --font-size-body-l: 1.25rem;
 
   /* 폰트 굵기 */
   --font-weight-regular: 400;

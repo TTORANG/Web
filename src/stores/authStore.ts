@@ -10,6 +10,11 @@ interface AuthState {
   login: (user: User, accessToken: string) => void;
   logout: () => void;
   updateUser: (user: Partial<User>) => void;
+
+  // 로그인 모달 상태/액션 추가
+  isLoginModalOpen: boolean;
+  openLoginModal: () => void;
+  closeLoginModal: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
