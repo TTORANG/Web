@@ -4,6 +4,7 @@ import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom'
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { Toaster } from 'sonner';
 
 import { queryClient } from '@/api';
 import { LoginButton, Logo } from '@/components/common';
@@ -65,6 +66,7 @@ enableMocking().then(() => {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
+        <Toaster />
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </StrictMode>,
