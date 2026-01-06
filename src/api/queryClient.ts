@@ -9,15 +9,42 @@
  * - 백그라운드 리패치 (탭 전환 시 자동 갱신)
  * - 낙관적 업데이트 (UI 먼저 변경, 서버는 나중에)
  */
-import { QueryClient } from '@tanstack/react-query';
+import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
+import type { AxiosError } from 'axios';
+
+import { type ApiError } from '@/api/client';
+import { handleApiError } from '@/api/errorHandler';
 
 /**
- * QueryClient 인스턴스
- *
- * 앱 전체에서 하나만 사용합니다.
- * 캐시와 설정을 관리합니다.
+ * React Query 전역 에러 핸들링 함수
+ * Axios에서 처리하지 않은 비즈니스 에러만 잡아서 처리합니다.
  */
+const handleGlobalError = (error: Error) => {
+  const axiosError = error as AxiosError<ApiError>;
+  const status = axiosError.response?.status;
+  const message = axiosError.response?.data?.message || axiosError.message;
+
+  // [하이브리드 전략]
+  // Axios 인터셉터에서 이미 처리한 시스템 에러(401, 500 등)는 무시 (중복 토스트 방지)
+  if (status === 401 || (status && status >= 500)) {
+    return;
+  }
+
+  // 비즈니스 에러 (400, 403, 404 등) 처리
+  handleApiError(status, message);
+};
+
 export const queryClient = new QueryClient({
+  // 1. 쿼리 (GET) 전역 에러 핸들링
+  queryCache: new QueryCache({
+    onError: (error) => handleGlobalError(error),
+  }),
+
+  // 2. 뮤테이션 (POST, PUT, DELETE) 전역 에러 핸들링
+  mutationCache: new MutationCache({
+    onError: (error) => handleGlobalError(error),
+  }),
+
   defaultOptions: {
     queries: {
       // 5분간 캐시 유지 (같은 쿼리 다시 호출해도 캐시 사용)
@@ -26,14 +53,13 @@ export const queryClient = new QueryClient({
       // 캐시 30분 후 삭제
       gcTime: 1000 * 60 * 30,
 
-      // 실패 시 3번까지 재시도
-      retry: 3,
+      // 실패 시 1회만 재시도 (기본값 3은 너무 많음)
+      retry: 1,
 
-      // 윈도우 포커스 시 자동 리패치 (탭 전환 후 돌아왔을 때)
-      refetchOnWindowFocus: true,
+      // 윈도우 포커스 시 자동 리패치 (개발 중엔 꺼두는 게 편함)
+      refetchOnWindowFocus: false,
     },
     mutations: {
-      // mutation(POST, PUT, DELETE) 실패 시 재시도 안 함
       retry: false,
     },
   },

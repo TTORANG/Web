@@ -58,8 +58,13 @@ apiClient.interceptors.response.use(
     const status = error.response?.status;
     const message = error.response?.data?.message || '알 수 없는 오류가 발생했습니다';
 
-    // 전역 에러 핸들러 호출
-    handleApiError(status, message);
+    // 1. 시스템 에러 (401 인증, 500 서버 장애)는 Axios가 즉시 처리
+    if (status === 401 || (status && status >= 500)) {
+      handleApiError(status, message);
+    }
+
+    // 2. 나머지 비즈니스 에러 (400, 403, 404 등)는 처리하지 않고 던짐
+    // -> React Query의 Global Cache onError에서 받아서 처리함
 
     return Promise.reject(error);
   },

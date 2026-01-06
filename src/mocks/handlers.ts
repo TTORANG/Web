@@ -130,4 +130,27 @@ export const handlers = [
 
     return new HttpResponse(null, { status: 204 });
   }),
+
+  /**
+   * 에러 테스트용 엔드포인트
+   * GET /test/error/:status
+   * 예: /test/error/400, /test/error/401, /test/error/500
+   */
+  http.get(`${BASE_URL}/test/error/:status`, async ({ params }) => {
+    await delay(100);
+    const status = Number(params.status);
+
+    return new HttpResponse(
+      JSON.stringify({
+        message: `[MSW] 테스트용 ${status} 에러 메시지입니다.`,
+        code: 'TEST_ERROR',
+      }),
+      {
+        status,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+  }),
 ];
