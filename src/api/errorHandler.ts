@@ -1,3 +1,5 @@
+import { type AxiosError, isAxiosError } from 'axios';
+
 import { useAuthStore } from '@/stores/authStore';
 import { showToast } from '@/utils/toast';
 
@@ -12,11 +14,11 @@ const errorHandlers: Record<number, ErrorHandler> = {
     useAuthStore.getState().logout();
     showToast.error('로그인이 만료되었습니다.', '다시 로그인해주세요.');
   },
-  403: () => {
-    showToast.error('권한이 없습니다.', '이 작업에 대한 접근 권한이 부족합니다.');
+  403: (message: string) => {
+    showToast.error('권한이 없습니다.', message || '이 작업에 대한 접근 권한이 부족합니다.');
   },
-  404: () => {
-    showToast.error('요청하신 데이터를 찾을 수 없습니다.');
+  404: (message: string) => {
+    showToast.error('요청하신 리소스를 찾을 수 없습니다.', message);
   },
 };
 
@@ -52,6 +54,6 @@ export const handleApiError = (status: number | undefined, message: string) => {
     return;
   }
 
-  // 3. 그 외 일반 에러 (400 등)는 서버 메시지 그대로 출력
-  showToast.error(message);
+  // 3. 그 외 일반 에러 (400 등)는 제목을 통일하고 메시지는 설명으로 전달
+  showToast.error('오류가 발생했습니다.', message);
 };

@@ -4,22 +4,32 @@ import { toast } from 'sonner';
  * 전역 알림(Toast) 유틸리티
  *
  * @example
- * showToast.success('업로드 완료!');
- * showToast.error('서버 에러가 발생했습니다.');
+ * import { showToast } from '@/utils/toast';
+ * const onUpload = async (file: File) => {
+ *   await showToast.promise(uploadApi(file), {
+ *     loading: '파일을 서버로 전송하고 변환 중입니다...',
+ *     success: '발표 준비가 완료되었습니다!',
+ *     error: 'PDF 파일 변환에 실패했습니다.',
+ *   });
+ * };
  */
 export const showToast = {
+  // 성공 알림
   success: (message: string, description?: string) => {
     toast.success(message, { description });
   },
 
+  // 오류 알림
   error: (message: string, description?: string) => {
     toast.error(message, { description });
   },
 
+  // 정보 알림
   info: (message: string, description?: string) => {
     toast.info(message, { description });
   },
 
+  // 경고 알림
   warning: (message: string, description?: string) => {
     toast.warning(message, { description });
   },

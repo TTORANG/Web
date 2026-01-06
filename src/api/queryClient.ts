@@ -8,9 +8,11 @@
  * - 로딩/에러 상태 자동 관리
  * - 백그라운드 리패치 (탭 전환 시 자동 갱신)
  * - 낙관적 업데이트 (UI 먼저 변경, 서버는 나중에)
+ *
+ * 이 파일에서는 전역 에러 핸들링 및 하이브리드 전략을 적용합니다.
  */
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
-import type { AxiosError } from 'axios';
+import { isAxiosError } from 'axios';
 
 import { type ApiError } from '@/api/client';
 import { handleApiError } from '@/api/errorHandler';
@@ -19,21 +21,57 @@ import { handleApiError } from '@/api/errorHandler';
  * React Query 전역 에러 핸들링 함수
  * Axios에서 처리하지 않은 비즈니스 에러만 잡아서 처리합니다.
  */
-const handleGlobalError = (error: Error) => {
-  const axiosError = error as AxiosError<ApiError>;
-  const status = axiosError.response?.status;
-  const message = axiosError.response?.data?.message || axiosError.message;
+const handleGlobalError = (error: unknown) => {
+  if (isAxiosError<ApiError>(error)) {
+    const status = error.response?.status;
+    const message = error.response?.data?.message || error.message;
 
-  // [하이브리드 전략]
-  // Axios 인터셉터에서 이미 처리한 시스템 에러(401, 500 등)는 무시 (중복 토스트 방지)
-  if (status === 401 || (status && status >= 500)) {
-    return;
+    // Axios 인터셉터에서 이미 처리한 시스템 에러(401, 500 등)는 무시 (중복 토스트 방지)
+    if (status === 401 || (status && status >= 500)) {
+      return;
+    }
+
+    // 비즈니스 에러 (400, 403, 404 등) 처리
+    handleApiError(status, message);
+  } else if (error instanceof Error) {
+    handleApiError(undefined, error.message);
+  } else {
+    handleApiError(undefined, '알 수 없는 오류가 발생했습니다.');
   }
-
-  // 비즈니스 에러 (400, 403, 404 등) 처리
-  handleApiError(status, message);
 };
 
+/**
+ * Query Key 팩토리
+ *
+ * 쿼리 키를 일관되게 관리합니다.
+ * 캐시 무효화할 때 유용합니다.
+ */
+export const queryKeys = {
+  // 슬라이드 관련 쿼리 키
+  slides: {
+    all: ['slides'] as const,
+    lists: () => [...queryKeys.slides.all, 'list'] as const,
+    list: (projectId: string) => [...queryKeys.slides.lists(), projectId] as const,
+    details: () => [...queryKeys.slides.all, 'detail'] as const,
+    detail: (slideId: string) => [...queryKeys.slides.details(), slideId] as const,
+  },
+
+  // 프로젝트 관련 쿼리 키
+  projects: {
+    all: ['projects'] as const,
+    lists: () => [...queryKeys.projects.all, 'list'] as const,
+    list: () => [...queryKeys.projects.lists()] as const,
+    details: () => [...queryKeys.projects.all, 'detail'] as const,
+    detail: (projectId: string) => [...queryKeys.projects.details(), projectId] as const,
+  },
+} as const;
+
+/**
+ * QueryClient 인스턴스
+ *
+ * 앱 전체에서 하나만 사용합니다.
+ * 캐시와 설정을 관리합니다.
+ */
 export const queryClient = new QueryClient({
   // 1. 쿼리 (GET) 전역 에러 핸들링
   queryCache: new QueryCache({
@@ -56,44 +94,12 @@ export const queryClient = new QueryClient({
       // 실패 시 1회만 재시도 (기본값 3은 너무 많음)
       retry: 1,
 
-      // 윈도우 포커스 시 자동 리패치 (개발 중엔 꺼두는 게 편함)
-      refetchOnWindowFocus: false,
+      // 윈도우 포커스 시 자동 리패치 (프로덕션에서는 활성화)
+      refetchOnWindowFocus: import.meta.env.PROD,
     },
     mutations: {
+      // mutation(POST, PUT, DELETE) 실패 시 재시도 안 함
       retry: false,
     },
   },
 });
-
-/**
- * Query Key 팩토리
- *
- * 쿼리 키를 일관되게 관리합니다.
- * 캐시 무효화할 때 유용합니다.
- *
- * @example
- * // 모든 슬라이드 쿼리 무효화
- * queryClient.invalidateQueries({ queryKey: queryKeys.slides.all });
- *
- * // 특정 슬라이드만 무효화
- * queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail('1') });
- */
-export const queryKeys = {
-  // 슬라이드 관련 쿼리 키
-  slides: {
-    all: ['slides'] as const,
-    lists: () => [...queryKeys.slides.all, 'list'] as const,
-    list: (projectId: string) => [...queryKeys.slides.lists(), projectId] as const,
-    details: () => [...queryKeys.slides.all, 'detail'] as const,
-    detail: (slideId: string) => [...queryKeys.slides.details(), slideId] as const,
-  },
-
-  // 프로젝트 관련 쿼리 키
-  projects: {
-    all: ['projects'] as const,
-    lists: () => [...queryKeys.projects.all, 'list'] as const,
-    list: () => [...queryKeys.projects.lists()] as const,
-    details: () => [...queryKeys.projects.all, 'detail'] as const,
-    detail: (projectId: string) => [...queryKeys.projects.details(), projectId] as const,
-  },
-} as const;
