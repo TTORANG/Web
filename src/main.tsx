@@ -11,7 +11,7 @@ import { LoginButton, Logo } from '@/components/common';
 import { Gnb } from '@/components/layout/Gnb';
 import { Layout } from '@/components/layout/Layout';
 import { DEFAULT_SLIDE_ID } from '@/constants/navigation';
-import { HomePage, InsightPage, SlidePage, VideoPage } from '@/pages';
+import { DevTestPage, HomePage, InsightPage, SlidePage, VideoPage } from '@/pages';
 import '@/styles/index.css';
 
 const router = createBrowserRouter([
@@ -19,6 +19,10 @@ const router = createBrowserRouter([
     path: '/',
     element: <Layout right={<LoginButton />} />,
     children: [{ index: true, element: <HomePage /> }],
+  },
+  {
+    path: '/dev',
+    element: <DevTestPage />,
   },
   {
     path: '/:projectId',
