@@ -4,13 +4,14 @@ import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom'
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { Toaster } from 'sonner';
 
 import { queryClient } from '@/api';
 import { LoginButton, Logo } from '@/components/common';
 import { Gnb } from '@/components/layout/Gnb';
 import { Layout } from '@/components/layout/Layout';
 import { DEFAULT_SLIDE_ID } from '@/constants/navigation';
-import { HomePage, InsightPage, SlidePage, VideoPage } from '@/pages';
+import { DevTestPage, HomePage, InsightPage, SlidePage, VideoPage } from '@/pages';
 import '@/styles/index.css';
 
 const router = createBrowserRouter([
@@ -18,6 +19,10 @@ const router = createBrowserRouter([
     path: '/',
     element: <Layout right={<LoginButton />} />,
     children: [{ index: true, element: <HomePage /> }],
+  },
+  {
+    path: '/dev',
+    element: <DevTestPage />,
   },
   {
     path: '/:projectId',
@@ -65,6 +70,7 @@ enableMocking().then(() => {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
+        <Toaster position="top-center" closeButton />
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </StrictMode>,
