@@ -22,8 +22,34 @@
 
   /* 토스트 내용 (아이콘 + 텍스트) */
   [data-sonner-toast] [data-content] {
-    @apply flex items-center shrink-0;
+    @apply flex shrink-0;
+    gap: 4px !important;
+  }
+
+  /* description이 있을 때 세로 배치 */
+  [data-sonner-toast] [data-content]:has([data-description]) {
+    @apply flex-col items-start;
+  }
+
+  /* description이 없을 때 가로 배치 */
+  [data-sonner-toast] [data-content]:not(:has([data-description])) {
+    @apply items-center;
     gap: 8px !important;
+  }
+
+  /* 제목 스타일 */
+  [data-sonner-toast] [data-title] {
+    font-size: 16px !important;
+    font-weight: 400 !important;
+    line-height: 1.5 !important;
+  }
+
+  /* 설명 스타일 */
+  [data-sonner-toast] [data-description] {
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    line-height: 1.5 !important;
+    opacity: 0.7 !important;
   }
 
   /* 토스트 아이콘 */
