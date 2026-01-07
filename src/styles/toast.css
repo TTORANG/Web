@@ -1,0 +1,125 @@
+/**
+ * Sonner 토스트 커스텀 스타일
+ */
+
+@layer components {
+  /* 기본 토스트 스타일 */
+  [data-sonner-toast] {
+    @apply flex items-center rounded-lg;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    font-family: var(--font-family) !important;
+    font-size: 16px !important;
+    font-weight: 400 !important;
+    line-height: 1.5 !important;
+    letter-spacing: -0.32px !important;
+    box-shadow: none !important;
+    border: none !important;
+    --normal-bg: transparent !important;
+    --normal-border: transparent !important;
+    --normal-text: inherit !important;
+  }
+
+  /* 토스트 내용 (아이콘 + 텍스트) */
+  [data-sonner-toast] [data-content] {
+    @apply flex items-center shrink-0;
+    gap: 8px !important;
+  }
+
+  /* 토스트 아이콘 */
+  [data-sonner-toast] [data-icon] {
+    @apply size-6 shrink-0;
+    margin: 0 !important;
+    order: -1 !important;
+  }
+
+  /* 닫기 버튼 */
+  [data-sonner-toast] [data-close-button] {
+    @apply size-4 shrink-0;
+    position: static !important;
+    inset: unset !important;
+    left: unset !important;
+    right: unset !important;
+    top: unset !important;
+    bottom: unset !important;
+    transform: none !important;
+    margin: 0 !important;
+    margin-left: auto !important;
+    padding: 0 !important;
+    order: 999 !important;
+    opacity: 1 !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  [data-sonner-toast] [data-close-button]::before,
+  [data-sonner-toast] [data-close-button]::after {
+    display: none !important;
+  }
+
+  [data-sonner-toast] [data-close-button] svg {
+    @apply size-4;
+  }
+
+  /* Info 토스트 */
+  [data-sonner-toast][data-type='info'] {
+    background-color: var(--color-gray-800) !important;
+    color: var(--color-white) !important;
+    padding: 8px 12px 8px 16px !important;
+  }
+
+  [data-sonner-toast][data-type='info'] [data-icon] {
+    display: none !important;
+  }
+
+  [data-sonner-toast][data-type='info'] [data-close-button] {
+    color: var(--color-white) !important;
+  }
+
+  /* Success 토스트 */
+  [data-sonner-toast][data-type='success'] {
+    background-color: var(--color-gray-100) !important;
+    color: var(--color-gray-800) !important;
+    padding: 8px 12px !important;
+  }
+
+  [data-sonner-toast][data-type='success'] [data-icon] {
+    color: var(--color-success) !important;
+  }
+
+  [data-sonner-toast][data-type='success'] [data-close-button] {
+    color: var(--color-gray-800) !important;
+  }
+
+  /* Warning 토스트 */
+  [data-sonner-toast][data-type='warning'] {
+    background-color: var(--color-gray-100) !important;
+    color: var(--color-gray-800) !important;
+    padding: 8px 12px !important;
+  }
+
+  [data-sonner-toast][data-type='warning'] [data-icon] {
+    color: var(--color-warning) !important;
+  }
+
+  [data-sonner-toast][data-type='warning'] [data-close-button] {
+    color: var(--color-gray-800) !important;
+  }
+
+  /* Error 토스트 */
+  [data-sonner-toast][data-type='error'] {
+    background-color: var(--color-gray-100) !important;
+    color: var(--color-gray-800) !important;
+    padding: 8px 12px !important;
+  }
+
+  [data-sonner-toast][data-type='error'] [data-icon] {
+    color: var(--color-error) !important;
+  }
+
+  [data-sonner-toast][data-type='error'] [data-close-button] {
+    color: var(--color-gray-800) !important;
+  }
+}
