@@ -5,7 +5,7 @@ import { useUpload } from '@/hooks/useUpload';
 const ACCEPTED_FILES_TYPES = '.pdf,.ppt,.pptx,.txt,.mp4';
 
 export default function HomePage() {
-  const { progress, state, error, uploadFiles, simulateUpload } = useUpload();
+  const { progress, state, error, uploadFiles } = useUpload();
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-6 py-8">
       {/* 소개글 & 파일 업로드 */}
@@ -25,9 +25,9 @@ export default function HomePage() {
           uploadState={state}
           progress={progress}
           // UI 확인용
-          onFilesSelected={() => simulateUpload()}
+          //onFilesSelected={() => simulateUpload()}
           // 실제 업로드용
-          // onFilesSelected={uploadFiles};
+          onFilesSelected={uploadFiles}
         />
 
         {error && <p className="mt-3 text-body-s text-red-500">업로드 실패: {error}</p>}

@@ -54,23 +54,24 @@ export function useUpload() {
     setError(null);
   };
 
-  const simulateUpload = () => {
-    setError(null);
-    setState('uploading');
-    setProgress(0);
+  //progress바 테스트용
+  // const simulateUpload = () => {
+  //   setError(null);
+  //   setState('uploading');
+  //   setProgress(0);
 
-    let p = 0;
-    const timer = setInterval(() => {
-      p += 8;
-      if (p >= 100) {
-        clearInterval(timer);
-        setProgress(100);
-        setState('done');
-        return;
-      }
-      setProgress(p);
-    }, 120);
-  };
+  //   let p = 0;
+  //   const timer = setInterval(() => {
+  //     p += 8;
+  //     if (p >= 100) {
+  //       clearInterval(timer);
+  //       setProgress(100);
+  //       setState('done');
+  //       return;
+  //     }
+  //     setProgress(p);
+  //   }, 120);
+  // };
 
-  return { progress, state, error, uploadFiles, reset, simulateUpload };
+  return { progress, state, error, uploadFiles, reset };
 }
