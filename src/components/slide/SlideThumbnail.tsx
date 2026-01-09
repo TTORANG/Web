@@ -18,7 +18,7 @@ interface SlideThumbnailProps {
   basePath: string;
 }
 
-export default function SlideThumbnail({ slide, index, isActive, basePath }: SlideThumbnailProps) {
+function SlideThumbnail({ slide, index, isActive, basePath }: SlideThumbnailProps) {
   return (
     <Link
       to={`${basePath}/slide/${slide.id}`}
@@ -45,3 +45,21 @@ export default function SlideThumbnail({ slide, index, isActive, basePath }: Sli
     </Link>
   );
 }
+
+function SlideThumbnailSkeleton({ index }: { index: number }) {
+  return (
+    <div className="flex items-start gap-2 px-2 py-1 -mx-2 -my-1">
+      {/* 번호 */}
+      <span className="w-4 pt-1 text-right text-caption font-semibold text-gray-800 select-none">
+        {index + 1}
+      </span>
+
+      {/* 썸네일 영역 */}
+      <div className="flex-1 aspect-video rounded-sm bg-gray-200 animate-pulse" />
+    </div>
+  );
+}
+
+export default Object.assign(SlideThumbnail, {
+  Skeleton: SlideThumbnailSkeleton,
+});

@@ -25,10 +25,7 @@ export default function SlideList({ slides, currentSlideId, basePath, isLoading 
       <div className="flex flex-col gap-3 p-2">
         {isLoading
           ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <span className="w-4" />
-                <div className="flex-1 aspect-video rounded bg-gray-200 animate-pulse" />
-              </div>
+              <SlideThumbnail.Skeleton key={i} index={i} />
             ))
           : slides?.map((slide, idx) => (
               <SlideThumbnail
