@@ -9,25 +9,36 @@ import type { Slide } from '@/types/slide';
 
 import SlideThumbnail from './SlideThumbnail';
 
+/** 로딩 시 표시할 스켈레톤 개수 */
+const SKELETON_COUNT = 6;
+
 interface SlideListProps {
-  slides: Slide[];
-  currentSlideId: string;
+  slides?: Slide[];
+  currentSlideId?: string;
   basePath: string;
+  isLoading?: boolean;
 }
 
-export default function SlideList({ slides, currentSlideId, basePath }: SlideListProps) {
+export default function SlideList({ slides, currentSlideId, basePath, isLoading }: SlideListProps) {
   return (
     <aside className="w-56 shrink-0 h-full overflow-y-auto">
       <div className="flex flex-col gap-3">
-        {slides.map((slide, idx) => (
-          <SlideThumbnail
-            key={slide.id}
-            slide={slide}
-            index={idx}
-            isActive={slide.id === currentSlideId}
-            basePath={basePath}
-          />
-        ))}
+        {isLoading
+          ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <span className="w-4" />
+                <div className="flex-1 aspect-video rounded bg-gray-200 animate-pulse" />
+              </div>
+            ))
+          : slides?.map((slide, idx) => (
+              <SlideThumbnail
+                key={slide.id}
+                slide={slide}
+                index={idx}
+                isActive={slide.id === currentSlideId}
+                basePath={basePath}
+              />
+            ))}
       </div>
     </aside>
   );

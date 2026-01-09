@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient } from '@/api';
+import { Skeleton, Spinner } from '@/components/common';
 import { showToast } from '@/utils/toast';
 
 /**
@@ -141,6 +142,81 @@ export default function DevTestPage() {
         <p className="text-xs text-gray-500">
           * 400: 페이지 진입 시 자동 + 버튼 클릭 (React Query) | 401, 500: Axios 인터셉터
         </p>
+      </section>
+
+      {/* Skeleton 테스트 */}
+      <section className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
+        <h2 className="mb-4 text-lg font-bold text-gray-800">💀 Skeleton 테스트</h2>
+
+        {/* 기본 스켈레톤 */}
+        <div className="mb-6">
+          <h3 className="mb-3 text-sm font-medium text-gray-600">기본 스켈레톤</h3>
+          <div className="flex flex-col gap-2">
+            <Skeleton width="100%" height={20} />
+            <Skeleton width="80%" height={20} />
+            <Skeleton width="60%" height={20} />
+          </div>
+        </div>
+
+        {/* 원형 스켈레톤 */}
+        <div className="mb-6">
+          <h3 className="mb-3 text-sm font-medium text-gray-600">원형 (Circle)</h3>
+          <div className="flex gap-3">
+            <Skeleton.Circle size={32} />
+            <Skeleton.Circle size={48} />
+            <Skeleton.Circle size={64} />
+          </div>
+        </div>
+
+        {/* 텍스트 스켈레톤 */}
+        <div className="mb-6">
+          <h3 className="mb-3 text-sm font-medium text-gray-600">텍스트 (Text)</h3>
+          <Skeleton.Text lines={3} />
+        </div>
+
+        {/* 프리셋 */}
+        <div>
+          <h3 className="mb-3 text-sm font-medium text-gray-600">프리셋</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="mb-2 text-xs text-gray-500">Card</p>
+              <Skeleton.Card />
+            </div>
+            <div>
+              <p className="mb-2 text-xs text-gray-500">ListItem</p>
+              <Skeleton.ListItem />
+              <Skeleton.ListItem />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Spinner 테스트 */}
+      <section className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
+        <h2 className="mb-4 text-lg font-bold text-gray-800">🔄 Spinner 테스트</h2>
+
+        <div className="flex items-center gap-6">
+          <div className="flex flex-col items-center gap-2">
+            <Spinner size={16} />
+            <span className="text-xs text-gray-500">16px</span>
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <Spinner size={24} />
+            <span className="text-xs text-gray-500">24px</span>
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <Spinner size={32} />
+            <span className="text-xs text-gray-500">32px</span>
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <Spinner size={24} color="var(--color-main)" />
+            <span className="text-xs text-gray-500">main</span>
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <Spinner size={24} color="var(--color-error)" />
+            <span className="text-xs text-gray-500">error</span>
+          </div>
+        </div>
       </section>
 
       {/* 컴포넌트 테스트 영역 (확장용) */}
