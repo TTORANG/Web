@@ -20,25 +20,28 @@ interface SlideThumbnailProps {
 
 export default function SlideThumbnail({ slide, index, isActive, basePath }: SlideThumbnailProps) {
   return (
-    <div className="flex items-start gap-2">
+    <Link
+      to={`${basePath}/slide/${slide.id}`}
+      aria-current={isActive ? 'true' : undefined}
+      className={clsx(
+        'group flex items-start gap-2 px-2 py-1 -mx-2 -my-1 rounded-sm transition-colors',
+        isActive ? 'bg-main-variant1' : 'hover:bg-white',
+      )}
+    >
       {/* 번호 - 썸네일 바깥 왼쪽 */}
-      <span className="w-4 pt-0.5 text-right text-xs font-semibold text-gray-800 select-none">
+      <span
+        className={clsx(
+          'w-4 pt-1 text-right text-caption font-semibold select-none transition-colors',
+          isActive ? 'text-white' : 'text-gray-800',
+        )}
+      >
         {index + 1}
       </span>
 
       {/* 썸네일 - 16:9 비율 */}
-      <Link
-        to={`${basePath}/slide/${slide.id}`}
-        aria-current={isActive ? 'true' : undefined}
-        className={clsx(
-          'block flex-1 aspect-video rounded overflow-hidden',
-          'outline outline-2 -outline-offset-2',
-          'focus-visible:outline-main',
-          isActive ? 'outline-main' : 'outline-transparent hover:outline-gray-300',
-        )}
-      >
+      <div className="flex-1 aspect-video rounded-sm overflow-hidden">
         <div className="h-full w-full bg-gray-200" />
-      </Link>
-    </div>
+      </div>
+    </Link>
   );
 }

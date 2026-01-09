@@ -21,8 +21,8 @@ interface SlideListProps {
 
 export default function SlideList({ slides, currentSlideId, basePath, isLoading }: SlideListProps) {
   return (
-    <aside className="w-56 shrink-0 h-full overflow-y-auto">
-      <div className="flex flex-col gap-3">
+    <aside className="w-60 shrink-0 h-full overflow-y-auto">
+      <div className="flex flex-col gap-3 p-2">
         {isLoading
           ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
               <div key={i} className="flex items-start gap-2">
