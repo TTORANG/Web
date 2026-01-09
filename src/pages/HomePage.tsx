@@ -1,9 +1,11 @@
 import FileDropzone from '@/components/common/FileDropzone';
-import ProgressBar from '@/components/common/ProgressBar';
+// import ProgressBar from '@/components/common/ProgressBar';
 import { useUpload } from '@/hooks/useUpload';
 
+const ACCEPTED_FILES_TYPES = '.pdf,.ppt,.pptx,.txt,.mp4';
+
 export default function HomePage() {
-  const { progress, state, error, uploadFiles } = useUpload();
+  const { progress, state, error, uploadFiles, simulateUpload } = useUpload();
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-6 py-8">
       {/* 소개글 & 파일 업로드 */}
@@ -19,13 +21,14 @@ export default function HomePage() {
         {/* Dropzone */}
         <FileDropzone
           disabled={state === 'uploading'}
-          accept=".pdf,.ppt,.pptx,.txt,.mp4"
-          onFilesSelected={(files) => {
-            uploadFiles(files);
-          }}
+          accept={ACCEPTED_FILES_TYPES}
+          uploadState={state}
+          progress={progress}
+          // UI 확인용
+          onFilesSelected={() => simulateUpload()}
+          // 실제 업로드용
+          // onFilesSelected={uploadFiles};
         />
-
-        {state === 'uploading' && <ProgressBar value={progress} />}
 
         {error && <p className="mt-3 text-body-s text-red-500">업로드 실패: {error}</p>}
       </section>

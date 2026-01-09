@@ -1,17 +1,19 @@
 import { useState } from 'react';
 
-import axios from 'axios';
+import type { AxiosError } from 'axios';
+
+import { type ApiError, apiClient } from '@/api/client';
 
 type UploadState = 'idle' | 'uploading' | 'done' | 'error';
+
+// ✅TODO
+const UPLOAD_ENDPOINT = '/projects/upload';
+const FORM_KEY = 'files'; // 서버가 file인지 files인지
 
 export function useUpload() {
   const [progress, setProgress] = useState(0); // 0~100
   const [state, setState] = useState<UploadState>('idle');
   const [error, setError] = useState<string | null>(null);
-
-  // ✅TODO
-  const UPLOAD_ENDPOINT = '/projects/upload';
-  const FORM_KEY = 'files'; // 서버가 file인지 files인지
 
   const uploadFiles = async (files: File[]) => {
     setError(null);
@@ -22,7 +24,7 @@ export function useUpload() {
       const formData = new FormData();
       files.forEach((f) => formData.append(FORM_KEY, f));
 
-      await axios.post(UPLOAD_ENDPOINT, formData, {
+      await apiClient.post(UPLOAD_ENDPOINT, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: (evt) => {
           const total = evt.total ?? 0;
@@ -35,9 +37,9 @@ export function useUpload() {
     } catch (e: unknown) {
       setState('error');
 
-      // 네트워크/서버 에러일 때만 response 접근
-      if (axios.isAxiosError(e)) {
-        setError(e.response?.data?.message ?? e.message);
+      if (typeof e === 'object' && e !== null && 'response' in e) {
+        const axiosError = e as AxiosError<ApiError>;
+        setError(axiosError.response?.data?.message ?? axiosError.message);
       } else if (e instanceof Error) {
         setError(e.message);
       } else {
@@ -52,5 +54,23 @@ export function useUpload() {
     setError(null);
   };
 
-  return { progress, state, error, uploadFiles, reset };
+  const simulateUpload = () => {
+    setError(null);
+    setState('uploading');
+    setProgress(0);
+
+    let p = 0;
+    const timer = setInterval(() => {
+      p += 8;
+      if (p >= 100) {
+        clearInterval(timer);
+        setProgress(100);
+        setState('done');
+        return;
+      }
+      setProgress(p);
+    }, 120);
+  };
+
+  return { progress, state, error, uploadFiles, reset, simulateUpload };
 }
