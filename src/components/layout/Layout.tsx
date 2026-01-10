@@ -11,6 +11,7 @@ import { Outlet } from 'react-router-dom';
 import { Logo } from '@/components/common';
 
 import { LoginModal } from '../auth/login-modal';
+import { ShareModal } from '../share/share-modal';
 
 interface LayoutProps {
   left?: ReactNode;
@@ -34,6 +35,7 @@ export function Layout({ left, center, right }: LayoutProps) {
         </div>
       </main>
       <LoginModal />
+      <ShareModal />
     </div>
   );
 }

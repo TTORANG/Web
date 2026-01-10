@@ -14,6 +14,8 @@ import { DEFAULT_SLIDE_ID } from '@/constants/navigation';
 import { DevTestPage, HomePage, InsightPage, SlidePage, VideoPage } from '@/pages';
 import '@/styles/index.css';
 
+import { ShareButton } from './components/common/ShareButton';
+
 const router = createBrowserRouter([
   {
     path: '/',
@@ -35,7 +37,12 @@ const router = createBrowserRouter([
           </>
         }
         center={<Gnb />}
-        right={<LoginButton />}
+        right={
+          <div className="flex items-center gap-2">
+            <ShareButton />
+            <LoginButton />
+          </div>
+        }
       />
     ),
     children: [
