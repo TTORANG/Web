@@ -1,0 +1,99 @@
+// 좌측 슬라이드 뷰어
+// components/feedback/SlideViewer.tsx
+import leftArrow from '../../assets/component-dark/leftArrow.svg';
+import rightArrow from '../../assets/component-dark/rightArrow.svg';
+import { useSlides } from '../../hooks/useSlides';
+
+type Props = ReturnType<typeof useSlides>;
+
+export default function SlideViewer({
+  currentSlide,
+  slideIndex,
+  totalSlides,
+  isFirst,
+  isLast,
+  isEditingTitle,
+  draftTitle,
+  setDraftTitle,
+  goPrev,
+  goNext,
+  startTitleEdit,
+  commitTitle,
+  cancelTitleEdit,
+}: Props) {
+  return (
+    <div className="ml-35 flex-1 flex flex-col min-w-0 bg-gray-900">
+      {/* 1. 좌측 상단: 슬라이드 뷰어 */}
+      {/* 1. 상단 영역 (슬라이드가 들어갈 공간 확보) */}
+      {/* 이 div는 남는 공간을 꽉 채우고, 내용물을 정중앙에 배치합니다. */}
+      <div className="flex-1 flex items-center justify-center overflow-hidden relative">
+        {/* 2. 슬라이드 본체 (회색 박스) */}
+        {/* w-full max-h-full: 가로를 꽉 채우되, 세로 공간이 모자라면 높이에 맞춤 (반응형) */}
+        <div className="aspect-[16/9] w-full max-h-full bg-gray-600 relative flex items-center justify-center shadow-lg">
+          <p className="text-gray-300 text-lg font-medium">{currentSlide.viewerText}</p>
+        </div>
+      </div>
+
+      {/* 2. 좌측 하단: 설명 텍스트 */}
+      <div className="h-[250px] bg-gray-900 px-5 pt-1 overflow-y-auto border-r border-gray-800">
+        <div className="flex justify-between items-baseline mb-3">
+          {isEditingTitle ? (
+            <input
+              value={draftTitle}
+              autoFocus
+              onChange={(e) => setDraftTitle(e.target.value)}
+              onBlur={commitTitle}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commitTitle();
+                if (e.key === 'Escape') cancelTitleEdit();
+              }}
+              className="text-body-m-bold text-white bg-gray-800 border-white rounded px-1"
+            />
+          ) : (
+            <h2
+              className="text-body-m-bold text-white"
+              onDoubleClick={startTitleEdit}
+              title="더블클릭해서 제목 수정"
+            >
+              {currentSlide.title}
+            </h2>
+          )}
+
+          <div className=" bottom-6 inline-flex items-center gap-1 rounded-full py-2 backdrop-blur">
+            <button
+              onClick={goPrev}
+              disabled={isFirst}
+              className={[
+                'grid h-6 w-6 place-items-center rounded-full ',
+                isFirst ? 'bg-black' : 'bg-gray-800 hover:bg-white/15 transition',
+              ].join(' ')}
+            >
+              <img src={leftArrow} alt="prev" />
+            </button>
+
+            <div className="min-w-[56px] text-center text-body-m-bold text-gray-200">
+              {slideIndex + 1} / {totalSlides}
+            </div>
+
+            <button
+              onClick={goNext}
+              disabled={isLast}
+              className={[
+                'grid h-6 w-6 place-items-center rounded-full',
+                isLast ? 'bg-black' : 'bg-gray-800 hover:bg-white/15 transition',
+              ].join(' ')}
+            >
+              <img src={rightArrow} alt="next" />
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-gray-800 rounded-xl p-3">
+          <p className="text-body-s text-white" style={{ whiteSpace: 'pre-line' }}>
+            {currentSlide.body}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

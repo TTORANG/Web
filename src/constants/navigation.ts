@@ -42,6 +42,11 @@ export const getTabPath = (projectId: string, tab: Tab, slideId?: string): strin
   }
 };
 
+export const getPresentationPath = (projectId: string, slideId?: string): string => {
+  const targetSlideId = slideId ?? getLastSlideId(projectId);
+  return `/${projectId}/fslide/${targetSlideId}`;
+};
+
 /** pathname에서 탭 추출 (/:projectId/:tab/...) */
 export const getTabFromPathname = (pathname: string): Tab => {
   const segments = pathname.split('/').filter(Boolean);
