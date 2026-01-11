@@ -11,7 +11,7 @@ import { LoginButton, Logo } from '@/components/common';
 import { Gnb } from '@/components/layout/Gnb';
 import { Layout } from '@/components/layout/Layout';
 import { DEFAULT_SLIDE_ID } from '@/constants/navigation';
-import { FdSlidePage, HomePage, InsightPage, SlidePage, VideoPage } from '@/pages';
+import { DevTestPage, FdSlidePage, HomePage, InsightPage, SlidePage, VideoPage } from '@/pages';
 import '@/styles/index.css';
 
 const router = createBrowserRouter([
