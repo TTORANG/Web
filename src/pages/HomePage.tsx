@@ -1,13 +1,15 @@
 import FileDropzone from '@/components/common/FileDropzone';
-// import ProgressBar from '@/components/common/ProgressBar';
+import ProjectsCard from '@/components/projects/ProjectCard';
+import ProjectHeader from '@/components/projects/ProjectHeader';
 import { useUpload } from '@/hooks/useUpload';
+import { MOCK_PROJECTS } from '@/mocks/projects';
 
 const ACCEPTED_FILES_TYPES = '.pdf,.ppt,.pptx,.txt,.mp4';
 
 export default function HomePage() {
-  const { progress, state, error, uploadFiles } = useUpload();
+  const { progress, state, error, uploadFiles, simulateUpload } = useUpload();
   return (
-    <main className="mx-auto min-h-screen max-w-6xl px-6 py-8">
+    <main className="mx-auto min-h-screen max-w-4xl px-6 py-8">
       {/* 소개글 & 파일 업로드 */}
       <section className="flex flex-col items-center text-center">
         {/* 소개글 */}
@@ -25,9 +27,9 @@ export default function HomePage() {
           uploadState={state}
           progress={progress}
           // UI 확인용
-          //onFilesSelected={() => simulateUpload()}
+          onFilesSelected={() => simulateUpload()}
           // 실제 업로드용
-          onFilesSelected={uploadFiles}
+          // onFilesSelected={uploadFiles}
         />
 
         {error && <p className="mt-3 text-body-s text-red-500">업로드 실패: {error}</p>}
@@ -41,8 +43,14 @@ export default function HomePage() {
         </div>
 
         {/* 검색 */}
+        <ProjectHeader />
 
         {/* 프레젠테이션 목록 */}
+        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {MOCK_PROJECTS.map((project) => (
+            <ProjectsCard key={project.id} {...project} />
+          ))}
+        </div>
       </section>
     </main>
   );
