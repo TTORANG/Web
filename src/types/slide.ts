@@ -1,4 +1,5 @@
-import type { EmojiReaction, HistoryItem, OpinionItem } from './script';
+import type { CommentItem } from './comment';
+import type { EmojiReaction, HistoryItem } from './script';
 
 /**
  * 슬라이드 데이터 모델
@@ -12,7 +13,7 @@ export interface Slide {
   thumb: string;
   /** 포커스 해제 시 히스토리에 자동 저장 */
   script: string;
-  opinions: OpinionItem[];
+  opinions: CommentItem[];
   /** 최신순 정렬 */
   history: HistoryItem[];
   emojiReactions: EmojiReaction[];

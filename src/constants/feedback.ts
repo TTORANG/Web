@@ -1,5 +1,6 @@
 // constants/feedback.ts
-import type { Comment, Reaction, Slide } from '../types/feedback';
+import type { CommentItem } from '@/types/comment';
+import type { Reaction, Slide } from '@/types/feedback';
 
 export const INITIAL_SLIDES: Slide[] = Array.from({ length: 5 }, (_, i) => ({
   title: `슬라이드 ${i + 1}`,
@@ -7,21 +8,23 @@ export const INITIAL_SLIDES: Slide[] = Array.from({ length: 5 }, (_, i) => ({
   viewerText: `Main Slide Content Area - ${i + 1}`,
 }));
 
-export const INITIAL_COMMENTS: Comment[] = [
+export const INITIAL_COMMENTS: CommentItem[] = [
   {
-    id: 1,
-    user: '익명',
-    time: '방금 전',
+    id: 'initial-1',
+    author: '익명',
+    timestamp: new Date(Date.now() - 1000 * 60).toISOString(), // 1분 전
     slideRef: '슬라이드 1',
     content: '이 부분 설명이 명확해요!',
+    isMine: false,
     replies: [],
   },
   {
-    id: 2,
-    user: '익명',
-    time: '4시간 전',
+    id: 'initial-2',
+    author: '익명',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(), // 4시간 전
     slideRef: '슬라이드 4',
     content: '여기 좋아요',
+    isMine: false,
     replies: [],
   },
 ];

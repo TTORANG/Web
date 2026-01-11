@@ -2,22 +2,23 @@
 // components/feedback/CommentList.tsx
 import { useState } from 'react';
 
-import clickedReplyIcon from '../../assets/component-dark/clickedReplyIcon.svg';
-import fileIcon from '../../assets/component-dark/fileIcon.svg';
-import replyIcon from '../../assets/component-dark/replyIcon.svg';
-import type { Comment } from '../../types/feedback';
+import clickedReplyIcon from '@/assets/component-dark/clickedReplyIcon.svg';
+import fileIcon from '@/assets/component-dark/fileIcon.svg';
+import replyIcon from '@/assets/component-dark/replyIcon.svg';
+import type { CommentItem } from '@/types/comment';
+import { formatRelativeTime } from '@/utils/format';
 
 interface Props {
-  comments: Comment[];
-  onAddReply: (targetId: number, content: string) => void;
+  comments: CommentItem[];
+  onAddReply: (targetId: string, content: string) => void;
   onGoToSlideRef: (ref: string) => void;
 }
 
 export default function CommentList({ comments, onAddReply, onGoToSlideRef }: Props) {
-  const [replyingToId, setReplyingToId] = useState<number | null>(null);
+  const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
 
-  const handleReplySubmit = (targetId: number) => {
+  const handleReplySubmit = (targetId: string) => {
     onAddReply(targetId, replyDraft);
     setReplyDraft('');
     setReplyingToId(null);
@@ -45,8 +46,10 @@ export default function CommentList({ comments, onAddReply, onGoToSlideRef }: Pr
 
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline space-x-2">
-                <span className="text-body-s-bold text-white">{comment.user}</span>
-                <span className="text-caption text-gray-400">{comment.time}</span>
+                <span className="text-body-s-bold text-white">{comment.author}</span>
+                <span className="text-caption text-gray-400">
+                  {formatRelativeTime(comment.timestamp)}
+                </span>
               </div>
 
               <div className="mt-1 text-body-s text-white">
@@ -119,8 +122,10 @@ export default function CommentList({ comments, onAddReply, onGoToSlideRef }: Pr
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline space-x-2">
-                        <span className="text-body-s-bold text-white">{reply.user}</span>
-                        <span className="text-caption text-gray-400">{reply.time}</span>
+                        <span className="text-body-s-bold text-white">{reply.author}</span>
+                        <span className="text-caption text-gray-400">
+                          {formatRelativeTime(reply.timestamp)}
+                        </span>
                       </div>
 
                       <div className="mt-1 text-body-s text-white">

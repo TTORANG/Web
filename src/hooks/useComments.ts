@@ -1,65 +1,36 @@
 // hooks/useComments.ts
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
-import { INITIAL_COMMENTS } from '../constants/feedback';
-import type { Comment } from '../types/feedback';
+import { INITIAL_COMMENTS } from '@/constants/feedback';
+import type { CommentItem } from '@/types/comment';
+import { addReplyToTree, createComment } from '@/utils/comment';
 
 export function useComments() {
-  const [comments, setComments] = useState<Comment[]>(INITIAL_COMMENTS);
-  const nextIdRef = useRef(1000);
-
-  const genId = () => {
-    nextIdRef.current += 1;
-    return nextIdRef.current;
-  };
+  const [comments, setComments] = useState<CommentItem[]>(INITIAL_COMMENTS);
 
   const addComment = (content: string, currentSlideIndex: number) => {
     const trimmed = content.trim();
     if (!trimmed) return;
 
-    const newComment: Comment = {
-      id: genId(),
-      user: '익명',
-      time: '방금 전',
-      slideRef: `슬라이드 ${currentSlideIndex + 1}`,
+    const newComment = createComment({
       content: trimmed,
-      replies: [],
-    };
+      author: '익명',
+      slideRef: `슬라이드 ${currentSlideIndex + 1}`,
+    });
 
     setComments((prev) => [newComment, ...prev]);
   };
 
-  const addReply = (targetId: number, content: string) => {
+  const addReply = (targetId: string, content: string) => {
     const trimmed = content.trim();
     if (!trimmed) return;
 
-    const newReply: Comment = {
-      id: genId(),
-      user: '익명',
-      time: '방금 전',
-      content: trimmed,
-      replies: [],
-    };
-
-    const addToTree = (list: Comment[]): Comment[] => {
-      return list.map((node) => {
-        if (node.id === targetId) {
-          return {
-            ...node,
-            replies: [...(node.replies ?? []), newReply],
-          };
-        }
-        if (node.replies && node.replies.length > 0) {
-          return {
-            ...node,
-            replies: addToTree(node.replies),
-          };
-        }
-        return node;
-      });
-    };
-
-    setComments((prev) => addToTree(prev));
+    setComments((prev) =>
+      addReplyToTree(prev, targetId, {
+        content: trimmed,
+        author: '익명',
+      }),
+    );
   };
 
   return { comments, addComment, addReply };

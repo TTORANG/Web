@@ -34,6 +34,7 @@ import { devtools } from 'zustand/middleware';
 
 import type { HistoryItem } from '@/types/script';
 import type { Slide } from '@/types/slide';
+import { addReplyToFlat, deleteFromFlat } from '@/utils/comment';
 
 interface SlideState {
   slide: Slide | null;
@@ -153,8 +154,7 @@ export const useSlideStore = create<SlideState>()(
             slide: state.slide
               ? {
                   ...state.slide,
-                  // 해당 의견과 그 의견에 달린 답글(parentId가 일치하는 것)도 함께 삭제
-                  opinions: state.slide.opinions.filter((o) => o.id !== id && o.parentId !== id),
+                  opinions: deleteFromFlat(state.slide.opinions, id),
                 }
               : null,
           }),
@@ -168,27 +168,14 @@ export const useSlideStore = create<SlideState>()(
           (state) => {
             if (!state.slide) return state;
 
-            // 새 답글 생성 (현재 사용자가 작성한 것으로 표시)
-            const newReply = {
-              id: crypto.randomUUID(),
-              author: '나',
-              content,
-              timestamp: new Date().toISOString(), // ISO 문자열로 저장하여 렌더링 시 상대 시간 계산
-              isMine: true,
-              isReply: true,
-              parentId,
-            };
-
-            // 부모 의견의 위치를 찾음
-            const parentIndex = state.slide.opinions.findIndex((o) => o.id === parentId);
-            if (parentIndex === -1) return state;
-
-            // 부모 의견 바로 다음에 답글 삽입 (스레드 형태로 표시하기 위함)
-            const newOpinions = [...state.slide.opinions];
-            newOpinions.splice(parentIndex + 1, 0, newReply);
-
             return {
-              slide: { ...state.slide, opinions: newOpinions },
+              slide: {
+                ...state.slide,
+                opinions: addReplyToFlat(state.slide.opinions, parentId, {
+                  content,
+                  author: '나',
+                }),
+              },
             };
           },
           false,
