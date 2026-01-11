@@ -1,17 +1,20 @@
-// src/components/share/share-modal/ShareModal.tsx
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams } from 'react-router-dom';
 
+import clsx from 'clsx';
+import { toast } from 'sonner';
+
+import IconCopy from '@/assets/icons/icon-copy.svg?react';
+import FaceBookIcon from '@/assets/sns-icons/facebook-icon.svg?react';
+import InstagramIcon from '@/assets/sns-icons/instagram-icon.svg?react';
+import KaKaoTalkIcon from '@/assets/sns-icons/kakaotalk-icon.svg?react';
+import XIcon from '@/assets/sns-icons/x-icon.svg?react';
+import { Popover } from '@/components/common/Popover';
 import { type ShareType, useShareStore } from '@/stores/shareStore';
 
-/**
- * 시안에 있는 "공유할 녹화 영상" 리스트를 위해
- * 임시 데이터 사용
- *
- */
+// 임시데이터 설정
 type VideoItem = { id: string; title: string; date: string };
-
 const MOCK_VIDEOS: VideoItem[] = [
   { id: 'v1', title: '새로운 연습 1', date: '2024-11-15 14:30' },
   { id: 'v2', title: '새로운 연습 2', date: '2024-11-15 11:20' },
@@ -19,86 +22,116 @@ const MOCK_VIDEOS: VideoItem[] = [
   { id: 'v4', title: '새로운 연습 4', date: '2024-11-14 10:15' },
 ];
 
+// 화면에 표시할 공유 타입 보여주기
 function shareTypeLabel(type: ShareType) {
   return type === 'slide_script' ? '슬라이드 + 대본' : '슬라이드 + 대본 + 영상';
 }
 
-/**
- * ShareModal은 Layout에 "항상 깔아두되",
- * store의 isShareModalOpen 값이 false면 null을 반환해서
- * 화면에 아무것도 렌더되지 않게 만든다.
- *
- * LoginModal과 동일한 패턴.
- */
 export function ShareModal() {
   const { projectId } = useParams<{ projectId: string }>();
 
-  // shareModal이 store에 정의된 값, 함수들을 구독하고 있다.
+  // zustand 값 구독(읽기)
   const isOpen = useShareStore((s) => s.isShareModalOpen);
   const step = useShareStore((s) => s.step);
   const shareType = useShareStore((s) => s.shareType);
   const selectedVideoId = useShareStore((s) => s.selectedVideoId);
   const shareUrl = useShareStore((s) => s.shareUrl);
 
+  // zustand store 액션 구독
   const close = useShareStore((s) => s.closeShareModal);
   const setShareType = useShareStore((s) => s.setShareType);
   const setSelectedVideoId = useShareStore((s) => s.setSelectedVideoId);
   const generateShareLink = useShareStore((s) => s.generateShareLink);
   const resetForm = useShareStore((s) => s.resetForm);
 
-  // "복사 완료" 같은 UX를 위해 간단한 로컬 상태를 둔다.
+  // 복사완료 토스트 알림용
   const [copied, setCopied] = useState(false);
 
-  // 선택된 영상 정보(결과 화면에서 표시용)
+  // (남아있지만 현재 로직에서 실사용 안 하면 추후 제거 가능)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const dropdownButtonRef = useRef<HTMLDivElement | null>(null);
+
+  // 공유유형 Popover open 상태 (controlled로 사용)
+  const [isTypeOpen, setIsTypeOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isDropdownOpen) return;
+
+    const onMousedown = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target) &&
+        dropdownButtonRef.current &&
+        !dropdownButtonRef.current.contains(target)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onMousedown);
+    return () => document.removeEventListener('mousedown', onMousedown);
+  }, [isDropdownOpen]);
+
+  // 선택된 비디오 바뀔 때만 다시 계산
   const selectedVideo = useMemo(() => {
     return MOCK_VIDEOS.find((v) => v.id === selectedVideoId) ?? null;
   }, [selectedVideoId]);
 
+  // 모달 열려있을 때
   useEffect(() => {
     if (!isOpen) return;
 
-    // Esc로 닫기 (LoginModal과 동일)
+    // esc 눌렀을때,
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close();
-    };
-    window.addEventListener('keydown', onKeyDown);
+      if (e.key !== 'Escape') return;
 
-    // 모달 열리면 바디 스크롤 잠금 (LoginModal과 동일)
+      // 1순위: 팝오버 열려있고, 공유유형 popover 먼저 닫기
+      if (isTypeOpen) {
+        setIsTypeOpen(false);
+        return;
+      }
+
+      // 2순위: 다른 드롭다운 닫기(있다면)
+      if (isDropdownOpen) {
+        setIsDropdownOpen(false);
+        return;
+      }
+
+      // 3순위: 모달 닫기
+      close();
+    };
+
+    // 모달 열릴때 배경 스크롤 막기
+    window.addEventListener('keydown', onKeyDown);
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
+    // 모달 닫히면 원복
     return () => {
       window.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = prevOverflow;
     };
-  }, [isOpen, close]);
+  }, [isOpen, close, isTypeOpen, isDropdownOpen]);
 
-  // 닫혀 있으면 아무것도 렌더링 안 함 (LoginModal과 동일)
   if (!isOpen) return null;
 
-  /**
-   * 링크 복사
-   * - 실제로는 sonner(Toaster)로 "복사 완료" 토스트 띄우는 것도 추천
-   */
+  // 카피 알람
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      window.setTimeout(() => setCopied(false), 1200);
+      window.setTimeout(() => setCopied(false), 2000);
     } catch {
-      // clipboard 권한 이슈 등 예외 처리
       setCopied(false);
+      toast.error('복사에 실패했습니다.');
     }
   };
 
-  /**
-   * "공유 링크 생성" 클릭
-   * - projectId가 URL에 있어야 정상 생성 가능 (너희 라우팅 구조상 /:projectId 아래에서만 Gnb가 보임)
-   */
   const handleGenerate = () => {
+    // 프로젝트 id없으면 생성x
     if (!projectId) return;
-
-    // 영상 포함 공유라면 영상 선택이 필수라고 가정
+    // 영상포함 유형일때 비디오 없으면 공유 링크 생성X
     if (shareType === 'slide_script_video' && !selectedVideoId) return;
 
     generateShareLink({
@@ -108,39 +141,128 @@ export function ShareModal() {
     });
   };
 
-  /**
-   * 결과 화면에서 "닫기"를 누르면:
-   * - 모달 닫고
-   * - 다음에 열 때 기본 form으로 시작하도록 reset
-   */
   const handleCloseFromResult = () => {
     close();
     resetForm();
   };
 
-  // 시안 느낌의 "드롭다운"을 간단히 select로 구현
+  // Popover children을 함수로 쓰지 않고, 상태로 닫도록 변경
   const typeSelect = (
-    <div className="flex flex-col gap-1">
-      <label className="text-caption text-gray-500">공유 유형</label>
-      <select
-        className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-body-s"
-        value={shareType}
-        onChange={(e) => setShareType(e.target.value as ShareType)}
+    <div className={clsx('flex flex-col', isTypeOpen ? 'gap-1' : 'gap-2')}>
+      <label className="text-caption text-gray-600">공유 유형</label>
+
+      <Popover
+        position="bottom"
+        align="start"
+        isOpen={isTypeOpen} // controlled
+        onOpenChange={setIsTypeOpen} // open 상태 동기화
+        className="w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-[0px_4px_20px_rgba(0,0,0,0.10)]"
+        ariaLabel="공유 유형 선택"
+        trigger={({ isOpen }) => (
+          <button
+            type="button"
+            className={clsx(
+              'flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-5 py-3',
+              'cursor-pointer',
+              isOpen && 'border-gray-300',
+            )}
+          >
+            <span className="text-body-s-bold text-gray-800">
+              {shareType === 'slide_script' ? '슬라이드 + 대본' : '슬라이드 + 대본 + 영상'}
+            </span>
+
+            <svg
+              className={clsx('h-4 w-4 text-gray-500 transition-transform', isOpen && 'rotate-180')}
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden
+            >
+              <path
+                d="M6 9l6 6 6-6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        )}
       >
-        <option value="slide_script">슬라이드 + 대본</option>
-        <option value="slide_script_video">슬라이드 + 대본 + 영상</option>
-      </select>
-      <p className="text-caption text-gray-400">공유 범위를 설정해보세요.</p>
+        {/* 변경: children 함수 호출 X, 일반 JSX만 렌더 */}
+        <div className="w-full bg-white">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation(); // 클릭이 trigger로 다시 전달돼 “바로 다시 열리는 현상”을 방지
+              setShareType('slide_script');
+              setIsTypeOpen(false); // 변경: close() 대신 상태로 닫기
+            }}
+            className={clsx(
+              'w-full px-5 py-3 text-left transition-colors',
+              'hover:bg-gray-50',
+              shareType === 'slide_script' ? 'bg-gray-100' : 'bg-white',
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <span
+                className={clsx('text-body-s', shareType === 'slide_script' && 'font-semibold')}
+              >
+                슬라이드 + 대본
+              </span>
+              {shareType === 'slide_script' && (
+                <span className="text-caption text-gray-700">✓</span>
+              )}
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShareType('slide_script_video');
+              setIsTypeOpen(false); // 변경
+            }}
+            className={clsx(
+              'w-full px-5 py-3 text-left transition-colors border-t border-gray-100',
+              'hover:bg-gray-50',
+              shareType === 'slide_script_video' ? 'bg-gray-100' : 'bg-white',
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <span
+                className={clsx(
+                  'text-body-s',
+                  shareType === 'slide_script_video' && 'font-semibold',
+                )}
+              >
+                슬라이드 + 대본 + 영상
+              </span>
+              {shareType === 'slide_script_video' && (
+                <span className="text-caption text-gray-700">✓</span>
+              )}
+            </div>
+          </button>
+        </div>
+      </Popover>
+
+      {!isTypeOpen && (
+        <p className="text-caption text-gray-600">
+          {shareType === 'slide_script'
+            ? '슬라이드와 대본만 공유됩니다.'
+            : '녹화된 영상과 함께 공유됩니다.'}
+        </p>
+      )}
     </div>
   );
 
-  // 시안의 “공유할 녹화 영상” 영역: 고정 높이 + 내부 스크롤
   const videoList = (
     <div className="flex flex-col gap-2">
       <label className="text-caption text-gray-500">공유할 녹화 영상</label>
 
-      <div className="max-h-[260px] overflow-y-auto rounded-xl border border-gray-200 bg-gray-50 p-2">
-        <div className="flex flex-col gap-2">
+      <div className="max-h-80 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50">
+        <div className="flex flex-col">
           {MOCK_VIDEOS.map((v) => {
             const active = v.id === selectedVideoId;
 
@@ -150,18 +272,16 @@ export function ShareModal() {
                 type="button"
                 onClick={() => setSelectedVideoId(v.id)}
                 className={[
-                  'flex w-full items-center justify-between rounded-lg border px-3 py-3 text-left transition',
-                  active
-                    ? 'border-main bg-white'
-                    : 'border-transparent bg-white hover:border-gray-200',
+                  'flex w-full items-center gap-6 px-5 py-4 text-left transition',
+                  active ? 'bg-gray-100' : 'bg-white hover:bg-gray-50',
                 ].join(' ')}
               >
+                <div className="h-16.75 w-30 rounded-sm bg-gray-200" />
+
                 <div className="flex flex-col">
                   <span className="text-body-s-bold text-gray-800">{v.title}</span>
-                  <span className="text-caption text-gray-500">{v.date}</span>
+                  <span className="text-caption text-gray-600">{v.date}</span>
                 </div>
-
-                {active && <span className="text-caption text-main">선택됨</span>}
               </button>
             );
           })}
@@ -170,37 +290,28 @@ export function ShareModal() {
     </div>
   );
 
-  /**
-   * 모달 바디: step에 따라 2가지 화면을 렌더링
-   * - form: 옵션 선택 + 영상 리스트(조건부) + "공유 링크 생성"
-   * - result: 링크 + SNS 버튼 + 공유 정보 + 닫기
-   */
   const modalBody =
     step === 'form' ? (
-      <div className="flex flex-col gap-4">
+      <div className="relative flex flex-col gap-3">
         {typeSelect}
-
-        {/* 공유 유형이 "영상 포함"일 때만 영상 리스트가 펼쳐짐 (시안 2번째 이미지) */}
         {shareType === 'slide_script_video' && videoList}
 
-        {/* 하단 버튼 (시안의 파란 큰 버튼) */}
         <button
           type="button"
           onClick={handleGenerate}
           disabled={shareType === 'slide_script_video' && !selectedVideoId}
           className={[
-            'mt-2 h-12 w-full rounded-xl text-body-s-bold text-white transition',
+            'mt-4 h-14 w-full rounded-[8px] text-body-s-bold text-white transition flex items-center justify-center gap-2',
             shareType === 'slide_script_video' && !selectedVideoId
               ? 'bg-gray-300 cursor-not-allowed'
               : 'bg-main hover:opacity-90',
           ].join(' ')}
         >
-          공유 링크 생성
+          <span>공유 링크 생성</span>
         </button>
       </div>
     ) : (
       <div className="flex flex-col gap-4">
-        {/* 링크 영역 */}
         <div className="flex flex-col gap-1">
           <label className="text-caption text-gray-500">공유 링크</label>
 
@@ -210,69 +321,114 @@ export function ShareModal() {
               readOnly
               className="w-full bg-transparent text-body-s text-gray-800 outline-none"
             />
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="text-caption text-main hover:opacity-80"
-            >
-              {copied ? '복사됨' : '복사'}
-            </button>
-          </div>
-        </div>
 
-        {/* SNS 공유 (시안의 아이콘 4개) - 실제 연동 전이므로 버튼만 형태 제공 */}
-        <div className="flex flex-col gap-2">
-          <label className="text-caption text-gray-500">SNS로 공유하기</label>
-          <div className="flex items-center gap-4">
-            <button type="button" className="h-10 w-10 rounded-full bg-gray-100">
-              카
-            </button>
-            <button type="button" className="h-10 w-10 rounded-full bg-gray-100">
-              인
-            </button>
-            <button type="button" className="h-10 w-10 rounded-full bg-gray-100">
-              X
-            </button>
-            <button type="button" className="h-10 w-10 rounded-full bg-gray-100">
-              f
-            </button>
-          </div>
-        </div>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="text-caption text-main hover:opacity-80"
+                aria-label="링크 복사"
+              >
+                <IconCopy className="h-4 w-4" />
+              </button>
 
-        {/* 결과 요약 정보 */}
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
-          <div className="text-caption text-gray-500">공유 유형</div>
-          <div className="text-body-s-bold text-gray-800">{shareTypeLabel(shareType)}</div>
-
-          {shareType === 'slide_script_video' && selectedVideo && (
-            <div className="mt-2">
-              <div className="text-caption text-gray-500">선택된 영상</div>
-              <div className="text-body-s text-gray-700">
-                {selectedVideo.title} · {selectedVideo.date}
-              </div>
+              {copied && (
+                <div
+                  role="status"
+                  className={clsx(
+                    'absolute -top-11 right-0',
+                    'rounded-md bg-gray-900 px-3 py-2 text-caption text-white shadow-lg',
+                    'whitespace-nowrap',
+                  )}
+                >
+                  복사가 완료되었습니다.
+                </div>
+              )}
             </div>
-          )}
+          </div>
+        </div>
+
+        {/* SNS 공유 */}
+        <div className="flex flex-col gap-5">
+          <label className="text-caption text-gray-500">SNS로 공유하기</label>
+          <div className="flex items-center justify-center gap-17">
+            <div className="flex flex-col items-center">
+              <button
+                type="button"
+                aria-label="카카오톡으로 공유"
+                className="h-15 w-15 rounded-full  grid place-items-center"
+              >
+                <KaKaoTalkIcon className="h-12 w-12" aria-hidden />
+              </button>
+              <span className="mt-2 text-caption text-black">카카오톡</span>
+            </div>
+
+            <div className="flex flex-col items-center">
+              <button
+                type="button"
+                aria-label="인스타로 공유"
+                className="h-15 w-15 rounded-full grid place-items-center"
+              >
+                <InstagramIcon className="h-12 w-12" aria-hidden />
+              </button>
+              <span className="mt-2 text-caption text-black">인스타그램</span>
+            </div>
+
+            <div className="flex flex-col items-center">
+              <button
+                type="button"
+                aria-label="X으로 공유"
+                className="h-15 w-15 rounded-full grid place-items-center"
+              >
+                <XIcon className="h-12 w-12" aria-hidden />
+              </button>
+              <span className="mt-2 text-caption text-black">X</span>
+            </div>
+
+            <div className="flex flex-col items-center">
+              <button
+                type="button"
+                aria-label="페이스북으로 공유"
+                className="h-15 w-15 rounded-fullgrid place-items-center"
+              >
+                <FaceBookIcon className="h-12 w-12" aria-hidden />
+              </button>
+              <span className="mt-2 text-caption text-black">페이스북</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 결과 요약 정보 (너 코드 유지) */}
+        <div className="rounded-xl border border-gray-200 bg-gray-0 p-3 mt-6">
+          <div className="grid grid-cols-[92px_1fr] items-center gap-y-2">
+            <div className="text-caption text-gray-500">공유 유형</div>
+            <div className="text-body-s-bold text-gray-800">{shareTypeLabel(shareType)}</div>
+
+            {shareType === 'slide_script_video' && selectedVideo && (
+              <>
+                <div className="text-caption text-gray-500">선택된 영상</div>
+
+                <div className="flex gap-5">
+                  <span className="text-body-s text-gray-700 ">{selectedVideo.title}</span>
+                  <span className="text-sm text-body-s text-gray-400">{selectedVideo.date}</span>
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         <button
           type="button"
           onClick={handleCloseFromResult}
-          className="h-11 w-full rounded-xl border border-gray-200 bg-white text-body-s-bold text-gray-800 hover:bg-gray-50"
+          className="h-11 w-full rounded-xl border border-gray-200 bg-gray-100 text-body-s-bold text-blue-700"
         >
           닫기
         </button>
       </div>
     );
 
-  /**
-   * Portal로 document.body에 붙이기
-   * - Layout이 overflow-hidden이라도 모달이 잘 보이게
-   * - z-index 충돌 최소화
-   * - LoginModal과 완전히 같은 방식
-   */
   const modal = (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* 배경 오버레이: 클릭하면 닫힘 (LoginModal과 동일) */}
       <button
         type="button"
         aria-label="close overlay"
@@ -280,19 +436,16 @@ export function ShareModal() {
         onClick={close}
       />
 
-      {/* 다이얼로그 카드 */}
       <div
         role="dialog"
         aria-modal="true"
         aria-label="발표 자료 공유"
-        className="relative z-10 w-[520px] max-w-[calc(100vw-32px)] rounded-2xl bg-white px-6 py-5 shadow-xl"
+        className="relative z-12 w-148.5 max-w-[calc(100vw-32px)] rounded-xl bg-white px-6 pt-5 pb-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 헤더 */}
         <div className="mb-4 flex items-center justify-between">
           <div className="text-body-m-bold text-gray-800">발표 자료 공유</div>
 
-          {/* 닫기 버튼: 아이콘 대신 X 텍스트로 처리(필요하면 CloseIcon 연결) */}
           <button
             type="button"
             onClick={close}
@@ -303,7 +456,6 @@ export function ShareModal() {
           </button>
         </div>
 
-        {/* 바디 */}
         {modalBody}
       </div>
     </div>

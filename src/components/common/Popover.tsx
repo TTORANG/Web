@@ -27,6 +27,9 @@ interface PopoverProps {
   align?: PopoverAlign;
   className?: string;
   ariaLabel?: string;
+
+  isOpen?: boolean; // Popover 바깥에 있는 부모 컴포넌트 ex) ShareModal 에서 control하려고
+  onOpenChange?: (isOpen: boolean) => void; // 추가
 }
 
 export function Popover({
@@ -36,41 +39,40 @@ export function Popover({
   align = 'end',
   className,
   ariaLabel,
+  isOpen,
+  onOpenChange,
 }: PopoverProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  // Popover 내부 state: 공유유형 옵션 선택 시 알아서 닫히고, 모달 내 바깥 클릭하면 닫히게 하기
+  const [innerOpen, setInnerOpen] = useState(false);
+  const open = isOpen ?? innerOpen; // 부모가 isOpen 주면 우선사용, isOpen 안주면 innerOpen 사용
   const popoverRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const lastFocusedElement = useRef<HTMLElement | null>(null);
   const popoverId = useId();
 
-  /**
-   * 팝오버의 열림/닫힘 상태를 토글합니다.
-   * 열릴 때 현재 포커스된 요소를 저장하여 닫힐 때 복원합니다.
-   */
-  const handleToggle = useCallback(() => {
-    setIsOpen((prev) => {
-      if (!prev) {
-        // 팝오버가 열릴 때 현재 포커스된 요소 저장
-        lastFocusedElement.current = document.activeElement as HTMLElement;
-      }
-      return !prev;
-    });
-  }, []);
+  const setOpen = useCallback(
+    (next: boolean) => {
+      // // 부모가 isOpen을 주지 않은 경우(uncontrolled)만 내부 상태를 변경
+      if (isOpen === undefined) setInnerOpen(next);
+      onOpenChange?.(next);
+    },
+    [isOpen, onOpenChange],
+  );
 
-  /**
-   * 팝오버를 닫습니다.
-   * 닫힐 때 이전에 저장된 요소로 포커스를 복원합니다.
-   */
+  const handleToggle = useCallback(() => {
+    if (!open) lastFocusedElement.current = document.activeElement as HTMLElement;
+    setOpen(!open);
+  }, [open, setOpen]);
+
   const handleClose = useCallback(() => {
-    setIsOpen(false);
-    // 팝오버 닫힐 때 이전에 포커스된 요소로 포커스 이동
+    setOpen(false);
     lastFocusedElement.current?.focus();
-  }, []);
+  }, [setOpen]);
 
   // Escape 키로 닫기
   useEffect(() => {
-    if (!isOpen) return;
+    if (!open) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -80,11 +82,11 @@ export function Popover({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, handleClose]);
+  }, [open, handleClose]);
 
   // 외부 클릭 시 닫기
   useEffect(() => {
-    if (!isOpen) return;
+    if (!open) return;
 
     const handleClickOutside = (e: MouseEvent) => {
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
@@ -94,11 +96,11 @@ export function Popover({
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, handleClose]);
+  }, [open, handleClose]);
 
   // 팝오버 열릴 때 첫 번째 포커스 가능한 요소로 포커스 이동
   useEffect(() => {
-    if (!isOpen || !contentRef.current) return;
+    if (!open || !contentRef.current) return;
 
     const focusableElements = contentRef.current.querySelectorAll<HTMLElement>(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
@@ -107,7 +109,7 @@ export function Popover({
     if (focusableElements.length > 0) {
       focusableElements[0].focus();
     }
-  }, [isOpen]);
+  }, [open]);
 
   const positionClasses = clsx({
     'bottom-full mb-2': position === 'top',
@@ -125,13 +127,13 @@ export function Popover({
         ref={triggerRef}
         onClick={handleToggle}
         aria-haspopup="dialog"
-        aria-expanded={isOpen}
-        aria-controls={isOpen ? popoverId : undefined}
+        aria-expanded={open}
+        aria-controls={open ? popoverId : undefined}
       >
-        {typeof trigger === 'function' ? trigger({ isOpen }) : trigger}
+        {typeof trigger === 'function' ? trigger({ isOpen: open }) : trigger}
       </div>
 
-      {isOpen && (
+      {open && (
         <div
           ref={contentRef}
           id={popoverId}
