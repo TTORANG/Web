@@ -1,63 +1,33 @@
+/**
+ * @file Opinion.tsx
+ * @description 의견 목록 팝오버
+ *
+ * 대본에 대한 팀원들의 의견을 보여주고, 답글을 달 수 있습니다.
+ * Zustand store를 통해 의견 데이터를 읽고 업데이트합니다.
+ */
 import { useState } from 'react';
 
 import clsx from 'clsx';
 
 import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
-import type { OpinionItem } from '@/types/script';
+import { Popover } from '@/components/common';
+import { useSlideActions, useSlideOpinions } from '@/hooks';
+import { formatRelativeTime } from '@/utils/format';
 
-import { Popover } from '../common';
-
-interface OpinionProps {
-  opinions?: OpinionItem[];
-  opinionCount?: number;
-  onDelete?: (id: number) => void;
-  onReply?: (id: number, content: string) => void;
-}
-
-export default function Opinion({
-  opinions = [
-    {
-      id: 0,
-      author: '익명 사용자',
-      content: '이 부분 설명이 명확해요!',
-      timestamp: '방금 전',
-      isMine: true,
-    },
-    {
-      id: 1,
-      author: '이영희',
-      content: '이 부분 설명이 명확해요!',
-      timestamp: '1시간 전',
-      isMine: true,
-    },
-    {
-      id: 2,
-      author: '박민수',
-      content: '이 부분 설명이 명확해요!',
-      timestamp: '1시간 전',
-      isMine: false,
-      isReply: true,
-      parentId: 1,
-    },
-    {
-      id: 3,
-      author: '김철수',
-      content: '이 부분 설명이 명확해요!',
-      timestamp: '1시간 전',
-      isMine: false,
-    },
-  ],
-  opinionCount = 3,
-  onDelete,
-  onReply,
-}: OpinionProps) {
-  const [activeReplyId, setActiveReplyId] = useState<number | null>(null);
+export default function Opinion() {
+  const opinions = useSlideOpinions();
+  const { deleteOpinion, addReply } = useSlideActions();
+  const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
 
-  const handleReplySubmit = (opinionId: number) => {
+  /**
+   * 답글을 등록합니다.
+   * @param opinionId - 답글을 달 의견의 ID
+   */
+  const handleReplySubmit = (opinionId: string) => {
     if (replyText.trim()) {
-      onReply?.(opinionId, replyText);
+      addReply(opinionId, replyText);
     }
     setActiveReplyId(null);
     setReplyText('');
@@ -68,7 +38,7 @@ export default function Opinion({
       trigger={({ isOpen }) => (
         <button
           type="button"
-          aria-label={`의견 ${opinionCount}개 보기`}
+          aria-label={`의견 ${opinions.length}개 보기`}
           className={clsx(
             'inline-flex h-7 items-center gap-1 rounded px-2',
             'outline-1 -outline-offset-1',
@@ -91,7 +61,7 @@ export default function Opinion({
               isOpen ? 'text-main-variant1' : 'text-gray-600',
             )}
           >
-            {opinionCount}
+            {opinions.length}
           </span>
         </button>
       )}
@@ -130,13 +100,15 @@ export default function Opinion({
                       <span className="max-w-50 truncate text-sm font-semibold text-gray-800">
                         {opinion.author}
                       </span>
-                      <span className="text-xs font-medium text-gray-600">{opinion.timestamp}</span>
+                      <span className="text-xs font-medium text-gray-600">
+                        {formatRelativeTime(opinion.timestamp)}
+                      </span>
                     </div>
 
                     {opinion.isMine && (
                       <button
                         type="button"
-                        onClick={() => onDelete?.(opinion.id)}
+                        onClick={() => deleteOpinion(opinion.id)}
                         aria-label="의견 삭제"
                         className="flex items-center gap-1 text-xs font-semibold text-error active:opacity-80"
                       >

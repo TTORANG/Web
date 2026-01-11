@@ -1,3 +1,10 @@
+/**
+ * @file Gnb.tsx
+ * @description 글로벌 네비게이션 바 (탭 메뉴)
+ *
+ * 슬라이드/영상/인사이트 탭을 표시하며, 슬라이딩 인디케이터로 현재 위치를 나타냅니다.
+ * 프로젝트 페이지에서만 표시됩니다.
+ */
 import { Link, useLocation, useParams } from 'react-router-dom';
 
 import clsx from 'clsx';

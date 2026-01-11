@@ -1,3 +1,10 @@
+/**
+ * @file Popover.tsx
+ * @description 재사용 가능한 팝오버 컴포넌트
+ *
+ * 트리거 요소를 클릭하면 팝오버가 열리고, 외부 클릭이나 ESC 키로 닫힙니다.
+ * 위치(top/bottom)와 정렬(start/end)을 지정할 수 있습니다.
+ */
 import {
   type ReactElement,
   type ReactNode,
@@ -37,6 +44,10 @@ export function Popover({
   const lastFocusedElement = useRef<HTMLElement | null>(null);
   const popoverId = useId();
 
+  /**
+   * 팝오버의 열림/닫힘 상태를 토글합니다.
+   * 열릴 때 현재 포커스된 요소를 저장하여 닫힐 때 복원합니다.
+   */
   const handleToggle = useCallback(() => {
     setIsOpen((prev) => {
       if (!prev) {
@@ -47,6 +58,10 @@ export function Popover({
     });
   }, []);
 
+  /**
+   * 팝오버를 닫습니다.
+   * 닫힐 때 이전에 저장된 요소로 포커스를 복원합니다.
+   */
   const handleClose = useCallback(() => {
     setIsOpen(false);
     // 팝오버 닫힐 때 이전에 포커스된 요소로 포커스 이동

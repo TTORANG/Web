@@ -1,28 +1,36 @@
-import { useState } from 'react';
+/**
+ * @file SlideTitle.tsx
+ * @description 슬라이드 제목 편집 팝오버
+ *
+ * ScriptBox 헤더에서 슬라이드 제목을 클릭하면 나타나는 편집 UI입니다.
+ * Zustand store를 통해 슬라이드 제목을 읽고 업데이트합니다.
+ */
+import { useEffect, useState } from 'react';
 
 import clsx from 'clsx';
 
 import ArrowDownIcon from '@/assets/icons/icon-arrow-down.svg?react';
-
-import { Popover } from '../common';
+import { Popover } from '@/components/common';
+import { useSlideActions, useSlideTitle } from '@/hooks';
 
 interface SlideTitleProps {
-  initialTitle?: string;
   isCollapsed?: boolean;
-  onSave?: (title: string) => void;
 }
 
-export default function SlideTitle({
-  initialTitle = '슬라이드 1',
-  isCollapsed = false,
-  onSave,
-}: SlideTitleProps) {
-  const [title, setTitle] = useState(initialTitle);
-  const [editTitle, setEditTitle] = useState(initialTitle);
+export default function SlideTitle({ isCollapsed = false }: SlideTitleProps) {
+  const title = useSlideTitle();
+  const { updateSlide } = useSlideActions();
+  const [editTitle, setEditTitle] = useState(title);
 
+  useEffect(() => {
+    setEditTitle(title);
+  }, [title]);
+
+  /**
+   * 변경된 제목을 `store`에 저장합니다.
+   */
   const handleSave = () => {
-    setTitle(editTitle);
-    onSave?.(editTitle);
+    updateSlide({ title: editTitle });
   };
 
   return (
