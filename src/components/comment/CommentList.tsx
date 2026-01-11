@@ -7,8 +7,9 @@
  */
 import { useState } from 'react';
 
-import { CommentItem } from '@/components/common';
 import type { CommentItem as CommentItemType } from '@/types/comment';
+
+import CommentItem from './CommentItem';
 
 interface Props {
   comments: CommentItemType[];
