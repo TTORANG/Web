@@ -372,6 +372,7 @@ export function ShareModal() {
                     jsKey: KAKAO_JS_KEY,
                     url: shareUrl,
                     text: SHARE_TEXT,
+                    title: '발표 자료 공유',
                   });
                 }}
                 className="h-15 w-15 rounded-full grid place-items-center"
