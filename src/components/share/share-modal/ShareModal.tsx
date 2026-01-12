@@ -12,6 +12,11 @@ import KaKaoTalkIcon from '@/assets/sns-icons/kakaotalk-icon.svg?react';
 import XIcon from '@/assets/sns-icons/x-icon.svg?react';
 import { Popover } from '@/components/common/Popover';
 import { type ShareType, useShareStore } from '@/stores/shareStore';
+// sns공유테스트
+import { shareToFacebook, shareToInstagram, shareToKakao, shareToX } from '@/utils/snsShare';
+
+const KAKAO_JS_KEY = import.meta.env?.VITE_KAKAO_JS_KEY ?? '';
+const SHARE_TEXT = '내 발표를 확인하고 피드백을 남겨주세요!';
 
 // 임시데이터 설정
 type VideoItem = { id: string; title: string; date: string };
@@ -116,7 +121,7 @@ export function ShareModal() {
 
   if (!isOpen) return null;
 
-  // 카피 알람
+  // 사용자 클립보드에 url 복사
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
@@ -341,32 +346,47 @@ export function ShareModal() {
                     'whitespace-nowrap',
                   )}
                 >
-                  복사가 완료되었습니다.
+                  URL을 복사했습니다.
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* SNS 공유 */}
+        {/* SNS 공유 , 링크 생성 */}
         <div className="flex flex-col gap-5">
           <label className="text-caption text-gray-500">SNS로 공유하기</label>
+
           <div className="flex items-center justify-center gap-17">
+            {/* 카카오톡 */}
             <div className="flex flex-col items-center">
               <button
                 type="button"
                 aria-label="카카오톡으로 공유"
-                className="h-15 w-15 rounded-full  grid place-items-center"
+                onClick={() => {
+                  if (!KAKAO_JS_KEY) {
+                    toast.error('카카오 JS 키가 설정되지 않았습니다. (.env 확인)');
+                    return;
+                  }
+                  shareToKakao({
+                    jsKey: KAKAO_JS_KEY,
+                    url: shareUrl,
+                    text: SHARE_TEXT,
+                  });
+                }}
+                className="h-15 w-15 rounded-full grid place-items-center"
               >
                 <KaKaoTalkIcon className="h-12 w-12" aria-hidden />
               </button>
               <span className="mt-2 text-caption text-black">카카오톡</span>
             </div>
 
+            {/* 인스타그램 */}
             <div className="flex flex-col items-center">
               <button
                 type="button"
                 aria-label="인스타로 공유"
+                onClick={shareToInstagram}
                 className="h-15 w-15 rounded-full grid place-items-center"
               >
                 <InstagramIcon className="h-12 w-12" aria-hidden />
@@ -374,10 +394,17 @@ export function ShareModal() {
               <span className="mt-2 text-caption text-black">인스타그램</span>
             </div>
 
+            {/* X */}
             <div className="flex flex-col items-center">
               <button
                 type="button"
                 aria-label="X으로 공유"
+                onClick={() =>
+                  shareToX({
+                    url: shareUrl,
+                    text: SHARE_TEXT,
+                  })
+                }
                 className="h-15 w-15 rounded-full grid place-items-center"
               >
                 <XIcon className="h-12 w-12" aria-hidden />
@@ -385,11 +412,17 @@ export function ShareModal() {
               <span className="mt-2 text-caption text-black">X</span>
             </div>
 
+            {/* 페이스북 */}
             <div className="flex flex-col items-center">
               <button
                 type="button"
                 aria-label="페이스북으로 공유"
-                className="h-15 w-15 rounded-fullgrid place-items-center"
+                onClick={() =>
+                  shareToFacebook({
+                    url: shareUrl,
+                  })
+                }
+                className="h-15 w-15 rounded-full grid place-items-center"
               >
                 <FaceBookIcon className="h-12 w-12" aria-hidden />
               </button>
@@ -398,7 +431,7 @@ export function ShareModal() {
           </div>
         </div>
 
-        {/* 결과 요약 정보 (너 코드 유지) */}
+        {/* 공유유형, 선택된 영상 정보 */}
         <div className="rounded-xl border border-gray-200 bg-gray-0 p-3 mt-6">
           <div className="grid grid-cols-[92px_1fr] items-center gap-y-2">
             <div className="text-caption text-gray-500">공유 유형</div>
