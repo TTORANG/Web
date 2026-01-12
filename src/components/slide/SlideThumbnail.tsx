@@ -60,6 +60,4 @@ function SlideThumbnailSkeleton({ index }: { index: number }) {
   );
 }
 
-export default Object.assign(SlideThumbnail, {
-  Skeleton: SlideThumbnailSkeleton,
-});
+export { SlideThumbnail, SlideThumbnailSkeleton };
