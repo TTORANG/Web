@@ -6,7 +6,7 @@ interface DeviceSelectProps {
 }
 
 /**
- * @description 웹캠 및 마이크 선택을 위한 커스텀 셀렉트 컴포넌트
+ * @description 웹캠 및 마이크 선택 컴포넌트
  */
 export const DeviceSelect = ({ label, options, selectedValue, onChange }: DeviceSelectProps) => {
   return (
