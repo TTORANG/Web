@@ -6,10 +6,10 @@ import clsx from 'clsx';
 import { toast } from 'sonner';
 
 import IconCopy from '@/assets/icons/icon-copy.svg?react';
-import FaceBookIcon from '@/assets/sns-icons/facebook-icon.svg?react';
-import InstagramIcon from '@/assets/sns-icons/instagram-icon.svg?react';
-import KaKaoTalkIcon from '@/assets/sns-icons/kakaotalk-icon.svg?react';
-import XIcon from '@/assets/sns-icons/x-icon.svg?react';
+import facebookIcon from '@/assets/sns-icons/facebook-icon@4x.webp';
+import instagramIcon from '@/assets/sns-icons/instagram-icon@4x.webp';
+import kakaoTalkIcon from '@/assets/sns-icons/kakaotalk-icon@4x.webp';
+import xIcon from '@/assets/sns-icons/x-icon@4x.webp';
 import { Popover } from '@/components/common/Popover';
 import { type ShareType, useShareStore } from '@/stores/shareStore';
 // sns공유테스트
@@ -377,7 +377,7 @@ export function ShareModal() {
                 }}
                 className="h-15 w-15 rounded-full grid place-items-center"
               >
-                <KaKaoTalkIcon className="h-12 w-12" aria-hidden />
+                <img src={kakaoTalkIcon} alt="" aria-hidden className="h-12 w-12" />
               </button>
               <span className="mt-2 text-caption text-black">카카오톡</span>
             </div>
@@ -390,7 +390,7 @@ export function ShareModal() {
                 onClick={shareToInstagram}
                 className="h-15 w-15 rounded-full grid place-items-center"
               >
-                <InstagramIcon className="h-12 w-12" aria-hidden />
+                <img src={instagramIcon} alt="" aria-hidden className="h-12 w-12" />
               </button>
               <span className="mt-2 text-caption text-black">인스타그램</span>
             </div>
@@ -408,7 +408,7 @@ export function ShareModal() {
                 }
                 className="h-15 w-15 rounded-full grid place-items-center"
               >
-                <XIcon className="h-12 w-12" aria-hidden />
+                <img src={xIcon} alt="" aria-hidden className="h-12 w-12" />
               </button>
               <span className="mt-2 text-caption text-black">X</span>
             </div>
@@ -425,7 +425,7 @@ export function ShareModal() {
                 }
                 className="h-15 w-15 rounded-full grid place-items-center"
               >
-                <FaceBookIcon className="h-12 w-12" aria-hidden />
+                <img src={facebookIcon} alt="" aria-hidden className="h-12 w-12" />
               </button>
               <span className="mt-2 text-caption text-black">페이스북</span>
             </div>
