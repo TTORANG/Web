@@ -70,10 +70,8 @@ export const useShareStore = create<ShareStoreState>((set, get) => ({
   },
 
   closeShareModal: () => {
-    // 닫을 때는 그냥 닫기만 해도 되지만,
-    // 다음에 열었을 때 깔끔하도록 reset까지 함께 해도 좋다.
+    // 닫을 때는 모달만 닫고, resetForm은 애니메이션 완료 후 호출
     set({ isShareModalOpen: false });
-    get().resetForm();
   },
 
   setShareType: (type) => {

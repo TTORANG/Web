@@ -61,29 +61,26 @@ export function Popover({
   );
 
   const handleToggle = useCallback(() => {
-    setIsOpen((prev) => {
-      if (!prev) {
-        // 팝오버가 열릴 때 현재 포커스된 요소 저장
-        lastFocusedElement.current = document.activeElement as HTMLElement;
-      }
-      return !prev;
-    });
-  }, []);
+    if (!open) {
+      lastFocusedElement.current = document.activeElement as HTMLElement;
+    }
+    setOpen(!open);
+  }, [open, setOpen]);
 
   /**
    * 팝오버를 닫습니다 (render prop용, ref 접근 없음)
    */
   const close = useCallback(() => {
-    setIsOpen(false);
-  }, []);
+    setOpen(false);
+  }, [setOpen]);
 
   // 팝오버 닫힐 때 이전에 포커스된 요소로 포커스 복원
   useEffect(() => {
-    if (!isOpen && lastFocusedElement.current) {
+    if (!open && lastFocusedElement.current) {
       lastFocusedElement.current.focus();
       lastFocusedElement.current = null;
     }
-  }, [isOpen]);
+  }, [open]);
 
   // Escape 키로 닫기
   useEffect(() => {
@@ -97,7 +94,7 @@ export function Popover({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, close]);
+  }, [open, close]);
 
   // 외부 클릭 시 닫기
   useEffect(() => {
@@ -111,7 +108,7 @@ export function Popover({
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, close]);
+  }, [open, close]);
 
   // 팝오버 열릴 때 첫 번째 포커스 가능한 요소로 포커스 이동
   useEffect(() => {

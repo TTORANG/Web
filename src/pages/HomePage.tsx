@@ -30,7 +30,7 @@ export default function HomePage() {
           onFilesSelected={uploadFiles}
         />
 
-        {error && <p className="mt-3 text-body-s text-red-500">업로드 실패: {error}</p>}
+        {error && <p className="mt-3 text-body-s text-error">업로드 실패: {error}</p>}
       </section>
 
       {/* 내발표 */}

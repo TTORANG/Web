@@ -26,6 +26,8 @@ export interface DropdownItem {
   onClick: () => void;
   variant?: 'default' | 'danger';
   disabled?: boolean;
+  /** 현재 선택된 항목인지 여부 */
+  selected?: boolean;
 }
 
 interface DropdownProps {
@@ -106,6 +108,7 @@ export function Dropdown({
       switch (e.key) {
         case 'Escape':
           e.preventDefault();
+          e.stopImmediatePropagation();
           close();
           break;
         case 'ArrowDown':
@@ -130,8 +133,8 @@ export function Dropdown({
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
   }, [isOpen, close, focusedIndex, enabledItems, handleItemClick]);
 
   // 포커스 인덱스 변경 시 해당 항목에 포커스
@@ -195,7 +198,7 @@ export function Dropdown({
             positionClasses,
             alignClasses,
             'rounded-lg border border-gray-200 bg-white',
-            'shadow-[0_0.25rem_1.25rem_rgba(0,0,0,0.05)]',
+            'shadow-[0_0.25rem_1.25rem_rgba(0,0,0,0.1)]',
             menuClassName,
           )}
         >
@@ -221,13 +224,14 @@ export function Dropdown({
                   }
                 }}
                 className={clsx(
-                  'w-full px-4 py-2 text-left text-sm font-medium transition-colors focus:outline-none',
+                  'w-full whitespace-nowrap px-5 py-3 text-left text-body-m-bold transition-colors focus:outline-none',
                   {
                     'cursor-not-allowed opacity-50': item.disabled,
-                    'text-error': item.variant === 'danger',
-                    'text-black': item.variant !== 'danger',
-                    'bg-gray-100': !item.disabled && isFocused,
-                    'active:bg-main-variant1 active:text-white': !item.disabled,
+                    'text-error': item.variant === 'danger' && !item.selected,
+                    'text-gray-800': item.variant !== 'danger' && !item.selected,
+                    'bg-gray-100': !item.disabled && isFocused && !item.selected,
+                    'bg-main-variant1 text-white': item.selected,
+                    'active:bg-main-variant1 active:text-white': !item.disabled && !item.selected,
                   },
                 )}
               >
