@@ -110,18 +110,15 @@ export const useMediaStream = (videoDeviceId?: string, audioDeviceId?: string) =
   }, [videoDeviceId, audioDeviceId, cleanupStream, setupAudioAnalysis]);
 
   useEffect(() => {
+    if (videoDeviceId === undefined && audioDeviceId === undefined) {
+      return;
+    }
     startStream();
 
     return () => {
       cleanupStream();
     };
-  }, [videoDeviceId, audioDeviceId]);
-
-  useEffect(() => {
-    return () => {
-      cleanupStream();
-    };
-  }, []);
+  }, [videoDeviceId, audioDeviceId, startStream, cleanupStream]);
 
   return {
     stream,

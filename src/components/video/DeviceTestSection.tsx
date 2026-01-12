@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { ActionButton, DeviceSelect, VolumeIndicator } from '@/components/common';
+import { ActionButton } from '@/components/common';
+import { DeviceSelect, VolumeIndicator } from '@/components/video';
 import { useMediaStream } from '@/hooks/useMediaStream';
 
 interface DeviceTestSectionProps {
@@ -9,21 +10,31 @@ interface DeviceTestSectionProps {
 
 export const DeviceTestSection = ({ onNext }: DeviceTestSectionProps) => {
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
-  const [selectedVideo, setSelectedVideo] = useState<string>('');
-  const [selectedAudio, setSelectedAudio] = useState<string>('');
+  const [selectedVideo, setSelectedVideo] = useState<string | undefined>();
+  const [selectedAudio, setSelectedAudio] = useState<string | undefined>();
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const { stream, volume } = useMediaStream(selectedVideo, selectedAudio);
 
   useEffect(() => {
     const initDevices = async () => {
-      const allDevices = await navigator.mediaDevices.enumerateDevices();
-      setDevices(allDevices);
-      const vInput = allDevices.find((d) => d.kind === 'videoinput');
-      const aInput = allDevices.find((d) => d.kind === 'audioinput');
-      if (vInput) setSelectedVideo(vInput.deviceId);
-      if (aInput) setSelectedAudio(aInput.deviceId);
+      try {
+        const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+        tempStream.getTracks().forEach((track) => track.stop());
+
+        const allDevices = await navigator.mediaDevices.enumerateDevices();
+        setDevices(allDevices);
+
+        const vInput = allDevices.find((d) => d.kind === 'videoinput');
+        const aInput = allDevices.find((d) => d.kind === 'audioinput');
+
+        if (vInput) setSelectedVideo(vInput.deviceId);
+        if (aInput) setSelectedAudio(aInput.deviceId);
+      } catch (err) {
+        console.error('Media device access denied:', err);
+      }
     };
+
     initDevices();
   }, []);
 
@@ -34,15 +45,11 @@ export const DeviceTestSection = ({ onNext }: DeviceTestSectionProps) => {
   }, [stream]);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-6 text-white">
-      <div className="w-full max-w-[800px] flex flex-col items-center gap-10">
-        {/* 제목 */}
-        <h1 className="text-2xl font-bold font-sans tracking-tight">
-          웹캠, 마이크를 테스트해주세요.
-        </h1>
+    <div className="w-full h-full flex flex-col items-center justify-center text-white overflow-hidden">
+      <div className="w-full max-w-[720px] flex flex-col items-center gap-6 py-4">
+        <h1 className="text-xl font-bold">웹캠, 마이크를 테스트해주세요.</h1>
 
-        {/* 프리뷰 */}
-        <div className="w-full aspect-video bg-[#2a2d34] rounded-xl overflow-hidden border-2 border-[#5162ff] shadow-2xl">
+        <div className="w-full aspect-video bg-[#2a2d34] rounded-xl overflow-hidden border-2 border-[#5162ff] shadow-xl">
           <video
             ref={videoRef}
             autoPlay
@@ -52,12 +59,11 @@ export const DeviceTestSection = ({ onNext }: DeviceTestSectionProps) => {
           />
         </div>
 
-        {/* 설정 */}
-        <div className="w-full grid grid-cols-2 gap-8">
+        <div className="w-full grid grid-cols-2 gap-6">
           <DeviceSelect
             label="웹캠"
             options={devices.filter((d) => d.kind === 'videoinput')}
-            selectedValue={selectedVideo}
+            selectedValue={selectedVideo ?? ''}
             onChange={setSelectedVideo}
           />
 
@@ -65,19 +71,18 @@ export const DeviceTestSection = ({ onNext }: DeviceTestSectionProps) => {
             <DeviceSelect
               label="마이크"
               options={devices.filter((d) => d.kind === 'audioinput')}
-              selectedValue={selectedAudio}
+              selectedValue={selectedAudio ?? ''}
               onChange={setSelectedAudio}
             />
-            <div className="space-y-2">
+            <div className="space-y-1">
               <VolumeIndicator volume={volume} />
-              <p className="text-[11px] text-white/40 ml-1">또박또박한 목소리를 들려주세요.</p>
+              <p className="text-[10px] text-white/40 ml-1">또랑또랑한 목소리를 들려주세요.</p>
             </div>
           </div>
         </div>
 
-        {/* 실행 */}
-        <div className="w-full max-w-[400px] pt-4">
-          <div className="w-full py-4 text-lg font-bold">
+        <div className="w-full max-w-[320px] mt-2">
+          <div className="w-full py-3.5">
             <ActionButton text="영상 녹화하기" onClick={onNext} />
           </div>
         </div>
