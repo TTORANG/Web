@@ -213,16 +213,14 @@ export function Dropdown({
                   }
                 }}
                 className={clsx(
-                  'w-full px-4 py-2 text-left text-sm font-medium transition-colors',
-                  'focus:outline-none',
-                  item.disabled
-                    ? 'cursor-not-allowed opacity-50'
-                    : [
-                        item.variant === 'danger' ? 'text-error' : 'text-black',
-                        isFocused && 'bg-gray-100',
-                        'active:bg-main-variant1 active:text-white',
-                      ],
-                  item.disabled && (item.variant === 'danger' ? 'text-error' : 'text-black'),
+                  'w-full px-4 py-2 text-left text-sm font-medium transition-colors focus:outline-none',
+                  {
+                    'cursor-not-allowed opacity-50': item.disabled,
+                    'text-error': item.variant === 'danger',
+                    'text-black': item.variant !== 'danger',
+                    'bg-gray-100': !item.disabled && isFocused,
+                    'active:bg-main-variant1 active:text-white': !item.disabled,
+                  },
                 )}
               >
                 {item.label}
