@@ -5,6 +5,9 @@
  * 슬라이드 화면(CommentPopover)과 피드백 화면(CommentList) 모두에서 사용됩니다.
  * theme prop으로 Light/Dark 스타일을 지원합니다.
  */
+// ✅ [수정] Hooks 추가 (높이 조절용)
+import { useEffect, useRef } from 'react';
+
 import clsx from 'clsx';
 
 import fileIcon from '@/assets/component-dark/fileIcon.svg';
@@ -32,10 +35,19 @@ interface CommentItemProps {
   onCancelReply: () => void;
   /** 삭제 핸들러 (선택적) */
   onDelete?: () => void;
+  // ✅ [추가] 재귀를 위해 "ID로 삭제하는 원본 함수"도 받아야 함
+  onDeleteComment?: (id: string) => void;
   /** 슬라이드 참조 클릭 핸들러 (선택적) */
   onGoToSlideRef?: (ref: string) => void;
   /** 들여쓰기 여부 (플랫 구조에서 답글 표시용) */
   isIndented?: boolean;
+  // ✅ [추가] 재귀(무한 대댓글)를 위해 필요한 상태 Props
+  replyingToId?: string | null;
+  setReplyingToId?: (id: string | null) => void;
+
+  // ✅ 재귀에서 특정 댓글 id로 submit/toggle 호출하려고 추가
+  onReplySubmit?: (targetId: string) => void;
+  onToggleReplyById?: (targetId: string) => void;
 }
 
 const themeStyles = {
@@ -77,12 +89,30 @@ export default function CommentItem({
   onSubmitReply,
   onCancelReply,
   onDelete,
+  onDeleteComment,
   onGoToSlideRef,
   isIndented = false,
+  // ✅ [추가] 재귀용 Props (기본값 처리로 에러 방지)
+  replyingToId,
+  setReplyingToId,
+  onReplySubmit,
+  onToggleReplyById,
 }: CommentItemProps) {
   const styles = themeStyles[theme];
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  // ✅ [수정] Textarea 높이 자동 조절 로직
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (isActive && textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      // 활성화 시 자동 포커스
+      textareaRef.current.focus();
+    }
+  }, [isActive, replyText]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       onSubmitReply();
@@ -109,10 +139,12 @@ export default function CommentItem({
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className={clsx('max-w-50 truncate text-sm font-semibold', styles.author)}>
+                <span
+                  className={clsx('max-w-50 truncate text-body-s-bold text-white', styles.author)}
+                >
                   {comment.author}
                 </span>
-                <span className={clsx('text-xs font-medium', styles.time)}>
+                <span className={clsx('text-caption text-gray-400', styles.time)}>
                   {formatRelativeTime(comment.timestamp)}
                 </span>
               </div>
@@ -122,7 +154,7 @@ export default function CommentItem({
                   type="button"
                   onClick={onDelete}
                   aria-label="댓글 삭제"
-                  className="flex items-center gap-1 text-xs font-semibold text-error active:opacity-80"
+                  className="flex items-center gap-1 text-caption-bold text-error active:opacity-80"
                 >
                   삭제
                   <RemoveIcon className="h-4 w-4" aria-hidden="true" />
@@ -130,7 +162,7 @@ export default function CommentItem({
               )}
             </div>
 
-            <div className={clsx('text-sm font-medium', styles.content)}>
+            <div className={clsx('text-body-s', styles.content)}>
               {comment.slideRef && onGoToSlideRef && (
                 <button
                   type="button"
@@ -153,7 +185,7 @@ export default function CommentItem({
               aria-expanded={isActive}
               aria-label={`${comment.author}에게 답글 달기`}
               className={clsx(
-                'flex items-center gap-1 text-xs font-semibold transition',
+                'flex items-center gap-1 text-caption-bold transition',
                 isActive ? styles.replyButtonActive : styles.replyButton,
               )}
             >
@@ -173,26 +205,30 @@ export default function CommentItem({
             styles.containerActive,
           )}
         >
-          <input
-            type="text"
+          <textarea
+            ref={textareaRef}
             autoFocus
             value={replyText}
             onChange={(e) => onReplyTextChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="댓글을 입력하세요"
+            rows={1}
             aria-label="답글 입력"
             className={clsx(
-              'w-full border-b bg-transparent px-0.5 py-2 text-base font-semibold outline-none transition-colors',
+              // 1. 레이아웃 & 폰트: 우리 스타일 (text-body-s, pb-2, resize-none)
+              'w-full overflow-hidden resize-none bg-transparent border-b border-gray-200 text-body-s text-white pb-2 focus:border-white outline-none placeholder-gray-400 transition-colors',
+              // 2. 색상: 팀원이 잡아둔 테마 스타일 (border, text color)
               styles.input,
             )}
           />
+
           <div className="flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={onCancelReply}
               aria-label="답글 취소"
               className={clsx(
-                'px-3 py-1.5 text-xs font-semibold rounded-full',
+                'px-3 py-1.5 rounded-full text-caption-bold text-gray-200 bg-gray-800 hover:bg-gray-900 transition',
                 styles.cancelButton,
               )}
             >
@@ -204,13 +240,49 @@ export default function CommentItem({
               disabled={!replyText.trim()}
               aria-label="답글 등록"
               className={clsx(
-                'rounded-full px-3 py-1.5 text-xs font-semibold',
+                'px-3 py-1.5 rounded-full text-caption-bold text-gray-400 bg-white hover:bg-white/20 transition',
                 replyText.trim() ? styles.submitButton : styles.submitButtonDisabled,
               )}
             >
               답글
             </button>
           </div>
+        </div>
+      )}
+
+      {/* ✅ [수정] 무한 답글(재귀) 렌더링 */}
+      {comment.replies && comment.replies.length > 0 && (
+        <div className="pl-8">
+          {comment.replies.map((reply) => (
+            <CommentItem
+              key={reply.id}
+              comment={reply}
+              theme={theme}
+              // 1. 활성 상태 확인 로직 (동일)
+              isActive={replyingToId === reply.id}
+              // 2. [중요 수정] 답글 버튼 클릭 시 '이 대댓글의 ID'로 토글 함수 실행
+              // 기존: setReplyingToId 직접 호출 -> 수정: 부모가 준 핸들러 사용 (그래야 draft 초기화 등 로직이 수행됨)
+              onToggleReply={() => onToggleReplyById?.(reply.id)}
+              // 3. 재귀용 상태 전달 (동일)
+              replyingToId={replyingToId}
+              setReplyingToId={setReplyingToId}
+              // 4. 입력 상태 전달 (동일)
+              replyText={replyText}
+              onReplyTextChange={onReplyTextChange}
+              // 5. [핵심 수정] 제출 버튼 클릭 시 '이 대댓글의 ID'로 제출 함수 실행
+              // 기존: onSubmitReply (부모 ID가 바인딩된 함수) -> 수정: onReplySubmit(현재 ID)
+              onSubmitReply={() => onReplySubmit?.(reply.id)}
+              // 6. 취소/삭제 등 나머지 전달
+              onCancelReply={onCancelReply}
+              onDelete={() => onDeleteComment?.(reply.id)}
+              onDeleteComment={onDeleteComment}
+              onGoToSlideRef={onGoToSlideRef}
+              // 7. 재귀를 위해 헬퍼 함수들을 계속 밑으로 전달
+              onReplySubmit={onReplySubmit}
+              onToggleReplyById={onToggleReplyById}
+              isIndented={false}
+            />
+          ))}
         </div>
       )}
     </div>

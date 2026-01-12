@@ -15,9 +15,15 @@ interface Props {
   comments: CommentItemType[];
   onAddReply: (targetId: string, content: string) => void;
   onGoToSlideRef: (ref: string) => void;
+  onDeleteComment?: (commentId: string) => void;
 }
 
-export default function CommentList({ comments, onAddReply, onGoToSlideRef }: Props) {
+export default function CommentList({
+  comments,
+  onAddReply,
+  onGoToSlideRef,
+  onDeleteComment,
+}: Props) {
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
 
@@ -42,36 +48,25 @@ export default function CommentList({ comments, onAddReply, onGoToSlideRef }: Pr
   return (
     <div className="mr-35 mt-2 flex-1 space-y-2 overflow-y-auto">
       {comments.map((comment) => (
-        <div key={comment.id}>
-          {/* 부모 댓글 */}
-          <CommentItem
-            comment={comment}
-            theme="dark"
-            isActive={replyingToId === comment.id}
-            replyText={replyDraft}
-            onReplyTextChange={setReplyDraft}
-            onToggleReply={() => handleToggleReply(comment.id)}
-            onSubmitReply={() => handleReplySubmit(comment.id)}
-            onCancelReply={handleCancelReply}
-            onGoToSlideRef={onGoToSlideRef}
-          />
-
-          {/* 대댓글 */}
-          {comment.replies?.map((reply) => (
-            <CommentItem
-              key={reply.id}
-              comment={reply}
-              theme="dark"
-              isActive={replyingToId === reply.id}
-              replyText={replyDraft}
-              onReplyTextChange={setReplyDraft}
-              onToggleReply={() => handleToggleReply(reply.id)}
-              onSubmitReply={() => handleReplySubmit(reply.id)}
-              onCancelReply={handleCancelReply}
-              isIndented
-            />
-          ))}
-        </div>
+        <CommentItem
+          key={comment.id}
+          comment={comment}
+          theme="dark"
+          isActive={replyingToId === comment.id}
+          replyText={replyDraft}
+          onReplyTextChange={setReplyDraft}
+          onToggleReply={() => handleToggleReply(comment.id)}
+          onSubmitReply={() => handleReplySubmit(comment.id)}
+          onDelete={() => onDeleteComment?.(comment.id)}
+          onDeleteComment={onDeleteComment}
+          onCancelReply={handleCancelReply}
+          onGoToSlideRef={onGoToSlideRef}
+          // ✅ 재귀에 필요한 props 전달
+          replyingToId={replyingToId}
+          setReplyingToId={setReplyingToId}
+          onReplySubmit={handleReplySubmit}
+          onToggleReplyById={handleToggleReply}
+        />
       ))}
     </div>
   );

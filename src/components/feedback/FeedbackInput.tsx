@@ -74,9 +74,9 @@ export default function FeedbackInput({ reactions, onToggleReaction, onAddCommen
 
       <div className="items-center mt-3">
         <div className="grid grid-cols-2 gap-2">
-          {reactions.map((reaction, idx) => (
+          {reactions.map((reaction) => (
             <button
-              key={idx}
+              key={reaction.emoji}
               onClick={() => onToggleReaction(reaction.emoji)}
               className={`flex items-center justify-between px-2 py-1.5 rounded-full transition ${
                 reaction.active

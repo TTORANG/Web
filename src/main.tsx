@@ -59,7 +59,7 @@ const router = createBrowserRouter([
       />
     ),
     children: [
-      { index: true, element: <Navigate to={`slide/${DEFAULT_SLIDE_ID}`} replace /> },
+      { index: true, element: <Navigate to={`fslide/${DEFAULT_SLIDE_ID}`} replace /> },
       { path: 'fslide/:slideId', element: <FdSlidePage /> },
     ],
   },

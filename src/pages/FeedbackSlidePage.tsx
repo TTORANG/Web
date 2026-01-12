@@ -1,14 +1,14 @@
 // pages/FeedbackSlidePage.tsx
-import CommentList from '../components/feedback/CommentList';
+import CommentList from '../components/comment/CommentList';
 import FeedbackInput from '../components/feedback/FeedbackInput';
 import SlideViewer from '../components/feedback/SlideViewer';
 import { useComments } from '../hooks/useComments';
 import { useReactions } from '../hooks/useReactions';
 import { useSlides } from '../hooks/useSlides';
 
-export default function PresentationViewer() {
+export default function FeedbackSlidePage() {
   const slideLogic = useSlides();
-  const { comments, addComment, addReply } = useComments();
+  const { comments, addComment, addReply, deleteComment } = useComments();
   const { reactions, toggleReaction } = useReactions();
 
   return (
@@ -23,6 +23,7 @@ export default function PresentationViewer() {
           comments={comments}
           onAddReply={addReply}
           onGoToSlideRef={slideLogic.goToSlideRef}
+          onDeleteComment={deleteComment}
         />
 
         {/* 입력창 및 리액션 바 */}
