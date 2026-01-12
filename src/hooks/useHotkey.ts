@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 type KeyHandler = (e: KeyboardEvent) => void;
 type KeyMap = Record<string, KeyHandler>;
@@ -13,6 +13,9 @@ interface UseHotkeyOptions {
 /**
  * 키보드 단축키를 등록하는 훅
  *
+ * @param keyMap - 키와 핸들러 매핑 객체
+ * @param options - 훅 옵션
+ *
  * @example
  * useHotkey({
  *   ArrowUp: () => navigatePrev(),
@@ -22,6 +25,12 @@ interface UseHotkeyOptions {
  */
 export function useHotkey(keyMap: KeyMap, options: UseHotkeyOptions = {}) {
   const { enabled = true, enableOnInput = false } = options;
+  const keyMapRef = useRef(keyMap);
+
+  // keyMap이 변경될 때마다 ref 업데이트
+  useEffect(() => {
+    keyMapRef.current = keyMap;
+  });
 
   useEffect(() => {
     if (!enabled) return;
@@ -49,7 +58,7 @@ export function useHotkey(keyMap: KeyMap, options: UseHotkeyOptions = {}) {
       const combo = [...modifiers, key].join('+');
 
       // 조합키 먼저 확인, 없으면 단일 키 확인
-      const handler = keyMap[combo] ?? keyMap[key];
+      const handler = keyMapRef.current[combo] ?? keyMapRef.current[key];
 
       if (handler) {
         e.preventDefault();
@@ -59,5 +68,5 @@ export function useHotkey(keyMap: KeyMap, options: UseHotkeyOptions = {}) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [keyMap, enabled, enableOnInput]);
+  }, [enabled, enableOnInput]);
 }
