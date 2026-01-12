@@ -151,7 +151,7 @@ export function Popover({
             className,
           )}
         >
-          {typeof children === 'function' ? children({ close: close }) : children}
+          {typeof children === 'function' ? children({ close }) : children}
         </div>
       )}
     </div>

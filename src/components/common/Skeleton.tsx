@@ -1,5 +1,7 @@
 import { type CSSProperties } from 'react';
 
+import clsx from 'clsx';
+
 /** 기본 스켈레톤 Props */
 interface SkeletonBaseProps {
   /** 너비 (숫자면 px, 문자열이면 그대로) */
@@ -50,7 +52,7 @@ function SkeletonBase({ width, height, rounded = 4, className = '' }: SkeletonBa
     borderRadius: toSize(rounded, 4),
   };
 
-  return <div className={`animate-pulse bg-gray-200 ${className}`} style={style} />;
+  return <div className={clsx('animate-pulse bg-gray-200', className)} style={style} />;
 }
 
 /**
@@ -61,7 +63,7 @@ function SkeletonBase({ width, height, rounded = 4, className = '' }: SkeletonBa
 function SkeletonCircle({ size = 40, className = '' }: SkeletonCircleProps) {
   return (
     <div
-      className={`animate-pulse rounded-full bg-gray-200 ${className}`}
+      className={clsx('animate-pulse rounded-full bg-gray-200', className)}
       style={{ width: size, height: size }}
     />
   );
@@ -80,7 +82,7 @@ function SkeletonText({
   className = '',
 }: SkeletonTextProps) {
   return (
-    <div className={`flex flex-col ${className}`} style={{ gap }}>
+    <div className={clsx('flex flex-col', className)} style={{ gap }}>
       {Array.from({ length: lines }).map((_, i) => (
         <div
           key={i}
@@ -106,7 +108,7 @@ function SkeletonText({
  */
 function SkeletonCard({ className = '' }: { className?: string }) {
   return (
-    <div className={`rounded-xl border border-gray-200 bg-white p-4 ${className}`}>
+    <div className={clsx('rounded-xl border border-gray-200 bg-white p-4', className)}>
       {/* 썸네일 */}
       <SkeletonBase width="100%" height={120} rounded={8} className="mb-4" />
       {/* 제목 */}
@@ -124,7 +126,7 @@ function SkeletonCard({ className = '' }: { className?: string }) {
  */
 function SkeletonListItem({ className = '' }: { className?: string }) {
   return (
-    <div className={`flex items-center gap-3 py-3 ${className}`}>
+    <div className={clsx('flex items-center gap-3 py-3', className)}>
       {/* 아바타 */}
       <SkeletonCircle size={40} />
       {/* 텍스트 */}

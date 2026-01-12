@@ -5,7 +5,7 @@ interface SpinnerProps {
   size?: number;
   /** 스피너 색상 (기본값: main) */
   color?: string;
-  /** 선 두께 (기본값: 2) */
+  /** 선 두께 (기본값: 2.5) */
   strokeWidth?: number;
   /** 추가 클래스 */
   className?: string;

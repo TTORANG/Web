@@ -11,7 +11,7 @@ export default function LoginModal() {
   const { isLoginModalOpen, closeLoginModal } = useAuthStore();
 
   return (
-    <Modal isOpen={isLoginModalOpen} onClose={closeLoginModal} size="sm" className="!p-0">
+    <Modal isOpen={isLoginModalOpen} onClose={closeLoginModal} size="sm" noPadding>
       <div className="px-6 pb-10 pt-4">
         {/* Header */}
         <header className="flex flex-col items-center text-center">

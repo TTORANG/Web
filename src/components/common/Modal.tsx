@@ -24,6 +24,8 @@ interface ModalProps {
   showCloseButton?: boolean;
   closeOnBackdropClick?: boolean;
   closeOnEscape?: boolean;
+  /** 콘텐츠 영역 패딩 제거 (기본값: false) */
+  noPadding?: boolean;
 }
 
 const sizeClasses: Record<ModalSize, string> = {
@@ -42,6 +44,7 @@ export function Modal({
   showCloseButton = true,
   closeOnBackdropClick = true,
   closeOnEscape = true,
+  noPadding = false,
 }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const lastFocusedElement = useRef<HTMLElement | null>(null);
@@ -172,7 +175,7 @@ export function Modal({
         )}
 
         {/* Content */}
-        <div className="p-6">{children}</div>
+        <div className={noPadding ? '' : 'p-6'}>{children}</div>
       </div>
     </div>,
     document.body,

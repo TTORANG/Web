@@ -168,7 +168,15 @@ export function Dropdown({
   return (
     <div ref={dropdownRef} className={clsx('relative', className)}>
       <div
+        role="button"
+        tabIndex={0}
         onClick={handleToggle}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleToggle();
+          }
+        }}
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-controls={isOpen ? menuId : undefined}
