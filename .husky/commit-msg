@@ -3,6 +3,11 @@
 commit_msg=$(cat "$1")
 first_line=$(echo "$commit_msg" | head -n 1)
 
+# Merge 커밋은 검사 제외
+if echo "$first_line" | grep -qE "^Merge"; then
+  exit 0
+fi
+
 # 허용된 타입
 allowed_types="feat|fix|docs|style|refactor|test|chore|design|ci|perf"
 
