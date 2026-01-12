@@ -22,7 +22,7 @@ type PopoverAlign = 'start' | 'end';
 
 interface PopoverProps {
   trigger: ReactElement | ((props: { isOpen: boolean }) => ReactElement);
-  children: ReactNode;
+  children: ReactNode | ((props: { close: () => void }) => ReactNode);
   position?: PopoverPosition;
   align?: PopoverAlign;
   className?: string;
@@ -59,14 +59,19 @@ export function Popover({
   }, []);
 
   /**
-   * 팝오버를 닫습니다.
-   * 닫힐 때 이전에 저장된 요소로 포커스를 복원합니다.
+   * 팝오버를 닫습니다 (render prop용, ref 접근 없음)
    */
-  const handleClose = useCallback(() => {
+  const close = useCallback(() => {
     setIsOpen(false);
-    // 팝오버 닫힐 때 이전에 포커스된 요소로 포커스 이동
-    lastFocusedElement.current?.focus();
   }, []);
+
+  // 팝오버 닫힐 때 이전에 포커스된 요소로 포커스 복원
+  useEffect(() => {
+    if (!isOpen && lastFocusedElement.current) {
+      lastFocusedElement.current.focus();
+      lastFocusedElement.current = null;
+    }
+  }, [isOpen]);
 
   // Escape 키로 닫기
   useEffect(() => {
@@ -74,13 +79,13 @@ export function Popover({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        handleClose();
+        close();
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, handleClose]);
+  }, [isOpen, close]);
 
   // 외부 클릭 시 닫기
   useEffect(() => {
@@ -88,13 +93,13 @@ export function Popover({
 
     const handleClickOutside = (e: MouseEvent) => {
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
-        handleClose();
+        close();
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, handleClose]);
+  }, [isOpen, close]);
 
   // 팝오버 열릴 때 첫 번째 포커스 가능한 요소로 포커스 이동
   useEffect(() => {
@@ -146,7 +151,7 @@ export function Popover({
             className,
           )}
         >
-          {children}
+          {typeof children === 'function' ? children({ close }) : children}
         </div>
       )}
     </div>
