@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { useHotkey } from '@/hooks';
 import type { Slide } from '@/types/slide';
 
-import SlideThumbnail from './SlideThumbnail';
+import { SlideThumbnail, SlideThumbnailSkeleton } from './SlideThumbnail';
 
 /** 로딩 시 표시할 스켈레톤 개수 */
 const SKELETON_COUNT = 6;
@@ -65,7 +65,7 @@ export default function SlideList({ slides, currentSlideId, basePath, isLoading 
       <div ref={listRef} className="flex flex-col gap-3 p-2">
         {isLoading
           ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
-              <SlideThumbnail.Skeleton key={i} index={i} />
+              <SlideThumbnailSkeleton key={i} index={i} />
             ))
           : slides?.map((slide, idx) => (
               <SlideThumbnail
