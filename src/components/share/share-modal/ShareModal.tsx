@@ -47,27 +47,10 @@ export function ShareModal() {
   // 복사완료 토스트 알림용
   const [copied, setCopied] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const dropdownButtonRef = useRef<HTMLDivElement | null>(null);
 
   // 공유유형 Popover open 상태 (controlled로 사용)
   const [isTypeOpen, setIsTypeOpen] = useState(false);
-  useEffect(() => {
-    if (!isDropdownOpen) return;
-    const onMousedown = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(target) &&
-        dropdownButtonRef.current &&
-        !dropdownButtonRef.current.contains(target)
-      ) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', onMousedown);
-    return () => document.removeEventListener('mousedown', onMousedown);
-  }, [isDropdownOpen]);
+
   // 선택된 비디오 바뀔 때만 다시 계산
   const selectedVideo = useMemo(() => {
     return MOCK_VIDEOS.find((v) => v.id === selectedVideoId) ?? null;
