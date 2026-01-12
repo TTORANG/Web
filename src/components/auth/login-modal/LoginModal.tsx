@@ -44,7 +44,7 @@ export default function LoginModal() {
         </div>
 
         {/* Footer */}
-        <p className="text-caption text-gray-500 text-center mt-4">
+        <p className="text-caption text-gray-600 text-center mt-4">
           로그인하면 또랑의 서비스 약관 및 개인정보 처리방침에 동의하게 됩니다.
         </p>
       </div>

@@ -13,7 +13,7 @@ export default function HomePage() {
         {/* 소개글 */}
         <div className="mt-10">
           <h1 className="text-body-l-bold text-gray-900">발표 연습을 시작하세요.</h1>
-          <p className="mt-2 text-body-s text-gray-500">
+          <p className="mt-2 text-body-s text-gray-600">
             파일을 업로드해서 바로 연습을 시작해보세요.
           </p>
         </div>
