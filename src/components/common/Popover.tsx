@@ -22,7 +22,7 @@ type PopoverAlign = 'start' | 'end';
 
 interface PopoverProps {
   trigger: ReactElement | ((props: { isOpen: boolean }) => ReactElement);
-  children: ReactNode;
+  children: ReactNode | ((props: { close: () => void }) => ReactNode);
   position?: PopoverPosition;
   align?: PopoverAlign;
   className?: string;
@@ -61,14 +61,29 @@ export function Popover({
   );
 
   const handleToggle = useCallback(() => {
-    if (!open) lastFocusedElement.current = document.activeElement as HTMLElement;
-    setOpen(!open);
-  }, [open, setOpen]);
+    setIsOpen((prev) => {
+      if (!prev) {
+        // 팝오버가 열릴 때 현재 포커스된 요소 저장
+        lastFocusedElement.current = document.activeElement as HTMLElement;
+      }
+      return !prev;
+    });
+  }, []);
 
-  const handleClose = useCallback(() => {
-    setOpen(false);
-    lastFocusedElement.current?.focus();
-  }, [setOpen]);
+  /**
+   * 팝오버를 닫습니다 (render prop용, ref 접근 없음)
+   */
+  const close = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+
+  // 팝오버 닫힐 때 이전에 포커스된 요소로 포커스 복원
+  useEffect(() => {
+    if (!isOpen && lastFocusedElement.current) {
+      lastFocusedElement.current.focus();
+      lastFocusedElement.current = null;
+    }
+  }, [isOpen]);
 
   // Escape 키로 닫기
   useEffect(() => {
@@ -76,13 +91,13 @@ export function Popover({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        handleClose();
+        close();
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [open, handleClose]);
+  }, [isOpen, close]);
 
   // 외부 클릭 시 닫기
   useEffect(() => {
@@ -90,13 +105,13 @@ export function Popover({
 
     const handleClickOutside = (e: MouseEvent) => {
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
-        handleClose();
+        close();
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [open, handleClose]);
+  }, [isOpen, close]);
 
   // 팝오버 열릴 때 첫 번째 포커스 가능한 요소로 포커스 이동
   useEffect(() => {
@@ -148,7 +163,7 @@ export function Popover({
             className,
           )}
         >
-          {children}
+          {typeof children === 'function' ? children({ close }) : children}
         </div>
       )}
     </div>
