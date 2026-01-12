@@ -151,6 +151,12 @@ export default function Opinion() {
                 <input
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && replyText.trim()) {
+                      e.preventDefault();
+                      handleReplySubmit(opinion.id);
+                    }
+                  }}
                   placeholder="댓글을 입력하세요"
                   aria-label="답글 입력"
                   className="w-full border-b border-gray-400 bg-transparent px-0.5 py-2 text-base font-semibold text-gray-800 outline-none placeholder:text-gray-600 focus:border-main"
