@@ -1,3 +1,5 @@
+export { Dropdown } from './Dropdown';
+export type { DropdownItem } from './Dropdown';
 export { LoginButton } from './LoginButton';
 export { Logo } from './Logo';
 export { Modal } from './Modal';

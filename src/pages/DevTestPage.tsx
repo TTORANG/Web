@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient } from '@/api';
-import { Modal, Skeleton, Spinner } from '@/components/common';
+import { Dropdown, Modal, Popover, Skeleton, Spinner } from '@/components/common';
 import { showToast } from '@/utils/toast';
 
 /**
@@ -152,6 +152,17 @@ export default function DevTestPage() {
       <section className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
         <h2 className="mb-4 text-lg font-bold text-gray-800">💀 Skeleton 테스트</h2>
 
+        <div className="mb-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+          <p className="mb-2 font-medium text-gray-800">Features</p>
+          <ul className="list-inside list-disc space-y-1">
+            <li>width, height: 크기 (숫자면 px, 문자열이면 그대로)</li>
+            <li>rounded: 모서리 둥글기</li>
+            <li>Skeleton.Circle: 원형 (아바타용)</li>
+            <li>Skeleton.Text: 여러 줄 텍스트</li>
+            <li>Skeleton.Card / Skeleton.ListItem: 프리셋</li>
+          </ul>
+        </div>
+
         {/* 기본 스켈레톤 */}
         <div className="mb-6">
           <h3 className="mb-3 text-sm font-medium text-gray-600">기본 스켈레톤</h3>
@@ -199,6 +210,15 @@ export default function DevTestPage() {
       <section className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
         <h2 className="mb-4 text-lg font-bold text-gray-800">🔄 Spinner 테스트</h2>
 
+        <div className="mb-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+          <p className="mb-2 font-medium text-gray-800">Features</p>
+          <ul className="list-inside list-disc space-y-1">
+            <li>size: 크기 (기본값: 24)</li>
+            <li>color: 색상 (기본값: main)</li>
+            <li>strokeWidth: 선 두께 (기본값: 2.5)</li>
+          </ul>
+        </div>
+
         <div className="flex items-center gap-6">
           <div className="flex flex-col items-center gap-2">
             <Spinner size={16} />
@@ -226,6 +246,18 @@ export default function DevTestPage() {
       {/* Modal 테스트 */}
       <section className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
         <h2 className="mb-4 text-lg font-bold text-gray-800">🪟 Modal 테스트</h2>
+
+        <div className="mb-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+          <p className="mb-2 font-medium text-gray-800">Features</p>
+          <ul className="list-inside list-disc space-y-1">
+            <li>size: sm | md | lg</li>
+            <li>title: 선택적 제목</li>
+            <li>showCloseButton: 닫기 버튼 표시 여부</li>
+            <li>closeOnBackdropClick: 배경 클릭으로 닫기</li>
+            <li>closeOnEscape: ESC 키로 닫기</li>
+            <li>포커스 트랩 및 body 스크롤 방지</li>
+          </ul>
+        </div>
 
         <div className="flex flex-wrap gap-3">
           <button
@@ -298,6 +330,200 @@ export default function DevTestPage() {
             </div>
           </div>
         </Modal>
+      </section>
+
+      {/* Popover 테스트 */}
+      <section className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
+        <h2 className="mb-4 text-lg font-bold text-gray-800">💬 Popover 테스트</h2>
+
+        <div className="mb-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+          <p className="mb-2 font-medium text-gray-800">Features</p>
+          <ul className="list-inside list-disc space-y-1">
+            <li>position: top | bottom</li>
+            <li>align: start | end</li>
+            <li>ESC 키 또는 외부 클릭으로 닫기</li>
+            <li>children render prop으로 close 함수 전달</li>
+            <li>trigger render prop으로 isOpen 상태 전달</li>
+          </ul>
+        </div>
+
+        <div className="flex flex-wrap gap-6">
+          {/* bottom-start */}
+          <Popover
+            trigger={
+              <button className="rounded-lg bg-gray-800 px-4 py-2 text-sm text-white hover:bg-gray-900">
+                bottom-start
+              </button>
+            }
+            position="bottom"
+            align="start"
+          >
+            <div className="w-48 p-4">
+              <p className="text-sm text-gray-800">position: bottom</p>
+              <p className="text-sm text-gray-800">align: start</p>
+            </div>
+          </Popover>
+
+          {/* bottom-end */}
+          <Popover
+            trigger={
+              <button className="rounded-lg bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600">
+                bottom-end
+              </button>
+            }
+            position="bottom"
+            align="end"
+          >
+            <div className="w-48 p-4">
+              <p className="text-sm text-gray-800">position: bottom</p>
+              <p className="text-sm text-gray-800">align: end</p>
+            </div>
+          </Popover>
+
+          {/* top-start */}
+          <Popover
+            trigger={
+              <button className="rounded-lg bg-green-500 px-4 py-2 text-sm text-white hover:bg-green-600">
+                top-start
+              </button>
+            }
+            position="top"
+            align="start"
+          >
+            <div className="w-48 p-4">
+              <p className="text-sm text-gray-800">position: top</p>
+              <p className="text-sm text-gray-800">align: start</p>
+            </div>
+          </Popover>
+
+          {/* top-end */}
+          <Popover
+            trigger={
+              <button className="rounded-lg bg-purple-500 px-4 py-2 text-sm text-white hover:bg-purple-600">
+                top-end
+              </button>
+            }
+            position="top"
+            align="end"
+          >
+            {({ close }) => (
+              <div className="w-48 p-4">
+                <p className="mb-2 text-sm text-gray-800">닫기 버튼 포함</p>
+                <button
+                  onClick={close}
+                  className="rounded bg-gray-200 px-3 py-1 text-xs hover:bg-gray-300"
+                >
+                  닫기
+                </button>
+              </div>
+            )}
+          </Popover>
+        </div>
+      </section>
+
+      {/* Dropdown 테스트 */}
+      <section className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
+        <h2 className="mb-4 text-lg font-bold text-gray-800">🔽 Dropdown 테스트</h2>
+
+        <div className="mb-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+          <p className="mb-2 font-medium text-gray-800">Features</p>
+          <ul className="list-inside list-disc space-y-1">
+            <li>position: top | bottom</li>
+            <li>align: start | end</li>
+            <li>variant: default | danger (삭제 등 위험한 작업용)</li>
+            <li>키보드 네비게이션 (↑↓ 화살표, Enter)</li>
+            <li>ESC 키 또는 외부 클릭으로 닫기</li>
+          </ul>
+        </div>
+
+        <div className="flex flex-wrap gap-6">
+          {/* 기본 드롭다운 */}
+          <Dropdown
+            trigger={
+              <button className="rounded-lg bg-gray-800 px-4 py-2 text-sm text-white hover:bg-gray-900">
+                기본 드롭다운
+              </button>
+            }
+            items={[
+              {
+                id: 'edit',
+                label: '이름 변경',
+                onClick: () => showToast.info('이름 변경 클릭'),
+              },
+              {
+                id: 'delete',
+                label: '삭제',
+                variant: 'danger',
+                onClick: () => showToast.error('삭제 클릭'),
+              },
+            ]}
+            position="bottom"
+            align="start"
+          />
+
+          {/* 위치 변경 드롭다운 */}
+          <Dropdown
+            trigger={
+              <button className="rounded-lg bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600">
+                top-end
+              </button>
+            }
+            items={[
+              {
+                id: 'share',
+                label: '공유하기',
+                onClick: () => showToast.info('공유하기 클릭'),
+              },
+              {
+                id: 'duplicate',
+                label: '복제하기',
+                onClick: () => showToast.info('복제하기 클릭'),
+              },
+              {
+                id: 'delete',
+                label: '삭제',
+                variant: 'danger',
+                onClick: () => showToast.error('삭제 클릭'),
+              },
+            ]}
+            position="top"
+            align="end"
+          />
+
+          {/* 비활성화 항목 포함 */}
+          <Dropdown
+            trigger={({ isOpen }) => (
+              <button
+                className={`rounded-lg px-4 py-2 text-sm text-white transition-colors ${
+                  isOpen ? 'bg-purple-700' : 'bg-purple-500 hover:bg-purple-600'
+                }`}
+              >
+                {isOpen ? '열림' : '비활성화 항목'}
+              </button>
+            )}
+            items={[
+              {
+                id: 'enabled',
+                label: '활성화 항목',
+                onClick: () => showToast.success('활성화 항목 클릭'),
+              },
+              {
+                id: 'disabled',
+                label: '비활성화 항목',
+                onClick: () => {},
+                disabled: true,
+              },
+              {
+                id: 'delete',
+                label: '삭제',
+                variant: 'danger',
+                onClick: () => showToast.error('삭제 클릭'),
+              },
+            ]}
+            position="bottom"
+            align="start"
+          />
+        </div>
       </section>
 
       {/* 컴포넌트 테스트 영역 (확장용) */}

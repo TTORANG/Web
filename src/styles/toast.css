@@ -99,6 +99,10 @@
     display: none !important;
   }
 
+  [data-sonner-toast][data-type='info'] [data-description] {
+    color: var(--color-white) !important;
+  }
+
   [data-sonner-toast][data-type='info'] [data-close-button] {
     color: var(--color-white) !important;
   }
