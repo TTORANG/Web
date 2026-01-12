@@ -2,7 +2,7 @@
  * @file
  * @description
  *
- * 헤더 우측에 표시되는 로그인 링크입니다.
+ * 헤더 우측에 표시되는 공유 링크입니다.
  */
 import ShareIcon from '@/assets/icons/icon-share.svg?react';
 import { useShareStore } from '@/stores/shareStore';

@@ -276,10 +276,10 @@ export function ShareModal() {
                 key={v.id}
                 type="button"
                 onClick={() => setSelectedVideoId(v.id)}
-                className={[
+                className={clsx(
                   'flex w-full items-center gap-6 px-5 py-4 text-left transition',
                   active ? 'bg-gray-100' : 'bg-white hover:bg-gray-50',
-                ].join(' ')}
+                )}
               >
                 <div className="h-16.75 w-30 rounded-sm bg-gray-200" />
 
@@ -305,12 +305,12 @@ export function ShareModal() {
           type="button"
           onClick={handleGenerate}
           disabled={shareType === 'slide_script_video' && !selectedVideoId}
-          className={[
-            'mt-4 h-14 w-full rounded-[8px] text-body-s-bold text-white transition flex items-center justify-center gap-2',
+          className={clsx(
+            'mt-4 h-14 w-full rounded-lg text-body-s-bold text-white transition flex items-center justify-center gap-2',
             shareType === 'slide_script_video' && !selectedVideoId
               ? 'bg-gray-300 cursor-not-allowed'
               : 'bg-main hover:opacity-90',
-          ].join(' ')}
+          )}
         >
           <span>공유 링크 생성</span>
         </button>
