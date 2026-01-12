@@ -56,33 +56,19 @@ export default function SlideTitle({ isCollapsed = false }: SlideTitleProps) {
       ariaLabel="슬라이드 이름 변경"
       className="flex w-80 items-center gap-2 border border-gray-200 px-3 py-2"
     >
-      {({ close }) => (
-        <>
-          <input
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleSave();
-                close();
-              }
-            }}
-            aria-label="슬라이드 이름"
-            className="h-9 flex-1 rounded-md border border-gray-200 px-3 text-sm text-gray-800 outline-none focus:border-main"
-          />
-          <button
-            type="button"
-            onClick={() => {
-              handleSave();
-              close();
-            }}
-            className="h-9 rounded-full bg-main px-3 text-sm font-semibold text-white active:bg-main-variant2"
-          >
-            저장
-          </button>
-        </>
-      )}
+      <input
+        value={editTitle}
+        onChange={(e) => setEditTitle(e.target.value)}
+        aria-label="슬라이드 이름"
+        className="h-9 flex-1 rounded-md border border-gray-200 px-3 text-sm text-gray-800 outline-none focus:border-main"
+      />
+      <button
+        type="button"
+        onClick={handleSave}
+        className="h-9 rounded-full bg-main px-3 text-sm font-semibold text-white active:bg-main-variant2"
+      >
+        저장
+      </button>
     </Popover>
   );
 }

@@ -11,7 +11,7 @@ export default function ProgressBar({ value }: ProgressBarProps) {
           style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
         />
       </div>
-      <p className="mt-2 text-body-s text-gray-600">{value}%</p>
+      <p className="mt-2 text-body-s text-gray-500">{value}%</p>
     </div>
   );
 }

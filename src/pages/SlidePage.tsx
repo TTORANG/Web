@@ -23,7 +23,15 @@ export default function SlidePage() {
     }
   }, [projectId, slideId]);
 
-  if (isError) {
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center bg-gray-100">
+        <p className="text-body-m text-gray-500">슬라이드를 불러오는 중...</p>
+      </div>
+    );
+  }
+
+  if (isError || !slides) {
     return (
       <div className="flex h-full items-center justify-center bg-gray-100">
         <p className="text-body-m text-error">슬라이드를 불러오지 못했습니다.</p>
@@ -31,21 +39,16 @@ export default function SlidePage() {
     );
   }
 
-  const currentSlide = slides?.find((s) => s.id === slideId) ?? slides?.[0];
+  const currentSlide = slides.find((s) => s.id === slideId) ?? slides[0];
   const basePath = projectId ? `/${projectId}` : '';
 
   return (
     <div className="h-full bg-gray-100">
       <div className="flex h-full gap-12 pl-14 pr-20 pt-6">
-        <SlideList
-          slides={slides}
-          currentSlideId={currentSlide?.id}
-          basePath={basePath}
-          isLoading={isLoading}
-        />
+        <SlideList slides={slides} currentSlideId={currentSlide.id} basePath={basePath} />
 
         <main className="flex-1 h-full min-w-0 overflow-hidden">
-          <SlideWorkspace slide={currentSlide} isLoading={isLoading} />
+          <SlideWorkspace slide={currentSlide} />
         </main>
       </div>
     </div>
