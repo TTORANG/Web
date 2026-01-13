@@ -2,10 +2,10 @@
 // components/feedback/FeedbackInput.tsx
 import { useRef, useState } from 'react';
 
-import type { Reaction } from '../../types/feedback';
+import type { EmojiReaction } from '@/types/script';
 
 interface Props {
-  reactions: Reaction[];
+  reactions: EmojiReaction[];
   onToggleReaction: (emoji: string) => void;
   onAddComment: (content: string) => void;
 }

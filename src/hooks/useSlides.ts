@@ -1,10 +1,10 @@
 // hooks/useSlides.ts
 import { useState } from 'react';
 
-import { INITIAL_SLIDES } from '../constants/feedback';
+import { MOCK_UI_SLIDES } from '@/mocks/slides';
 
 export function useSlides() {
-  const [slides, setSlides] = useState(INITIAL_SLIDES);
+  const [slides, setSlides] = useState(MOCK_UI_SLIDES);
   const [slideIndex, setSlideIndex] = useState(0);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [draftTitle, setDraftTitle] = useState('');

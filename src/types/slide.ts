@@ -17,4 +17,7 @@ export interface Slide {
   /** 최신순 정렬 */
   history: HistoryItem[];
   emojiReactions: EmojiReaction[];
+  // mocks/slides.ts에서 변환(map)할 때 이 값들을 넣어주고 있으므로, 타입만 열어주면 됩니다.
+  viewerText?: string; // 슬라이드 화면 중앙에 뜨는 텍스트
+  body?: string; // 하단 설명 박스에 뜨는 텍스트
 }

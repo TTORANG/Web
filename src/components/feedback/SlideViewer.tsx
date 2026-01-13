@@ -1,7 +1,8 @@
 // 좌측 슬라이드 뷰어
 // components/feedback/SlideViewer.tsx
-import leftArrow from '../../assets/component-dark/leftArrow.svg';
-import rightArrow from '../../assets/component-dark/rightArrow.svg';
+import LeftArrow from '@/assets/icons/icon-arrow-left.svg?react';
+import RightArrow from '@/assets/icons/icon-arrow-right.svg?react';
+
 import { useSlides } from '../../hooks/useSlides';
 
 type Props = ReturnType<typeof useSlides>;
@@ -35,7 +36,7 @@ export default function SlideViewer({
       </div>
 
       {/* 2. 좌측 하단: 설명 텍스트 */}
-      <div className="h-[250px] bg-gray-900 px-5 pt-1 overflow-y-auto border-r border-gray-800">
+      <div className="h-[250px] bg-gray-900 px-5 mt-2 overflow-y-auto border-r border-gray-800">
         <div className="flex justify-between items-baseline mb-3">
           {isEditingTitle ? (
             <input
@@ -59,7 +60,7 @@ export default function SlideViewer({
             </h2>
           )}
 
-          <div className=" bottom-6 inline-flex items-center gap-1 rounded-full py-2 backdrop-blur">
+          <div className="bottom-6 inline-flex items-center gap-1 rounded-full py-2 backdrop-blur">
             <button
               onClick={goPrev}
               disabled={isFirst}
@@ -68,7 +69,7 @@ export default function SlideViewer({
                 isFirst ? 'bg-black' : 'bg-gray-800 hover:bg-white/15 transition',
               ].join(' ')}
             >
-              <img src={leftArrow} alt="prev" />
+              <LeftArrow className="text-white" />
             </button>
 
             <div className="min-w-[56px] text-center text-body-m-bold text-gray-200">
@@ -83,12 +84,12 @@ export default function SlideViewer({
                 isLast ? 'bg-black' : 'bg-gray-800 hover:bg-white/15 transition',
               ].join(' ')}
             >
-              <img src={rightArrow} alt="next" />
+              <RightArrow className="text-white" />
             </button>
           </div>
         </div>
 
-        <div className="bg-gray-800 rounded-xl p-3">
+        <div className="bg-gray-800 rounded-xl p-3 my-2 ">
           <p className="text-body-s text-white" style={{ whiteSpace: 'pre-line' }}>
             {currentSlide.body}
           </p>

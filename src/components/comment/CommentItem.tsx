@@ -10,7 +10,7 @@ import { useEffect, useRef } from 'react';
 
 import clsx from 'clsx';
 
-import fileIcon from '@/assets/component-dark/fileIcon.svg';
+import FileIcon from '@/assets/icons/icon-document.svg?react';
 import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
 import type { CommentItem as CommentItemType } from '@/types/comment';
@@ -169,7 +169,7 @@ export default function CommentItem({
                   onClick={() => onGoToSlideRef(comment.slideRef!)}
                   className="text-body-s-bold text-main-variant1 hover:underline mr-1 inline-flex items-center align-middle"
                 >
-                  <img src={fileIcon} alt="" className="h-4 w-4" />
+                  <FileIcon className="text-main-variant1" />
                   &nbsp;{comment.slideRef}
                 </button>
               )}
