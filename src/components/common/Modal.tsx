@@ -5,7 +5,7 @@
  * 화면 중앙에 오버레이와 함께 모달을 표시합니다.
  * 외부 클릭이나 ESC 키로 닫을 수 있으며, 포커스 트랩을 지원합니다.
  */
-import { type ReactNode, useCallback, useEffect, useId, useRef } from 'react';
+import { type ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import clsx from 'clsx';
@@ -17,6 +17,8 @@ type ModalSize = 'sm' | 'md' | 'lg';
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** 닫힘 애니메이션 완료 후 호출되는 콜백 */
+  onAfterClose?: () => void;
   title?: string;
   children: ReactNode;
   size?: ModalSize;
@@ -37,6 +39,7 @@ const sizeClasses: Record<ModalSize, string> = {
 export function Modal({
   isOpen,
   onClose,
+  onAfterClose,
   title,
   children,
   size = 'md',
@@ -47,9 +50,34 @@ export function Modal({
   noPadding = false,
 }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
   const lastFocusedElement = useRef<HTMLElement | null>(null);
+  const mouseDownTarget = useRef<EventTarget | null>(null);
   const modalId = useId();
   const titleId = useId();
+
+  // 렌더링 상태 (열릴 때 true, 닫힘 애니메이션 완료 후 false)
+  const [shouldRender, setShouldRender] = useState(isOpen);
+  const isClosing = shouldRender && !isOpen;
+
+  // isOpen이 true가 되면 렌더링 시작
+  if (isOpen && !shouldRender) {
+    setShouldRender(true);
+  }
+
+  /**
+   * 닫힘 애니메이션 완료 시 호출
+   */
+  const handleAnimationEnd = useCallback(
+    (e: React.AnimationEvent) => {
+      // backdrop의 애니메이션만 처리 (자식 요소 제외)
+      if (e.target === backdropRef.current && !isOpen) {
+        setShouldRender(false);
+        onAfterClose?.();
+      }
+    },
+    [isOpen, onAfterClose],
+  );
 
   /**
    * 모달을 닫고 이전 포커스를 복원합니다.
@@ -60,13 +88,24 @@ export function Modal({
   }, [onClose]);
 
   /**
+   * mousedown 위치 저장
+   */
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    mouseDownTarget.current = e.target;
+  }, []);
+
+  /**
    * 백드롭 클릭 시 모달을 닫습니다.
+   * mousedown과 mouseup 모두 백드롭에서 발생해야 닫힙니다.
    */
   const handleBackdropClick = useCallback(
     (e: React.MouseEvent) => {
-      if (closeOnBackdropClick && e.target === e.currentTarget) {
+      const isBackdrop = e.target === backdropRef.current;
+      const mouseDownOnBackdrop = mouseDownTarget.current === backdropRef.current;
+      if (closeOnBackdropClick && isBackdrop && mouseDownOnBackdrop) {
         handleClose();
       }
+      mouseDownTarget.current = null;
     },
     [closeOnBackdropClick, handleClose],
   );
@@ -133,12 +172,18 @@ export function Modal({
     return () => document.removeEventListener('keydown', handleTabKey);
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      ref={backdropRef}
+      className={clsx(
+        'fixed inset-0 z-50 flex items-center justify-center bg-black/65',
+        isClosing ? 'animate-fade-out' : 'animate-fade-in',
+      )}
+      onMouseDown={handleMouseDown}
       onClick={handleBackdropClick}
+      onAnimationEnd={handleAnimationEnd}
       role="presentation"
     >
       <div
@@ -148,7 +193,8 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
         className={clsx(
-          'relative w-full rounded-2xl border border-black/10 bg-white shadow-lg',
+          'relative w-full rounded-xl bg-white shadow-lg',
+          isClosing ? 'animate-zoom-out' : 'animate-zoom-in',
           sizeClasses[size],
           className,
         )}
@@ -158,7 +204,7 @@ export function Modal({
           <button
             type="button"
             onClick={handleClose}
-            className="absolute right-5 top-5 grid size-9 place-items-center rounded-lg text-gray-600 transition-opacity hover:opacity-70"
+            className="absolute right-5 top-5 grid size-9 place-items-center rounded-lg text-gray-600 transition-all hover:bg-gray-100 active:bg-gray-200"
             aria-label="닫기"
           >
             <CloseIcon className="size-4" />
@@ -167,8 +213,8 @@ export function Modal({
 
         {/* Header */}
         {title && (
-          <header className="px-6 pt-6">
-            <h2 id={titleId} className="text-lg font-medium text-gray-900">
+          <header className="px-6 pt-5">
+            <h2 id={titleId} className="text-body-l-bold text-gray-800">
               {title}
             </h2>
           </header>
