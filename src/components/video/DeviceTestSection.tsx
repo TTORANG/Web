@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { useEffect, useRef, useState } from 'react';
 
 import { ActionButton } from '@/components/common';
@@ -45,11 +46,11 @@ export const DeviceTestSection = ({ onNext }: DeviceTestSectionProps) => {
   }, [stream]);
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center text-white overflow-hidden">
-      <div className="w-full max-w-[720px] flex flex-col items-center gap-6 py-4">
-        <h1 className="text-xl font-bold">웹캠, 마이크를 테스트해주세요.</h1>
+    <div className="w-full h-full flex flex-col items-center justify-center text-white overflow-hidden p-4">
+      <div className="w-full max-w-[800px] max-h-full flex flex-col items-center justify-between gap-4 py-2">
+        <h1 className="text-xl md:text-2xl font-bold shrink-0">웹캠, 마이크를 테스트해주세요.</h1>
 
-        <div className="w-full aspect-video bg-[#2a2d34] rounded-xl overflow-hidden border-2 border-[#5162ff] shadow-xl">
+        <div className="w-full flex-1 min-h-[200px] max-h-[450px] aspect-video bg-[#2a2d34] rounded-xl overflow-hidden border-2 border-[#5162ff] shadow-xl shrink">
           <video
             ref={videoRef}
             autoPlay
@@ -59,7 +60,7 @@ export const DeviceTestSection = ({ onNext }: DeviceTestSectionProps) => {
           />
         </div>
 
-        <div className="w-full grid grid-cols-2 gap-6">
+        <div className="w-full grid grid-cols-2 gap-4 md:gap-8 shrink-0">
           <DeviceSelect
             label="웹캠"
             options={devices.filter((d) => d.kind === 'videoinput')}
@@ -67,7 +68,7 @@ export const DeviceTestSection = ({ onNext }: DeviceTestSectionProps) => {
             onChange={setSelectedVideo}
           />
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             <DeviceSelect
               label="마이크"
               options={devices.filter((d) => d.kind === 'audioinput')}
@@ -76,15 +77,15 @@ export const DeviceTestSection = ({ onNext }: DeviceTestSectionProps) => {
             />
             <div className="space-y-1">
               <VolumeIndicator volume={volume} />
-              <p className="text-[10px] text-white/40 ml-1">또랑또랑한 목소리를 들려주세요.</p>
+              <p className="text-[10px] text-white/40 ml-1 leading-none">
+                또랑또랑한 목소리를 들려주세요.
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="w-full max-w-[320px] mt-2">
-          <div className="w-full py-3.5">
-            <ActionButton text="영상 녹화하기" onClick={onNext} />
-          </div>
+        <div className="w-full max-w-[320px] shrink-0 mt-2">
+          <ActionButton text="영상 녹화하기" onClick={onNext} />
         </div>
       </div>
     </div>
