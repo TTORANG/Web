@@ -34,4 +34,8 @@ export interface EmojiReaction {
   emoji: string;
   /** 99 초과 시 "99+"로 표시 */
   count: number;
+  /** 활성화 여부 (UI용) */
+  active?: boolean;
+  /** 이모지 라벨 (좋아요, 별로예요 등) */
+  label?: string;
 }
