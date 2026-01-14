@@ -211,6 +211,53 @@ export const handlers = [
   }),
 
   /**
+   * 리액션 토글
+   * POST /slides/:slideId/reactions
+   */
+  http.post(`${BASE_URL}/slides/:slideId/reactions`, async ({ params, request }) => {
+    await delay(100);
+
+    const { slideId } = params;
+    const { emoji } = (await request.json()) as { emoji: string };
+    console.log(`[MSW] POST /slides/${slideId}/reactions`, emoji);
+
+    const slideIndex = slides.findIndex((s) => s.id === slideId);
+
+    if (slideIndex === -1) {
+      return new HttpResponse(null, {
+        status: 404,
+        statusText: 'Slide not found',
+      });
+    }
+
+    const slide = slides[slideIndex];
+    const reactionIndex = slide.emojiReactions.findIndex((r) => r.emoji === emoji);
+
+    if (reactionIndex !== -1) {
+      // 이미 있으면 토글 (count 증감, active 토글)
+      // 단순화를 위해 active가 true면 -1 (취소), false면 +1 (추가)
+      const currentReaction = slide.emojiReactions[reactionIndex];
+      if (currentReaction.active) {
+        currentReaction.count = Math.max(0, currentReaction.count - 1);
+        currentReaction.active = false;
+      } else {
+        currentReaction.count += 1;
+        currentReaction.active = true;
+      }
+    } else {
+      // 없으면 새로 추가
+      slide.emojiReactions.push({
+        emoji,
+        count: 1,
+        active: true,
+        label: emoji === '👍' ? '좋아요' : emoji === '👀' ? '확인했어요' : '반응', // 간단한 라벨 매핑
+      });
+    }
+
+    return HttpResponse.json(slide.emojiReactions);
+  }),
+
+  /**
    * 에러 테스트용 엔드포인트
    * GET /test/error/:status
    * 예: /test/error/400, /test/error/401, /test/error/500

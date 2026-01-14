@@ -29,7 +29,6 @@ export function Layout({ left, center, right }: LayoutProps) {
       </header>
 
       <main className="mt-15 h-[calc(100vh-3.75rem)] overflow-hidden">
-        {/* Outlet이 들어가는 영역(= 네 컨텐츠)이 이제 정확한 높이를 가짐 */}
         <div className="h-full">
           <Outlet />
         </div>
