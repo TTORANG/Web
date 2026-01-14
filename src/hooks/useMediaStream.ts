@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-// Window 인터페이스 확장
 declare global {
   interface Window {
     webkitAudioContext: typeof AudioContext;
@@ -13,6 +12,7 @@ export const useMediaStream = (videoDeviceId?: string, audioDeviceId?: string) =
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  const streamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyzerRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -29,8 +29,8 @@ export const useMediaStream = (videoDeviceId?: string, audioDeviceId?: string) =
       sourceNodeRef.current = null;
     }
 
-    if (audioContextRef.current?.state !== 'closed') {
-      audioContextRef.current?.close();
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      audioContextRef.current.close();
       audioContextRef.current = null;
     }
 
@@ -38,11 +38,13 @@ export const useMediaStream = (videoDeviceId?: string, audioDeviceId?: string) =
   }, []);
 
   const cleanupStream = useCallback(() => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
     }
+    setStream(null);
     cleanupAudioAnalysis();
-  }, [stream, cleanupAudioAnalysis]);
+  }, [cleanupAudioAnalysis]);
 
   const setupAudioAnalysis = useCallback(
     (mediaStream: MediaStream) => {
@@ -68,7 +70,7 @@ export const useMediaStream = (videoDeviceId?: string, audioDeviceId?: string) =
         const updateVolume = () => {
           if (!analyzerRef.current) return;
 
-          analyzer.getByteFrequencyData(dataArray);
+          analyzerRef.current.getByteFrequencyData(dataArray);
           const average = dataArray.reduce((a, b) => a + b) / bufferLength;
           setVolume(Math.round(average));
           animationFrameRef.current = requestAnimationFrame(updateVolume);
@@ -83,6 +85,8 @@ export const useMediaStream = (videoDeviceId?: string, audioDeviceId?: string) =
   );
 
   const startStream = useCallback(async () => {
+    if (!videoDeviceId && !audioDeviceId) return;
+
     setIsLoading(true);
     setError(null);
 
@@ -95,9 +99,10 @@ export const useMediaStream = (videoDeviceId?: string, audioDeviceId?: string) =
       };
 
       const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+      streamRef.current = newStream;
       setStream(newStream);
       setupAudioAnalysis(newStream);
-      setError(null);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : '미디어 장치를 가져오는데 실패했습니다';
@@ -110,9 +115,6 @@ export const useMediaStream = (videoDeviceId?: string, audioDeviceId?: string) =
   }, [videoDeviceId, audioDeviceId, cleanupStream, setupAudioAnalysis]);
 
   useEffect(() => {
-    if (videoDeviceId === undefined && audioDeviceId === undefined) {
-      return;
-    }
     startStream();
 
     return () => {
