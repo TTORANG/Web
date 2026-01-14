@@ -6,7 +6,7 @@
  * theme prop으로 Light/Dark 스타일을 지원합니다.
  */
 // ✅ [수정] Hooks 추가 (높이 조절용)
-import { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 
 import clsx from 'clsx';
 
@@ -79,7 +79,7 @@ const themeStyles = {
   },
 };
 
-export default function CommentItem({
+function CommentItem({
   comment,
   theme = 'light',
   isActive,
@@ -112,12 +112,43 @@ export default function CommentItem({
     }
   }, [isActive, replyText]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      onSubmitReply();
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        onSubmitReply();
+      }
+    },
+    [onSubmitReply],
+  );
+
+  // 렌더링될 때마다 새로운 익명 함수 () => ... 를 생성하는 것을 방지
+  const handleChildToggle = useCallback(
+    (id: string) => {
+      onToggleReplyById?.(id);
+    },
+    [onToggleReplyById],
+  );
+
+  const handleChildSubmit = useCallback(
+    (id: string) => {
+      onReplySubmit?.(id);
+    },
+    [onReplySubmit],
+  );
+
+  const handleChildDelete = useCallback(
+    (id: string) => {
+      onDeleteComment?.(id);
+    },
+    [onDeleteComment],
+  );
+
+  const handleGoToSlideRef = useCallback(() => {
+    if (comment.slideRef && onGoToSlideRef) {
+      onGoToSlideRef(comment.slideRef);
     }
-  };
+  }, [comment.slideRef, onGoToSlideRef]);
 
   return (
     <div>
@@ -166,7 +197,7 @@ export default function CommentItem({
               {comment.slideRef && onGoToSlideRef && (
                 <button
                   type="button"
-                  onClick={() => onGoToSlideRef(comment.slideRef!)}
+                  onClick={handleGoToSlideRef}
                   className="text-body-s-bold text-main-variant1 hover:underline mr-1 inline-flex items-center align-middle"
                 >
                   <FileIcon className="text-main-variant1" />
@@ -258,11 +289,9 @@ export default function CommentItem({
               key={reply.id}
               comment={reply}
               theme={theme}
-              // 1. 활성 상태 확인 로직 (동일)
+              // 1. 활성 상태 확인 로직
               isActive={replyingToId === reply.id}
-              // 2. [중요 수정] 답글 버튼 클릭 시 '이 대댓글의 ID'로 토글 함수 실행
-              // 기존: setReplyingToId 직접 호출 -> 수정: 부모가 준 핸들러 사용 (그래야 draft 초기화 등 로직이 수행됨)
-              onToggleReply={() => onToggleReplyById?.(reply.id)}
+              onToggleReply={() => handleChildToggle(reply.id)}
               // 3. 재귀용 상태 전달 (동일)
               replyingToId={replyingToId}
               setReplyingToId={setReplyingToId}
@@ -271,10 +300,10 @@ export default function CommentItem({
               onReplyTextChange={onReplyTextChange}
               // 5. [핵심 수정] 제출 버튼 클릭 시 '이 대댓글의 ID'로 제출 함수 실행
               // 기존: onSubmitReply (부모 ID가 바인딩된 함수) -> 수정: onReplySubmit(현재 ID)
-              onSubmitReply={() => onReplySubmit?.(reply.id)}
+              onSubmitReply={() => handleChildSubmit(reply.id)}
               // 6. 취소/삭제 등 나머지 전달
               onCancelReply={onCancelReply}
-              onDelete={() => onDeleteComment?.(reply.id)}
+              onDelete={() => handleChildDelete(reply.id)}
               onDeleteComment={onDeleteComment}
               onGoToSlideRef={onGoToSlideRef}
               // 7. 재귀를 위해 헬퍼 함수들을 계속 밑으로 전달
@@ -288,3 +317,5 @@ export default function CommentItem({
     </div>
   );
 }
+
+export default React.memo(CommentItem);
