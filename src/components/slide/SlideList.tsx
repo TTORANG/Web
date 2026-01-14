@@ -15,7 +15,7 @@ import type { Slide } from '@/types/slide';
 import { SlideThumbnail, SlideThumbnailSkeleton } from './SlideThumbnail';
 
 /** 로딩 시 표시할 스켈레톤 개수 */
-const SKELETON_COUNT = 6;
+const SKELETON_COUNT = 3;
 
 interface SlideListProps {
   slides?: Slide[];

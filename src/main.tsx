@@ -8,7 +8,7 @@ import { Toaster } from 'sonner';
 
 import { queryClient } from '@/api';
 import { LoginButton, Logo } from '@/components/common';
-import { ShareButton } from '@/components/common';
+import { ShareButton } from '@/components/common/ShareButton';
 import { Gnb } from '@/components/layout/Gnb';
 import { Layout } from '@/components/layout/Layout';
 import { DEFAULT_SLIDE_ID } from '@/constants/navigation';
