@@ -9,12 +9,11 @@
  */
 import { useEffect, useState } from 'react';
 
-import { Skeleton } from '@/components/common';
-import { SLIDE_MAX_WIDTH } from '@/constants/layout';
-import { useSlideActions } from '@/hooks';
+import { Skeleton, SlideImage } from '@/components/common';
+import { SLIDE_COLLAPSED_OFFSET, SLIDE_MAX_WIDTH } from '@/constants/layout';
+import { useSlideActions, useSlideThumb, useSlideTitle } from '@/hooks';
 import type { Slide } from '@/types/slide';
 
-import SlideViewer from './SlideViewer';
 import { ScriptBox } from './script';
 
 interface SlideWorkspaceProps {
@@ -49,5 +48,39 @@ export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps
         </div>
       </div>
     </div>
+  );
+}
+
+function SlideViewer({
+  isScriptCollapsed,
+  isLoading,
+}: {
+  isScriptCollapsed: boolean;
+  isLoading?: boolean;
+}) {
+  const thumb = useSlideThumb();
+  const title = useSlideTitle();
+
+  return (
+    <section className="flex flex-1 min-h-0 flex-col justify-center overflow-hidden">
+      <div className="mx-auto w-full" style={{ maxWidth: SLIDE_MAX_WIDTH }}>
+        <div
+          className="transition-transform duration-300 ease-out"
+          style={{
+            transform: `translateY(${
+              !isLoading && isScriptCollapsed ? SLIDE_COLLAPSED_OFFSET : 0
+            }px)`,
+          }}
+        >
+          <div className="relative w-full aspect-video bg-gray-200 shadow-sm overflow-hidden">
+            {isLoading ? (
+              <Skeleton height="100%" />
+            ) : (
+              thumb && <SlideImage key={thumb} src={thumb} alt={title} />
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

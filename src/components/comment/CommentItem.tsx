@@ -240,23 +240,17 @@ function CommentItem({
             <CommentItem
               key={reply.id}
               comment={reply}
-              // 1. 활성 상태 확인 로직
               isActive={replyingToId === reply.id}
               onToggleReply={() => handleChildToggle(reply.id)}
-              // 3. 재귀용 상태 전달
               replyingToId={replyingToId}
               setReplyingToId={setReplyingToId}
-              // 4. 입력 상태 전달
               replyText={replyText}
               onReplyTextChange={onReplyTextChange}
-              // 5. 제출 버튼 클릭 시 '이 대댓글의 ID'로 제출 함수 실행
               onSubmitReply={() => handleChildSubmit(reply.id)}
-              // 6. 취소/삭제 등 나머지 전달
               onCancelReply={onCancelReply}
               onDelete={() => handleChildDelete(reply.id)}
               onDeleteComment={onDeleteComment}
               onGoToSlideRef={onGoToSlideRef}
-              // 7. 재귀를 위해 헬퍼 함수들을 계속 밑으로 전달
               onReplySubmit={onReplySubmit}
               onToggleReplyById={onToggleReplyById}
               isIndented={false}
