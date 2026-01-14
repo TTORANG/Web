@@ -95,7 +95,7 @@ export const handlers = [
     const newSlide: Slide = {
       id: crypto.randomUUID(),
       title: data.title,
-      thumb: `https://via.placeholder.com/160x90?text=${slides.length + 1}`,
+      thumb: `/thumbnails/slide-${slides.length % 52}.webp`,
       script: data.script || '',
       opinions: [],
       history: [],

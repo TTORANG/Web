@@ -40,6 +40,12 @@ export const useSlideId = () => useSlideStore((state) => state.slide?.id ?? '');
 export const useSlideTitle = () => useSlideStore((state) => state.slide?.title ?? '');
 
 /**
+ * 슬라이드 썸네일을 구독합니다.
+ * @returns 현재 슬라이드 썸네일 URL (없으면 빈 문자열)
+ */
+export const useSlideThumb = () => useSlideStore((state) => state.slide?.thumb ?? '');
+
+/**
  * 슬라이드 대본을 구독합니다.
  * @returns 현재 슬라이드 대본 (없으면 빈 문자열)
  */

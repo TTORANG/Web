@@ -27,7 +27,7 @@ export const MOCK_SLIDES: Slide[] = [
   {
     id: '1',
     title: '도입',
-    thumb: 'https://via.placeholder.com/160x90?text=1',
+    thumb: '/thumbnails/slide-0.webp',
     script:
       '안녕하세요, 오늘 발표를 맡은 김또랑입니다.\n이번 프로젝트는 프레젠테이션 협업 도구입니다.',
     opinions: [
@@ -78,7 +78,7 @@ export const MOCK_SLIDES: Slide[] = [
   {
     id: '2',
     title: '문제 정의',
-    thumb: 'https://via.placeholder.com/160x90?text=2',
+    thumb: '/thumbnails/slide-1.webp',
     script: '',
     opinions: [
       {
@@ -152,7 +152,7 @@ export const MOCK_SLIDES: Slide[] = [
   {
     id: '3',
     title: '문제 분석',
-    thumb: 'https://via.placeholder.com/160x90?text=3',
+    thumb: '/thumbnails/slide-2.webp',
     script:
       '문제의 근본 원인은 세 가지로 분류할 수 있습니다.\n첫째, 기능적 한계입니다.\n둘째, 구조적 문제입니다.\n셋째, 사용 흐름의 복잡성입니다.',
     opinions: [],
@@ -197,7 +197,7 @@ export const MOCK_SLIDES: Slide[] = [
   {
     id: '4',
     title: '해결 목표',
-    thumb: 'https://via.placeholder.com/160x90?text=4',
+    thumb: '/thumbnails/slide-3.webp',
     script: '',
     opinions: [
       {
@@ -224,7 +224,7 @@ export const MOCK_SLIDES: Slide[] = [
   {
     id: '5',
     title: '해결 방안',
-    thumb: 'https://via.placeholder.com/160x90?text=5',
+    thumb: '/thumbnails/slide-4.webp',
     script: '핵심 해결 방안은 다음과 같습니다.',
     opinions: [],
     history: [
@@ -244,7 +244,7 @@ export const MOCK_SLIDES: Slide[] = [
   {
     id: '6',
     title: '기능 구성 및 상세 설계 - 핵심 모듈 분석',
-    thumb: 'https://via.placeholder.com/160x90?text=6',
+    thumb: '/thumbnails/slide-5.webp',
     script: '',
     opinions: [
       {
@@ -263,7 +263,7 @@ export const MOCK_SLIDES: Slide[] = [
   {
     id: '7',
     title: '화면 흐름',
-    thumb: 'https://via.placeholder.com/160x90?text=7',
+    thumb: '/thumbnails/slide-6.webp',
     script: `사용자 화면 흐름을 설명드리겠습니다.
 
 1. 로그인 화면
@@ -300,7 +300,7 @@ Google, Kakao, Naver 로그인을 지원합니다.
   {
     id: '8',
     title: '기술적 구현',
-    thumb: 'https://via.placeholder.com/160x90?text=8',
+    thumb: '/thumbnails/slide-7.webp',
     script: 'React 19, TypeScript, Zustand를 사용합니다.',
     opinions: [
       {
@@ -335,7 +335,7 @@ Google, Kakao, Naver 로그인을 지원합니다.
   {
     id: '9',
     title: '기대 효과',
-    thumb: 'https://via.placeholder.com/160x90?text=9',
+    thumb: '/thumbnails/slide-8.webp',
     script: '',
     opinions: [
       {
@@ -371,7 +371,7 @@ Google, Kakao, Naver 로그인을 지원합니다.
   {
     id: '10',
     title: '결론',
-    thumb: 'https://via.placeholder.com/160x90?text=10',
+    thumb: '/thumbnails/slide-9.webp',
     script: '',
     opinions: [],
     history: [],

@@ -11,15 +11,17 @@ import clsx from 'clsx';
 
 import ArrowDownIcon from '@/assets/icons/icon-arrow-down.svg?react';
 import { Popover } from '@/components/common';
-import { useSlideActions, useSlideTitle } from '@/hooks';
+import { useSlideActions, useSlideId, useSlideTitle, useUpdateSlide } from '@/hooks';
 
 interface SlideTitleProps {
   isCollapsed?: boolean;
 }
 
 export default function SlideTitle({ isCollapsed = false }: SlideTitleProps) {
+  const slideId = useSlideId();
   const title = useSlideTitle();
   const { updateSlide } = useSlideActions();
+  const { mutate: updateSlideApi } = useUpdateSlide();
   const [editTitle, setEditTitle] = useState(title);
 
   useEffect(() => {
@@ -27,10 +29,16 @@ export default function SlideTitle({ isCollapsed = false }: SlideTitleProps) {
   }, [title]);
 
   /**
-   * 변경된 제목을 `store`에 저장합니다.
+   * 변경된 제목을 저장합니다.
    */
   const handleSave = () => {
+    // 로컬 store 즉시 업데이트
     updateSlide({ title: editTitle });
+
+    // API 호출
+    if (slideId) {
+      updateSlideApi({ slideId, data: { title: editTitle } });
+    }
   };
 
   return (
