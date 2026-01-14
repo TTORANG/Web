@@ -3,61 +3,23 @@
  * @description 의견 목록 팝오버
  *
  * 대본에 대한 팀원들의 의견을 보여주고, 답글을 달 수 있습니다.
- * API를 통해 서버와 동기화하고, Zustand store로 로컬 상태를 관리합니다.
+ * useComments 훅을 통해 API와 동기화합니다.
  */
 import { useState } from 'react';
 
 import clsx from 'clsx';
 
+import CommentItem from '@/components/comment/CommentItem';
 import { Popover } from '@/components/common';
-import OpinionItem from '@/components/slide/script/OpinionItem';
-import ReplyInput from '@/components/slide/script/ReplyInput';
-import {
-  useCreateOpinion,
-  useDeleteOpinion,
-  useSlideActions,
-  useSlideId,
-  useSlideOpinions,
-} from '@/hooks';
-import { showToast } from '@/utils/toast.ts';
+import { useSlideOpinions } from '@/hooks';
+import { useComments } from '@/hooks/useComments';
 
 export default function Opinion() {
-  const slideId = useSlideId();
   const opinions = useSlideOpinions();
-  const {
-    deleteOpinion: deleteOpinionLocal,
-    addReply: addReplyLocal,
-    setOpinions,
-  } = useSlideActions();
-
-  const { mutate: createOpinion } = useCreateOpinion();
-  const { mutate: deleteOpinionApi } = useDeleteOpinion();
+  const { comments: treeOpinions, addReply, deleteComment } = useComments();
 
   const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
-
-  /**
-   * 의견을 삭제합니다.
-   * @param opinionId - 삭제할 의견 ID
-   */
-  const handleDelete = (opinionId: string) => {
-    const previousOpinions = opinions; // 스냅샷 저장
-
-    // 로컬 store 즉시 업데이트 (Optimistic UI)
-    deleteOpinionLocal(opinionId);
-
-    // API 호출
-    deleteOpinionApi(
-      { opinionId, slideId },
-      {
-        onError: () => {
-          // 실패 시 롤백
-          setOpinions(previousOpinions);
-          showToast.error('의견 삭제에 실패했습니다.', '잠시 후 다시 시도해주세요.');
-        },
-      },
-    );
-  };
 
   /**
    * 답글을 등록합니다.
@@ -65,24 +27,17 @@ export default function Opinion() {
    */
   const handleReplySubmit = (parentId: string) => {
     if (!replyText.trim()) return;
+    addReply(parentId, replyText);
+    setActiveReplyId(null);
+    setReplyText('');
+  };
 
-    const previousOpinions = opinions; // 스냅샷 저장
+  const handleToggleReply = (id: string) => {
+    setActiveReplyId(activeReplyId === id ? null : id);
+    setReplyText('');
+  };
 
-    // 로컬 store 즉시 업데이트 (Optimistic UI)
-    addReplyLocal(parentId, replyText);
-
-    // API 호출
-    createOpinion(
-      { slideId, data: { content: replyText, parentId } },
-      {
-        onError: () => {
-          // 실패 시 롤백
-          setOpinions(previousOpinions);
-          showToast.error('답글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
-        },
-      },
-    );
-
+  const handleCancelReply = () => {
     setActiveReplyId(null);
     setReplyText('');
   };
@@ -131,31 +86,23 @@ export default function Opinion() {
 
       {/* 의견 목록 */}
       <div className="h-80 overflow-y-auto">
-        {opinions.map((opinion) => (
-          <div key={opinion.id}>
-            <OpinionItem
-              {...opinion}
-              isActive={activeReplyId === opinion.id}
-              onDelete={handleDelete}
-              onReplyClick={(id) => {
-                setActiveReplyId(activeReplyId === id ? null : id);
-                setReplyText('');
-              }}
-            />
-
-            {/* 답글 입력 */}
-            {activeReplyId === opinion.id && (
-              <ReplyInput
-                value={replyText}
-                onChange={setReplyText}
-                onSubmit={() => handleReplySubmit(opinion.id)}
-                onCancel={() => {
-                  setActiveReplyId(null);
-                  setReplyText('');
-                }}
-              />
-            )}
-          </div>
+        {treeOpinions.map((opinion) => (
+          <CommentItem
+            key={opinion.id}
+            comment={opinion}
+            isActive={activeReplyId === opinion.id}
+            replyText={replyText}
+            onReplyTextChange={setReplyText}
+            onToggleReply={() => handleToggleReply(opinion.id)}
+            onSubmitReply={() => handleReplySubmit(opinion.id)}
+            onCancelReply={handleCancelReply}
+            onDelete={() => deleteComment(opinion.id)}
+            onDeleteComment={deleteComment}
+            replyingToId={activeReplyId}
+            setReplyingToId={setActiveReplyId}
+            onReplySubmit={handleReplySubmit}
+            onToggleReplyById={handleToggleReply}
+          />
         ))}
       </div>
     </Popover>

@@ -52,22 +52,8 @@ const router = createBrowserRouter([
     ],
   },
   {
-    path: '/feedback',
-    element: (
-      <Layout
-        left={
-          <>
-            <Logo />
-            <span className="text-body-m-bold text-gray-800">내 발표</span>
-          </>
-        }
-        right={<LoginButton />}
-      />
-    ),
-    children: [
-      { index: true, element: <Navigate to={`slide/${DEFAULT_SLIDE_ID}`} replace /> },
-      { path: 'slide/:slideId', element: <FdSlidePage /> },
-    ],
+    path: '/feedback/slide/:projectId',
+    element: <FdSlidePage />,
   },
 ]);
 

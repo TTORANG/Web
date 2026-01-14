@@ -51,7 +51,6 @@ export default function CommentList({
         <CommentItem
           key={comment.id}
           comment={comment}
-          theme="dark"
           isActive={replyingToId === comment.id}
           replyText={replyDraft}
           onReplyTextChange={setReplyDraft}

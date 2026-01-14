@@ -1,26 +1,35 @@
 import { useEffect, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 
+import CommentList from '@/components/comment/CommentList';
 import DarkHeader from '@/components/common/DarkHeader';
-import { MOCK_SLIDES, MOCK_UI_SLIDES } from '@/mocks/slides';
+import FeedbackInput from '@/components/feedback/FeedbackInput';
+import SlideViewer from '@/components/feedback/SlideViewer';
+import { useSlides } from '@/hooks/queries/useSlides';
+import { useSlideNavigation } from '@/hooks/useSlideNavigation';
 import { useSlideStore } from '@/stores/slideStore';
 
-import CommentList from '../components/comment/CommentList';
-import FeedbackInput from '../components/feedback/FeedbackInput';
-import SlideViewer from '../components/feedback/SlideViewer';
 import { useComments } from '../hooks/useComments';
 import { useReactions } from '../hooks/useReactions';
-import { useSlides } from '../hooks/useSlides';
 
 export default function FeedbackSlidePage() {
-  const slideLogic = useSlides();
-  const { slideIndex } = slideLogic;
+  const { projectId } = useParams<{ projectId: string }>();
+  const { data: slides, isLoading } = useSlides(projectId ?? '');
+
+  const totalSlides = slides?.length ?? 0;
+  const navigation = useSlideNavigation(totalSlides);
+  const { slideIndex, goPrev, goNext, isFirst, isLast, goToSlideRef } = navigation;
+
+  const currentSlide = slides?.[slideIndex];
 
   const { comments, addComment, addReply, deleteComment } = useComments();
   const { reactions, toggleReaction } = useReactions();
   const initSlide = useSlideStore((state) => state.initSlide);
 
+  // 모든 슬라이드의 의견을 하나의 플랫 배열로 합침 (슬라이드 참조 포함)
   const allFlatOpinions = useMemo(() => {
-    return MOCK_SLIDES.flatMap((slide, index) => {
+    if (!slides) return [];
+    return slides.flatMap((slide, index) => {
       const slideLabel = `슬라이드 ${index + 1}`;
       return (slide.opinions || []).map((op) => ({
         ...op,
@@ -29,34 +38,53 @@ export default function FeedbackSlidePage() {
         slideRef: slideLabel,
       }));
     });
-  }, []);
+  }, [slides]);
 
+  // 현재 슬라이드 데이터를 store에 초기화
   useEffect(() => {
-    const rawData = MOCK_SLIDES[slideIndex];
-    const uiData = MOCK_UI_SLIDES[slideIndex];
+    if (!currentSlide) return;
 
-    if (rawData && uiData) {
-      initSlide({
-        ...rawData,
-        opinions: allFlatOpinions,
-        emojiReactions: uiData.emojiReactions,
-      });
-    }
-  }, [slideIndex, initSlide, allFlatOpinions]);
+    initSlide({
+      ...currentSlide,
+      opinions: allFlatOpinions,
+    });
+  }, [slideIndex, currentSlide, initSlide, allFlatOpinions]);
+
+  if (isLoading) {
+    return (
+      <div
+        data-theme="dark"
+        className="fixed inset-0 z-60 flex h-screen w-screen items-center justify-center bg-white"
+      >
+        <p className="text-gray-400">로딩 중...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="fixed inset-0 z-60 flex h-screen w-screen flex-col overflow-hidden bg-gray-900">
-      <DarkHeader title="Q4 마케팅 전략 발표" />
+    <div
+      data-theme="dark"
+      className="fixed inset-0 z-60 flex h-screen w-screen flex-col overflow-hidden bg-white"
+    >
+      <DarkHeader title={currentSlide?.title ?? '발표 피드백'} />
 
       <div className="flex flex-1 w-full min-h-0">
-        <SlideViewer {...slideLogic} />
+        <SlideViewer
+          slide={currentSlide}
+          slideIndex={slideIndex}
+          totalSlides={totalSlides}
+          isFirst={isFirst}
+          isLast={isLast}
+          onPrev={goPrev}
+          onNext={goNext}
+        />
 
-        <aside className="w-130 bg-gray-900 flex flex-col border-l border-white/5">
+        <aside className="w-130 bg-white flex flex-col border-l border-white/5">
           <div className="flex-1 min-h-0 overflow-y-auto">
             <CommentList
               comments={comments}
               onAddReply={addReply}
-              onGoToSlideRef={slideLogic.goToSlideRef}
+              onGoToSlideRef={goToSlideRef}
               onDeleteComment={deleteComment}
             />
           </div>
@@ -65,7 +93,7 @@ export default function FeedbackSlidePage() {
             <FeedbackInput
               reactions={reactions}
               onToggleReaction={toggleReaction}
-              onAddComment={(content) => addComment(content, slideLogic.slideIndex)}
+              onAddComment={(content) => addComment(content, slideIndex)}
             />
           </div>
         </aside>

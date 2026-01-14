@@ -3,7 +3,7 @@
  * @description 댓글 항목 공통 컴포넌트
  *
  * 슬라이드 화면(CommentPopover)과 피드백 화면(CommentList) 모두에서 사용됩니다.
- * theme prop으로 Light/Dark 스타일을 지원합니다.
+ * data-theme 속성에 따라 CSS 변수가 자동 반전되어 다크모드를 지원합니다.
  */
 import React, { useCallback, useEffect, useRef } from 'react';
 
@@ -15,11 +15,8 @@ import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
 import type { CommentItem as CommentItemType } from '@/types/comment';
 import { formatRelativeTime } from '@/utils/format';
 
-type Theme = 'light' | 'dark';
-
 interface CommentItemProps {
   comment: CommentItemType;
-  theme?: Theme;
   /** 현재 답글 입력 활성화 여부 */
   isActive: boolean;
   /** 답글 입력 값 */
@@ -49,38 +46,8 @@ interface CommentItemProps {
   onToggleReplyById?: (targetId: string) => void;
 }
 
-const themeStyles = {
-  light: {
-    container: 'bg-white',
-    containerActive: 'bg-gray-100',
-    author: 'text-gray-800',
-    time: 'text-gray-600',
-    content: 'text-gray-800',
-    replyButton: 'text-main hover:text-main-variant1 active:text-main-variant2',
-    replyButtonActive: 'text-gray-400',
-    input: 'border-gray-400 text-gray-800 placeholder:text-gray-600 focus:border-main',
-    cancelButton: 'text-gray-800 hover:text-gray-600',
-    submitButton: 'bg-white text-main active:text-main-variant2',
-    submitButtonDisabled: 'bg-white text-gray-400',
-  },
-  dark: {
-    container: 'bg-transparent',
-    containerActive: 'bg-gray-800',
-    author: 'text-white',
-    time: 'text-gray-400',
-    content: 'text-white',
-    replyButton: 'text-main hover:text-main-variant1',
-    replyButtonActive: 'text-gray-400',
-    input: 'border-gray-200 text-white placeholder-gray-400 focus:border-white',
-    cancelButton: 'text-gray-200 bg-gray-800 hover:bg-gray-900',
-    submitButton: 'bg-white text-gray-400 hover:bg-white/20',
-    submitButtonDisabled: 'bg-white text-gray-400',
-  },
-};
-
 function CommentItem({
   comment,
-  theme = 'light',
   isActive,
   replyText,
   onReplyTextChange,
@@ -97,8 +64,6 @@ function CommentItem({
   onReplySubmit,
   onToggleReplyById,
 }: CommentItemProps) {
-  const styles = themeStyles[theme];
-
   // Textarea 높이 자동 조절 로직
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -156,7 +121,7 @@ function CommentItem({
         className={clsx(
           'flex gap-3 py-3 pr-4 transition-colors',
           isIndented ? 'pl-15' : 'pl-4',
-          isActive ? styles.containerActive : styles.container,
+          isActive ? 'bg-gray-200' : 'bg-gray-100',
         )}
       >
         {/* 프로필 이미지 */}
@@ -169,12 +134,10 @@ function CommentItem({
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span
-                  className={clsx('max-w-50 truncate text-body-s-bold text-white', styles.author)}
-                >
+                <span className="max-w-50 truncate text-body-s-bold text-black">
                   {comment.author}
                 </span>
-                <span className={clsx('text-caption text-gray-400', styles.time)}>
+                <span className="text-caption text-gray-600">
                   {formatRelativeTime(comment.timestamp)}
                 </span>
               </div>
@@ -192,7 +155,7 @@ function CommentItem({
               )}
             </div>
 
-            <div className={clsx('text-body-s', styles.content)}>
+            <div className="text-body-s text-black">
               {comment.slideRef && onGoToSlideRef && (
                 <button
                   type="button"
@@ -216,7 +179,9 @@ function CommentItem({
               aria-label={`${comment.author}에게 답글 달기`}
               className={clsx(
                 'flex items-center gap-1 text-caption-bold transition',
-                isActive ? styles.replyButtonActive : styles.replyButton,
+                isActive
+                  ? 'text-gray-400'
+                  : 'text-main hover:text-main-variant1 active:text-main-variant2',
               )}
             >
               답글
@@ -228,13 +193,7 @@ function CommentItem({
 
       {/* 답글 입력 */}
       {isActive && (
-        <div
-          className={clsx(
-            'flex flex-col gap-1 pb-4 pr-4',
-            isIndented ? 'pl-15' : 'pl-15',
-            styles.containerActive,
-          )}
-        >
+        <div className="flex flex-col gap-1 pb-4 pr-4 pl-15 bg-gray-200">
           <textarea
             ref={textareaRef}
             autoFocus
@@ -244,10 +203,7 @@ function CommentItem({
             placeholder="댓글을 입력하세요"
             rows={1}
             aria-label="답글 입력"
-            className={clsx(
-              'w-full overflow-hidden resize-none bg-transparent border-b border-gray-200 text-body-s text-white pb-2 focus:border-white outline-none placeholder-gray-400 transition-colors',
-              styles.input,
-            )}
+            className="w-full overflow-hidden resize-none bg-transparent border-b border-gray-600 pb-2 text-body-s text-black placeholder:text-gray-600 focus:border-main outline-none transition-colors"
           />
 
           <div className="flex items-center justify-end gap-2">
@@ -255,10 +211,7 @@ function CommentItem({
               type="button"
               onClick={onCancelReply}
               aria-label="답글 취소"
-              className={clsx(
-                'px-3 py-1.5 rounded-full text-caption-bold text-gray-200 bg-gray-800 hover:bg-gray-900 transition',
-                styles.cancelButton,
-              )}
+              className="px-3 py-1.5 rounded-full text-caption-bold text-gray-800 hover:text-gray-600 transition"
             >
               취소
             </button>
@@ -268,8 +221,10 @@ function CommentItem({
               disabled={!replyText.trim()}
               aria-label="답글 등록"
               className={clsx(
-                'px-3 py-1.5 rounded-full text-caption-bold text-gray-400 bg-white hover:bg-white/20 transition',
-                replyText.trim() ? styles.submitButton : styles.submitButtonDisabled,
+                'px-3 py-1.5 rounded-full text-caption-bold transition',
+                replyText.trim()
+                  ? 'bg-main text-white hover:bg-main-variant1 active:bg-main-variant2'
+                  : 'bg-gray-100 text-gray-600',
               )}
             >
               답글
@@ -285,7 +240,6 @@ function CommentItem({
             <CommentItem
               key={reply.id}
               comment={reply}
-              theme={theme}
               // 1. 활성 상태 확인 로직
               isActive={replyingToId === reply.id}
               onToggleReply={() => handleChildToggle(reply.id)}

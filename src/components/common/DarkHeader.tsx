@@ -9,12 +9,12 @@ interface DarkHeaderProps {
 
 export const DarkHeader = ({ title, renderRight }: DarkHeaderProps) => {
   return (
-    <header className="flex h-15 w-full shrink-0 items-center justify-between border-b border-white/10 bg-[#2a2d34] px-6 md:px-18">
+    <header className="flex h-15 w-full shrink-0 items-center justify-between border-b border-[#ffffff]/10 bg-[#2a2d34] px-6 md:px-18">
       <div className="flex items-center gap-4">
         <Logo />
-        <div className="hidden h-4 w-[1px] bg-white/20 sm:block" />
+        <div className="hidden h-4 w-px bg-[#ffffff]/20 sm:block" />
         <div className="flex items-center gap-1.5">
-          <span className="text-sm font-bold text-white">{title}</span>
+          <span className="text-sm font-bold text-[#ffffff]">{title}</span>
           <svg
             width="14"
             height="14"
@@ -24,7 +24,7 @@ export const DarkHeader = ({ title, renderRight }: DarkHeaderProps) => {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-white/40 cursor-help"
+            className="text-[#ffffff]/40 cursor-help"
           >
             <circle cx="12" cy="12" r="10" />
             <path d="M12 16v-4" />

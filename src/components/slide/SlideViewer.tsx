@@ -5,36 +5,9 @@
  * 현재 선택된 슬라이드를 16:9 비율로 표시합니다.
  * ScriptBox 접힘 상태에 따라 슬라이드 위치가 부드럽게 이동합니다.
  */
-import { useState } from 'react';
-
-import clsx from 'clsx';
-
+import { SlideImage } from '@/components/common';
 import { SLIDE_COLLAPSED_OFFSET, SLIDE_MAX_WIDTH } from '@/constants/layout';
 import { useSlideThumb, useSlideTitle } from '@/hooks';
-
-interface SlideImageProps {
-  src: string;
-  alt: string;
-}
-
-function SlideImage({ src, alt }: SlideImageProps) {
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  return (
-    <>
-      {!isLoaded && <div className="absolute inset-0 animate-pulse bg-gray-200" />}
-      <img
-        src={src}
-        alt={alt}
-        onLoad={() => setIsLoaded(true)}
-        className={clsx(
-          'h-full w-full object-contain transition-opacity duration-300',
-          isLoaded ? 'opacity-100' : 'opacity-0',
-        )}
-      />
-    </>
-  );
-}
 
 interface SlideViewerProps {
   isScriptCollapsed: boolean;

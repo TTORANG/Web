@@ -6,4 +6,5 @@ export { Modal } from './Modal';
 export { Popover } from './Popover';
 export { ActionButton } from './ActionButton';
 export { Skeleton } from './Skeleton';
+export { default as SlideImage } from './SlideImage';
 export { Spinner } from './Spinner';
