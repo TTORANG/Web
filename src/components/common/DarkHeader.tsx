@@ -15,24 +15,15 @@ export const DarkHeader = ({ title, renderRight }: DarkHeaderProps) => {
         <div className="hidden h-4 w-[1px] bg-white/20 sm:block" />
         <div className="flex items-center gap-1.5">
           <span className="text-sm font-bold text-white">{title}</span>
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-white/40 cursor-help"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 16v-4" />
-            <path d="M12 8h.01" />
-          </svg>
+          <img
+            src="/assets/icon/icon-information.svg"
+            alt="information"
+            className="w-4 h-4 cursor-pointer"
+          />
         </div>
       </div>
-      = <div className="flex items-center">{renderRight}</div>
+
+      <div className="flex items-center">{renderRight}</div>
     </header>
   );
 };
