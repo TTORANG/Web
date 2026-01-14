@@ -42,7 +42,6 @@ export default function FeedbackSlidePage() {
     const uiData = MOCK_UI_SLIDES[slideIndex];
 
     if (rawData && uiData) {
-      // ✅ [핵심] 두 데이터를 병합하여 초기화
       initSlide({
         ...rawData,
         // opinions를 현재 슬라이드 것이 아닌 '전체 합친 것'으로 덮어쓰기

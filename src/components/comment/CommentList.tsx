@@ -61,7 +61,7 @@ export default function CommentList({
           onDeleteComment={onDeleteComment}
           onCancelReply={handleCancelReply}
           onGoToSlideRef={onGoToSlideRef}
-          // ✅ 재귀에 필요한 props 전달
+          // 재귀에 필요한 props 전달
           replyingToId={replyingToId}
           setReplyingToId={setReplyingToId}
           onReplySubmit={handleReplySubmit}

@@ -398,13 +398,12 @@ const EMOJI_LABELS: Record<string, string> = {
 };
 
 /**
- * [변환 1] UI용 슬라이드 데이터
+ * - UI용 슬라이드 데이터
  * - 슬라이드별 이모지 상태(count)를 기본 템플릿과 병합합니다.
  */
 export const MOCK_UI_SLIDES: UiSlide[] = MOCK_SLIDES.map((slide, index) => {
   const displayTitle = slide.title.trim() ? slide.title : `슬라이드 ${index + 1}`;
 
-  // 💡 [최적화] 2단계(base -> merge)를 1단계로 축소
   const emojiReactions: EmojiReaction[] = Object.entries(EMOJI_LABELS).map(([emoji, label]) => ({
     emoji,
     label,
@@ -419,14 +418,14 @@ export const MOCK_UI_SLIDES: UiSlide[] = MOCK_SLIDES.map((slide, index) => {
     script: slide.script,
     opinions: [],
     history: [],
-    emojiReactions, // 깔끔하게 주입
+    emojiReactions,
     body: slide.script || `${displayTitle} 내용입니다.`,
     viewerText: `${displayTitle}의 본문 내용입니다.`,
   };
 });
 
 /**
- * [변환 2] UI용 댓글 목록
+ * - UI용 댓글 목록
  * - Flat 구조 -> Nested 구조 변환
  * - 슬라이드 번호(slideRef) 주입
  */
@@ -434,7 +433,7 @@ export const MOCK_UI_COMMENTS: CommentItem[] = MOCK_SLIDES.flatMap((slide, index
   const opinions = slide.opinions || [];
   const slideLabel = `슬라이드 ${index + 1}`;
 
-  // 💡 [최적화] 댓글 매핑 로직 재사용을 위한 헬퍼 함수
+  // 댓글 매핑 로직 재사용을 위한 헬퍼 함수
   const mapComment = (c: CommentItem, replies: CommentItem[] = []) => ({
     id: `${slide.id}-${c.id}`,
     author: c.author,
@@ -458,12 +457,12 @@ export const MOCK_UI_COMMENTS: CommentItem[] = MOCK_SLIDES.flatMap((slide, index
 }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
 /**
- * [변환 3] UI용 전체 리액션 집계 (Dashboard용)
+ * - UI용 전체 리액션 집계 (Dashboard용)
  * - 모든 슬라이드의 이모지 카운트를 합산합니다.
  */
 export const MOCK_UI_REACTIONS: EmojiReaction[] = Object.entries(EMOJI_LABELS).map(
   ([emoji, label]) => {
-    // 💡 [최적화] Map 사용 없이 reduce로 한방에 계산
+    // Map 사용 없이 reduce로 한방에 계산
     const totalCount = MOCK_SLIDES.reduce((acc, slide) => {
       const found = slide.emojiReactions?.find((r) => r.emoji === emoji);
       return acc + (found ? found.count : 0);

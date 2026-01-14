@@ -84,7 +84,6 @@ export default function FeedbackInput({ reactions, onToggleReaction, onAddCommen
                   : 'bg-gray-800 ring-1 text-body-m ring-gray-600 text-white hover:bg-gray-800'
               }`}
             >
-              {/* ✅ 여기! flex items-center로 가로 정렬 + whitespace-nowrap으로 줄바꿈 방지 */}
               <div className="flex items-center gap-2 min-w-0">
                 <span className="flex-shrink-0">{reaction.emoji}</span>
                 <span className="whitespace-nowrap overflow-hidden">{reaction.label}</span>

@@ -5,7 +5,6 @@
  * 슬라이드 화면(CommentPopover)과 피드백 화면(CommentList) 모두에서 사용됩니다.
  * theme prop으로 Light/Dark 스타일을 지원합니다.
  */
-// ✅ [수정] Hooks 추가 (높이 조절용)
 import React, { useCallback, useEffect, useRef } from 'react';
 
 import clsx from 'clsx';
@@ -35,17 +34,17 @@ interface CommentItemProps {
   onCancelReply: () => void;
   /** 삭제 핸들러 (선택적) */
   onDelete?: () => void;
-  // ✅ [추가] 재귀를 위해 "ID로 삭제하는 원본 함수"도 받아야 함
+  // 재귀를 위해 "ID로 삭제하는 원본 함수"도 받아야 함
   onDeleteComment?: (id: string) => void;
   /** 슬라이드 참조 클릭 핸들러 (선택적) */
   onGoToSlideRef?: (ref: string) => void;
   /** 들여쓰기 여부 (플랫 구조에서 답글 표시용) */
   isIndented?: boolean;
-  // ✅ [추가] 재귀(무한 대댓글)를 위해 필요한 상태 Props
+  // 재귀(무한 대댓글)를 위해 필요한 상태 Props
   replyingToId?: string | null;
   setReplyingToId?: (id: string | null) => void;
 
-  // ✅ 재귀에서 특정 댓글 id로 submit/toggle 호출하려고 추가
+  // 재귀에서 특정 댓글 id로 submit/toggle 호출하려고 추가
   onReplySubmit?: (targetId: string) => void;
   onToggleReplyById?: (targetId: string) => void;
 }
@@ -92,7 +91,7 @@ function CommentItem({
   onDeleteComment,
   onGoToSlideRef,
   isIndented = false,
-  // ✅ [추가] 재귀용 Props (기본값 처리로 에러 방지)
+  // 재귀용 Props (기본값 처리로 에러 방지)
   replyingToId,
   setReplyingToId,
   onReplySubmit,
@@ -100,7 +99,7 @@ function CommentItem({
 }: CommentItemProps) {
   const styles = themeStyles[theme];
 
-  // ✅ [수정] Textarea 높이 자동 조절 로직
+  // Textarea 높이 자동 조절 로직
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -246,9 +245,7 @@ function CommentItem({
             rows={1}
             aria-label="답글 입력"
             className={clsx(
-              // 1. 레이아웃 & 폰트: 우리 스타일 (text-body-s, pb-2, resize-none)
               'w-full overflow-hidden resize-none bg-transparent border-b border-gray-200 text-body-s text-white pb-2 focus:border-white outline-none placeholder-gray-400 transition-colors',
-              // 2. 색상: 팀원이 잡아둔 테마 스타일 (border, text color)
               styles.input,
             )}
           />
@@ -281,7 +278,7 @@ function CommentItem({
         </div>
       )}
 
-      {/* ✅ [수정] 무한 답글(재귀) 렌더링 */}
+      {/* 무한 답글(재귀) 렌더링 */}
       {comment.replies && comment.replies.length > 0 && (
         <div className="pl-8">
           {comment.replies.map((reply) => (
@@ -292,14 +289,13 @@ function CommentItem({
               // 1. 활성 상태 확인 로직
               isActive={replyingToId === reply.id}
               onToggleReply={() => handleChildToggle(reply.id)}
-              // 3. 재귀용 상태 전달 (동일)
+              // 3. 재귀용 상태 전달
               replyingToId={replyingToId}
               setReplyingToId={setReplyingToId}
-              // 4. 입력 상태 전달 (동일)
+              // 4. 입력 상태 전달
               replyText={replyText}
               onReplyTextChange={onReplyTextChange}
-              // 5. [핵심 수정] 제출 버튼 클릭 시 '이 대댓글의 ID'로 제출 함수 실행
-              // 기존: onSubmitReply (부모 ID가 바인딩된 함수) -> 수정: onReplySubmit(현재 ID)
+              // 5. 제출 버튼 클릭 시 '이 대댓글의 ID'로 제출 함수 실행
               onSubmitReply={() => handleChildSubmit(reply.id)}
               // 6. 취소/삭제 등 나머지 전달
               onCancelReply={onCancelReply}
