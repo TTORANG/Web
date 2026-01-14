@@ -1,40 +1,45 @@
 /**
- * @file Opinion.tsx
- * @description 의견 목록 팝오버
+ * @file CommentPopover.tsx
+ * @description 슬라이드 의견 목록 팝오버
  *
  * 대본에 대한 팀원들의 의견을 보여주고, 답글을 달 수 있습니다.
  * Zustand store를 통해 의견 데이터를 읽고 업데이트합니다.
  */
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import clsx from 'clsx';
 
-import { CommentItem, Popover } from '@/components/common';
+import { Popover } from '@/components/common';
 import { useSlideActions, useSlideOpinions } from '@/hooks';
 
-export default function Opinion() {
+import CommentItem from './CommentItem';
+
+export default function CommentPopover() {
   const opinions = useSlideOpinions();
   const { deleteOpinion, addReply } = useSlideActions();
   const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
 
-  const handleReplySubmit = (opinionId: string) => {
-    if (replyText.trim()) {
-      addReply(opinionId, replyText);
-    }
+  const handleReplySubmit = useCallback(
+    (opinionId: string) => {
+      if (replyText.trim()) {
+        addReply(opinionId, replyText);
+      }
+      setActiveReplyId(null);
+      setReplyText('');
+    },
+    [replyText, addReply],
+  );
+
+  const handleToggleReply = useCallback((opinionId: string) => {
+    setActiveReplyId((prev) => (prev === opinionId ? null : opinionId));
+    setReplyText('');
+  }, []);
+
+  const handleCancelReply = useCallback(() => {
     setActiveReplyId(null);
     setReplyText('');
-  };
-
-  const handleToggleReply = (opinionId: string) => {
-    setActiveReplyId(activeReplyId === opinionId ? null : opinionId);
-    setReplyText('');
-  };
-
-  const handleCancelReply = () => {
-    setActiveReplyId(null);
-    setReplyText('');
-  };
+  }, []);
 
   return (
     <Popover
