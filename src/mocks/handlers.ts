@@ -72,9 +72,24 @@ export const handlers = [
       });
     }
 
+    const currentSlide = slides[slideIndex];
+
+    // 스크립트가 변경되는 경우 히스토리 저장
+    if (
+      updates.script !== undefined &&
+      updates.script !== currentSlide.script &&
+      currentSlide.script.trim()
+    ) {
+      currentSlide.history.unshift({
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        content: currentSlide.script,
+      });
+    }
+
     // 슬라이드 업데이트
     slides[slideIndex] = {
-      ...slides[slideIndex],
+      ...currentSlide,
       ...updates,
     };
 

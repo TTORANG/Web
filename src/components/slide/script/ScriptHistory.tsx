@@ -9,13 +9,40 @@ import clsx from 'clsx';
 
 import RevertIcon from '@/assets/icons/icon-revert.svg?react';
 import { Popover } from '@/components/common';
-import { useSlideActions, useSlideHistory, useSlideScript } from '@/hooks';
+import { useSlideActions, useSlideHistory, useSlideId, useSlideScript } from '@/hooks';
+import { useUpdateSlide } from '@/hooks/queries/useSlides';
+import type { HistoryItem } from '@/types/script';
 import { formatTimestamp } from '@/utils/format';
+import { showToast } from '@/utils/toast';
 
 export default function ScriptHistory() {
+  const slideId = useSlideId();
   const script = useSlideScript();
   const history = useSlideHistory();
   const { restoreFromHistory } = useSlideActions();
+
+  const { mutate: updateSlide } = useUpdateSlide();
+
+  const handleRestore = (item: HistoryItem) => {
+    if (!slideId) return;
+
+    // 1. 로컬 상태 업데이트 (Optimistic)
+    restoreFromHistory(item);
+
+    // 2. 서버 저장
+    updateSlide(
+      { slideId, data: { script: item.content } },
+      {
+        onSuccess: () => {
+          showToast.success('대본이 복원되었습니다.');
+        },
+        onError: () => {
+          showToast.error('복원 실패', '다시 시도해주세요.');
+        },
+      },
+    );
+  };
+
   return (
     <Popover
       trigger={({ isOpen }) => (
@@ -68,7 +95,7 @@ export default function ScriptHistory() {
                 </span>
                 <button
                   type="button"
-                  onClick={() => restoreFromHistory(item)}
+                  onClick={() => handleRestore(item)}
                   aria-label={`${formatTimestamp(item.timestamp)} 버전으로 복원`}
                   className={clsx(
                     'inline-flex items-center gap-1 rounded py-1 pl-2 pr-1.5',
