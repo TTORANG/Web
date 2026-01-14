@@ -12,7 +12,7 @@ import { ShareButton } from '@/components/common/ShareButton';
 import { Gnb } from '@/components/layout/Gnb';
 import { Layout } from '@/components/layout/Layout';
 import { DEFAULT_SLIDE_ID } from '@/constants/navigation';
-import { DevTestPage, HomePage, InsightPage, SlidePage, VideoPage } from '@/pages';
+import { DevTestPage, FdSlidePage, HomePage, InsightPage, SlidePage, VideoPage } from '@/pages';
 import '@/styles/index.css';
 
 const router = createBrowserRouter([
@@ -49,6 +49,24 @@ const router = createBrowserRouter([
       { path: 'slide/:slideId', element: <SlidePage /> },
       { path: 'video', element: <VideoPage /> },
       { path: 'insight', element: <InsightPage /> },
+    ],
+  },
+  {
+    path: '/feedback',
+    element: (
+      <Layout
+        left={
+          <>
+            <Logo />
+            <span className="text-body-m-bold text-gray-800">내 발표</span>
+          </>
+        }
+        right={<LoginButton />}
+      />
+    ),
+    children: [
+      { index: true, element: <Navigate to={`fslide/${DEFAULT_SLIDE_ID}`} replace /> },
+      { path: 'fslide/:slideId', element: <FdSlidePage /> },
     ],
   },
 ]);

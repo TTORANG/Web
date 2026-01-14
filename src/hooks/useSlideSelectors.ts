@@ -20,10 +20,11 @@
 import { useShallow } from 'zustand/shallow';
 
 import { useSlideStore } from '@/stores/slideStore';
-import type { EmojiReaction, HistoryItem, OpinionItem } from '@/types/script';
+import type { CommentItem } from '@/types/comment';
+import type { EmojiReaction, HistoryItem } from '@/types/script';
 
 // 빈 배열 상수 (참조 안정성을 위해)
-const EMPTY_OPINIONS: OpinionItem[] = [];
+const EMPTY_OPINIONS: CommentItem[] = [];
 const EMPTY_HISTORY: HistoryItem[] = [];
 const EMPTY_EMOJIS: EmojiReaction[] = [];
 
