@@ -19,11 +19,16 @@ import {
   useSlideId,
   useSlideOpinions,
 } from '@/hooks';
+import { showToast } from '@/utils/toast.ts';
 
 export default function Opinion() {
   const slideId = useSlideId();
   const opinions = useSlideOpinions();
-  const { deleteOpinion: deleteOpinionLocal, addReply: addReplyLocal } = useSlideActions();
+  const {
+    deleteOpinion: deleteOpinionLocal,
+    addReply: addReplyLocal,
+    setOpinions,
+  } = useSlideActions();
 
   const { mutate: createOpinion } = useCreateOpinion();
   const { mutate: deleteOpinionApi } = useDeleteOpinion();
@@ -36,11 +41,22 @@ export default function Opinion() {
    * @param opinionId - 삭제할 의견 ID
    */
   const handleDelete = (opinionId: string) => {
+    const previousOpinions = opinions; // 스냅샷 저장
+
     // 로컬 store 즉시 업데이트 (Optimistic UI)
     deleteOpinionLocal(opinionId);
 
     // API 호출
-    deleteOpinionApi({ opinionId, slideId });
+    deleteOpinionApi(
+      { opinionId, slideId },
+      {
+        onError: () => {
+          // 실패 시 롤백
+          setOpinions(previousOpinions);
+          showToast.error('의견 삭제에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+        },
+      },
+    );
   };
 
   /**
@@ -50,11 +66,22 @@ export default function Opinion() {
   const handleReplySubmit = (parentId: string) => {
     if (!replyText.trim()) return;
 
+    const previousOpinions = opinions; // 스냅샷 저장
+
     // 로컬 store 즉시 업데이트 (Optimistic UI)
     addReplyLocal(parentId, replyText);
 
     // API 호출
-    createOpinion({ slideId, data: { content: replyText, parentId } });
+    createOpinion(
+      { slideId, data: { content: replyText, parentId } },
+      {
+        onError: () => {
+          // 실패 시 롤백
+          setOpinions(previousOpinions);
+          showToast.error('답글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+        },
+      },
+    );
 
     setActiveReplyId(null);
     setReplyText('');

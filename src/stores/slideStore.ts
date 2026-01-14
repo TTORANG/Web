@@ -88,6 +88,13 @@ interface SlideState {
 
   // 새 루트 댓글 작성 액션
   addOpinion: (content: string, slideIndex: number) => void;
+
+  /**
+   * 의견 목록을 통째로 교체합니다.
+   * (Optimistic UI 롤백용)
+   * @param opinions - 교체할 의견 목록
+   */
+  setOpinions: (opinions: import('@/types/comment').CommentItem[]) => void;
 }
 
 export const useSlideStore = create<SlideState>()(
@@ -242,6 +249,16 @@ export const useSlideStore = create<SlideState>()(
           }),
           false,
           'slide/addOpinion',
+        );
+      },
+
+      setOpinions: (opinions) => {
+        set(
+          (state) => ({
+            slide: state.slide ? { ...state.slide, opinions } : null,
+          }),
+          false,
+          'slide/setOpinions',
         );
       },
     }),

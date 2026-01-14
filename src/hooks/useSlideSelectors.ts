@@ -97,5 +97,6 @@ export const useSlideActions = () =>
       restoreFromHistory: state.restoreFromHistory,
       deleteOpinion: state.deleteOpinion,
       addReply: state.addReply,
+      setOpinions: state.setOpinions,
     })),
   );
