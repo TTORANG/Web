@@ -1,13 +1,13 @@
+import type { ReactNode } from 'react';
+
 import { Logo } from '@/components/common';
 
-interface VideoHeaderProps {
+interface DarkHeaderProps {
   title: string;
-  step?: 'TEST' | 'RECORDING';
-  isFeedback?: boolean;
-  onExit?: () => void;
+  renderRight?: ReactNode;
 }
 
-export const VideoHeader = ({ title, step, isFeedback = false, onExit }: VideoHeaderProps) => {
+export const DarkHeader = ({ title, renderRight }: DarkHeaderProps) => {
   return (
     <header className="flex h-15 w-full shrink-0 items-center justify-between border-b border-white/10 bg-[#2a2d34] px-6 md:px-18">
       <div className="flex items-center gap-4">
@@ -32,15 +32,9 @@ export const VideoHeader = ({ title, step, isFeedback = false, onExit }: VideoHe
           </svg>
         </div>
       </div>
-
-      {!isFeedback && onExit && (
-        <button
-          onClick={onExit}
-          className="px-4 py-1.5 bg-white/5 hover:bg-white/10 rounded text-xs text-white border border-white/10 transition-colors"
-        >
-          {step === 'RECORDING' ? '녹화 중단' : '종료'}
-        </button>
-      )}
+      = <div className="flex items-center">{renderRight}</div>
     </header>
   );
 };
+
+export default DarkHeader;

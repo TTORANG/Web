@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 
-import { VideoHeader } from '@/components/video/VideoHeader';
+import DarkHeader from '@/components/common/DarkHeader';
 import { MOCK_SLIDES, MOCK_UI_SLIDES } from '@/mocks/slides';
 import { useSlideStore } from '@/stores/slideStore';
 
@@ -46,7 +46,7 @@ export default function FeedbackSlidePage() {
 
   return (
     <div className="fixed inset-0 z-[60] flex h-screen w-screen flex-col overflow-hidden bg-gray-900">
-      <VideoHeader title="Q4 마케팅 전략 발표" isFeedback={true} />
+      <DarkHeader title="Q4 마케팅 전략 발표" />
 
       <div className="flex flex-1 w-full min-h-0">
         <SlideViewer {...slideLogic} />
