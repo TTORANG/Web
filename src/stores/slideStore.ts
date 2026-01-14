@@ -32,6 +32,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
+import type { CommentItem } from '@/types/comment';
 import type { HistoryItem } from '@/types/script';
 import type { Slide } from '@/types/slide';
 import { addReplyToFlat, createComment, deleteFromFlat } from '@/utils/comment';
@@ -94,7 +95,7 @@ interface SlideState {
    * (Optimistic UI 롤백용)
    * @param opinions - 교체할 의견 목록
    */
-  setOpinions: (opinions: import('@/types/comment').CommentItem[]) => void;
+  setOpinions: (opinions: CommentItem[]) => void;
 }
 
 export const useSlideStore = create<SlideState>()(
