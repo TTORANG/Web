@@ -3,7 +3,7 @@
  * @description 의견(댓글) 관련 API 엔드포인트
  */
 import { apiClient } from '@/api';
-import type { OpinionItem } from '@/types/script';
+import type { CommentItem } from '@/types/comment';
 
 /**
  * 의견 생성 요청 타입
@@ -24,8 +24,8 @@ export interface CreateOpinionRequest {
 export async function createOpinion(
   slideId: string,
   data: CreateOpinionRequest,
-): Promise<OpinionItem> {
-  const response = await apiClient.post<OpinionItem>(`/slides/${slideId}/opinions`, data);
+): Promise<CommentItem> {
+  const response = await apiClient.post<CommentItem>(`/slides/${slideId}/opinions`, data);
   return response.data;
 }
 
