@@ -30,13 +30,13 @@ export default function SlideViewer({
       <div className="flex-1 flex items-center justify-center overflow-hidden relative">
         {/* 2. 슬라이드 본체 (회색 박스) */}
         {/* w-full max-h-full: 가로를 꽉 채우되, 세로 공간이 모자라면 높이에 맞춤 (반응형) */}
-        <div className="aspect-[16/9] w-full max-h-full bg-gray-600 relative flex items-center justify-center shadow-lg">
+        <div className="aspect-video w-full max-h-full bg-gray-600 relative flex items-center justify-center shadow-lg">
           <p className="text-gray-300 text-lg font-medium">{currentSlide.viewerText}</p>
         </div>
       </div>
 
       {/* 2. 좌측 하단: 설명 텍스트 */}
-      <div className="h-[250px] bg-gray-900 px-5 mt-2 overflow-y-auto border-r border-gray-800">
+      <div className="h-62.5 bg-gray-900 px-5 mt-2 overflow-y-auto border-r border-gray-800">
         <div className="flex justify-between items-baseline mb-3">
           {isEditingTitle ? (
             <input
@@ -72,7 +72,7 @@ export default function SlideViewer({
               <LeftArrow className="text-white" />
             </button>
 
-            <div className="min-w-[56px] text-center text-body-m-bold text-gray-200">
+            <div className="min-w-14 text-center text-body-m-bold text-gray-200">
               {slideIndex + 1} / {totalSlides}
             </div>
 

@@ -1,7 +1,5 @@
-// pages/FeedbackSlidePage.tsx
 import { useEffect, useMemo } from 'react';
 
-// ✅ [수정] 원본 데이터(댓글용)와 UI 데이터(이모지/라벨용) 둘 다 가져옵니다.
 import { MOCK_SLIDES, MOCK_UI_SLIDES } from '@/mocks/slides';
 import { useSlideStore } from '@/stores/slideStore';
 
@@ -30,7 +28,7 @@ export default function FeedbackSlidePage() {
         id: `${slide.id}-${op.id}`,
 
         parentId: op.parentId ? `${slide.id}-${op.parentId}` : undefined,
-        slideRef: slideLabel, // "슬라이드 1" 같은 출처 표기 추가
+        slideRef: slideLabel,
       }));
     });
   }, []);
@@ -56,7 +54,7 @@ export default function FeedbackSlidePage() {
     <div className="flex h-full w-full bg-gray-900 overflow-hidden">
       <SlideViewer {...slideLogic} />
 
-      <aside className="w-[520px] bg-gray-900 flex flex-col">
+      <aside className="w-130 bg-gray-900 flex flex-col">
         <CommentList
           comments={comments}
           onAddReply={addReply}
