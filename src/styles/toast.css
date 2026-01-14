@@ -13,7 +13,6 @@
     font-weight: 400 !important;
     line-height: 1.5 !important;
     letter-spacing: -0.32px !important;
-    box-shadow: none !important;
     border: none !important;
     --normal-bg: transparent !important;
     --normal-border: transparent !important;
@@ -23,7 +22,7 @@
   /* 토스트 내용 (아이콘 + 텍스트) */
   [data-sonner-toast] [data-content] {
     @apply flex shrink-0;
-    gap: 4px !important;
+    gap: 0px !important;
   }
 
   /* description이 있을 때 세로 배치 */
@@ -98,6 +97,10 @@
 
   [data-sonner-toast][data-type='info'] [data-icon] {
     display: none !important;
+  }
+
+  [data-sonner-toast][data-type='info'] [data-description] {
+    color: var(--color-white) !important;
   }
 
   [data-sonner-toast][data-type='info'] [data-close-button] {

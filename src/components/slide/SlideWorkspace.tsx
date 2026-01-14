@@ -9,6 +9,7 @@
  */
 import { useEffect, useState } from 'react';
 
+import { Skeleton } from '@/components/common';
 import { SLIDE_MAX_WIDTH } from '@/constants/layout';
 import { useSlideActions } from '@/hooks';
 import type { Slide } from '@/types/slide';
@@ -17,16 +18,44 @@ import SlideViewer from './SlideViewer';
 import { ScriptBox } from './script';
 
 interface SlideWorkspaceProps {
-  slide: Slide;
+  slide?: Slide;
+  isLoading?: boolean;
 }
 
-export default function SlideWorkspace({ slide }: SlideWorkspaceProps) {
+export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps) {
   const [isScriptCollapsed, setIsScriptCollapsed] = useState(false);
   const { initSlide } = useSlideActions();
 
   useEffect(() => {
-    initSlide(slide);
+    if (slide) {
+      initSlide(slide);
+    }
   }, [slide, initSlide]);
+
+  if (isLoading) {
+    return (
+      <div className="h-full min-h-0 flex flex-col">
+        {/* 슬라이드 뷰어 스켈레톤 */}
+        <section className="flex-1 min-h-0 overflow-hidden">
+          <div className="mx-auto w-full" style={{ maxWidth: SLIDE_MAX_WIDTH }}>
+            <div className="w-full aspect-video shadow-sm">
+              <Skeleton height="100%" />
+            </div>
+          </div>
+        </section>
+
+        {/* 스크립트 박스 스켈레톤 */}
+        <div className="shrink-0">
+          <div className="mx-auto w-full" style={{ maxWidth: SLIDE_MAX_WIDTH }}>
+            <div className="w-full h-[clamp(12rem,30vh,20rem)] rounded-t-lg bg-white shadow-sm p-4">
+              <Skeleton width="30%" height={20} className="mb-4" />
+              <Skeleton.Text lines={4} lineHeight={16} gap={10} lastLineWidth={0.6} />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full min-h-0 flex flex-col">

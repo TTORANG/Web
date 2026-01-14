@@ -14,6 +14,8 @@ import { DEFAULT_SLIDE_ID } from '@/constants/navigation';
 import { DevTestPage, FdSlidePage, HomePage, InsightPage, SlidePage, VideoPage } from '@/pages';
 import '@/styles/index.css';
 
+import { ShareButton } from './components/common/ShareButton';
+
 const router = createBrowserRouter([
   {
     path: '/',
@@ -35,7 +37,12 @@ const router = createBrowserRouter([
           </>
         }
         center={<Gnb />}
-        right={<LoginButton />}
+        right={
+          <div className="flex items-center gap-3">
+            <ShareButton />
+            <LoginButton />
+          </div>
+        }
       />
     ),
     children: [
@@ -88,7 +95,7 @@ enableMocking().then(() => {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
-        <Toaster position="top-center" closeButton />
+        <Toaster position="bottom-center" closeButton />
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </StrictMode>,
