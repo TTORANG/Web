@@ -1,4 +1,4 @@
-import { ActionButton, ProgressBar, SlideImage } from '@/components/common';
+import { ActionButton, SlideImage } from '@/components/common';
 import { showToast } from '@/utils/toast';
 
 export function CommonUITestSection() {
