@@ -28,6 +28,12 @@ const EMPTY_HISTORY: HistoryItem[] = [];
 const EMPTY_EMOJIS: EmojiReaction[] = [];
 
 /**
+ * 슬라이드 ID를 구독합니다.
+ * @returns 현재 슬라이드 ID (없으면 빈 문자열)
+ */
+export const useSlideId = () => useSlideStore((state) => state.slide?.id ?? '');
+
+/**
  * 슬라이드 제목을 구독합니다.
  * @returns 현재 슬라이드 제목 (없으면 빈 문자열)
  */
