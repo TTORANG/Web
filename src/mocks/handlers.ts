@@ -132,6 +132,85 @@ export const handlers = [
   }),
 
   /**
+   * 의견 추가
+   * POST /slides/:slideId/opinions
+   */
+  http.post(`${BASE_URL}/slides/:slideId/opinions`, async ({ params, request }) => {
+    await delay(200);
+
+    const { slideId } = params;
+    const data = (await request.json()) as { content: string; parentId?: string };
+    console.log(`[MSW] POST /slides/${slideId}/opinions`, data);
+
+    const slideIndex = slides.findIndex((s) => s.id === slideId);
+
+    if (slideIndex === -1) {
+      return new HttpResponse(null, {
+        status: 404,
+        statusText: 'Slide not found',
+      });
+    }
+
+    const newOpinion = {
+      id: crypto.randomUUID(),
+      author: '나',
+      content: data.content,
+      timestamp: new Date().toISOString(),
+      isMine: true,
+      isReply: !!data.parentId,
+      parentId: data.parentId,
+    };
+
+    // 답글인 경우 부모 의견 바로 다음에 삽입
+    if (data.parentId) {
+      const parentIndex = slides[slideIndex].opinions.findIndex((o) => o.id === data.parentId);
+      if (parentIndex !== -1) {
+        slides[slideIndex].opinions.splice(parentIndex + 1, 0, newOpinion);
+      } else {
+        slides[slideIndex].opinions.push(newOpinion);
+      }
+    } else {
+      slides[slideIndex].opinions.push(newOpinion);
+    }
+
+    return HttpResponse.json(newOpinion, { status: 201 });
+  }),
+
+  /**
+   * 의견 삭제
+   * DELETE /opinions/:opinionId
+   */
+  http.delete(`${BASE_URL}/opinions/:opinionId`, async ({ params }) => {
+    await delay(200);
+
+    const { opinionId } = params;
+    console.log(`[MSW] DELETE /opinions/${opinionId}`);
+
+    // 모든 슬라이드에서 해당 의견 찾기
+    let found = false;
+    for (const slide of slides) {
+      const opinionIndex = slide.opinions.findIndex((o) => o.id === opinionId);
+      if (opinionIndex !== -1) {
+        // 해당 의견과 답글 모두 삭제
+        slide.opinions = slide.opinions.filter(
+          (o) => o.id !== opinionId && o.parentId !== opinionId,
+        );
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      return new HttpResponse(null, {
+        status: 404,
+        statusText: 'Opinion not found',
+      });
+    }
+
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  /**
    * 에러 테스트용 엔드포인트
    * GET /test/error/:status
    * 예: /test/error/400, /test/error/401, /test/error/500

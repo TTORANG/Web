@@ -3,7 +3,7 @@
  * @description 의견 목록 팝오버
  *
  * 대본에 대한 팀원들의 의견을 보여주고, 답글을 달 수 있습니다.
- * Zustand store를 통해 의견 데이터를 읽고 업데이트합니다.
+ * API를 통해 서버와 동기화하고, Zustand store로 로컬 상태를 관리합니다.
  */
 import { useState } from 'react';
 
@@ -12,23 +12,51 @@ import clsx from 'clsx';
 import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
 import { Popover } from '@/components/common';
-import { useSlideActions, useSlideOpinions } from '@/hooks';
+import {
+  useCreateOpinion,
+  useDeleteOpinion,
+  useSlideActions,
+  useSlideId,
+  useSlideOpinions,
+} from '@/hooks';
 import { formatRelativeTime } from '@/utils/format';
 
 export default function Opinion() {
+  const slideId = useSlideId();
   const opinions = useSlideOpinions();
-  const { deleteOpinion, addReply } = useSlideActions();
+  const { deleteOpinion: deleteOpinionLocal, addReply: addReplyLocal } = useSlideActions();
+
+  const { mutate: createOpinion } = useCreateOpinion();
+  const { mutate: deleteOpinionApi } = useDeleteOpinion();
+
   const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
 
   /**
-   * 답글을 등록합니다.
-   * @param opinionId - 답글을 달 의견의 ID
+   * 의견을 삭제합니다.
+   * @param opinionId - 삭제할 의견 ID
    */
-  const handleReplySubmit = (opinionId: string) => {
-    if (replyText.trim()) {
-      addReply(opinionId, replyText);
-    }
+  const handleDelete = (opinionId: string) => {
+    // 로컬 store 즉시 업데이트 (Optimistic UI)
+    deleteOpinionLocal(opinionId);
+
+    // API 호출
+    deleteOpinionApi({ opinionId, slideId });
+  };
+
+  /**
+   * 답글을 등록합니다.
+   * @param parentId - 답글을 달 의견의 ID
+   */
+  const handleReplySubmit = (parentId: string) => {
+    if (!replyText.trim()) return;
+
+    // 로컬 store 즉시 업데이트 (Optimistic UI)
+    addReplyLocal(parentId, replyText);
+
+    // API 호출
+    createOpinion({ slideId, data: { content: replyText, parentId } });
+
     setActiveReplyId(null);
     setReplyText('');
   };
@@ -108,7 +136,7 @@ export default function Opinion() {
                     {opinion.isMine && (
                       <button
                         type="button"
-                        onClick={() => deleteOpinion(opinion.id)}
+                        onClick={() => handleDelete(opinion.id)}
                         aria-label="의견 삭제"
                         className="flex items-center gap-1 text-xs font-semibold text-error active:opacity-80"
                       >
