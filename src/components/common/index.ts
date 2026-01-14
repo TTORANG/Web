@@ -8,3 +8,6 @@ export { ActionButton } from './ActionButton';
 export { Skeleton } from './Skeleton';
 export { default as SlideImage } from './SlideImage';
 export { Spinner } from './Spinner';
+export { default as FileDropzone } from './FileDropzone';
+export { default as ProgressBar } from './ProgressBar';
+export { ShareButton } from './ShareButton';

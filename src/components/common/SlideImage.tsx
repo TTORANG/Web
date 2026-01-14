@@ -25,7 +25,7 @@ export default function SlideImage({ src, alt }: SlideImageProps) {
         alt={alt}
         onLoad={() => setIsLoaded(true)}
         className={clsx(
-          'h-full w-full object-contain transition-opacity duration-300',
+          'h-full w-full object-cover transition-opacity duration-300',
           isLoaded ? 'opacity-100' : 'opacity-0',
         )}
       />

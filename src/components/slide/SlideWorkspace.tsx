@@ -32,38 +32,20 @@ export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps
     }
   }, [slide, initSlide]);
 
-  if (isLoading) {
-    return (
-      <div className="h-full min-h-0 flex flex-col">
-        {/* 슬라이드 뷰어 스켈레톤 */}
-        <section className="flex-1 min-h-0 overflow-hidden">
-          <div className="mx-auto w-full" style={{ maxWidth: SLIDE_MAX_WIDTH }}>
-            <div className="w-full aspect-video shadow-sm">
-              <Skeleton height="100%" />
-            </div>
-          </div>
-        </section>
+  return (
+    <div className="h-full min-h-0 flex flex-col">
+      <SlideViewer isScriptCollapsed={isScriptCollapsed} isLoading={isLoading} />
 
-        {/* 스크립트 박스 스켈레톤 */}
-        <div className="shrink-0">
-          <div className="mx-auto w-full" style={{ maxWidth: SLIDE_MAX_WIDTH }}>
+      <div className="shrink-0">
+        <div className="mx-auto w-full" style={{ maxWidth: SLIDE_MAX_WIDTH }}>
+          {isLoading ? (
             <div className="w-full h-[clamp(12rem,30vh,20rem)] rounded-t-lg bg-white shadow-sm p-4">
               <Skeleton width="30%" height={20} className="mb-4" />
               <Skeleton.Text lines={4} lineHeight={16} gap={10} lastLineWidth={0.6} />
             </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="h-full min-h-0 flex flex-col">
-      <SlideViewer isScriptCollapsed={isScriptCollapsed} />
-
-      <div className="shrink-0">
-        <div className="mx-auto w-full" style={{ maxWidth: SLIDE_MAX_WIDTH }}>
-          <ScriptBox onCollapsedChange={setIsScriptCollapsed} />
+          ) : (
+            <ScriptBox onCollapsedChange={setIsScriptCollapsed} />
+          )}
         </div>
       </div>
     </div>
