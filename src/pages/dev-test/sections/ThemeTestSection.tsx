@@ -2,44 +2,11 @@
  * @file ThemeTestSection.tsx
  * @description 테마 설정 테스트 섹션
  */
-import { useEffect, useState } from 'react';
-
+import { useThemeStore } from '@/stores/themeStore';
 import type { ThemeMode } from '@/types/theme';
 
-const THEME_STORAGE_KEY = 'ttorang-theme';
-
 export function ThemeTestSection() {
-  const [theme, setTheme] = useState<ThemeMode>(() => {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    return (stored as ThemeMode) || 'light';
-  });
-
-  const handleThemeChange = (newTheme: ThemeMode) => {
-    setTheme(newTheme);
-    localStorage.setItem(THEME_STORAGE_KEY, newTheme);
-    // Layout에서 감지할 수 있도록 custom event 발생
-    window.dispatchEvent(new CustomEvent('theme-change'));
-  };
-
-  // 테마 적용
-  useEffect(() => {
-    const root = document.documentElement;
-
-    if (theme === 'auto') {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      root.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
-
-      // 시스템 설정 변경 감지
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handler = (e: MediaQueryListEvent) => {
-        root.setAttribute('data-theme', e.matches ? 'dark' : 'light');
-      };
-      mediaQuery.addEventListener('change', handler);
-      return () => mediaQuery.removeEventListener('change', handler);
-    } else {
-      root.setAttribute('data-theme', theme);
-    }
-  }, [theme]);
+  const { theme, setTheme } = useThemeStore();
 
   const options: { value: ThemeMode; label: string }[] = [
     { value: 'light', label: '라이트' },
@@ -65,7 +32,7 @@ export function ThemeTestSection() {
         {options.map(({ value, label }) => (
           <button
             key={value}
-            onClick={() => handleThemeChange(value)}
+            onClick={() => setTheme(value)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               theme === value ? 'bg-main text-white' : 'bg-gray-200 text-black hover:bg-gray-400'
             }`}

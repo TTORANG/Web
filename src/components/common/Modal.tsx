@@ -178,7 +178,7 @@ export function Modal({
     <div
       ref={backdropRef}
       className={clsx(
-        'fixed inset-0 z-50 flex items-center justify-center bg-black/65',
+        'fixed inset-0 z-50 flex items-center justify-center bg-[#000000]/65',
         isClosing ? 'animate-fade-out' : 'animate-fade-in',
       )}
       onMouseDown={handleMouseDown}
