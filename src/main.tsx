@@ -8,8 +8,8 @@ import { Toaster } from 'sonner';
 
 import { queryClient } from '@/api';
 import { LoginButton, Logo } from '@/components/common';
-import { Gnb } from '@/components/common/Gnb.tsx';
-import { Header } from '@/components/common/Header.tsx';
+import { Gnb } from '@/components/common/Gnb';
+import { Layout } from '@/components/common/Layout';
 import { ShareButton } from '@/components/common/ShareButton';
 import { DEFAULT_SLIDE_ID } from '@/constants/navigation';
 import {
@@ -26,7 +26,7 @@ import '@/styles/index.css';
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Header right={<LoginButton />} />,
+    element: <Layout right={<LoginButton />} />,
     children: [{ index: true, element: <HomePage /> }],
   },
   {
@@ -36,7 +36,7 @@ const router = createBrowserRouter([
   {
     path: '/:projectId',
     element: (
-      <Header
+      <Layout
         left={
           <>
             <Logo />
@@ -62,7 +62,7 @@ const router = createBrowserRouter([
   {
     path: '/feedback/slide/:projectId',
     element: (
-      <Header
+      <Layout
         theme="dark"
         left={
           <>

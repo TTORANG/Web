@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Logo, Modal } from '@/components/common';
-import { Header } from '@/components/common/Header';
+import { Layout } from '@/components/common/Layout';
 import { DeviceTestSection } from '@/components/video';
 
 type RecordStep = 'TEST' | 'RECORDING';
@@ -28,7 +28,7 @@ export default function VideoRecordPage() {
   };
 
   return (
-    <Header
+    <Layout
       theme="dark"
       left={
         <>
@@ -83,6 +83,6 @@ export default function VideoRecordPage() {
           </div>
         </Modal>
       </div>
-    </Header>
+    </Layout>
   );
 }

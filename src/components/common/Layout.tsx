@@ -9,7 +9,7 @@ import { type ReactNode, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import { LoginModal } from '@/components/auth/login-modal';
-import { Logo } from '@/components/common/index.ts';
+import { Logo } from '@/components/common/index';
 import { ShareModal } from '@/components/share/share-modal';
 import { useThemeStore } from '@/stores/themeStore';
 
@@ -22,7 +22,7 @@ interface LayoutProps {
   children?: ReactNode;
 }
 
-export function Header({ left, center, right, theme, children }: LayoutProps) {
+export function Layout({ left, center, right, theme, children }: LayoutProps) {
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
   const appliedTheme = theme ?? resolvedTheme;
 

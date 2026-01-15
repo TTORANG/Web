@@ -9,7 +9,7 @@ import { Link, useLocation, useParams } from 'react-router-dom';
 
 import clsx from 'clsx';
 
-import { TABS, getTabFromPathname, getTabPath } from '@/constants/navigation.ts';
+import { TABS, getTabFromPathname, getTabPath } from '@/constants/navigation';
 
 export function Gnb() {
   const { projectId } = useParams<{ projectId: string }>();
