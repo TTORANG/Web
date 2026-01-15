@@ -17,7 +17,7 @@ export default function ScriptBoxEmoji() {
   const trigger = (
     <button
       type="button"
-      className="h-7 rounded px-2 hover:bg-gray-100 active:bg-gray-200"
+      className="h-7 rounded px-2 text-gray-600 hover:bg-gray-100 active:bg-gray-200"
       aria-label="반응 더보기"
     >
       ···
