@@ -21,6 +21,7 @@ import {
   VideoPage,
   VideoRecordPage,
 } from '@/pages';
+import { useThemeStore } from '@/stores/themeStore';
 import '@/styles/index.css';
 
 const router = createBrowserRouter([
@@ -80,6 +81,11 @@ const router = createBrowserRouter([
   },
 ]);
 
+function AppToaster() {
+  const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
+  return <Toaster position="bottom-center" closeButton theme={resolvedTheme} />;
+}
+
 /**
  * MSW 활성화 (개발 환경 전용)
  *
@@ -103,7 +109,7 @@ enableMocking().then(() => {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
-        <Toaster position="bottom-center" closeButton />
+        <AppToaster />
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </StrictMode>,
