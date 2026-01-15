@@ -62,4 +62,11 @@ if (typeof window !== 'undefined') {
     }
   };
   mediaQuery.addEventListener('change', handleChange);
+
+  // 테마 동기화
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'ttorang-theme') {
+      useThemeStore.persist.rehydrate();
+    }
+  });
 }
