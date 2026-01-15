@@ -9,7 +9,7 @@ import clsx from 'clsx';
 
 import ArrowDownIcon from '@/assets/icons/icon-arrow-down.svg?react';
 
-import CommentPopover from './CommentPopover.tsx';
+import CommentPopover from './CommentPopover';
 import ScriptBoxEmoji from './ScriptBoxEmoji';
 import ScriptHistory from './ScriptHistory';
 import SlideTitle from './SlideTitle';

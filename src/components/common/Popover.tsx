@@ -137,7 +137,16 @@ export function Popover({
     <div ref={popoverRef} className="relative">
       <div
         ref={triggerRef}
+        role="button"
+        tabIndex={0}
+        className="cursor-pointer inline-block"
         onClick={handleToggle}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleToggle();
+          }
+        }}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? popoverId : undefined}
