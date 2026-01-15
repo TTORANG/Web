@@ -9,9 +9,9 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import { LoginModal } from '@/components/auth/login-modal';
-import { Logo } from '@/components/common';
+import { Logo } from '@/components/common/index.ts';
 import { ShareModal } from '@/components/share/share-modal';
-import type { ThemeMode } from '@/types/theme';
+import type { ThemeMode } from '@/types/theme.ts';
 
 const THEME_STORAGE_KEY = 'ttorang-theme';
 
@@ -35,7 +35,7 @@ interface LayoutProps {
   theme?: 'light' | 'dark';
 }
 
-export function Layout({ left, center, right, theme }: LayoutProps) {
+export function Header({ left, center, right, theme }: LayoutProps) {
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(
     () => theme ?? getResolvedTheme(),
   );

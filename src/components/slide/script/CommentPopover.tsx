@@ -14,7 +14,7 @@ import { Popover } from '@/components/common';
 import { useSlideOpinions } from '@/hooks';
 import { useComments } from '@/hooks/useComments';
 
-export default function Opinion() {
+export default function CommentPopover() {
   const opinions = useSlideOpinions();
   const { comments: treeOpinions, addReply, deleteComment } = useComments();
 

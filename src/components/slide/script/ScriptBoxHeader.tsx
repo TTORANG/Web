@@ -9,7 +9,7 @@ import clsx from 'clsx';
 
 import ArrowDownIcon from '@/assets/icons/icon-arrow-down.svg?react';
 
-import Opinion from './Opinion';
+import CommentPopover from './CommentPopover.tsx';
 import ScriptBoxEmoji from './ScriptBoxEmoji';
 import ScriptHistory from './ScriptHistory';
 import SlideTitle from './SlideTitle';
@@ -29,11 +29,11 @@ export default function ScriptBoxHeader({ isCollapsed, onToggleCollapse }: Scrip
       <div className="flex items-center gap-3">
         <ScriptBoxEmoji />
         <ScriptHistory />
-        <Opinion />
+        <CommentPopover />
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="flex h-6 w-6 items-center justify-center rounded hover:bg-gray-100 active:bg-gray-200"
+          className="flex h-6 w-6 items-center justify-center rounded text-gray-600 hover:bg-gray-100 active:bg-gray-200"
           aria-expanded={!isCollapsed}
           aria-label={isCollapsed ? '대본 펼치기' : '대본 접기'}
         >

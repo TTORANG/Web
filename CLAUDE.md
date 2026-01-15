@@ -34,7 +34,7 @@ npm run prettier:fix     # Auto-fix formatting
 src/
 ├── components/          # React components
 │   ├── common/          # Reusable UI (Logo, LoginButton, Popover)
-│   ├── layout/          # Layout components (Layout, Gnb)
+│   ├── layout/          # Header components (Header, Gnb)
 │   └── script-box/      # Script viewer components
 ├── constants/           # App constants, navigation utils
 ├── hooks/               # Custom React hooks

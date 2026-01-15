@@ -16,7 +16,7 @@
 
 ## Key Directories
 
-- `src/components/`: React components (Common, Layout, Slide-specific).
+- `src/components/`: React components (Common, Header, Slide-specific).
 - `src/stores/`: Zustand stores for global state (e.g., `slideStore.ts`, `authStore.ts`).
 - `src/hooks/`: Custom React hooks (e.g., `useSlideSelectors.ts`).
 - `src/pages/`: Page-level components.
