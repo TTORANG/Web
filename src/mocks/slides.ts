@@ -1,6 +1,8 @@
 import type { Slide } from '@/types/slide';
 import dayjs, { type ManipulateType } from '@/utils/dayjs';
 
+import { MOCK_USERS } from './users';
+
 /**
  * 목 데이터용 타임스탬프 헬퍼
  *
@@ -33,14 +35,14 @@ export const MOCK_SLIDES: Slide[] = [
     opinions: [
       {
         id: '1',
-        author: '김철수',
+        authorId: MOCK_USERS[1].id,
         content: '도입부가 인상적이에요!',
         timestamp: ts.ago(2, 'minute'),
         isMine: false,
       },
       {
         id: '2',
-        author: '나',
+        authorId: MOCK_USERS[0].id,
         content: '감사합니다~',
         timestamp: ts.ago(1, 'minute'),
         isMine: true,
@@ -49,7 +51,7 @@ export const MOCK_SLIDES: Slide[] = [
       },
       {
         id: '3',
-        author: '이영희',
+        authorId: MOCK_USERS[2].id,
         content: '첫 문장을 질문으로 시작하면 어떨까요?',
         timestamp: ts.ago(30, 'second'),
         isMine: false,
@@ -83,14 +85,14 @@ export const MOCK_SLIDES: Slide[] = [
     opinions: [
       {
         id: '1',
-        author: '김철수',
+        authorId: MOCK_USERS[1].id,
         content: '문제 정의가 명확하네요',
         timestamp: ts.ago(10, 'minute'),
         isMine: false,
       },
       {
         id: '2',
-        author: '이영희',
+        authorId: MOCK_USERS[2].id,
         content: '동의합니다!',
         timestamp: ts.ago(9, 'minute'),
         isMine: false,
@@ -99,14 +101,14 @@ export const MOCK_SLIDES: Slide[] = [
       },
       {
         id: '3',
-        author: '박민수',
+        authorId: MOCK_USERS[3].id,
         content: '추가로 이런 문제도 있어요',
         timestamp: ts.ago(8, 'minute'),
         isMine: false,
       },
       {
         id: '4',
-        author: '나',
+        authorId: MOCK_USERS[0].id,
         content: '좋은 의견이에요',
         timestamp: ts.ago(7, 'minute'),
         isMine: true,
@@ -115,28 +117,28 @@ export const MOCK_SLIDES: Slide[] = [
       },
       {
         id: '5',
-        author: '최지훈',
+        authorId: MOCK_USERS[4].id,
         content: '사용자 인터뷰 결과도 추가하면 좋겠어요',
         timestamp: ts.ago(6, 'minute'),
         isMine: false,
       },
       {
         id: '6',
-        author: '정수진',
+        authorId: MOCK_USERS[1].id,
         content: '데이터로 뒷받침하면 더 설득력 있을 것 같아요',
         timestamp: ts.ago(5, 'minute'),
         isMine: false,
       },
       {
         id: '7',
-        author: '강동원',
+        authorId: MOCK_USERS[2].id,
         content: '경쟁사 분석도 넣어보는 건 어떨까요?',
         timestamp: ts.ago(4, 'minute'),
         isMine: false,
       },
       {
         id: '8',
-        author: '나',
+        authorId: MOCK_USERS[0].id,
         content: '네, 반영해볼게요!',
         timestamp: ts.ago(3, 'minute'),
         isMine: true,
@@ -202,7 +204,7 @@ export const MOCK_SLIDES: Slide[] = [
     opinions: [
       {
         id: '1',
-        author: '팀장',
+        authorId: MOCK_USERS[3].id,
         content: '목표가 명확해요!',
         timestamp: ts.ago(1, 'hour'),
         isMine: false,
@@ -249,7 +251,7 @@ export const MOCK_SLIDES: Slide[] = [
     opinions: [
       {
         id: '1',
-        author: '개발자A',
+        authorId: MOCK_USERS[4].id,
         content: '기능 정의가 잘 되어있네요',
         timestamp: ts.ago(2, 'hour'),
         isMine: false,
@@ -305,14 +307,14 @@ Google, Kakao, Naver 로그인을 지원합니다.
     opinions: [
       {
         id: '1',
-        author: '나',
+        authorId: MOCK_USERS[0].id,
         content: 'Zustand로 상태 관리하면 좋을 것 같아요',
         timestamp: ts.ago(3, 'hour'),
         isMine: true,
       },
       {
         id: '2',
-        author: '나',
+        authorId: MOCK_USERS[0].id,
         content: 'Context보다 성능이 좋습니다',
         timestamp: ts.ago(2, 'hour'),
         isMine: true,
@@ -321,7 +323,7 @@ Google, Kakao, Naver 로그인을 지원합니다.
       },
       {
         id: '3',
-        author: '나',
+        authorId: MOCK_USERS[0].id,
         content: 'Selector 패턴으로 최적화 가능해요',
         timestamp: ts.ago(1, 'hour'),
         isMine: true,
@@ -340,21 +342,21 @@ Google, Kakao, Naver 로그인을 지원합니다.
     opinions: [
       {
         id: '1',
-        author: '김대리',
+        authorId: MOCK_USERS[1].id,
         content: '기대 효과가 구체적이에요',
         timestamp: ts.ago(4, 'hour'),
         isMine: false,
       },
       {
         id: '2',
-        author: '박과장',
+        authorId: MOCK_USERS[2].id,
         content: '수치화된 목표가 있으면 더 좋겠어요',
         timestamp: ts.ago(3, 'hour'),
         isMine: false,
       },
       {
         id: '3',
-        author: '이부장',
+        authorId: MOCK_USERS[3].id,
         content: '비즈니스 임팩트도 추가해주세요',
         timestamp: ts.ago(2, 'hour'),
         isMine: false,

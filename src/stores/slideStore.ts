@@ -32,6 +32,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
+import { MOCK_CURRENT_USER } from '@/mocks/users';
 import type { CommentItem } from '@/types/comment';
 import type { HistoryItem } from '@/types/script';
 import type { Slide } from '@/types/slide';
@@ -187,7 +188,7 @@ export const useSlideStore = create<SlideState>()(
                 ...state.slide,
                 opinions: addReplyToFlat(state.slide.opinions, parentId, {
                   content,
-                  author: '나',
+                  authorId: MOCK_CURRENT_USER.id,
                 }),
               },
             };
@@ -235,7 +236,7 @@ export const useSlideStore = create<SlideState>()(
 
         const newComment = createComment({
           content: trimmed,
-          author: '익명', // 혹은 로그인된 유저 정보
+          authorId: MOCK_CURRENT_USER.id, // 혹은 로그인된 유저 정보
           slideRef: `슬라이드 ${slideIndex + 1}`,
         });
 

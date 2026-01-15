@@ -4,6 +4,7 @@ import { HttpResponse, delay, http } from 'msw';
 import type { Slide } from '@/types/slide';
 
 import { MOCK_SLIDES } from './slides';
+import { MOCK_USERS } from './users';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -168,7 +169,7 @@ export const handlers = [
 
     const newOpinion = {
       id: crypto.randomUUID(),
-      author: '나',
+      authorId: MOCK_USERS[0].id,
       content: data.content,
       timestamp: new Date().toISOString(),
       isMine: true,
@@ -293,5 +294,28 @@ export const handlers = [
         },
       },
     );
+  }),
+
+  /**
+   * 로그인 (Mock)
+   * POST /auth/login/mock
+   */
+  http.post(`${BASE_URL}/auth/login/mock`, async () => {
+    await delay(300);
+    console.log('[MSW] POST /auth/login/mock');
+    return HttpResponse.json({
+      user: MOCK_USERS[0],
+      accessToken: 'mock-access-token',
+    });
+  }),
+
+  /**
+   * 내 정보 조회
+   * GET /users/me
+   */
+  http.get(`${BASE_URL}/users/me`, async () => {
+    await delay(200);
+    console.log('[MSW] GET /users/me');
+    return HttpResponse.json(MOCK_USERS[0]);
   }),
 ];

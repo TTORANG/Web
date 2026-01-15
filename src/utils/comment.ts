@@ -15,7 +15,7 @@ export function createComment(input: CreateCommentInput): CommentItem {
 
   return {
     id: generateCommentId(),
-    author: input.author ?? '익명',
+    authorId: input.authorId ?? 'unknown',
     content: input.content.trim(),
     timestamp: new Date().toISOString(),
     isMine: true,

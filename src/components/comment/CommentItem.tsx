@@ -12,6 +12,7 @@ import clsx from 'clsx';
 import FileIcon from '@/assets/icons/icon-document.svg?react';
 import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
+import { MOCK_USERS } from '@/mocks/users';
 import type { CommentItem as CommentItemType } from '@/types/comment';
 import { formatRelativeTime } from '@/utils/format';
 
@@ -64,6 +65,11 @@ function CommentItem({
   onReplySubmit,
   onToggleReplyById,
 }: CommentItemProps) {
+  // 사용자 정보 조회 (Mock Data Lookup)
+  const user = MOCK_USERS.find((u) => u.id === comment.authorId);
+  const authorName = user?.name ?? '알 수 없음';
+  const authorProfileImage = user?.profileImage;
+
   // Textarea 높이 자동 조절 로직
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -126,7 +132,15 @@ function CommentItem({
       >
         {/* 프로필 이미지 */}
         <div className="w-8 shrink-0">
-          <div className="h-8 w-8 rounded-full bg-gray-400" />
+          {authorProfileImage ? (
+            <img
+              src={authorProfileImage}
+              alt={authorName}
+              className="h-8 w-8 rounded-full object-cover"
+            />
+          ) : (
+            <div className="h-8 w-8 rounded-full bg-gray-400" />
+          )}
         </div>
 
         {/* 댓글 내용 */}
@@ -134,9 +148,7 @@ function CommentItem({
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="max-w-50 truncate text-body-s-bold text-black">
-                  {comment.author}
-                </span>
+                <span className="max-w-50 truncate text-body-s-bold text-black">{authorName}</span>
                 <span className="text-caption text-gray-600">
                   {formatRelativeTime(comment.timestamp)}
                 </span>
@@ -176,7 +188,7 @@ function CommentItem({
               type="button"
               onClick={onToggleReply}
               aria-expanded={isActive}
-              aria-label={`${comment.author}에게 답글 달기`}
+              aria-label={`${authorName}에게 답글 달기`}
               className={clsx(
                 'flex items-center gap-1 text-caption-bold transition',
                 isActive
