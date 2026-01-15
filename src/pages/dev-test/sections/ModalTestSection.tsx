@@ -9,10 +9,10 @@ export function ModalTestSection() {
 
   return (
     <section className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
-      <h2 className="mb-4 text-lg font-bold text-gray-800">🪟 Modal 테스트</h2>
+      <h2 className="mb-4 text-lg font-bold text-black">🪟 Modal 테스트</h2>
 
-      <div className="mb-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
-        <p className="mb-2 font-medium text-gray-800">Features</p>
+      <div className="mb-4 rounded-lg bg-gray-100 p-4 text-sm text-gray-600">
+        <p className="mb-2 font-medium text-black">Features</p>
         <ul className="list-inside list-disc space-y-1">
           <li>size: sm | md | lg</li>
           <li>title: 선택적 제목</li>
@@ -47,8 +47,8 @@ export function ModalTestSection() {
       {/* 기본 모달 */}
       <Modal isOpen={isBasicModalOpen} onClose={() => setIsBasicModalOpen(false)} size="sm">
         <div className="text-center">
-          <p className="text-gray-800">기본 모달입니다.</p>
-          <p className="mt-2 text-sm text-gray-500">ESC 키나 배경 클릭으로 닫을 수 있습니다.</p>
+          <p className="text-black">기본 모달입니다.</p>
+          <p className="mt-2 text-sm text-gray-600">ESC 키나 배경 클릭으로 닫을 수 있습니다.</p>
         </div>
       </Modal>
 
@@ -62,11 +62,11 @@ export function ModalTestSection() {
         <div className="space-y-4">
           <div className="rounded-lg bg-gray-100 p-4">
             <p className="text-sm font-medium text-gray-600">공유 링크</p>
-            <p className="mt-1 text-sm text-gray-800">https://ttorang.app/share/abc123</p>
+            <p className="mt-1 text-sm text-black">https://ttorang.app/share/abc123</p>
           </div>
           <button
             onClick={() => setIsTitleModalOpen(false)}
-            className="w-full rounded-lg border border-gray-300 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            className="w-full rounded-lg border border-gray-300 py-2 text-sm text-gray-700 hover:bg-gray-100"
           >
             닫기
           </button>

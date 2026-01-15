@@ -25,7 +25,7 @@ export function FileUploadTestSection() {
 
   return (
     <section className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
-      <h2 className="mb-4 text-lg font-bold text-gray-800">📂 File Upload</h2>
+      <h2 className="mb-4 text-lg font-bold text-black">📂 File Upload</h2>
 
       <div className="mb-4 flex gap-2">
         <button

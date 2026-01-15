@@ -4,7 +4,7 @@ import { showToast } from '@/utils/toast';
 export function CommonUITestSection() {
   return (
     <section className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
-      <h2 className="mb-4 text-lg font-bold text-gray-800">🧩 Common UI Components</h2>
+      <h2 className="mb-4 text-lg font-bold text-black">🧩 Common UI Components</h2>
 
       <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* ActionButton */}

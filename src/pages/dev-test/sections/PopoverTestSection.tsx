@@ -3,10 +3,10 @@ import { Popover } from '@/components/common';
 export function PopoverTestSection() {
   return (
     <section className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
-      <h2 className="mb-4 text-lg font-bold text-gray-800">💬 Popover 테스트</h2>
+      <h2 className="mb-4 text-lg font-bold text-black">💬 Popover 테스트</h2>
 
-      <div className="mb-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
-        <p className="mb-2 font-medium text-gray-800">Features</p>
+      <div className="mb-4 rounded-lg bg-gray-100 p-4 text-sm text-gray-600">
+        <p className="mb-2 font-medium text-black">Features</p>
         <ul className="list-inside list-disc space-y-1">
           <li>position: top | bottom</li>
           <li>align: start | end</li>
@@ -28,8 +28,8 @@ export function PopoverTestSection() {
           align="start"
         >
           <div className="w-48 p-4">
-            <p className="text-sm text-gray-800">position: bottom</p>
-            <p className="text-sm text-gray-800">align: start</p>
+            <p className="text-sm text-black">position: bottom</p>
+            <p className="text-sm text-black">align: start</p>
           </div>
         </Popover>
 
@@ -44,8 +44,8 @@ export function PopoverTestSection() {
           align="end"
         >
           <div className="w-48 p-4">
-            <p className="text-sm text-gray-800">position: bottom</p>
-            <p className="text-sm text-gray-800">align: end</p>
+            <p className="text-sm text-black">position: bottom</p>
+            <p className="text-sm text-black">align: end</p>
           </div>
         </Popover>
 
@@ -60,8 +60,8 @@ export function PopoverTestSection() {
           align="start"
         >
           <div className="w-48 p-4">
-            <p className="text-sm text-gray-800">position: top</p>
-            <p className="text-sm text-gray-800">align: start</p>
+            <p className="text-sm text-black">position: top</p>
+            <p className="text-sm text-black">align: start</p>
           </div>
         </Popover>
 
@@ -77,7 +77,7 @@ export function PopoverTestSection() {
         >
           {({ close }) => (
             <div className="w-48 p-4">
-              <p className="mb-2 text-sm text-gray-800">닫기 버튼 포함</p>
+              <p className="mb-2 text-sm text-black">닫기 버튼 포함</p>
               <button
                 onClick={close}
                 className="rounded bg-gray-200 px-3 py-1 text-xs hover:bg-gray-300"

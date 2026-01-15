@@ -3,7 +3,7 @@ import { showToast } from '@/utils/toast';
 export function ToastTestSection() {
   return (
     <section className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
-      <h2 className="mb-4 text-lg font-bold text-gray-800">🎨 Toast 테스트</h2>
+      <h2 className="mb-4 text-lg font-bold text-black">🎨 Toast 테스트</h2>
 
       {/* 기본 토스트 */}
       <div className="mb-6">

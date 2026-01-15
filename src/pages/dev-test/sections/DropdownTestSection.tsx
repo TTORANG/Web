@@ -4,10 +4,10 @@ import { showToast } from '@/utils/toast';
 export function DropdownTestSection() {
   return (
     <section className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
-      <h2 className="mb-4 text-lg font-bold text-gray-800">🔽 Dropdown 테스트</h2>
+      <h2 className="mb-4 text-lg font-bold text-black">🔽 Dropdown 테스트</h2>
 
-      <div className="mb-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
-        <p className="mb-2 font-medium text-gray-800">Features</p>
+      <div className="mb-4 rounded-lg bg-gray-100 p-4 text-sm text-gray-600">
+        <p className="mb-2 font-medium text-black">Features</p>
         <ul className="list-inside list-disc space-y-1">
           <li>position: top | bottom</li>
           <li>align: start | end</li>

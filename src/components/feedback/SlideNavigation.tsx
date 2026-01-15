@@ -29,13 +29,13 @@ export default function SlideNavigation({
         disabled={isFirst}
         className={[
           'grid h-6 w-6 place-items-center rounded-full',
-          isFirst ? 'bg-black' : 'bg-gray-800 hover:bg-white/15 transition',
+          isFirst ? 'bg-white' : 'bg-gray-200 hover:bg-gray-400/30 transition',
         ].join(' ')}
       >
-        <LeftArrow className="text-white" />
+        <LeftArrow className="text-black" />
       </button>
 
-      <div className="min-w-14 text-center text-body-m-bold text-gray-200">
+      <div className="min-w-14 text-center text-body-m-bold text-gray-800">
         {slideIndex + 1} / {totalSlides}
       </div>
 
@@ -44,10 +44,10 @@ export default function SlideNavigation({
         disabled={isLast}
         className={[
           'grid h-6 w-6 place-items-center rounded-full',
-          isLast ? 'bg-black' : 'bg-gray-800 hover:bg-white/15 transition',
+          isLast ? 'bg-white' : 'bg-gray-200 hover:bg-gray-400/30 transition',
         ].join(' ')}
       >
-        <RightArrow className="text-white" />
+        <RightArrow className="text-black" />
       </button>
     </div>
   );

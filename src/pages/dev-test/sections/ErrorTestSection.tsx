@@ -29,7 +29,7 @@ export function ErrorTestSection() {
   return (
     <section className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
       <TestQueryError />
-      <h2 className="mb-4 text-lg font-bold text-gray-800">🚨 에러 핸들링 테스트</h2>
+      <h2 className="mb-4 text-lg font-bold text-black">🚨 에러 핸들링 테스트</h2>
 
       <div className="mb-4">
         <h3 className="mb-3 text-sm font-medium text-gray-600">에러 테스트</h3>
@@ -56,7 +56,7 @@ export function ErrorTestSection() {
         </div>
       </div>
 
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-gray-600">
         * 400: 페이지 진입 시 자동 + 버튼 클릭 (React Query) | 401, 500: Axios 인터셉터
       </p>
     </section>

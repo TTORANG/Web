@@ -24,7 +24,7 @@ export function FeedbackTestSection() {
 
   return (
     <section className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
-      <h2 className="mb-4 text-lg font-bold text-gray-800">💬 Feedback Components</h2>
+      <h2 className="mb-4 text-lg font-bold text-black">💬 Feedback Components</h2>
       <div className="rounded-lg border border-gray-200 p-4">
         <h3 className="mb-4 text-sm font-medium text-gray-600">
           FeedbackInput (Dark Theme Preview)

@@ -2,7 +2,6 @@ import { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
 import CommentList from '@/components/comment/CommentList';
-import DarkHeader from '@/components/common/DarkHeader';
 import FeedbackInput from '@/components/feedback/FeedbackInput';
 import SlideViewer from '@/components/feedback/SlideViewer';
 import { useSlides } from '@/hooks/queries/useSlides';
@@ -52,52 +51,42 @@ export default function FeedbackSlidePage() {
 
   if (isLoading) {
     return (
-      <div
-        data-theme="dark"
-        className="fixed inset-0 z-60 flex h-screen w-screen items-center justify-center bg-white"
-      >
-        <p className="text-gray-400">로딩 중...</p>
+      <div className="flex h-full items-center justify-center bg-white">
+        <p className="text-gray-600">로딩 중...</p>
       </div>
     );
   }
 
   return (
-    <div
-      data-theme="dark"
-      className="fixed inset-0 z-60 flex h-screen w-screen flex-col overflow-hidden bg-white"
-    >
-      <DarkHeader title={currentSlide?.title ?? '발표 피드백'} />
+    <div className="flex h-full w-full">
+      <SlideViewer
+        slide={currentSlide}
+        slideIndex={slideIndex}
+        totalSlides={totalSlides}
+        isFirst={isFirst}
+        isLast={isLast}
+        onPrev={goPrev}
+        onNext={goNext}
+      />
 
-      <div className="flex flex-1 w-full min-h-0">
-        <SlideViewer
-          slide={currentSlide}
-          slideIndex={slideIndex}
-          totalSlides={totalSlides}
-          isFirst={isFirst}
-          isLast={isLast}
-          onPrev={goPrev}
-          onNext={goNext}
-        />
+      <aside className="w-130 bg-white flex flex-col border-l border-black/5">
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <CommentList
+            comments={comments}
+            onAddReply={addReply}
+            onGoToSlideRef={goToSlideRef}
+            onDeleteComment={deleteComment}
+          />
+        </div>
 
-        <aside className="w-130 bg-white flex flex-col border-l border-white/5">
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <CommentList
-              comments={comments}
-              onAddReply={addReply}
-              onGoToSlideRef={goToSlideRef}
-              onDeleteComment={deleteComment}
-            />
-          </div>
-
-          <div className="shrink-0 border-t border-white/5">
-            <FeedbackInput
-              reactions={reactions}
-              onToggleReaction={toggleReaction}
-              onAddComment={(content) => addComment(content, slideIndex)}
-            />
-          </div>
-        </aside>
-      </div>
+        <div className="shrink-0 border-t border-black/5">
+          <FeedbackInput
+            reactions={reactions}
+            onToggleReaction={toggleReaction}
+            onAddComment={(content) => addComment(content, slideIndex)}
+          />
+        </div>
+      </aside>
     </div>
   );
 }

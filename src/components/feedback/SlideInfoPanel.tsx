@@ -26,9 +26,9 @@ export default function SlideInfoPanel({
   onNext,
 }: Props) {
   return (
-    <div className="h-62.5 bg-gray-900 px-5 mt-2 overflow-y-auto border-r border-gray-800">
+    <div className="h-62.5 bg-gray-100 px-5 mt-2 overflow-y-auto border-r border-gray-200">
       <div className="flex justify-between items-baseline mb-3">
-        <h2 className="text-body-m-bold text-white">{slide.title}</h2>
+        <h2 className="text-body-m-bold text-black">{slide.title}</h2>
 
         <SlideNavigation
           slideIndex={slideIndex}
@@ -40,8 +40,8 @@ export default function SlideInfoPanel({
         />
       </div>
 
-      <div className="bg-gray-800 rounded-xl p-3 my-2">
-        <p className="text-body-s text-white" style={{ whiteSpace: 'pre-line' }}>
+      <div className="bg-gray-200 rounded-xl p-3 my-2">
+        <p className="text-body-s text-black" style={{ whiteSpace: 'pre-line' }}>
           {slide.script || '대본이 없습니다.'}
         </p>
       </div>

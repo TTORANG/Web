@@ -32,7 +32,7 @@ export default function FeedbackInput({ reactions, onToggleReaction, onAddCommen
   const formatReactionCount = (count: number) => (count > 99 ? '99+' : count);
 
   return (
-    <div className="mr-35 p-4 bg-gray-900">
+    <div className="p-4 bg-gray-100">
       <div className="mb-1">
         <textarea
           ref={commentTextareaRef}
@@ -50,7 +50,7 @@ export default function FeedbackInput({ reactions, onToggleReaction, onAddCommen
               handleAddComment();
             }
           }}
-          className="w-full overflow-hidden resize-none bg-transparent border-b border-gray-400 focus:border-white outline-none py-2 text-body-m-bold text-white placeholder-gray-400 transition-colors"
+          className="w-full overflow-hidden resize-none bg-transparent border-b border-gray-600 focus:border-black outline-none py-2 text-body-m-bold text-black placeholder-gray-600 transition-colors"
         />
       </div>
 
@@ -58,7 +58,7 @@ export default function FeedbackInput({ reactions, onToggleReaction, onAddCommen
         <button
           type="button"
           onClick={handleCancel}
-          className="px-3 py-1.5 rounded-full text-caption-bold text-gray-200 bg-gray-900 hover:bg-gray-800 transition"
+          className="px-3 py-1.5 rounded-full text-caption-bold text-gray-800 bg-gray-100 hover:bg-gray-200 transition"
         >
           취소
         </button>
@@ -66,7 +66,7 @@ export default function FeedbackInput({ reactions, onToggleReaction, onAddCommen
         <button
           type="button"
           onClick={handleAddComment}
-          className="px-3 py-1.5 rounded-full text-caption-bold text-gray-400 bg-white hover:bg-white/20 transition"
+          className="px-3 py-1.5 rounded-full text-caption-bold text-gray-600 bg-white hover:bg-gray-200 transition"
         >
           답글
         </button>
@@ -80,8 +80,8 @@ export default function FeedbackInput({ reactions, onToggleReaction, onAddCommen
               onClick={() => onToggleReaction(reaction.emoji)}
               className={`flex items-center justify-between px-2 py-1.5 rounded-full transition ${
                 reaction.active
-                  ? 'bg-gray-100 text-main-variant2 text-body-m-bold ring-1 ring-main-variant1'
-                  : 'bg-gray-800 ring-1 text-body-m ring-gray-600 text-white hover:bg-gray-800'
+                  ? 'bg-gray-900 text-main-variant2 text-body-m-bold ring-1 ring-main-variant1'
+                  : 'bg-gray-200 ring-1 text-body-m ring-gray-400 text-black hover:bg-gray-400'
               }`}
             >
               <div className="flex items-center gap-2 min-w-0">

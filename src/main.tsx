@@ -12,7 +12,15 @@ import { ShareButton } from '@/components/common/ShareButton';
 import { Gnb } from '@/components/layout/Gnb';
 import { Layout } from '@/components/layout/Layout';
 import { DEFAULT_SLIDE_ID } from '@/constants/navigation';
-import { DevTestPage, FdSlidePage, HomePage, InsightPage, SlidePage, VideoPage } from '@/pages';
+import {
+  DevTestPage,
+  FdSlidePage,
+  HomePage,
+  InsightPage,
+  SlidePage,
+  VideoPage,
+  VideoRecordPage,
+} from '@/pages';
 import '@/styles/index.css';
 
 const router = createBrowserRouter([
@@ -53,7 +61,33 @@ const router = createBrowserRouter([
   },
   {
     path: '/feedback/slide/:projectId',
-    element: <FdSlidePage />,
+    element: (
+      <Layout
+        theme="dark"
+        left={
+          <>
+            <Logo />
+            <span className="text-body-m-bold text-black">발표 피드백</span>
+          </>
+        }
+      />
+    ),
+    children: [{ index: true, element: <FdSlidePage /> }],
+  },
+  {
+    path: '/:projectId/video/record',
+    element: (
+      <Layout
+        theme="dark"
+        left={
+          <>
+            <Logo />
+            <span className="text-body-m-bold text-black">영상 녹화</span>
+          </>
+        }
+      />
+    ),
+    children: [{ index: true, element: <VideoRecordPage /> }],
   },
 ]);
 

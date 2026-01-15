@@ -28,16 +28,16 @@ export default function SlideViewer({
 }: Props) {
   if (!slide) {
     return (
-      <div className="ml-35 flex-1 flex items-center justify-center bg-gray-900">
-        <p className="text-gray-400">슬라이드를 불러오는 중...</p>
+      <div className="ml-35 flex-1 flex items-center justify-center bg-gray-100">
+        <p className="text-gray-600">슬라이드를 불러오는 중...</p>
       </div>
     );
   }
 
   return (
-    <div className="ml-35 flex-1 flex flex-col min-w-0 bg-gray-900">
+    <div className="ml-35 flex-1 flex flex-col min-w-0 bg-gray-100">
       <div className="flex-1 flex items-center justify-center overflow-hidden relative">
-        <div className="aspect-video w-full max-h-full bg-gray-600 relative overflow-hidden shadow-lg">
+        <div className="aspect-video w-full max-h-full bg-gray-400 relative overflow-hidden shadow-lg">
           {slide.thumb && <SlideImage key={slide.id} src={slide.thumb} alt={slide.title} />}
         </div>
       </div>
