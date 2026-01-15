@@ -33,9 +33,10 @@ interface LayoutProps {
   right?: ReactNode;
   /** 명시적 테마 (설정 시 로컬스토리지 무시) */
   theme?: 'light' | 'dark';
+  children?: ReactNode;
 }
 
-export function Header({ left, center, right, theme }: LayoutProps) {
+export function Header({ left, center, right, theme, children }: LayoutProps) {
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(
     () => theme ?? getResolvedTheme(),
   );
@@ -78,9 +79,7 @@ export function Header({ left, center, right, theme }: LayoutProps) {
       </header>
 
       <main className="mt-15 h-[calc(100vh-3.75rem)] overflow-hidden">
-        <div className="h-full">
-          <Outlet />
-        </div>
+        <div className="h-full">{children || <Outlet />}</div>
       </main>
       <LoginModal />
       <ShareModal />

@@ -76,18 +76,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/:projectId/video/record',
-    element: (
-      <Header
-        theme="dark"
-        left={
-          <>
-            <Logo />
-            <span className="text-body-m-bold text-black">영상 녹화</span>
-          </>
-        }
-      />
-    ),
-    children: [{ index: true, element: <VideoRecordPage /> }],
+    element: <VideoRecordPage />,
   },
 ]);
 

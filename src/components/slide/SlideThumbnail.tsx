@@ -5,11 +5,11 @@
  * SlideList 내부에서 사용되며, 슬라이드 번호와 미리보기를 표시합니다.
  * 현재 선택된 슬라이드는 시각적으로 구분됩니다.
  */
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import clsx from 'clsx';
 
+import { SlideImage } from '@/components/common';
 import type { Slide } from '@/types/slide';
 
 interface SlideThumbnailProps {
@@ -20,8 +20,6 @@ interface SlideThumbnailProps {
 }
 
 function SlideThumbnail({ slide, index, isActive, basePath }: SlideThumbnailProps) {
-  const [isLoaded, setIsLoaded] = useState(false);
-
   return (
     <Link
       to={`${basePath}/slide/${slide.id}`}
@@ -43,16 +41,7 @@ function SlideThumbnail({ slide, index, isActive, basePath }: SlideThumbnailProp
 
       {/* 썸네일 - 16:9 비율 */}
       <div className="relative flex-1 aspect-video rounded-sm overflow-hidden bg-gray-200">
-        {!isLoaded && <div className="absolute inset-0 animate-pulse bg-gray-200" />}
-        <img
-          src={slide.thumb}
-          alt={`슬라이드 ${index + 1}: ${slide.title}`}
-          onLoad={() => setIsLoaded(true)}
-          className={clsx(
-            'h-full w-full object-cover transition-opacity duration-300',
-            isLoaded ? 'opacity-100' : 'opacity-0',
-          )}
-        />
+        <SlideImage src={slide.thumb} alt={`슬라이드 ${index + 1}: ${slide.title}`} />
       </div>
     </Link>
   );

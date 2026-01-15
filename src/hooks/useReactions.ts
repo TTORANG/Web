@@ -27,7 +27,8 @@ export function useReactions() {
       {
         onError: () => {
           showToast.error('반응을 반영하지 못했습니다.');
-          // 에러 시 스토어 상태 롤백 로직이 필요하다면 추가 (현재는 쿼리 무효화로 대체)
+          // Optimistic Update Rollback
+          toggleReactionStore(emoji);
         },
       },
     );

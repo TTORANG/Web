@@ -85,12 +85,12 @@ export default function FeedbackInput({ reactions, onToggleReaction, onAddCommen
               }`}
             >
               <div className="flex items-center gap-2 min-w-0">
-                <span className="flex-shrink-0">{reaction.emoji}</span>
+                <span className="shrink-0">{reaction.emoji}</span>
                 <span className="whitespace-nowrap overflow-hidden">{reaction.label}</span>
               </div>
 
               {reaction.count > 0 && (
-                <span className={`flex-shrink-0 ml-2 ${reaction.active ? 'font-bold' : ''}`}>
+                <span className={`shrink-0 ml-2 ${reaction.active ? 'font-bold' : ''}`}>
                   {formatReactionCount(reaction.count)}
                 </span>
               )}
