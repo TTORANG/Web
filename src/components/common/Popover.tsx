@@ -139,7 +139,7 @@ export function Popover({
         ref={triggerRef}
         role="button"
         tabIndex={0}
-        className="cursor-pointer inline-block"
+        className="inline-block"
         onClick={handleToggle}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {

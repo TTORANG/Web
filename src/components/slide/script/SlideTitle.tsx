@@ -47,7 +47,7 @@ export default function SlideTitle({ isCollapsed = false }: SlideTitleProps) {
         <button
           type="button"
           aria-label="슬라이드 이름 변경"
-          className="inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 active:bg-gray-200"
+          className="inline-flex h-7 items-center gap-1.5 rounded-md bg-transparent px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 active:bg-gray-200"
         >
           <span className="max-w-30 line-clamp-1">{title}</span>
           <ArrowDownIcon

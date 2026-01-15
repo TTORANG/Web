@@ -58,7 +58,7 @@ export default function FeedbackInput({ reactions, onToggleReaction, onAddCommen
         <button
           type="button"
           onClick={handleCancel}
-          className="px-3 py-1.5 rounded-full text-caption-bold text-gray-800 bg-gray-100 hover:bg-gray-200 transition"
+          className="bg-gray-100 px-3 py-1.5 rounded-full text-caption-bold text-gray-800 hover:bg-gray-200 transition"
         >
           취소
         </button>
@@ -66,7 +66,7 @@ export default function FeedbackInput({ reactions, onToggleReaction, onAddCommen
         <button
           type="button"
           onClick={handleAddComment}
-          className="px-3 py-1.5 rounded-full text-caption-bold text-gray-600 bg-white hover:bg-gray-200 transition"
+          className="bg-white px-3 py-1.5 rounded-full text-caption-bold text-gray-600 hover:bg-gray-200 transition"
         >
           답글
         </button>

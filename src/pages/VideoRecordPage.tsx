@@ -69,13 +69,13 @@ export default function VideoRecordPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setIsExitModalOpen(false)}
-                className="flex-1 py-3 bg-gray-100 rounded-md font-bold text-gray-600 hover:bg-gray-200 transition-colors"
+                className="flex-1 rounded-md bg-gray-100 py-3 font-bold text-gray-600 hover:bg-gray-200 transition-colors"
               >
                 취소
               </button>
               <button
                 onClick={handleConfirmExit}
-                className="flex-1 py-3 bg-error text-white rounded-md font-bold hover:bg-error/90 transition-colors"
+                className="flex-1 rounded-md bg-error py-3 font-bold text-white hover:bg-error/90 transition-colors"
               >
                 종료
               </button>

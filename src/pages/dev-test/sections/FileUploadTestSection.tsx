@@ -33,7 +33,7 @@ export function FileUploadTestSection() {
             setUploadState('idle');
             setUploadProgress(0);
           }}
-          className="rounded px-3 py-1 text-xs bg-gray-200 hover:bg-gray-300"
+          className="rounded bg-gray-200 px-3 py-1 text-xs hover:bg-gray-300"
         >
           Reset
         </button>
@@ -42,7 +42,7 @@ export function FileUploadTestSection() {
             setUploadState('uploading');
             setUploadProgress(0);
           }}
-          className="rounded px-3 py-1 text-xs bg-blue-100 text-blue-700 hover:bg-blue-200"
+          className="rounded bg-blue-100 px-3 py-1 text-xs text-blue-700 hover:bg-blue-200"
         >
           Start Upload
         </button>

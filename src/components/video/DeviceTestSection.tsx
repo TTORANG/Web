@@ -72,7 +72,7 @@ export const DeviceTestSection = ({ onNext }: DeviceTestSectionProps) => {
       </h1>
 
       <div className="flex w-full flex-1 items-center justify-center min-h-0 shrink py-6">
-        <div className="relative aspect-640/359 h-full max-h-[45vh] overflow-hidden rounded-xl border-2 border-main bg-gray-200 shadow-xl">
+        <div className="relative aspect-video h-full max-h-[45vh] overflow-hidden rounded-xl border-2 border-main bg-gray-200 shadow-xl">
           <video
             ref={videoRef}
             autoPlay

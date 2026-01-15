@@ -33,8 +33,7 @@ export default function ScriptBoxHeader({ isCollapsed, onToggleCollapse }: Scrip
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="flex h-6 w-6 items-center justify-center rounded text-gray-600 hover:bg-gray-100 active:bg-gray-200"
-          aria-expanded={!isCollapsed}
+          className="flex h-6 w-6 items-center justify-center rounded bg-transparent text-gray-600 hover:bg-gray-100 active:bg-gray-200"
           aria-label={isCollapsed ? '대본 펼치기' : '대본 접기'}
         >
           <ArrowDownIcon

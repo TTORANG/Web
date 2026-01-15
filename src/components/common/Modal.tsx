@@ -204,7 +204,7 @@ export function Modal({
           <button
             type="button"
             onClick={handleClose}
-            className="absolute right-5 top-5 grid size-9 place-items-center rounded-lg text-gray-600 transition-all hover:bg-gray-100 active:bg-gray-200"
+            className="absolute right-5 top-5 grid size-9 place-items-center rounded-lg bg-transparent text-gray-600 transition-all hover:bg-gray-100 active:bg-gray-200"
             aria-label="닫기"
           >
             <CloseIcon className="size-4" />
