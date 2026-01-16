@@ -46,7 +46,7 @@ export default function CommentList({
   };
 
   return (
-    <div className="mr-35 mt-2 flex-1 space-y-2 overflow-y-auto">
+    <div className="mr-10 md:mr-35 mt-2 flex-1 space-y-2 overflow-y-auto">
       {comments.map((comment) => (
         <CommentItem
           key={comment.id}

@@ -32,18 +32,23 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
-import type { HistoryItem } from '@/types/script';
+import type { EmojiReaction, HistoryItem, OpinionItem } from '@/types/script';
 import type { Slide } from '@/types/slide';
 import { addReplyToFlat, createComment, deleteFromFlat } from '@/utils/comment';
 
 interface SlideState {
   slide: Slide | null;
 
+  // 데이터를 기억하기 위한 저장소
+  currentSlideIndex: number;
+  globalOpinions: OpinionItem[]; // 전체 댓글 유지용
+  reactionMap: Record<number, EmojiReaction[]>; // 슬라이드별 이모지 상태 유지용
+
   /**
    * 슬라이드 데이터를 초기화합니다.
    * @param slide - 초기화할 슬라이드 데이터
    */
-  initSlide: (slide: Slide) => void;
+  initSlide: (slide: Slide, slideIndex: number) => void;
 
   /**
    * 슬라이드 데이터를 부분 업데이트합니다.
@@ -94,9 +99,46 @@ export const useSlideStore = create<SlideState>()(
   devtools(
     (set) => ({
       slide: null,
+      // 초기 상태값
+      currentSlideIndex: 0,
+      globalOpinions: [],
+      reactionMap: {},
 
-      initSlide: (slide) => {
-        set({ slide }, false, 'slide/initSlide');
+      initSlide: (slide, slideIndex) => {
+        set(
+          (state) => {
+            // 1. 댓글 복원 로직
+            // 스토어에 저장된 댓글이 있으면 그걸 쓰고, 없으면(첫 진입) 들어온 slide.opinions 사용
+            let opinionsToUse = state.globalOpinions;
+            if (state.globalOpinions.length === 0) {
+              opinionsToUse = slide.opinions || [];
+            }
+
+            // 2. 이모지 복원 로직
+            // 이 슬라이드 번호(Index)에 저장된 이모지가 있으면 그걸 쓰고, 없으면 들어온 것 사용
+            const savedReactions = state.reactionMap[slideIndex];
+            const reactionsToUse = savedReactions || slide.emojiReactions || [];
+
+            // 3. Map에 현재 상태가 없으면 초기값 등록해두기
+            const nextReactionMap = { ...state.reactionMap };
+            if (!savedReactions) {
+              nextReactionMap[slideIndex] = reactionsToUse;
+            }
+
+            return {
+              currentSlideIndex: slideIndex,
+              globalOpinions: opinionsToUse, // 상태 동기화
+              reactionMap: nextReactionMap, // 맵 업데이트
+              slide: {
+                ...slide,
+                opinions: opinionsToUse, // 복원된 댓글 적용
+                emojiReactions: reactionsToUse, // 복원된 이모지 적용
+              },
+            };
+          },
+          false,
+          'slide/initSlide',
+        );
       },
 
       updateSlide: (updates) => {
@@ -156,14 +198,13 @@ export const useSlideStore = create<SlideState>()(
 
       deleteOpinion: (id) => {
         set(
-          (state) => ({
-            slide: state.slide
-              ? {
-                  ...state.slide,
-                  opinions: deleteFromFlat(state.slide.opinions, id),
-                }
-              : null,
-          }),
+          (state) => {
+            const newOpinions = deleteFromFlat(state.globalOpinions, id);
+            return {
+              globalOpinions: newOpinions, // 영구 저장소 업데이트
+              slide: state.slide ? { ...state.slide, opinions: newOpinions } : null, // 현재 화면 업데이트
+            };
+          },
           false,
           'slide/deleteOpinion',
         );
@@ -172,16 +213,13 @@ export const useSlideStore = create<SlideState>()(
       addReply: (parentId, content) => {
         set(
           (state) => {
-            if (!state.slide) return state;
-
+            const newOpinions = addReplyToFlat(state.globalOpinions, parentId, {
+              content,
+              author: '나',
+            });
             return {
-              slide: {
-                ...state.slide,
-                opinions: addReplyToFlat(state.slide.opinions, parentId, {
-                  content,
-                  author: '나',
-                }),
-              },
+              globalOpinions: newOpinions,
+              slide: state.slide ? { ...state.slide, opinions: newOpinions } : null,
             };
           },
           false,
@@ -192,24 +230,23 @@ export const useSlideStore = create<SlideState>()(
       toggleReaction: (emoji) => {
         set(
           (state) => {
-            // 슬라이드가 없거나 리액션 배열이 없으면 무시
             if (!state.slide) return state;
 
             const currentReactions = state.slide.emojiReactions || [];
-
-            // 해당 이모지 찾아서 업데이트
             const newReactions = currentReactions.map((r) => {
               if (r.emoji !== emoji) return r;
-
-              // 활성 -> 비활성 (카운트 감소)
-              if (r.active) {
-                return { ...r, active: false, count: Math.max(0, r.count - 1) };
-              }
-              // 비활성 -> 활성 (카운트 증가)
+              if (r.active) return { ...r, active: false, count: Math.max(0, r.count - 1) };
               return { ...r, active: true, count: r.count + 1 };
             });
 
+            // 현재 슬라이드 번호에 맞는 맵 업데이트
+            const updatedMap = {
+              ...state.reactionMap,
+              [state.currentSlideIndex]: newReactions,
+            };
+
             return {
+              reactionMap: updatedMap, // 맵에 저장 (다른 슬라이드 갔다 와도 유지됨)
               slide: {
                 ...state.slide,
                 emojiReactions: newReactions,
@@ -217,7 +254,7 @@ export const useSlideStore = create<SlideState>()(
             };
           },
           false,
-          'slide/toggleReaction', // DevTools 액션 이름
+          'slide/toggleReaction',
         );
       },
 
@@ -232,14 +269,13 @@ export const useSlideStore = create<SlideState>()(
         });
 
         set(
-          (state) => ({
-            slide: state.slide
-              ? {
-                  ...state.slide,
-                  opinions: [newComment, ...state.slide.opinions],
-                }
-              : null,
-          }),
+          (state) => {
+            const newOpinions = [newComment, ...state.globalOpinions];
+            return {
+              globalOpinions: newOpinions,
+              slide: state.slide ? { ...state.slide, opinions: newOpinions } : null,
+            };
+          },
           false,
           'slide/addOpinion',
         );
