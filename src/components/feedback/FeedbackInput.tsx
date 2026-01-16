@@ -15,6 +15,7 @@ export default function FeedbackInput({ reactions, onToggleReaction, onAddCommen
   const commentTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const handleAddComment = () => {
+    if (!commentDraft.trim()) return;
     onAddComment(commentDraft);
     setCommentDraft('');
     if (commentTextareaRef.current) {
@@ -31,72 +32,81 @@ export default function FeedbackInput({ reactions, onToggleReaction, onAddCommen
 
   const formatReactionCount = (count: number) => (count > 99 ? '99+' : count);
 
+  const isCommentEmpty = !commentDraft.trim();
+
   return (
-    <div className="p-4 bg-gray-100">
-      <div className="mb-1">
-        <textarea
-          ref={commentTextareaRef}
-          placeholder="댓글을 입력하세요..."
-          value={commentDraft}
-          rows={1}
-          onChange={(e) => {
-            setCommentDraft(e.target.value);
-            e.currentTarget.style.height = 'auto';
-            e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleAddComment();
-            }
-          }}
-          className="w-full overflow-hidden resize-none bg-transparent border-b border-gray-600 focus:border-black outline-none py-2 text-body-m-bold text-black placeholder-gray-600 transition-colors"
-        />
-      </div>
-
-      <div className="flex justify-end gap-2 mt-1">
-        <button
-          type="button"
-          onClick={handleCancel}
-          className="bg-gray-100 px-3 py-1.5 rounded-full text-caption-bold text-gray-800 hover:bg-gray-200 transition"
-        >
-          취소
-        </button>
-
-        <button
-          type="button"
-          onClick={handleAddComment}
-          className="bg-white px-3 py-1.5 rounded-full text-caption-bold text-gray-600 hover:bg-gray-200 transition"
-        >
-          답글
-        </button>
-      </div>
-
-      <div className="items-center mt-3">
-        <div className="grid grid-cols-2 gap-2">
-          {reactions.map((reaction) => (
-            <button
-              key={reaction.emoji}
-              onClick={() => onToggleReaction(reaction.emoji)}
-              className={`flex items-center justify-between px-2 py-1.5 rounded-full transition ${
-                reaction.active
-                  ? 'bg-gray-900 text-main-variant2 text-body-m-bold ring-1 ring-main-variant1'
-                  : 'bg-gray-200 ring-1 text-body-m ring-gray-400 text-black hover:bg-gray-400'
-              }`}
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="shrink-0">{reaction.emoji}</span>
-                <span className="whitespace-nowrap overflow-hidden">{reaction.label}</span>
-              </div>
-
-              {reaction.count > 0 && (
-                <span className={`shrink-0 ml-2 ${reaction.active ? 'font-bold' : ''}`}>
-                  {formatReactionCount(reaction.count)}
-                </span>
-              )}
-            </button>
-          ))}
+    <div className="flex flex-col gap-6 px-4 pb-6 pt-2">
+      {/* 댓글 입력 영역 */}
+      <div className="flex flex-col gap-1 items-end">
+        <div className="w-full border-b border-gray-600 px-0.5 py-2">
+          <textarea
+            ref={commentTextareaRef}
+            placeholder="댓글을 입력하세요"
+            value={commentDraft}
+            rows={1}
+            onChange={(e) => {
+              setCommentDraft(e.target.value);
+              e.currentTarget.style.height = 'auto';
+              e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleAddComment();
+              }
+            }}
+            className="w-full overflow-hidden resize-none bg-transparent outline-none text-body-m-bold text-black placeholder-gray-600"
+          />
         </div>
+
+        <div className="flex gap-2 items-center">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="px-3 py-1.5 text-caption-bold text-gray-800 hover:opacity-80 transition"
+          >
+            취소
+          </button>
+
+          <button
+            type="button"
+            onClick={handleAddComment}
+            disabled={isCommentEmpty}
+            className={`px-3 py-1.5 rounded-full text-caption-bold transition ${
+              isCommentEmpty
+                ? 'bg-white text-gray-400 cursor-not-allowed'
+                : 'bg-main text-white hover:opacity-90'
+            }`}
+          >
+            답글
+          </button>
+        </div>
+      </div>
+
+      {/* 이모지 리액션 버튼 */}
+      <div className="flex flex-wrap gap-2">
+        {reactions.map((reaction) => (
+          <button
+            key={reaction.emoji}
+            onClick={() => onToggleReaction(reaction.emoji)}
+            className={`w-[169px] flex items-center justify-between px-3 py-2 rounded-full border transition text-body-m ${
+              reaction.active
+                ? 'bg-gray-900 border-main-variant1 text-main-variant2 font-semibold'
+                : 'bg-gray-200 border-gray-400 text-black hover:border-gray-600'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span>{reaction.emoji}</span>
+              <span className="whitespace-nowrap">{reaction.label}</span>
+            </div>
+
+            {reaction.count > 0 && (
+              <span className={reaction.active ? 'font-semibold' : ''}>
+                {formatReactionCount(reaction.count)}
+              </span>
+            )}
+          </button>
+        ))}
       </div>
     </div>
   );

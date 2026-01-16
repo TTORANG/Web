@@ -2,7 +2,6 @@
  * @file SlideViewer.tsx
  * @description 피드백 화면 좌측 슬라이드 뷰어
  */
-import { SlideImage } from '@/components/common';
 import type { Slide } from '@/types/slide';
 
 import SlideInfoPanel from './SlideInfoPanel';
@@ -36,10 +35,12 @@ export default function SlideViewer({
 
   return (
     <div className="ml-35 flex-1 flex flex-col min-w-0 bg-gray-100">
-      <div className="flex-1 flex items-center justify-center overflow-hidden relative">
-        <div className="aspect-video w-full max-h-full bg-gray-400 relative overflow-hidden shadow-lg">
-          {slide.thumb && <SlideImage key={slide.id} src={slide.thumb} alt={slide.title} />}
-        </div>
+      <div className="flex-1 min-h-0 flex items-center justify-center">
+        <img
+          src={slide.thumb}
+          alt={slide.title}
+          className="w-full h-full object-contain shadow-lg"
+        />
       </div>
 
       <SlideInfoPanel

@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
 import CommentList from '@/components/comment/CommentList';
+import { Spinner } from '@/components/common';
 import FeedbackInput from '@/components/feedback/FeedbackInput';
 import SlideViewer from '@/components/feedback/SlideViewer';
 import { useSlides } from '@/hooks/queries/useSlides';
@@ -52,7 +53,7 @@ export default function FeedbackSlidePage() {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center bg-white">
-        <p className="text-gray-600">로딩 중...</p>
+        <Spinner size={40} />
       </div>
     );
   }
@@ -69,7 +70,7 @@ export default function FeedbackSlidePage() {
         onNext={goNext}
       />
 
-      <aside className="w-130 bg-white flex flex-col border-l border-black/5">
+      <aside className="w-130 bg-white flex flex-col border-l border-black/5 mr-35">
         <div className="flex-1 min-h-0 overflow-y-auto">
           <CommentList
             comments={comments}
