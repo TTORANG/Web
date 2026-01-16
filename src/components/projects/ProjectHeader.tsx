@@ -10,8 +10,7 @@ import type { ProjectHeaderProps } from '@/types/project';
 import { Popover } from '../common';
 
 // TODO
-// - 필터, 정렬 드롭다운 추가 (정렬은 arrowup icon도 임포트)
-// - 현재 선택되어있는 보기 방식은 아이콘 어둡게, 아닌 보기 방식은 아이콘을 옅은 회색으로
+// - 필터, 정렬 기능 추가
 
 //검색 + 우측 컨트롤
 export default function ProjectHeader({ value, onChange }: ProjectHeaderProps) {
