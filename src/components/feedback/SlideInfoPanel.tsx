@@ -40,7 +40,7 @@ export default function SlideInfoPanel({
         />
       </div>
 
-      <div className="bg-gray-200 rounded-lg px-4 py-3 h-48 overflow-y-auto">
+      <div className="bg-gray-200 rounded-t-lg px-4 py-3 h-48 overflow-y-auto">
         <p
           className={`text-body-s ${slide.script ? 'text-black' : 'text-gray-600'}`}
           style={{ whiteSpace: 'pre-line' }}

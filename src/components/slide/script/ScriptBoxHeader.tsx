@@ -8,6 +8,7 @@
 import clsx from 'clsx';
 
 import ArrowDownIcon from '@/assets/icons/icon-arrow-down.svg?react';
+import { Skeleton } from '@/components/common';
 
 import CommentPopover from './CommentPopover';
 import ScriptBoxEmoji from './ScriptBoxEmoji';
@@ -16,20 +17,29 @@ import SlideTitle from './SlideTitle';
 
 interface ScriptBoxHeaderProps {
   isCollapsed: boolean;
+  isLoading?: boolean;
   onToggleCollapse: () => void;
 }
 
-export default function ScriptBoxHeader({ isCollapsed, onToggleCollapse }: ScriptBoxHeaderProps) {
+export default function ScriptBoxHeader({
+  isCollapsed,
+  isLoading,
+  onToggleCollapse,
+}: ScriptBoxHeaderProps) {
   return (
-    <div className="flex h-10 items-center justify-between border-b border-gray-200 bg-white px-5">
+    <div className="flex h-10 items-center justify-between border-b border-gray-200 bg-white px-5 rounded-t-lg">
       {/* 좌측: 슬라이드 제목 */}
-      <SlideTitle isCollapsed={isCollapsed} />
+      {isLoading ? <Skeleton width={100} height={20} /> : <SlideTitle isCollapsed={isCollapsed} />}
 
       {/* 우측: 이모지, 변경기록, 의견, 접기 버튼 */}
       <div className="flex items-center gap-3">
-        <ScriptBoxEmoji />
+        {isLoading ? (
+          <Skeleton width={60} height={24} className="rounded-full" />
+        ) : (
+          <ScriptBoxEmoji />
+        )}
         <ScriptHistory />
-        <CommentPopover />
+        <CommentPopover isLoading={isLoading} />
         <button
           type="button"
           onClick={onToggleCollapse}

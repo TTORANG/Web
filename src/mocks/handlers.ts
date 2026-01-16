@@ -234,8 +234,8 @@ export const handlers = [
     await delay(100);
 
     const { slideId } = params;
-    const { emoji } = (await request.json()) as { emoji: string };
-    console.log(`[MSW] POST /slides/${slideId}/reactions`, emoji);
+    const { type } = (await request.json()) as { type: string };
+    console.log(`[MSW] POST /slides/${slideId}/reactions`, type);
 
     const slideIndex = slides.findIndex((s) => s.id === slideId);
 
@@ -247,11 +247,10 @@ export const handlers = [
     }
 
     const slide = slides[slideIndex];
-    const reactionIndex = slide.emojiReactions.findIndex((r) => r.emoji === emoji);
+    const reactionIndex = slide.emojiReactions.findIndex((r) => r.type === type);
 
     if (reactionIndex !== -1) {
       // 이미 있으면 토글 (count 증감, active 토글)
-      // 단순화를 위해 active가 true면 -1 (취소), false면 +1 (추가)
       const currentReaction = slide.emojiReactions[reactionIndex];
       if (currentReaction.active) {
         currentReaction.count = Math.max(0, currentReaction.count - 1);
@@ -260,14 +259,6 @@ export const handlers = [
         currentReaction.count += 1;
         currentReaction.active = true;
       }
-    } else {
-      // 없으면 새로 추가
-      slide.emojiReactions.push({
-        emoji,
-        count: 1,
-        active: true,
-        label: emoji === '👍' ? '좋아요' : emoji === '👀' ? '확인했어요' : '반응', // 간단한 라벨 매핑
-      });
     }
 
     return HttpResponse.json(slide.emojiReactions);

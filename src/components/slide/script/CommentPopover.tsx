@@ -10,11 +10,15 @@ import { useState } from 'react';
 import clsx from 'clsx';
 
 import CommentItem from '@/components/comment/CommentItem';
-import { Popover } from '@/components/common';
+import { Popover, Skeleton } from '@/components/common';
 import { useSlideOpinions } from '@/hooks';
 import { useComments } from '@/hooks/useComments';
 
-export default function CommentPopover() {
+interface CommentPopoverProps {
+  isLoading?: boolean;
+}
+
+export default function CommentPopover({ isLoading }: CommentPopoverProps) {
   const opinions = useSlideOpinions();
   const { comments: treeOpinions, addReply, deleteComment } = useComments();
 
@@ -64,14 +68,18 @@ export default function CommentPopover() {
           >
             의견
           </span>
-          <span
-            className={clsx(
-              'text-sm font-semibold leading-5',
-              isOpen ? 'text-main-variant1' : 'text-gray-600',
-            )}
-          >
-            {opinions.length}
-          </span>
+          {isLoading ? (
+            <Skeleton width={9} height={16} className="rounded" />
+          ) : (
+            <span
+              className={clsx(
+                'text-sm font-semibold leading-5',
+                isOpen ? 'text-main-variant1' : 'text-gray-600',
+              )}
+            >
+              {opinions.length}
+            </span>
+          )}
         </button>
       )}
       position="top"
