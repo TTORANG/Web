@@ -11,7 +11,7 @@ import { Outlet } from 'react-router-dom';
 import { LoginModal } from '@/components/auth/login-modal';
 import { Logo } from '@/components/common';
 import { ShareModal } from '@/components/share/share-modal';
-import { useThemeStore } from '@/stores/themeStore.ts';
+import { useThemeStore } from '@/stores/themeStore';
 
 interface LayoutProps {
   left?: ReactNode;

@@ -5,9 +5,9 @@
  * 헤더 우측에 표시되는 로그인 링크입니다.
  */
 import LoginIcon from '@/assets/icons/icon-login.svg?react';
-import { useAuthStore } from '@/stores/authStore.ts';
+import { useAuthStore } from '@/stores/authStore';
 
-import { HeaderButton } from './HeaderButton.tsx';
+import { HeaderButton } from './HeaderButton';
 
 export function LoginButton() {
   const openLoginModal = useAuthStore((s) => s.openLoginModal);
