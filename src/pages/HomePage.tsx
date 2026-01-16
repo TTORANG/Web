@@ -1,68 +1,59 @@
 import { useMemo, useState } from 'react';
 
-import FileDropzone from '@/components/common/FileDropzone';
+import IntroSection from '@/components/home/IntroSection';
 import ProjectsCard from '@/components/projects/ProjectCard';
 import ProjectHeader from '@/components/projects/ProjectHeader';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useUpload } from '@/hooks/useUpload';
 import { MOCK_PROJECTS } from '@/mocks/projects';
 
 const ACCEPTED_FILES_TYPES = '.pdf,.ppt,.pptx,.txt,.mp4';
 
 export default function HomePage() {
-  // 파일 업로드 테스트 시 simulateUpload를 아래에 추가, 실제 업로드 시 uploadFiles를 아래에 추가
-  const { progress, state, error, simulateUpload } = useUpload();
+  const { progress, state, error, uploadFiles } = useUpload();
   const [query, setQuery] = useState('');
+  const debouncedQuery = useDebounce(query, 300);
 
   const filteredProjects = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = debouncedQuery.trim().toLowerCase();
     if (!q) return MOCK_PROJECTS;
     return MOCK_PROJECTS.filter((p) => p.title.toLowerCase().includes(q));
-  }, [query]);
+  }, [debouncedQuery]);
+
+  const hasProjects = filteredProjects.length > 0;
 
   return (
     <main className="mx-auto min-h-screen max-w-4xl px-6 py-8">
       {/* 소개글 & 파일 업로드 */}
-      <section className="flex flex-col items-center text-center">
-        {/* 소개글 */}
-        <div className="mt-10">
-          <h1 className="text-body-l-bold text-gray-900">발표 연습을 시작하세요.</h1>
-          <p className="mt-2 text-body-s text-gray-600">
-            파일을 업로드해서 바로 연습을 시작해보세요.
-          </p>
-        </div>
-
-        {/* Dropzone */}
-        <FileDropzone
-          disabled={state === 'uploading'}
-          accept={ACCEPTED_FILES_TYPES}
-          uploadState={state}
-          progress={progress}
-          // UI 확인용
-          onFilesSelected={() => simulateUpload()}
-          // 실제 업로드용
-          // onFilesSelected={uploadFiles}
-        />
-
-        {error && <p className="mt-3 text-body-s text-error">업로드 실패: {error}</p>}
-      </section>
+      <IntroSection
+        accept={ACCEPTED_FILES_TYPES}
+        disabled={state == 'uploading'}
+        uploadState={state}
+        progress={progress}
+        error={error}
+        onFilesSelected={uploadFiles}
+        isEmpty={!hasProjects}
+      />
 
       {/* 내발표 */}
-      <section className="mt-14">
-        {/* 제목 */}
-        <div className="mb-4">
-          <h2 className="text-body-m-bold">내 발표</h2>
-        </div>
+      {hasProjects && (
+        <section className="mt-14">
+          {/* 제목 */}
+          <div className="mb-4">
+            <h2 className="text-body-m-bold">내 발표</h2>
+          </div>
 
-        {/* 검색 */}
-        <ProjectHeader value={query} onChange={setQuery} />
+          {/* 검색 */}
+          <ProjectHeader value={query} onChange={setQuery} />
 
-        {/* 프레젠테이션 목록 */}
-        <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
-          {filteredProjects.map((project) => (
-            <ProjectsCard key={project.id} {...project} />
-          ))}
-        </div>
-      </section>
+          {/* 프레젠테이션 목록 */}
+          <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
+            {filteredProjects.map((project) => (
+              <ProjectsCard key={project.id} {...project} />
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }
