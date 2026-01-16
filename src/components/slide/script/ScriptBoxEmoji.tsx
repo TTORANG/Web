@@ -21,7 +21,7 @@ export default function ScriptBoxEmoji() {
   const trigger = (
     <button
       type="button"
-      className="h-7 rounded bg-transparent px-2 text-gray-600 hover:bg-gray-100 active:bg-gray-200"
+      className="h-7 rounded bg-transparent px-2 text-gray-600 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main"
     >
       ···
     </button>

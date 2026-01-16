@@ -159,7 +159,7 @@ function CommentItem({
                   type="button"
                   onClick={onDelete}
                   aria-label="댓글 삭제"
-                  className="flex items-center gap-1 text-caption-bold text-error active:opacity-80"
+                  className="flex items-center gap-1 rounded text-caption-bold text-error active:opacity-80 focus-visible:outline-2 focus-visible:outline-error"
                 >
                   삭제
                   <RemoveIcon className="h-4 w-4" aria-hidden="true" />
@@ -172,7 +172,7 @@ function CommentItem({
                 <button
                   type="button"
                   onClick={handleGoToSlideRef}
-                  className="text-body-s-bold text-main-variant1 hover:underline mr-1 inline-flex items-center align-middle"
+                  className="text-body-s-bold text-main-variant1 hover:underline mr-1 inline-flex items-center align-middle rounded focus-visible:outline-2 focus-visible:outline-main"
                 >
                   <FileIcon className="text-main-variant1" />
                   &nbsp;{comment.slideRef}
@@ -190,7 +190,7 @@ function CommentItem({
               aria-expanded={isActive}
               aria-label={`${authorName}에게 답글 달기`}
               className={clsx(
-                'flex items-center gap-1 text-caption-bold transition',
+                'flex items-center gap-1 rounded text-caption-bold transition focus-visible:outline-2 focus-visible:outline-main',
                 isActive
                   ? 'text-gray-400'
                   : 'text-main hover:text-main-variant1 active:text-main-variant2',
@@ -223,7 +223,7 @@ function CommentItem({
               type="button"
               onClick={onCancelReply}
               aria-label="답글 취소"
-              className="px-3 py-1.5 rounded-full text-caption-bold text-gray-800 hover:text-gray-600 transition"
+              className="px-3 py-1.5 rounded-full text-caption-bold text-gray-800 hover:text-gray-600 transition focus-visible:outline-2 focus-visible:outline-main"
             >
               취소
             </button>
@@ -233,7 +233,7 @@ function CommentItem({
               disabled={!replyText.trim()}
               aria-label="답글 등록"
               className={clsx(
-                'px-3 py-1.5 rounded-full text-caption-bold transition',
+                'px-3 py-1.5 rounded-full text-caption-bold transition focus-visible:outline-2 focus-visible:outline-main',
                 replyText.trim()
                   ? 'bg-main text-white hover:bg-main-variant1 active:bg-main-variant2'
                   : 'bg-gray-100 text-gray-600',

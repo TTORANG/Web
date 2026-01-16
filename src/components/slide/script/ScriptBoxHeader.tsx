@@ -33,17 +33,13 @@ export default function ScriptBoxHeader({
 
       {/* 우측: 이모지, 변경기록, 의견, 접기 버튼 */}
       <div className="flex items-center gap-3">
-        {isLoading ? (
-          <Skeleton width={60} height={24} className="rounded-full" />
-        ) : (
-          <ScriptBoxEmoji />
-        )}
+        <ScriptBoxEmoji />
         <ScriptHistory />
         <CommentPopover isLoading={isLoading} />
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="flex h-6 w-6 items-center justify-center rounded bg-transparent text-gray-600 hover:bg-gray-100 active:bg-gray-200"
+          className="flex h-6 w-6 items-center justify-center rounded bg-transparent text-gray-600 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main"
           aria-label={isCollapsed ? '대본 펼치기' : '대본 접기'}
         >
           <ArrowDownIcon

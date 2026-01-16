@@ -28,7 +28,7 @@ export default function SlideNavigation({
         onClick={onPrev}
         disabled={isFirst}
         className={[
-          'grid size-6 shrink-0 place-items-center rounded-full border transition',
+          'grid size-6 shrink-0 place-items-center rounded-full border transition focus-visible:outline-2 focus-visible:outline-main',
           isFirst
             ? 'border-gray-400 opacity-50 cursor-not-allowed'
             : 'border-gray-400 hover:border-gray-600',
@@ -45,7 +45,7 @@ export default function SlideNavigation({
         onClick={onNext}
         disabled={isLast}
         className={[
-          'grid size-6 shrink-0 place-items-center rounded-full border transition',
+          'grid size-6 shrink-0 place-items-center rounded-full border transition focus-visible:outline-2 focus-visible:outline-main',
           isLast
             ? 'border-gray-400 opacity-50 cursor-not-allowed'
             : 'border-gray-400 hover:border-gray-600',

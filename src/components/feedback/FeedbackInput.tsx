@@ -63,7 +63,7 @@ export default function FeedbackInput({ reactions, onToggleReaction, onAddCommen
           <button
             type="button"
             onClick={handleCancel}
-            className="px-3 py-1.5 text-caption-bold text-gray-800 hover:opacity-80 transition"
+            className="px-3 py-1.5 rounded-full text-caption-bold text-gray-800 hover:opacity-80 transition focus-visible:outline-2 focus-visible:outline-main"
           >
             취소
           </button>
@@ -72,7 +72,7 @@ export default function FeedbackInput({ reactions, onToggleReaction, onAddCommen
             type="button"
             onClick={handleAddComment}
             disabled={isCommentEmpty}
-            className={`px-3 py-1.5 rounded-full text-caption-bold transition ${
+            className={`px-3 py-1.5 rounded-full text-caption-bold transition focus-visible:outline-2 focus-visible:outline-main ${
               isCommentEmpty
                 ? 'bg-white text-gray-400 cursor-not-allowed'
                 : 'bg-main text-white hover:opacity-90'
@@ -91,7 +91,7 @@ export default function FeedbackInput({ reactions, onToggleReaction, onAddCommen
             <button
               key={reaction.type}
               onClick={() => onToggleReaction(reaction.type)}
-              className={`w-42.25 flex items-center justify-between px-3 py-2 rounded-full border transition text-body-m ${
+              className={`w-42.25 flex items-center justify-between px-3 py-2 rounded-full border transition text-body-m focus-visible:outline-2 focus-visible:outline-main ${
                 reaction.active
                   ? 'bg-gray-900 border-main-variant1 text-main-variant2 font-semibold'
                   : 'bg-gray-200 border-gray-400 text-black hover:border-gray-600'

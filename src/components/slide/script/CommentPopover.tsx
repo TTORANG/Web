@@ -54,7 +54,7 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
           aria-label={`의견 ${opinions.length}개 보기`}
           className={clsx(
             'inline-flex h-7 items-center gap-1 rounded px-2',
-            'outline-1 -outline-offset-1',
+            'outline-1 -outline-offset-1 focus-visible:outline-2 focus-visible:outline-main',
             isOpen
               ? 'bg-white outline-main'
               : 'bg-white outline-gray-200 hover:bg-gray-100 active:bg-gray-200',

@@ -47,7 +47,7 @@ export default function SlideTitle({ isCollapsed = false }: SlideTitleProps) {
         <button
           type="button"
           aria-label="슬라이드 이름 변경"
-          className="inline-flex h-7 items-center gap-1.5 rounded-md bg-transparent px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 active:bg-gray-200"
+          className="inline-flex h-7 items-center gap-1.5 rounded-md bg-transparent px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main"
         >
           <span className="max-w-30 line-clamp-1">{title}</span>
           <ArrowDownIcon
@@ -77,7 +77,7 @@ export default function SlideTitle({ isCollapsed = false }: SlideTitleProps) {
               }
             }}
             aria-label="슬라이드 이름"
-            className="h-9 flex-1 rounded-md border border-gray-200 px-3 text-sm text-gray-800 outline-none focus:border-main"
+            className="h-9 flex-1 rounded-md border border-gray-200 px-3 text-sm text-gray-800 outline-none focus:border-main focus-visible:outline-2 focus-visible:outline-main"
           />
           <button
             type="button"
@@ -85,7 +85,7 @@ export default function SlideTitle({ isCollapsed = false }: SlideTitleProps) {
               handleSave();
               close();
             }}
-            className="h-9 rounded-full bg-main px-3 text-sm font-semibold text-white active:bg-main-variant2"
+            className="h-9 rounded-full bg-main px-3 text-sm font-semibold text-white active:bg-main-variant2 focus-visible:outline-2 focus-visible:outline-main"
           >
             저장
           </button>

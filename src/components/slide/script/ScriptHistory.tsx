@@ -51,7 +51,7 @@ export default function ScriptHistory() {
           aria-label="대본 변경 기록 보기"
           className={clsx(
             'inline-flex h-7 items-center gap-1 rounded pl-2 pr-1.5',
-            'outline-1 -outline-offset-1',
+            'outline-1 -outline-offset-1 focus-visible:outline-2 focus-visible:outline-main',
             isOpen
               ? 'bg-white text-main outline-main'
               : 'bg-white text-gray-800 outline-gray-200 hover:bg-gray-100 active:bg-gray-200',
@@ -100,7 +100,7 @@ export default function ScriptHistory() {
                   className={clsx(
                     'inline-flex items-center gap-1 rounded py-1 pl-2 pr-1.5',
                     'bg-white text-gray-800 outline-1 -outline-offset-1 outline-gray-200',
-                    'hover:text-gray-600 active:bg-gray-100',
+                    'hover:text-gray-600 active:bg-gray-100 focus-visible:outline-2 focus-visible:outline-main',
                   )}
                 >
                   <span className="text-xs font-semibold leading-4">복원</span>
