@@ -50,9 +50,15 @@ export default function ProjectHeader({ value, onChange }: ProjectHeaderProps) {
           className="border border-gray-200 w-30 overflow-hidden"
         >
           <div className="text-sm">
-            <button className="w-full px-3 py-2 text-left hover:bg-gray-100">전체</button>
-            <button className="w-full px-3 py-2 text-left hover:bg-gray-100">3분 이하</button>
-            <button className="w-full px-3 py-2 text-left hover:bg-gray-100">5분 이하</button>
+            <button className="w-full px-3 py-2 text-left hover:bg-gray-100" type="button">
+              전체
+            </button>
+            <button className="w-full px-3 py-2 text-left hover:bg-gray-100" type="button">
+              3분 이하
+            </button>
+            <button className="w-full px-3 py-2 text-left hover:bg-gray-100" type="button">
+              5분 이하
+            </button>
           </div>
         </Popover>
 
@@ -76,9 +82,15 @@ export default function ProjectHeader({ value, onChange }: ProjectHeaderProps) {
           className="border border-gray-200 w-36 overflow-hidden"
         >
           <div className="text-sm">
-            <button className="w-full px-3 py-2 text-left hover:bg-gray-100">최신순</button>
-            <button className="w-full px-3 py-2 text-left hover:bg-gray-100">피드백 많은 순</button>
-            <button className="w-full px-3 py-2 text-left hover:bg-gray-100">가나다순</button>
+            <button className="w-full px-3 py-2 text-left hover:bg-gray-100" type="button">
+              최신순
+            </button>
+            <button className="w-full px-3 py-2 text-left hover:bg-gray-100" type="button">
+              피드백 많은 순
+            </button>
+            <button className="w-full px-3 py-2 text-left hover:bg-gray-100" type="button">
+              가나다순
+            </button>
           </div>
         </Popover>
 

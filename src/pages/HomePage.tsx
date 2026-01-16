@@ -11,6 +11,7 @@ import { useUpload } from '@/hooks/useUpload';
 import { MOCK_PROJECTS } from '@/mocks/projects';
 
 const ACCEPTED_FILES_TYPES = '.pdf,.ppt,.pptx,.txt,.mp4';
+const SKELETON_CARD_COUNT = 9;
 
 export default function HomePage() {
   const { progress, state, error, uploadFiles } = useUpload();
@@ -58,7 +59,9 @@ export default function HomePage() {
           {/* 프레젠테이션 목록 */}
           <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
             {isLoading
-              ? Array.from({ length: 6 }).map((_, index) => <ProjectCardSkeleton key={index} />)
+              ? Array.from({ length: SKELETON_CARD_COUNT }).map((_, index) => (
+                  <ProjectCardSkeleton key={index} />
+                ))
               : filteredProjects.map((project) => <ProjectsCard key={project.id} {...project} />)}
           </div>
         </section>

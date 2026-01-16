@@ -44,8 +44,13 @@ export default function ProjectsCard({
             className="border border-gray-200 w-32 overflow-hidden"
           >
             <div className="text-sm">
-              <button className="w-full px-3 py-2 text-left hover:bg-gray-100">이름 변경</button>
-              <button className="w-full px-3 py-2 text-left text-red-500 hover:bg-gray-100">
+              <button className="w-full px-3 py-2 text-left hover:bg-gray-100" type="button">
+                이름 변경
+              </button>
+              <button
+                className="w-full px-3 py-2 text-left text-red-500 hover:bg-gray-100"
+                type="button"
+              >
                 삭제
               </button>
             </div>
