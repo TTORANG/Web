@@ -183,6 +183,9 @@ export const handlers = [
       if (parentIndex !== -1) {
         slides[slideIndex].opinions.splice(parentIndex + 1, 0, newOpinion);
       } else {
+        console.warn(
+          `[MSW] Parent opinion with id "${data.parentId}" not found. Adding as a root comment.`,
+        );
         slides[slideIndex].opinions.push(newOpinion);
       }
     } else {

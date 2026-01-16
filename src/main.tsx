@@ -18,7 +18,7 @@ import {
   VideoPage,
   VideoRecordPage,
 } from '@/pages';
-import { useThemeStore } from '@/stores/themeStore';
+import { useThemeListener, useThemeStore } from '@/stores/themeStore';
 import '@/styles/index.css';
 
 const router = createBrowserRouter([
@@ -78,6 +78,11 @@ const router = createBrowserRouter([
   },
 ]);
 
+function App() {
+  useThemeListener();
+  return <RouterProvider router={router} />;
+}
+
 function AppToaster() {
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
   return <Toaster position="bottom-center" closeButton theme={resolvedTheme} />;
@@ -105,7 +110,7 @@ enableMocking().then(() => {
   createRoot(document.querySelector('#root')!).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+        <App />
         <AppToaster />
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>

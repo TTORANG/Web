@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -52,21 +54,34 @@ export const useThemeStore = create<ThemeState>()(
   ),
 );
 
-// 시스템 테마 변경 감지
-if (typeof window !== 'undefined') {
-  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-  const handleChange = () => {
-    const { theme, initTheme } = useThemeStore.getState();
-    if (theme === 'auto') {
-      initTheme();
-    }
-  };
-  mediaQuery.addEventListener('change', handleChange);
+/**
+ * 시스템 테마 변경 및 스토리지 동기화 리스너 훅
+ * 앱의 최상위 컴포넌트에서 한 번만 호출해야 합니다.
+ */
+export function useThemeListener() {
+  const initTheme = useThemeStore((state) => state.initTheme);
 
-  // 테마 동기화
-  window.addEventListener('storage', (e) => {
-    if (e.key === 'ttorang-theme') {
-      useThemeStore.persist.rehydrate();
-    }
-  });
+  // 시스템 테마 변경 감지
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => {
+      const { theme } = useThemeStore.getState();
+      if (theme === 'auto') {
+        initTheme();
+      }
+    };
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [initTheme]);
+
+  // 탭 간 테마 동기화 (Storage 이벤트 감지)
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'ttorang-theme') {
+        useThemeStore.persist.rehydrate();
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 }
