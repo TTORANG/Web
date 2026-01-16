@@ -22,7 +22,7 @@ graph TB
         STT[SlideTitle]
         SBE[ScriptBoxEmoji]
         SH[ScriptHistory]
-        OP[Opinion]
+        OP[CommentPopover]
     end
 
     SP -->|slides| SL
@@ -80,7 +80,7 @@ graph TD
                 subgraph ScriptHistory[ScriptHistory]
                     SH_SEL[selector: script, history]
                 end
-                subgraph Opinion[Opinion]
+                subgraph CommentPopover[CommentPopover]
                     OP_SEL[selector: opinions]
                 end
             end
@@ -118,7 +118,7 @@ flowchart LR
         STT[SlideTitle]
         SBE[ScriptBoxEmoji]
         SH[ScriptHistory]
-        OP[Opinion]
+        OP[CommentPopover]
     end
 
     SLIDE --> SEL1 --> SV
@@ -164,7 +164,7 @@ flowchart TD
         R1[SlideViewer, SlideTitle]
         R2[ScriptBoxContent]
         R3[ScriptHistory]
-        R4[Opinion]
+        R4[CommentPopover]
     end
 
     A1 --> U1 --> S1 --> R1
@@ -266,7 +266,7 @@ flowchart TB
         CTX --> C3[SlideTitle]
         CTX --> C4[ScriptBoxEmoji]
         CTX --> C5[ScriptHistory]
-        CTX --> C6[Opinion]
+        CTX --> C6[CommentPopover]
 
         CHANGE1[script 변경] --> CTX
         CTX --> RERENDER1[6개 모두 리렌더링]
@@ -280,7 +280,7 @@ flowchart TB
         ZS -.->|title| Z3[SlideTitle]
         ZS -.->|emojiReactions| Z4[ScriptBoxEmoji]
         ZS -.->|history| Z5[ScriptHistory]
-        ZS -.->|opinions| Z6[Opinion]
+        ZS -.->|opinions| Z6[CommentPopover]
 
         CHANGE2[script 변경] --> ZS
         ZS --> RERENDER2[ScriptBoxContent만 리렌더링]
@@ -296,7 +296,7 @@ flowchart TB
 | SlideTitle       | `title`             | `updateSlide`                   |
 | ScriptBoxEmoji   | `emojiReactions`    | -                               |
 | ScriptHistory    | `script`, `history` | `restoreFromHistory`            |
-| Opinion          | `opinions`          | `deleteOpinion`, `addReply`     |
+| CommentPopover   | `opinions`          | `deleteOpinion`, `addReply`     |
 
 ## 요약
 

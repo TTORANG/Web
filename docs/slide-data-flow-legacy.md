@@ -47,7 +47,7 @@ graph TD
         SBH --> STT[SlideTitle]
         SBH --> SBE[ScriptBoxEmoji]
         SBH --> SH[ScriptHistory]
-        SBH --> OP[Opinion]
+        SBH --> OP[CommentPopover]
     end
 
     SB --> SBH
@@ -68,7 +68,7 @@ flowchart LR
         STT[SlideTitle]
         SBE[ScriptBoxEmoji]
         SH[ScriptHistory]
-        OP[Opinion]
+        OP[CommentPopover]
     end
 
     SLIDE -->|title, content| SV
@@ -218,7 +218,7 @@ graph TB
         STT[SlideTitle<br/>slide.title<br/>updateSlide]
         SBE[ScriptBoxEmoji<br/>slide.emojiReactions]
         SH[ScriptHistory<br/>slide.script, history<br/>restoreFromHistory]
-        OP[Opinion<br/>slide.opinions<br/>deleteOpinion, addReply]
+        OP[CommentPopover<br/>slide.opinions<br/>deleteOpinion, addReply]
     end
 
     subgraph Props만 사용

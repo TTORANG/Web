@@ -52,7 +52,13 @@ function SkeletonBase({ width, height, rounded = 4, className = '' }: SkeletonBa
     borderRadius: toSize(rounded, 4),
   };
 
-  return <div className={clsx('animate-pulse bg-gray-200', className)} style={style} />;
+  return (
+    <div
+      className={clsx('animate-pulse bg-gray-200', className)}
+      style={style}
+      aria-hidden="true"
+    />
+  );
 }
 
 /**
@@ -65,6 +71,7 @@ function SkeletonCircle({ size = 40, className = '' }: SkeletonCircleProps) {
     <div
       className={clsx('animate-pulse rounded-full bg-gray-200', className)}
       style={{ width: size, height: size }}
+      aria-hidden="true"
     />
   );
 }
@@ -82,7 +89,7 @@ function SkeletonText({
   className = '',
 }: SkeletonTextProps) {
   return (
-    <div className={clsx('flex flex-col', className)} style={{ gap }}>
+    <div className={clsx('flex flex-col', className)} style={{ gap }} aria-hidden="true">
       {Array.from({ length: lines }).map((_, i) => (
         <div
           key={i}

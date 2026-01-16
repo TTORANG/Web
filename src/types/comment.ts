@@ -1,6 +1,6 @@
 export interface CommentItem {
   id: string;
-  author: string;
+  authorId: string;
   content: string;
   /** ISO 8601 형식 또는 상대 시간 문자열 */
   timestamp: string;
@@ -21,7 +21,7 @@ export interface CommentItem {
  */
 export interface CreateCommentInput {
   content: string;
-  author?: string;
+  authorId?: string;
   slideRef?: string;
   parentId?: string;
 }

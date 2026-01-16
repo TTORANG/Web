@@ -29,10 +29,22 @@ const EMPTY_HISTORY: HistoryItem[] = [];
 const EMPTY_EMOJIS: EmojiReaction[] = [];
 
 /**
+ * 슬라이드 ID를 구독합니다.
+ * @returns 현재 슬라이드 ID (없으면 빈 문자열)
+ */
+export const useSlideId = () => useSlideStore((state) => state.slide?.id ?? '');
+
+/**
  * 슬라이드 제목을 구독합니다.
  * @returns 현재 슬라이드 제목 (없으면 빈 문자열)
  */
 export const useSlideTitle = () => useSlideStore((state) => state.slide?.title ?? '');
+
+/**
+ * 슬라이드 썸네일을 구독합니다.
+ * @returns 현재 슬라이드 썸네일 URL (없으면 빈 문자열)
+ */
+export const useSlideThumb = () => useSlideStore((state) => state.slide?.thumb ?? '');
 
 /**
  * 슬라이드 대본을 구독합니다.
@@ -85,5 +97,6 @@ export const useSlideActions = () =>
       restoreFromHistory: state.restoreFromHistory,
       deleteOpinion: state.deleteOpinion,
       addReply: state.addReply,
+      setOpinions: state.setOpinions,
     })),
   );

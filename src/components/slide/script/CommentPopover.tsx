@@ -3,31 +3,41 @@
  * @description 의견 목록 팝오버
  *
  * 대본에 대한 팀원들의 의견을 보여주고, 답글을 달 수 있습니다.
- * Zustand store를 통해 의견 데이터를 읽고 업데이트합니다.
+ * useComments 훅을 통해 API와 동기화합니다.
  */
 import { useState } from 'react';
 
 import clsx from 'clsx';
 
-import { CommentItem, Popover } from '@/components/common';
-import { useSlideActions, useSlideOpinions } from '@/hooks';
+import CommentItem from '@/components/comment/CommentItem';
+import { Popover, Skeleton } from '@/components/common';
+import { useSlideOpinions } from '@/hooks';
+import { useComments } from '@/hooks/useComments';
 
-export default function Opinion() {
+interface CommentPopoverProps {
+  isLoading?: boolean;
+}
+
+export default function CommentPopover({ isLoading }: CommentPopoverProps) {
   const opinions = useSlideOpinions();
-  const { deleteOpinion, addReply } = useSlideActions();
+  const { comments: treeOpinions, addReply, deleteComment } = useComments();
+
   const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
 
-  const handleReplySubmit = (opinionId: string) => {
-    if (replyText.trim()) {
-      addReply(opinionId, replyText);
-    }
+  /**
+   * 답글을 등록합니다.
+   * @param parentId - 답글을 달 의견의 ID
+   */
+  const handleReplySubmit = (parentId: string) => {
+    if (!replyText.trim()) return;
+    addReply(parentId, replyText);
     setActiveReplyId(null);
     setReplyText('');
   };
 
-  const handleToggleReply = (opinionId: string) => {
-    setActiveReplyId(activeReplyId === opinionId ? null : opinionId);
+  const handleToggleReply = (id: string) => {
+    setActiveReplyId(activeReplyId === id ? null : id);
     setReplyText('');
   };
 
@@ -44,7 +54,7 @@ export default function Opinion() {
           aria-label={`의견 ${opinions.length}개 보기`}
           className={clsx(
             'inline-flex h-7 items-center gap-1 rounded px-2',
-            'outline-1 -outline-offset-1',
+            'outline-1 -outline-offset-1 focus-visible:outline-2 focus-visible:outline-main',
             isOpen
               ? 'bg-white outline-main'
               : 'bg-white outline-gray-200 hover:bg-gray-100 active:bg-gray-200',
@@ -60,11 +70,15 @@ export default function Opinion() {
           </span>
           <span
             className={clsx(
-              'text-sm font-semibold leading-5',
+              'min-w-3 text-center text-sm font-semibold leading-5',
               isOpen ? 'text-main-variant1' : 'text-gray-600',
             )}
           >
-            {opinions.length}
+            {isLoading ? (
+              <Skeleton width="100%" height={16} className="rounded" />
+            ) : (
+              opinions.length
+            )}
           </span>
         </button>
       )}
@@ -80,19 +94,22 @@ export default function Opinion() {
 
       {/* 의견 목록 */}
       <div className="h-80 overflow-y-auto">
-        {opinions.map((opinion) => (
+        {treeOpinions.map((opinion) => (
           <CommentItem
             key={opinion.id}
             comment={opinion}
-            theme="light"
             isActive={activeReplyId === opinion.id}
             replyText={replyText}
             onReplyTextChange={setReplyText}
             onToggleReply={() => handleToggleReply(opinion.id)}
             onSubmitReply={() => handleReplySubmit(opinion.id)}
             onCancelReply={handleCancelReply}
-            onDelete={opinion.isMine ? () => deleteOpinion(opinion.id) : undefined}
-            isIndented={opinion.isReply}
+            onDelete={() => deleteComment(opinion.id)}
+            onDeleteComment={deleteComment}
+            replyingToId={activeReplyId}
+            setReplyingToId={setActiveReplyId}
+            onReplySubmit={handleReplySubmit}
+            onToggleReplyById={handleToggleReply}
           />
         ))}
       </div>

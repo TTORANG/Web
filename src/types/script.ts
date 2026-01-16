@@ -9,33 +9,33 @@ export interface HistoryItem {
 }
 
 /**
- * 의견(댓글) 아이템
- *
- * 슬라이드 대본에 대한 팀원들의 의견을 나타냅니다.
- * 답글은 `isReply: true`와 `parentId`로 구분되며, 부모 의견 바로 다음에 표시됩니다.
+ * 리액션 타입 (5가지 고정)
  */
-export interface OpinionItem {
-  id: string;
-  author: string;
-  content: string;
-  timestamp: string;
-  /** true면 삭제 가능 */
-  isMine: boolean;
-  /** @default false */
-  isReply?: boolean;
-  /** isReply일 때만 존재, 부모 삭제 시 연쇄 삭제 */
-  parentId?: string;
-}
+export type ReactionType = 'fire' | 'sleepy' | 'good' | 'bad' | 'confused';
+
+/**
+ * 리액션 설정 (이모지, 라벨 매핑)
+ */
+export const REACTION_CONFIG: Record<ReactionType, { emoji: string; label: string }> = {
+  fire: { emoji: '🔥', label: '인상적이에요' },
+  sleepy: { emoji: '💤', label: '지루해요' },
+  good: { emoji: '👍', label: '잘했어요' },
+  bad: { emoji: '👎', label: '별로에요' },
+  confused: { emoji: '🤷', label: '이해 안돼요' },
+} as const;
+
+/**
+ * 리액션 타입 목록 (순서 보장)
+ */
+export const REACTION_TYPES: ReactionType[] = ['fire', 'sleepy', 'good', 'bad', 'confused'];
 
 /**
  * 이모지 반응 정보
  */
 export interface EmojiReaction {
-  emoji: string;
+  type: ReactionType;
   /** 99 초과 시 "99+"로 표시 */
   count: number;
   /** 활성화 여부 (UI용) */
   active?: boolean;
-  /** 이모지 라벨 (좋아요, 별로예요 등) */
-  label?: string;
 }

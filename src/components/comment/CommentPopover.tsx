@@ -89,7 +89,6 @@ export default function CommentPopover() {
           <CommentItem
             key={opinion.id}
             comment={opinion}
-            theme="light"
             isActive={activeReplyId === opinion.id}
             replyText={replyText}
             onReplyTextChange={setReplyText}
