@@ -13,19 +13,35 @@ import { SlideImage } from '@/components/common';
 import type { Slide } from '@/types/slide';
 
 interface SlideThumbnailProps {
-  slide: Slide;
+  slide?: Slide;
   index: number;
-  isActive: boolean;
-  basePath: string;
+  isActive?: boolean;
+  basePath?: string;
+  isLoading?: boolean;
 }
 
-function SlideThumbnail({ slide, index, isActive, basePath }: SlideThumbnailProps) {
+export default function SlideThumbnail({
+  slide,
+  index,
+  isActive = false,
+  basePath = '',
+  isLoading,
+}: SlideThumbnailProps) {
+  if (isLoading || !slide) {
+    return (
+      <div className="flex items-start gap-2 p-2">
+        <span className="w-4" />
+        <div className="flex-1 aspect-video rounded bg-gray-200 animate-pulse" />
+      </div>
+    );
+  }
+
   return (
     <Link
       to={`${basePath}/slide/${slide.id}`}
       aria-current={isActive ? 'true' : undefined}
       className={clsx(
-        'group flex items-start gap-2 px-2 py-1 -mx-2 -my-1 rounded-sm transition-colors',
+        'group flex items-start gap-2 p-2 rounded transition-colors focus-visible:outline-2 focus-visible:outline-main',
         isActive ? 'bg-main-variant1' : 'hover:bg-white',
       )}
     >
@@ -40,25 +56,9 @@ function SlideThumbnail({ slide, index, isActive, basePath }: SlideThumbnailProp
       </span>
 
       {/* 썸네일 - 16:9 비율 */}
-      <div className="relative flex-1 aspect-video rounded-sm overflow-hidden bg-gray-200">
+      <div className="relative flex-1 aspect-video rounded overflow-hidden bg-gray-200">
         <SlideImage src={slide.thumb} alt={`슬라이드 ${index + 1}: ${slide.title}`} />
       </div>
     </Link>
   );
 }
-
-function SlideThumbnailSkeleton({ index }: { index: number }) {
-  return (
-    <div className="flex items-start gap-2 px-2 py-1 -mx-2 -my-1">
-      {/* 번호 */}
-      <span className="w-4 pt-1 text-right text-caption font-semibold text-gray-800 select-none">
-        {index + 1}
-      </span>
-
-      {/* 썸네일 영역 */}
-      <div className="flex-1 aspect-video rounded-sm bg-gray-200 animate-pulse" />
-    </div>
-  );
-}
-
-export { SlideThumbnail, SlideThumbnailSkeleton };

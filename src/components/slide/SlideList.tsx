@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { useHotkey } from '@/hooks';
 import type { Slide } from '@/types/slide';
 
-import { SlideThumbnail, SlideThumbnailSkeleton } from './SlideThumbnail';
+import SlideThumbnail from './SlideThumbnail';
 
 /** 로딩 시 표시할 스켈레톤 개수 */
 const SKELETON_COUNT = 3;
@@ -61,11 +61,11 @@ export default function SlideList({ slides, currentSlideId, basePath, isLoading 
   }, [currentIndex]);
 
   return (
-    <aside className="w-60 shrink-0 h-full overflow-y-auto">
-      <div ref={listRef} className="flex flex-col gap-3 p-2">
+    <aside className="w-60 shrink-0 h-full overflow-y-auto [scrollbar-gutter:stable]">
+      <div ref={listRef} className="flex flex-col gap-3 px-3 py-2">
         {isLoading
           ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
-              <SlideThumbnailSkeleton key={i} index={i} />
+              <SlideThumbnail key={i} index={i} isLoading />
             ))
           : slides?.map((slide, idx) => (
               <SlideThumbnail
