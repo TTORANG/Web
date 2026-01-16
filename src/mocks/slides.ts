@@ -70,9 +70,11 @@ export const MOCK_SLIDES: Slide[] = [
       },
     ],
     emojiReactions: [
-      { emoji: '👍', count: 5 },
-      { emoji: '❤️', count: 3 },
-      { emoji: '🔥', count: 2 },
+      { type: 'fire', count: 8 },
+      { type: 'sleepy', count: 4 },
+      { type: 'good', count: 99, active: true },
+      { type: 'bad', count: 1 },
+      { type: 'confused', count: 13 },
     ],
   },
 
@@ -147,7 +149,13 @@ export const MOCK_SLIDES: Slide[] = [
       },
     ],
     history: [],
-    emojiReactions: [{ emoji: '👀', count: 8 }],
+    emojiReactions: [
+      { type: 'fire', count: 0 },
+      { type: 'sleepy', count: 0 },
+      { type: 'good', count: 8 },
+      { type: 'bad', count: 0 },
+      { type: 'confused', count: 0 },
+    ],
   },
 
   // 3. 히스토리 많음 - 스크롤 테스트
@@ -192,7 +200,13 @@ export const MOCK_SLIDES: Slide[] = [
         content: '문제 분석 초안입니다.',
       },
     ],
-    emojiReactions: [{ emoji: '🤔', count: 3 }],
+    emojiReactions: [
+      { type: 'fire', count: 0 },
+      { type: 'sleepy', count: 0 },
+      { type: 'good', count: 0 },
+      { type: 'bad', count: 0 },
+      { type: 'confused', count: 3 },
+    ],
   },
 
   // 4. 이모지 많음 - 더보기 팝오버 테스트
@@ -212,13 +226,11 @@ export const MOCK_SLIDES: Slide[] = [
     ],
     history: [],
     emojiReactions: [
-      { emoji: '🎯', count: 12 },
-      { emoji: '👍', count: 8 },
-      { emoji: '🔥', count: 6 },
-      { emoji: '💡', count: 5 },
-      { emoji: '✨', count: 4 },
-      { emoji: '🚀', count: 3 },
-      { emoji: '💪', count: 2 },
+      { type: 'fire', count: 12 },
+      { type: 'sleepy', count: 0 },
+      { type: 'good', count: 8 },
+      { type: 'bad', count: 2 },
+      { type: 'confused', count: 0 },
     ],
   },
 
@@ -237,8 +249,11 @@ export const MOCK_SLIDES: Slide[] = [
       },
     ],
     emojiReactions: [
-      { emoji: '👍', count: 150 },
-      { emoji: '🎉', count: 99 },
+      { type: 'fire', count: 0 },
+      { type: 'sleepy', count: 0 },
+      { type: 'good', count: 150 },
+      { type: 'bad', count: 0 },
+      { type: 'confused', count: 0 },
     ],
   },
 
@@ -258,7 +273,13 @@ export const MOCK_SLIDES: Slide[] = [
       },
     ],
     history: [],
-    emojiReactions: [{ emoji: '👀', count: 5 }],
+    emojiReactions: [
+      { type: 'fire', count: 5 },
+      { type: 'sleepy', count: 0 },
+      { type: 'good', count: 0 },
+      { type: 'bad', count: 0 },
+      { type: 'confused', count: 0 },
+    ],
   },
 
   // 7. 긴 대본 - 스크롤 테스트
@@ -295,7 +316,13 @@ Google, Kakao, Naver 로그인을 지원합니다.
         content: '사용자 화면 흐름 초안',
       },
     ],
-    emojiReactions: [],
+    emojiReactions: [
+      { type: 'fire', count: 0 },
+      { type: 'sleepy', count: 0 },
+      { type: 'good', count: 0 },
+      { type: 'bad', count: 0 },
+      { type: 'confused', count: 0 },
+    ],
   },
 
   // 8. 내 의견만 - 삭제 버튼 테스트
@@ -330,7 +357,13 @@ Google, Kakao, Naver 로그인을 지원합니다.
       },
     ],
     history: [],
-    emojiReactions: [{ emoji: '💻', count: 2 }],
+    emojiReactions: [
+      { type: 'fire', count: 0 },
+      { type: 'sleepy', count: 0 },
+      { type: 'good', count: 2 },
+      { type: 'bad', count: 0 },
+      { type: 'confused', count: 0 },
+    ],
   },
 
   // 9. 타인 의견만 - 답글 테스트
@@ -364,8 +397,11 @@ Google, Kakao, Naver 로그인을 지원합니다.
     ],
     history: [],
     emojiReactions: [
-      { emoji: '📈', count: 7 },
-      { emoji: '💰', count: 3 },
+      { type: 'fire', count: 7 },
+      { type: 'sleepy', count: 0 },
+      { type: 'good', count: 3 },
+      { type: 'bad', count: 0 },
+      { type: 'confused', count: 0 },
     ],
   },
 
@@ -377,6 +413,12 @@ Google, Kakao, Naver 로그인을 지원합니다.
     script: '',
     opinions: [],
     history: [],
-    emojiReactions: [],
+    emojiReactions: [
+      { type: 'fire', count: 0 },
+      { type: 'sleepy', count: 0 },
+      { type: 'good', count: 0 },
+      { type: 'bad', count: 0 },
+      { type: 'confused', count: 0 },
+    ],
   },
 ];

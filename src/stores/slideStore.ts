@@ -34,7 +34,7 @@ import { devtools } from 'zustand/middleware';
 
 import { MOCK_CURRENT_USER } from '@/mocks/users';
 import type { CommentItem } from '@/types/comment';
-import type { HistoryItem } from '@/types/script';
+import type { HistoryItem, ReactionType } from '@/types/script';
 import type { Slide } from '@/types/slide';
 import { addReplyToFlat, createComment, deleteFromFlat } from '@/utils/comment';
 
@@ -86,7 +86,7 @@ interface SlideState {
   addReply: (parentId: string, content: string) => void;
 
   // 이모지 토글 액션을 정의합니다.
-  toggleReaction: (emoji: string) => void;
+  toggleReaction: (type: ReactionType) => void;
 
   // 새 루트 댓글 작성 액션
   addOpinion: (content: string, slideIndex: number) => void;
@@ -198,7 +198,7 @@ export const useSlideStore = create<SlideState>()(
         );
       },
 
-      toggleReaction: (emoji) => {
+      toggleReaction: (type) => {
         set(
           (state) => {
             // 슬라이드가 없거나 리액션 배열이 없으면 무시
@@ -206,9 +206,9 @@ export const useSlideStore = create<SlideState>()(
 
             const currentReactions = state.slide.emojiReactions || [];
 
-            // 해당 이모지 찾아서 업데이트
+            // 해당 타입 찾아서 업데이트
             const newReactions = currentReactions.map((r) => {
-              if (r.emoji !== emoji) return r;
+              if (r.type !== type) return r;
 
               // 활성 -> 비활성 (카운트 감소)
               if (r.active) {

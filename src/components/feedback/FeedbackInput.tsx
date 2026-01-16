@@ -2,11 +2,11 @@
 // components/feedback/FeedbackInput.tsx
 import { useRef, useState } from 'react';
 
-import type { EmojiReaction } from '@/types/script';
+import { type EmojiReaction, REACTION_CONFIG, type ReactionType } from '@/types/script';
 
 interface Props {
   reactions: EmojiReaction[];
-  onToggleReaction: (emoji: string) => void;
+  onToggleReaction: (type: ReactionType) => void;
   onAddComment: (content: string) => void;
 }
 
@@ -36,8 +36,8 @@ export default function FeedbackInput({ reactions, onToggleReaction, onAddCommen
 
   return (
     <div className="flex flex-col gap-6 px-4 pb-6 pt-2">
-      {/* 댓글 입력 영역 */}
-      <div className="flex flex-col gap-1 items-end">
+      {/* 댓글 입력 영역 - 이모지 버튼 2개 너비에 맞춤 */}
+      <div className="flex flex-col gap-1 items-end w-86">
         <div className="w-full border-b border-gray-600 px-0.5 py-2">
           <textarea
             ref={commentTextareaRef}
@@ -85,28 +85,31 @@ export default function FeedbackInput({ reactions, onToggleReaction, onAddCommen
 
       {/* 이모지 리액션 버튼 */}
       <div className="flex flex-wrap gap-2">
-        {reactions.map((reaction) => (
-          <button
-            key={reaction.emoji}
-            onClick={() => onToggleReaction(reaction.emoji)}
-            className={`w-[169px] flex items-center justify-between px-3 py-2 rounded-full border transition text-body-m ${
-              reaction.active
-                ? 'bg-gray-900 border-main-variant1 text-main-variant2 font-semibold'
-                : 'bg-gray-200 border-gray-400 text-black hover:border-gray-600'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <span>{reaction.emoji}</span>
-              <span className="whitespace-nowrap">{reaction.label}</span>
-            </div>
+        {reactions.map((reaction) => {
+          const config = REACTION_CONFIG[reaction.type];
+          return (
+            <button
+              key={reaction.type}
+              onClick={() => onToggleReaction(reaction.type)}
+              className={`w-[169px] flex items-center justify-between px-3 py-2 rounded-full border transition text-body-m ${
+                reaction.active
+                  ? 'bg-gray-900 border-main-variant1 text-main-variant2 font-semibold'
+                  : 'bg-gray-200 border-gray-400 text-black hover:border-gray-600'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span>{config.emoji}</span>
+                <span className="whitespace-nowrap">{config.label}</span>
+              </div>
 
-            {reaction.count > 0 && (
-              <span className={reaction.active ? 'font-semibold' : ''}>
-                {formatReactionCount(reaction.count)}
-              </span>
-            )}
-          </button>
-        ))}
+              {reaction.count > 0 && (
+                <span className={reaction.active ? 'font-semibold' : ''}>
+                  {formatReactionCount(reaction.count)}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

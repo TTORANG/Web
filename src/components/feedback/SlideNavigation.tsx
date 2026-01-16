@@ -23,12 +23,12 @@ export default function SlideNavigation({
   onNext,
 }: Props) {
   return (
-    <div className="inline-flex items-center gap-4">
+    <div className="inline-flex items-center gap-4 shrink-0">
       <button
         onClick={onPrev}
         disabled={isFirst}
         className={[
-          'grid h-6 w-6 place-items-center rounded-full border transition',
+          'grid size-6 shrink-0 place-items-center rounded-full border transition',
           isFirst
             ? 'border-gray-400 opacity-50 cursor-not-allowed'
             : 'border-gray-400 hover:border-gray-600',
@@ -37,7 +37,7 @@ export default function SlideNavigation({
         <LeftArrow className="text-black" />
       </button>
 
-      <div className="text-body-m-bold text-gray-800">
+      <div className="text-body-m-bold text-gray-800 shrink-0">
         {slideIndex + 1} / {totalSlides}
       </div>
 
@@ -45,7 +45,7 @@ export default function SlideNavigation({
         onClick={onNext}
         disabled={isLast}
         className={[
-          'grid h-6 w-6 place-items-center rounded-full border transition',
+          'grid size-6 shrink-0 place-items-center rounded-full border transition',
           isLast
             ? 'border-gray-400 opacity-50 cursor-not-allowed'
             : 'border-gray-400 hover:border-gray-600',

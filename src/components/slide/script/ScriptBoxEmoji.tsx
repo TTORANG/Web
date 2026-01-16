@@ -7,12 +7,16 @@
  */
 import { Popover } from '@/components/common';
 import { useSlideEmojis } from '@/hooks';
+import { REACTION_CONFIG } from '@/types/script';
 
 export default function ScriptBoxEmoji() {
   const emojiReactions = useSlideEmojis();
 
-  const mainEmojis = emojiReactions.slice(0, 2);
-  const extendedEmojis = emojiReactions.slice(2);
+  // count가 0보다 큰 리액션만 필터링
+  const activeReactions = emojiReactions.filter((r) => r.count > 0);
+
+  const mainEmojis = activeReactions.slice(0, 2);
+  const extendedEmojis = activeReactions.slice(2);
   const hasExtended = extendedEmojis.length > 0;
   const trigger = (
     <button
@@ -23,7 +27,7 @@ export default function ScriptBoxEmoji() {
     </button>
   );
 
-  if (emojiReactions.length === 0) {
+  if (activeReactions.length === 0) {
     return null;
   }
 
@@ -31,12 +35,17 @@ export default function ScriptBoxEmoji() {
     <div className="flex items-center gap-3">
       {/* 메인 이모지 카운트 */}
       <div className="flex items-center gap-6">
-        {mainEmojis.map(({ emoji, count }) => (
-          <div key={emoji} className="flex items-center gap-2">
-            <span className="text-base leading-6 text-gray-800">{emoji}</span>
-            <span className="text-base leading-6 text-gray-800">{count > 99 ? '99+' : count}</span>
-          </div>
-        ))}
+        {mainEmojis.map(({ type, count }) => {
+          const config = REACTION_CONFIG[type];
+          return (
+            <div key={type} className="flex items-center gap-2">
+              <span className="text-base leading-6 text-gray-800">{config.emoji}</span>
+              <span className="text-base leading-6 text-gray-800">
+                {count > 99 ? '99+' : count}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       {/* 이모지 더보기 팝오버 */}
@@ -49,12 +58,17 @@ export default function ScriptBoxEmoji() {
           className="px-4 py-3"
         >
           <div className="flex flex-wrap items-center gap-6">
-            {extendedEmojis.map(({ emoji, count }) => (
-              <div key={emoji} className="flex items-center gap-2">
-                <span className="text-center text-base leading-6 text-gray-800">{emoji}</span>
-                <span className="text-center text-base leading-6 text-gray-800">{count}</span>
-              </div>
-            ))}
+            {extendedEmojis.map(({ type, count }) => {
+              const config = REACTION_CONFIG[type];
+              return (
+                <div key={type} className="flex items-center gap-2">
+                  <span className="text-center text-base leading-6 text-gray-800">
+                    {config.emoji}
+                  </span>
+                  <span className="text-center text-base leading-6 text-gray-800">{count}</span>
+                </div>
+              );
+            })}
           </div>
         </Popover>
       )}

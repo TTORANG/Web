@@ -1,21 +1,22 @@
 import { useState } from 'react';
 
 import FeedbackInput from '@/components/feedback/FeedbackInput';
-import type { EmojiReaction } from '@/types/script';
+import { type EmojiReaction, type ReactionType } from '@/types/script';
 import { showToast } from '@/utils/toast';
 
 export function FeedbackTestSection() {
   const [reactions, setReactions] = useState<EmojiReaction[]>([
-    { emoji: '👍', count: 12, active: false, label: '좋아요' },
-    { emoji: '🔥', count: 5, active: true, label: '최고예요' },
-    { emoji: '🤔', count: 0, active: false, label: '궁금해요' },
-    { emoji: '👀', count: 1, active: false, label: '확인했어요' },
+    { type: 'fire', count: 8 },
+    { type: 'sleepy', count: 4 },
+    { type: 'good', count: 99, active: true },
+    { type: 'bad', count: 1 },
+    { type: 'confused', count: 13 },
   ]);
 
-  const handleToggleReaction = (emoji: string) => {
+  const handleToggleReaction = (type: ReactionType) => {
     setReactions((prev) =>
       prev.map((r) =>
-        r.emoji === emoji
+        r.type === type
           ? { ...r, active: !r.active, count: r.active ? r.count - 1 : r.count + 1 }
           : r,
       ),

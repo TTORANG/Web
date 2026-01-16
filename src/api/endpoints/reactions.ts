@@ -1,8 +1,8 @@
 import { apiClient } from '@/api';
-import type { EmojiReaction } from '@/types/script';
+import type { EmojiReaction, ReactionType } from '@/types/script';
 
 export interface ToggleReactionRequest {
-  emoji: string;
+  type: ReactionType;
 }
 
 export const toggleReaction = async (slideId: string, data: ToggleReactionRequest) => {

@@ -59,7 +59,7 @@ export default function FeedbackSlidePage() {
   }
 
   return (
-    <div className="flex h-full w-full">
+    <div className="flex h-full w-full px-35">
       <SlideViewer
         slide={currentSlide}
         slideIndex={slideIndex}
@@ -70,7 +70,7 @@ export default function FeedbackSlidePage() {
         onNext={goNext}
       />
 
-      <aside className="w-130 bg-white flex flex-col border-l border-black/5 mr-35">
+      <aside className="w-96 shrink-0 bg-gray-100 flex flex-col border-l border-gray-200">
         <div className="flex-1 min-h-0 overflow-y-auto">
           <CommentList
             comments={comments}

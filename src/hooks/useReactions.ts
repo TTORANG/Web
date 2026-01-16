@@ -1,6 +1,6 @@
 // hooks/useReactions.ts
 import { useSlideStore } from '@/stores/slideStore';
-import type { EmojiReaction } from '@/types/script';
+import type { EmojiReaction, ReactionType } from '@/types/script';
 import { showToast } from '@/utils/toast';
 
 import { useToggleReaction } from './queries/useReactionQueries';
@@ -15,20 +15,20 @@ export function useReactions() {
 
   const { mutate: toggleReactionApi } = useToggleReaction();
 
-  const toggleReaction = (emoji: string) => {
+  const toggleReaction = (type: ReactionType) => {
     if (!slideId) return;
 
     // 1. Optimistic Update (Store)
-    toggleReactionStore(emoji);
+    toggleReactionStore(type);
 
     // 2. API Call
     toggleReactionApi(
-      { slideId, data: { emoji } },
+      { slideId, data: { type } },
       {
         onError: () => {
           showToast.error('반응을 반영하지 못했습니다.');
           // Optimistic Update Rollback
-          toggleReactionStore(emoji);
+          toggleReactionStore(type);
         },
       },
     );
