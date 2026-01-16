@@ -5,8 +5,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { Logo, Modal } from '@/components/common';
-import { Layout } from '@/components/common/Layout';
+import { Layout, Logo, Modal } from '@/components/common';
 import { DeviceTestSection } from '@/components/video';
 
 type RecordStep = 'TEST' | 'RECORDING';

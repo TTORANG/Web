@@ -9,9 +9,9 @@ import { type ReactNode, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import { LoginModal } from '@/components/auth/login-modal';
-import { Logo } from '@/components/common/index';
+import { Logo } from '@/components/common';
 import { ShareModal } from '@/components/share/share-modal';
-import { useThemeStore } from '@/stores/themeStore';
+import { useThemeStore } from '@/stores/themeStore.ts';
 
 interface LayoutProps {
   left?: ReactNode;

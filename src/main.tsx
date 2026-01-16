@@ -7,10 +7,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'sonner';
 
 import { queryClient } from '@/api';
-import { LoginButton, Logo } from '@/components/common';
-import { Gnb } from '@/components/common/Gnb';
-import { Layout } from '@/components/common/Layout';
-import { ShareButton } from '@/components/common/ShareButton';
+import { Gnb, Layout, LoginButton, Logo, ShareButton } from '@/components/common';
 import { DEFAULT_SLIDE_ID } from '@/constants/navigation';
 import {
   DevTestPage,
