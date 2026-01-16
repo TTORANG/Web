@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import IntroSection from '@/components/home/IntroSection';
 import ProjectsCard from '@/components/projects/ProjectCard';
 import { ProjectCardSkeleton } from '@/components/projects/ProjectCardSkeleton';
 import ProjectHeader from '@/components/projects/ProjectHeader';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useFilteredProjects } from '@/hooks/useFilteredProjects';
+import { useHomeActions, useHomeQuery } from '@/hooks/useHomeSelectors';
 import { useUpload } from '@/hooks/useUpload';
 import { MOCK_PROJECTS } from '@/mocks/projects';
 
@@ -12,7 +14,8 @@ const ACCEPTED_FILES_TYPES = '.pdf,.ppt,.pptx,.txt,.mp4';
 
 export default function HomePage() {
   const { progress, state, error, uploadFiles } = useUpload();
-  const [query, setQuery] = useState('');
+  const query = useHomeQuery();
+  const { setQuery } = useHomeActions();
   const debouncedQuery = useDebounce(query, 300);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -22,11 +25,8 @@ export default function HomePage() {
     return () => clearTimeout(timer);
   }, []);
 
-  const filteredProjects = useMemo(() => {
-    const q = debouncedQuery.trim().toLowerCase();
-    if (!q) return MOCK_PROJECTS;
-    return MOCK_PROJECTS.filter((p) => p.title.toLowerCase().includes(q));
-  }, [debouncedQuery]);
+  // TODO : 나중에 mock data 말고 바꿔주기..
+  const filteredProjects = useFilteredProjects(MOCK_PROJECTS, debouncedQuery);
 
   const hasProjects = filteredProjects.length > 0;
   const showSection = isLoading || hasProjects;
