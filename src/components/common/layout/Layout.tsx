@@ -19,10 +19,17 @@ interface LayoutProps {
   right?: ReactNode;
   /** 명시적 테마 (설정 시 로컬스토리지 무시) */
   theme?: 'light' | 'dark';
+  /**
+   * 메인 영역 스크롤 여부
+   * - true: 전체 페이지 스크롤 허용 (홈 등)
+   * - false: 뷰포트 고정, 내부 스크롤 (슬라이드, 피드백 등)
+   * @default false
+   */
+  scrollable?: boolean;
   children?: ReactNode;
 }
 
-export function Layout({ left, center, right, theme, children }: LayoutProps) {
+export function Layout({ left, center, right, theme, scrollable = false, children }: LayoutProps) {
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
   const appliedTheme = theme ?? resolvedTheme;
 
@@ -39,14 +46,19 @@ export function Layout({ left, center, right, theme, children }: LayoutProps) {
   }, [appliedTheme, theme]);
 
   return (
-    <div data-theme={appliedTheme} className="h-screen overflow-hidden bg-gray-100">
+    <div
+      data-theme={appliedTheme}
+      className={`bg-gray-100 ${scrollable ? 'min-h-screen' : 'h-screen overflow-hidden'}`}
+    >
       <header className="fixed top-0 right-0 left-0 z-50 flex h-15 items-center justify-between border-b border-gray-200 bg-white px-18">
         <div className="flex items-center gap-6">{left ?? <Logo />}</div>
         <div className="absolute left-1/2 -translate-x-1/2">{center}</div>
         <div className="flex items-center gap-8">{right}</div>
       </header>
 
-      <main className="mt-15 h-[calc(100vh-3.75rem)] overflow-hidden">
+      <main
+        className={`mt-15 ${scrollable ? 'min-h-[calc(100vh-3.75rem)]' : 'h-[calc(100vh-3.75rem)] overflow-hidden'}`}
+      >
         <div className="h-full">{children || <Outlet />}</div>
       </main>
       <LoginModal />
