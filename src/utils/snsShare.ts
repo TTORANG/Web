@@ -1,4 +1,4 @@
-import { toast } from 'sonner';
+import { showToast } from '@/utils/toast.ts';
 
 /**
  * Kakao JS SDK에서 우리가 쓰는 최소 스펙만 타입으로 선언
@@ -10,7 +10,7 @@ type KakaoShareLink = {
 };
 
 type KakaoSendDefaultParams = {
-  objectType: 'feed'; // 또랑의 자료는 피드형식에 맞다.
+  objectType: 'feed';
   content: {
     title: string;
     description?: string;
@@ -57,7 +57,7 @@ function encode(value: string) {
  */
 function openNewTab(url: string) {
   const win = window.open(url, '_blank', 'noopener,noreferrer');
-  if (!win) toast.error('팝업이 차단되어 공유 창을 열 수 없습니다.');
+  if (!win) showToast.error('공유 창을 열 수 없습니다.', '팝업 차단을 해제해주세요.');
 }
 
 /**
@@ -109,11 +109,11 @@ export async function shareToKakao(params: {
 
   try {
     if (!jsKey) {
-      toast.error('Kakao JS Key가 비어 있습니다. VITE_KAKAO_JS_KEY를 확인해주세요.');
+      showToast.error('Kakao JS Key가 비어 있습니다.', 'VITE_KAKAO_JS_KEY를 확인해주세요.');
       return;
     }
     if (!url) {
-      toast.error('공유할 URL이 비어 있습니다.');
+      showToast.error('공유할 URL이 비어 있습니다.');
       return;
     }
 
@@ -123,7 +123,7 @@ export async function shareToKakao(params: {
     // 2) 로드 후 Kakao 객체 확인
     const Kakao = window.Kakao;
     if (!Kakao) {
-      toast.error('Kakao SDK 로드에 실패했습니다.');
+      showToast.error('Kakao SDK 로드에 실패했습니다.');
       return;
     }
 
@@ -157,7 +157,7 @@ export async function shareToKakao(params: {
   } catch (e) {
     // 네트워크/스크립트 로드 실패/도메인 미등록 등 전부 여기로 떨어질 수 있음
     console.error(e);
-    toast.error('카카오 공유에 실패했습니다. (JS SDK 도메인/키/URL을 확인)');
+    showToast.error('카카오 공유에 실패했습니다.', 'JS SDK 도메인/키/URL을 확인해주세요.');
   }
 }
 
@@ -165,7 +165,7 @@ export async function shareToKakao(params: {
  * 2b. 인스타그램 (TODO: 불가능)
  * ================================ */
 export function shareToInstagram() {
-  toast.info('인스타그램은 웹에서 링크 공유를 직접 호출할 수 없습니다.');
+  showToast.info('인스타그램 공유 불가', '웹에서 링크 공유를 직접 호출할 수 없습니다.');
 }
 
 /* ================================
