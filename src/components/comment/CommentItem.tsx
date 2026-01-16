@@ -5,7 +5,7 @@
  * 슬라이드 화면(CommentPopover)과 피드백 화면(CommentList) 모두에서 사용됩니다.
  * data-theme 속성에 따라 CSS 변수가 자동 반전되어 다크모드를 지원합니다.
  */
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback } from 'react';
 
 import clsx from 'clsx';
 
@@ -15,6 +15,8 @@ import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
 import { MOCK_USERS } from '@/mocks/users';
 import type { CommentItem as CommentItemType } from '@/types/comment';
 import { formatRelativeTime } from '@/utils/format';
+
+import CommentInput from './CommentInput';
 
 interface CommentItemProps {
   comment: CommentItemType;
@@ -69,28 +71,6 @@ function CommentItem({
   const user = MOCK_USERS.find((u) => u.id === comment.authorId);
   const authorName = user?.name ?? '알 수 없음';
   const authorProfileImage = user?.profileImage;
-
-  // Textarea 높이 자동 조절 로직
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    if (isActive && textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-      // 활성화 시 자동 포커스
-      textareaRef.current.focus();
-    }
-  }, [isActive, replyText]);
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        onSubmitReply();
-      }
-    },
-    [onSubmitReply],
-  );
 
   // 렌더링될 때마다 새로운 익명 함수 () => ... 를 생성하는 것을 방지
   const handleChildToggle = useCallback(
@@ -205,44 +185,15 @@ function CommentItem({
 
       {/* 답글 입력 */}
       {isActive && (
-        <div className="flex flex-col gap-1 pb-4 pr-4 pl-15 bg-gray-200">
-          <textarea
-            ref={textareaRef}
-            autoFocus
-            value={replyText}
-            onChange={(e) => onReplyTextChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="댓글을 입력하세요"
-            rows={1}
-            aria-label="답글 입력"
-            className="w-full overflow-hidden resize-none bg-transparent border-b border-gray-600 pb-2 text-body-s text-black placeholder:text-gray-600 focus:border-main outline-none transition-colors"
-          />
-
-          <div className="flex items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={onCancelReply}
-              aria-label="답글 취소"
-              className="px-3 py-1.5 rounded-full text-caption-bold text-gray-800 hover:text-gray-600 transition focus-visible:outline-2 focus-visible:outline-main"
-            >
-              취소
-            </button>
-            <button
-              type="button"
-              onClick={onSubmitReply}
-              disabled={!replyText.trim()}
-              aria-label="답글 등록"
-              className={clsx(
-                'px-3 py-1.5 rounded-full text-caption-bold transition focus-visible:outline-2 focus-visible:outline-main',
-                replyText.trim()
-                  ? 'bg-main text-white hover:bg-main-variant1 active:bg-main-variant2'
-                  : 'bg-gray-100 text-gray-600',
-              )}
-            >
-              답글
-            </button>
-          </div>
-        </div>
+        <CommentInput
+          value={replyText}
+          onChange={onReplyTextChange}
+          onSubmit={onSubmitReply}
+          onCancel={onCancelReply}
+          autoFocus
+          className="pb-4 pr-4 pl-15 bg-gray-200"
+          textareaClassName="text-body-s text-black"
+        />
       )}
 
       {/* 무한 답글(재귀) 렌더링 */}

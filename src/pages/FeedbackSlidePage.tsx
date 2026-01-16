@@ -1,9 +1,10 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
 import { Spinner } from '@/components/common';
-import FeedbackInput from '@/components/feedback/FeedbackInput';
+import ReactionButtons from '@/components/feedback/ReactionButtons';
 import SlideViewer from '@/components/feedback/SlideViewer';
 import { useHotkey } from '@/hooks';
 import { useSlides } from '@/hooks/queries/useSlides';
@@ -26,6 +27,14 @@ export default function FeedbackSlidePage() {
   const { comments, addComment, addReply, deleteComment } = useComments();
   const { reactions, toggleReaction } = useReactions();
   const initSlide = useSlideStore((state) => state.initSlide);
+
+  const [commentDraft, setCommentDraft] = useState('');
+
+  const handleAddComment = () => {
+    if (!commentDraft.trim()) return;
+    addComment(commentDraft, slideIndex);
+    setCommentDraft('');
+  };
 
   // 단축키 설정: 좌우 방향키로 슬라이드 이동
   useHotkey(
@@ -90,12 +99,15 @@ export default function FeedbackSlidePage() {
           />
         </div>
 
-        <div className="shrink-0 border-t border-black/5">
-          <FeedbackInput
-            reactions={reactions}
-            onToggleReaction={toggleReaction}
-            onAddComment={(content) => addComment(content, slideIndex)}
+        <div className="shrink-0 border-t border-black/5 flex flex-col gap-6 px-4 pb-6 pt-2">
+          <CommentInput
+            value={commentDraft}
+            onChange={setCommentDraft}
+            onSubmit={handleAddComment}
+            onCancel={() => setCommentDraft('')}
+            className="items-end w-86"
           />
+          <ReactionButtons reactions={reactions} onToggleReaction={toggleReaction} />
         </div>
       </aside>
     </div>
