@@ -26,7 +26,7 @@ export default function ProjectHeader({ value, onChange }: ProjectHeaderProps) {
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
-        <SearchIcon className="h-6 w-6 text-gray-500 cursor-pointer" />
+        <SearchIcon className="h-6 w-6 text-gray-500" />
       </div>
 
       <div className="flex flex-wrap items-center gap-2">

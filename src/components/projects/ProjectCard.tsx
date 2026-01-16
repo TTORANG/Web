@@ -41,7 +41,7 @@ export default function ProjectsCard({
             position="bottom"
             align="end"
             ariaLabel="더보기"
-            className="border border-gray-200 w-30 overflow-hidden"
+            className="border border-gray-200 w-32 overflow-hidden"
           >
             <div className="text-sm">
               <button className="w-full px-3 py-2 text-left hover:bg-gray-100">이름 변경</button>

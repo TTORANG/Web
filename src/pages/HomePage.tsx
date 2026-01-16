@@ -36,7 +36,7 @@ export default function HomePage() {
       {/* 소개글 & 파일 업로드 */}
       <IntroSection
         accept={ACCEPTED_FILES_TYPES}
-        disabled={state == 'uploading'}
+        disabled={state === 'uploading'}
         uploadState={state}
         progress={progress}
         error={error}
