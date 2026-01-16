@@ -11,8 +11,10 @@ import { LoginButton, Logo } from '@/components/common';
 import { Gnb } from '@/components/layout/Gnb';
 import { Layout } from '@/components/layout/Layout';
 import { DEFAULT_SLIDE_ID } from '@/constants/navigation';
-import { DevTestPage, HomePage, InsightPage, SlidePage, VideoPage } from '@/pages';
+import { DevTestPage, FdSlidePage, HomePage, InsightPage, SlidePage, VideoPage } from '@/pages';
 import '@/styles/index.css';
+
+import { ShareButton } from './components/common/ShareButton';
 
 const router = createBrowserRouter([
   {
@@ -35,7 +37,12 @@ const router = createBrowserRouter([
           </>
         }
         center={<Gnb />}
-        right={<LoginButton />}
+        right={
+          <div className="flex items-center gap-3">
+            <ShareButton />
+            <LoginButton />
+          </div>
+        }
       />
     ),
     children: [
@@ -43,6 +50,24 @@ const router = createBrowserRouter([
       { path: 'slide/:slideId', element: <SlidePage /> },
       { path: 'video', element: <VideoPage /> },
       { path: 'insight', element: <InsightPage /> },
+    ],
+  },
+  {
+    path: '/feedback',
+    element: (
+      <Layout
+        left={
+          <>
+            <Logo />
+            <span className="text-body-m-bold text-gray-800">내 발표</span>
+          </>
+        }
+        right={<LoginButton />}
+      />
+    ),
+    children: [
+      { index: true, element: <Navigate to={`fslide/${DEFAULT_SLIDE_ID}`} replace /> },
+      { path: 'fslide/:slideId', element: <FdSlidePage /> },
     ],
   },
 ]);
@@ -70,7 +95,7 @@ enableMocking().then(() => {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
-        <Toaster position="top-center" closeButton />
+        <Toaster position="bottom-center" closeButton />
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </StrictMode>,

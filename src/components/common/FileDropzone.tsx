@@ -70,7 +70,7 @@ export default function FileDropzone({
         onDrop={handleDrop}
         className={[
           'group relative w-full overflow-hidden rounded-2xl border bg-white px-8 py-14 shadow-sm transition focus:ring-1 focus:ring-gray-200',
-          disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-gray-50',
+          disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-gray-100',
           showDragOverlay ? 'border-gray-900 ring-1 ring-gray-200' : 'border-gray-200',
         ].join(' ')}
       >
@@ -82,14 +82,14 @@ export default function FileDropzone({
           ].join(' ')}
         >
           <div
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-700
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800
                       transition group-hover:bg-gray-900"
           >
             <UploadIcon className="h-5 w-5 text-white" />
           </div>
           <div className="space-y-2 text-center">
             <p className="text-body-m-bold text-gray-900">파일을 드래그하거나 클릭하세요.</p>
-            <p className="text-body-s text-gray-500">
+            <p className="text-body-s text-gray-600">
               PDF, PPTX, TXT, MP4 등 모든 파일을 한번에 업로드하세요.
             </p>
           </div>

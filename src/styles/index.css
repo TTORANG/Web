@@ -28,6 +28,65 @@
   --spacing-15: 3.75rem;
   --spacing-18: 4.5rem;
   --spacing-25: 6.25rem;
+  --spacing-35: 8.75rem;
 
   --width-popover: 26.3125rem; /* 421px */
+}
+
+/* Modal keyframe animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes zoom-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* Modal animation utility classes */
+.animate-fade-in {
+  animation: fade-in 200ms ease-out;
+}
+
+.animate-fade-out {
+  animation: fade-out 150ms ease-in forwards;
+}
+
+.animate-zoom-in {
+  animation: zoom-in 200ms ease-out;
+}
+
+.animate-zoom-out {
+  animation: zoom-out 150ms ease-in forwards;
 }
