@@ -8,6 +8,7 @@ import { Toaster } from 'sonner';
 
 import { queryClient } from '@/api';
 import { Gnb, Layout, LoginButton, Logo, ShareButton } from '@/components/common';
+import { DevFab } from '@/components/common/DevFab';
 import { DEFAULT_SLIDE_ID } from '@/constants/navigation';
 import {
   DevTestPage,
@@ -80,7 +81,12 @@ const router = createBrowserRouter([
 
 function App() {
   useThemeListener();
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <RouterProvider router={router} />
+      <DevFab />
+    </>
+  );
 }
 
 function AppToaster() {
