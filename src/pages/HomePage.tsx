@@ -1,3 +1,5 @@
+import { useMemo, useState } from 'react';
+
 import FileDropzone from '@/components/common/FileDropzone';
 import ProjectsCard from '@/components/projects/ProjectCard';
 import ProjectHeader from '@/components/projects/ProjectHeader';
@@ -9,6 +11,14 @@ const ACCEPTED_FILES_TYPES = '.pdf,.ppt,.pptx,.txt,.mp4';
 export default function HomePage() {
   // 파일 업로드 테스트 시 simulateUpload를 아래에 추가, 실제 업로드 시 uploadFiles를 아래에 추가
   const { progress, state, error, simulateUpload } = useUpload();
+  const [query, setQuery] = useState('');
+
+  const filteredProjects = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return MOCK_PROJECTS;
+    return MOCK_PROJECTS.filter((p) => p.title.toLowerCase().includes(q));
+  }, [query]);
+
   return (
     <main className="mx-auto min-h-screen max-w-4xl px-6 py-8">
       {/* 소개글 & 파일 업로드 */}
@@ -44,11 +54,11 @@ export default function HomePage() {
         </div>
 
         {/* 검색 */}
-        <ProjectHeader />
+        <ProjectHeader value={query} onChange={setQuery} />
 
         {/* 프레젠테이션 목록 */}
-        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {MOCK_PROJECTS.map((project) => (
+        <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
+          {filteredProjects.map((project) => (
             <ProjectsCard key={project.id} {...project} />
           ))}
         </div>

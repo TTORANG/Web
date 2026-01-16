@@ -36,7 +36,7 @@ export default function ProjectsCard({
           <h3 className="text-body-m-bold text-gray-800">{title}</h3>
           <Popover
             trigger={({ isOpen }) => (
-              <MoreIcon className={clsx('text-gray-500', isOpen ? 'text-main' : 'text-gray-500')} />
+              <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-500')} />
             )}
             position="bottom"
             align="end"

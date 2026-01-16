@@ -5,6 +5,7 @@ import FilterIcon from '@/assets/icons/icon-filter.svg?react';
 import SearchIcon from '@/assets/icons/icon-search.svg?react';
 import ViewCardIcon from '@/assets/icons/icon-view-card.svg?react';
 import ViewListIcon from '@/assets/icons/icon-view-list.svg?react';
+import type { ProjectHeaderProps } from '@/types/project';
 
 import { Popover } from '../common';
 
@@ -13,7 +14,7 @@ import { Popover } from '../common';
 // - 현재 선택되어있는 보기 방식은 아이콘 어둡게, 아닌 보기 방식은 아이콘을 옅은 회색으로
 
 //검색 + 우측 컨트롤
-export default function PresentationsHeader() {
+export default function ProjectHeader({ value, onChange }: ProjectHeaderProps) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       {/* 검색 부분 */}
@@ -22,6 +23,8 @@ export default function PresentationsHeader() {
           className="w-full bg-transparent text-body-m text-gray-900 placeholder:text-gray-500 focus:outline-none"
           placeholder="검색어를 입력하세요"
           type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
         />
         <SearchIcon className="h-6 w-6 text-gray-500 cursor-pointer" />
       </div>
@@ -33,7 +36,7 @@ export default function PresentationsHeader() {
             <button
               type="button"
               className={clsx(
-                'flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold text-gray-700',
+                'flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold',
                 isOpen ? 'text-main' : 'text-gray-700',
               )}
             >
@@ -58,7 +61,7 @@ export default function PresentationsHeader() {
           trigger={({ isOpen }) => (
             <button
               className={clsx(
-                'flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold text-gray-700',
+                'flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold',
                 isOpen ? 'text-main' : 'text-gray-700',
               )}
               type="button"
@@ -84,7 +87,7 @@ export default function PresentationsHeader() {
           <button aria-label="카드 보기" className="rounded-lg p-2 cursor-pointer" type="button">
             <ViewCardIcon className="h-6 w-6" />
           </button>
-          <button aria-label="리스트 보기" className="rounded-lg p-2 cursor-pointer">
+          <button aria-label="리스트 보기" className="rounded-lg p-2 cursor-pointer" type="button">
             <ViewListIcon className="h-6 w-6" />
           </button>
         </div>
