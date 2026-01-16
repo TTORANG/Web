@@ -6,7 +6,7 @@
  * ScriptBox의 접힘 상태에 따라 위치가 조정됩니다.
  */
 import { Skeleton, SlideImage } from '@/components/common';
-import { SLIDE_COLLAPSED_OFFSET, SLIDE_MAX_WIDTH } from '@/constants/layout';
+import { SLIDE_MAX_WIDTH } from '@/constants/layout';
 import { useSlideThumb, useSlideTitle } from '@/hooks';
 
 interface SlideViewerProps {
@@ -14,28 +14,19 @@ interface SlideViewerProps {
   isScriptCollapsed?: boolean;
 }
 
-export default function SlideViewer({ isLoading, isScriptCollapsed }: SlideViewerProps) {
+export default function SlideViewer({ isLoading }: SlideViewerProps) {
   const thumb = useSlideThumb();
   const title = useSlideTitle();
 
   return (
     <section className="flex flex-1 min-h-0 flex-col justify-center overflow-hidden">
       <div className="mx-auto w-full" style={{ maxWidth: SLIDE_MAX_WIDTH }}>
-        <div
-          className="transition-transform duration-300 ease-out"
-          style={{
-            transform: `translateY(${
-              !isLoading && isScriptCollapsed ? SLIDE_COLLAPSED_OFFSET : 0
-            }px)`,
-          }}
-        >
-          <div className="relative w-full aspect-video bg-gray-200 shadow-sm overflow-hidden">
-            {isLoading ? (
-              <Skeleton height="100%" />
-            ) : (
-              thumb && <SlideImage key={thumb} src={thumb} alt={title} />
-            )}
-          </div>
+        <div className="relative w-full aspect-video bg-gray-200 shadow-sm overflow-hidden">
+          {isLoading ? (
+            <Skeleton height="100%" />
+          ) : (
+            thumb && <SlideImage key={thumb} src={thumb} alt={title} />
+          )}
         </div>
       </div>
     </section>

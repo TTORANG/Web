@@ -36,7 +36,7 @@ export default function ScriptBox({ isLoading, onCollapsedChange }: ScriptBoxPro
   return (
     <div
       className={clsx(
-        'flex flex-col w-full rounded-t-lg bg-white shadow-sm',
+        'flex flex-col w-full rounded-t-lg bg-white shadow-sm transition-all duration-300 ease-in-out',
         isCollapsed ? 'h-10' : 'h-[clamp(12rem,30vh,20rem)]',
       )}
     >

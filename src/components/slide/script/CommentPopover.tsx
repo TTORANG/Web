@@ -68,18 +68,18 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
           >
             의견
           </span>
-          {isLoading ? (
-            <Skeleton width={9} height={16} className="rounded" />
-          ) : (
-            <span
-              className={clsx(
-                'text-sm font-semibold leading-5',
-                isOpen ? 'text-main-variant1' : 'text-gray-600',
-              )}
-            >
-              {opinions.length}
-            </span>
-          )}
+          <span
+            className={clsx(
+              'min-w-3 text-center text-sm font-semibold leading-5',
+              isOpen ? 'text-main-variant1' : 'text-gray-600',
+            )}
+          >
+            {isLoading ? (
+              <Skeleton width="100%" height={16} className="rounded" />
+            ) : (
+              opinions.length
+            )}
+          </span>
         </button>
       )}
       position="top"

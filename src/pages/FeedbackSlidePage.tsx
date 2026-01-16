@@ -5,6 +5,7 @@ import CommentList from '@/components/comment/CommentList';
 import { Spinner } from '@/components/common';
 import FeedbackInput from '@/components/feedback/FeedbackInput';
 import SlideViewer from '@/components/feedback/SlideViewer';
+import { useHotkey } from '@/hooks';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
 import { useSlideStore } from '@/stores/slideStore';
@@ -25,6 +26,15 @@ export default function FeedbackSlidePage() {
   const { comments, addComment, addReply, deleteComment } = useComments();
   const { reactions, toggleReaction } = useReactions();
   const initSlide = useSlideStore((state) => state.initSlide);
+
+  // 단축키 설정: 좌우 방향키로 슬라이드 이동
+  useHotkey(
+    {
+      ArrowLeft: goPrev,
+      ArrowRight: goNext,
+    },
+    { enabled: !isLoading },
+  );
 
   // 모든 슬라이드의 의견을 하나의 플랫 배열로 합침 (슬라이드 참조 포함)
   const allFlatOpinions = useMemo(() => {

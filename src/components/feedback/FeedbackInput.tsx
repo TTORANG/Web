@@ -91,7 +91,7 @@ export default function FeedbackInput({ reactions, onToggleReaction, onAddCommen
             <button
               key={reaction.type}
               onClick={() => onToggleReaction(reaction.type)}
-              className={`w-[169px] flex items-center justify-between px-3 py-2 rounded-full border transition text-body-m ${
+              className={`w-42.25 flex items-center justify-between px-3 py-2 rounded-full border transition text-body-m ${
                 reaction.active
                   ? 'bg-gray-900 border-main-variant1 text-main-variant2 font-semibold'
                   : 'bg-gray-200 border-gray-400 text-black hover:border-gray-600'
