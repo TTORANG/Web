@@ -32,7 +32,9 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
-import type { HistoryItem } from '@/types/script';
+import { MOCK_CURRENT_USER } from '@/mocks/users';
+import type { CommentItem } from '@/types/comment';
+import type { HistoryItem, ReactionType } from '@/types/script';
 import type { Slide } from '@/types/slide';
 import { addReplyToFlat, createComment, deleteFromFlat } from '@/utils/comment';
 
@@ -84,10 +86,17 @@ interface SlideState {
   addReply: (parentId: string, content: string) => void;
 
   // 이모지 토글 액션을 정의합니다.
-  toggleReaction: (emoji: string) => void;
+  toggleReaction: (type: ReactionType) => void;
 
   // 새 루트 댓글 작성 액션
   addOpinion: (content: string, slideIndex: number) => void;
+
+  /**
+   * 의견 목록을 통째로 교체합니다.
+   * (Optimistic UI 롤백용)
+   * @param opinions - 교체할 의견 목록
+   */
+  setOpinions: (opinions: CommentItem[]) => void;
 }
 
 export const useSlideStore = create<SlideState>()(
@@ -179,7 +188,7 @@ export const useSlideStore = create<SlideState>()(
                 ...state.slide,
                 opinions: addReplyToFlat(state.slide.opinions, parentId, {
                   content,
-                  author: '나',
+                  authorId: MOCK_CURRENT_USER.id,
                 }),
               },
             };
@@ -189,7 +198,7 @@ export const useSlideStore = create<SlideState>()(
         );
       },
 
-      toggleReaction: (emoji) => {
+      toggleReaction: (type) => {
         set(
           (state) => {
             // 슬라이드가 없거나 리액션 배열이 없으면 무시
@@ -197,9 +206,9 @@ export const useSlideStore = create<SlideState>()(
 
             const currentReactions = state.slide.emojiReactions || [];
 
-            // 해당 이모지 찾아서 업데이트
+            // 해당 타입 찾아서 업데이트
             const newReactions = currentReactions.map((r) => {
-              if (r.emoji !== emoji) return r;
+              if (r.type !== type) return r;
 
               // 활성 -> 비활성 (카운트 감소)
               if (r.active) {
@@ -227,7 +236,7 @@ export const useSlideStore = create<SlideState>()(
 
         const newComment = createComment({
           content: trimmed,
-          author: '익명', // 혹은 로그인된 유저 정보
+          authorId: MOCK_CURRENT_USER.id, // 혹은 로그인된 유저 정보
           slideRef: `슬라이드 ${slideIndex + 1}`,
         });
 
@@ -242,6 +251,16 @@ export const useSlideStore = create<SlideState>()(
           }),
           false,
           'slide/addOpinion',
+        );
+      },
+
+      setOpinions: (opinions) => {
+        set(
+          (state) => ({
+            slide: state.slide ? { ...state.slide, opinions } : null,
+          }),
+          false,
+          'slide/setOpinions',
         );
       },
     }),

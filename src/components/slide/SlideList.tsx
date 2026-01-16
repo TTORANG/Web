@@ -12,18 +12,27 @@ import { useNavigate } from 'react-router-dom';
 import { useHotkey } from '@/hooks';
 import type { Slide } from '@/types/slide';
 
-import { SlideThumbnail, SlideThumbnailSkeleton } from './SlideThumbnail';
+import SlideThumbnail from './SlideThumbnail';
 
-/** 로딩 시 표시할 스켈레톤 개수 */
-const SKELETON_COUNT = 6;
+const SKELETON_COUNT = 3;
 
 interface SlideListProps {
+  /** 슬라이드 목록 */
   slides?: Slide[];
+  /** 현재 선택된 슬라이드 ID */
   currentSlideId?: string;
+  /** 슬라이드 링크 기본 경로 */
   basePath: string;
+  /** 로딩 상태 */
   isLoading?: boolean;
 }
 
+/**
+ * 슬라이드 썸네일 목록 (좌측 사이드바)
+ *
+ * - 위/아래 화살표 키로 슬라이드 이동
+ * - 현재 슬라이드 변경 시 자동 스크롤
+ */
 export default function SlideList({ slides, currentSlideId, basePath, isLoading }: SlideListProps) {
   const navigate = useNavigate();
   const listRef = useRef<HTMLDivElement>(null);
@@ -48,7 +57,7 @@ export default function SlideList({ slides, currentSlideId, basePath, isLoading 
 
   useHotkey(keyMap, { enabled: !isLoading && !!slides?.length });
 
-  // 현재 슬라이드가 변경되면 해당 썸네일로 스크롤
+  /** 현재 슬라이드 변경 시 해당 썸네일로 스크롤 */
   useEffect(() => {
     if (!listRef.current || currentIndex < 0) return;
 
@@ -61,11 +70,11 @@ export default function SlideList({ slides, currentSlideId, basePath, isLoading 
   }, [currentIndex]);
 
   return (
-    <aside className="w-60 shrink-0 h-full overflow-y-auto">
-      <div ref={listRef} className="flex flex-col gap-3 p-2">
+    <aside className="w-60 shrink-0 h-full overflow-y-auto [scrollbar-gutter:stable]">
+      <div ref={listRef} className="flex flex-col gap-3 px-3 py-2">
         {isLoading
           ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
-              <SlideThumbnailSkeleton key={i} index={i} />
+              <SlideThumbnail key={i} index={i} isLoading />
             ))
           : slides?.map((slide, idx) => (
               <SlideThumbnail

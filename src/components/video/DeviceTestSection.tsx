@@ -67,12 +67,12 @@ export const DeviceTestSection = ({ onNext }: DeviceTestSectionProps) => {
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-between py-4">
-      <h1 className="shrink-0 text-xl font-bold text-white md:text-2xl">
+      <h1 className="shrink-0 text-xl font-bold text-black md:text-2xl">
         웹캠, 마이크를 테스트해주세요.
       </h1>
 
       <div className="flex w-full flex-1 items-center justify-center min-h-0 shrink py-6">
-        <div className="relative aspect-[640/359] h-full max-h-[45vh] overflow-hidden rounded-xl border-2 border-[#5162ff] bg-[#2a2d34] shadow-xl">
+        <div className="relative aspect-video h-full max-h-[45vh] overflow-hidden rounded-xl border-2 border-main bg-gray-200 shadow-xl">
           <video
             ref={videoRef}
             autoPlay
@@ -83,9 +83,9 @@ export const DeviceTestSection = ({ onNext }: DeviceTestSectionProps) => {
         </div>
       </div>
 
-      <div className="grid w-full shrink-0 max-w-[800px] grid-cols-2 gap-x-8 gap-y-4 text-left">
+      <div className="grid w-full shrink-0 max-w-200 grid-cols-2 gap-x-8 gap-y-4 text-left">
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-white/60 ml-1">웹캠</label>
+          <label className="text-sm font-medium text-black/60 ml-1">웹캠</label>
           <Dropdown
             trigger={renderTrigger('웹캠', selectedVideo, 'videoinput')}
             items={devices
@@ -102,7 +102,7 @@ export const DeviceTestSection = ({ onNext }: DeviceTestSectionProps) => {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-white/60 ml-1">마이크</label>
+          <label className="text-sm font-medium text-black/60 ml-1">마이크</label>
           <Dropdown
             trigger={renderTrigger('마이크', selectedAudio, 'audioinput')}
             items={devices
@@ -118,7 +118,7 @@ export const DeviceTestSection = ({ onNext }: DeviceTestSectionProps) => {
           />
           <div className="mt-1 space-y-1">
             <VolumeIndicator volume={volume} />
-            <p className="text-[10px] text-white/40 ml-1 leading-none font-medium">
+            <p className="text-[10px] text-black/40 ml-1 leading-none font-medium">
               또랑또랑한 목소리를 들려주세요.
             </p>
           </div>

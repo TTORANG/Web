@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { SlideList, SlideWorkspace } from '@/components/slide';
 import { setLastSlideId } from '@/constants/navigation';
 import { useSlides } from '@/hooks/queries/useSlides';
+import { showToast } from '@/utils/toast';
 
 export default function SlidePage() {
   const { projectId, slideId } = useParams<{
@@ -14,6 +15,15 @@ export default function SlidePage() {
   const { data: slides, isLoading, isError } = useSlides(projectId ?? '');
 
   /**
+   * 슬라이드 로드 에러 처리
+   */
+  useEffect(() => {
+    if (isError) {
+      showToast.error('슬라이드를 불러오지 못했습니다.', '잠시 후 다시 시도해주세요.');
+    }
+  }, [isError]);
+
+  /**
    * 탭 이동(영상/인사이트 → 슬라이드) 후 다시 돌아왔을 때
    * 마지막으로 보던 슬라이드로 복원하기 위함
    */
@@ -22,14 +32,6 @@ export default function SlidePage() {
       setLastSlideId(projectId, slideId);
     }
   }, [projectId, slideId]);
-
-  if (isError) {
-    return (
-      <div className="flex h-full items-center justify-center bg-gray-100">
-        <p className="text-body-m text-error">슬라이드를 불러오지 못했습니다.</p>
-      </div>
-    );
-  }
 
   const currentSlide = slides?.find((s) => s.id === slideId) ?? slides?.[0];
   const basePath = projectId ? `/${projectId}` : '';
