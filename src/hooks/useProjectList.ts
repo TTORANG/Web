@@ -3,18 +3,38 @@ import { useMemo } from 'react';
 import type { SortMode } from '@/types/home';
 import type { CardItems } from '@/types/project';
 
-export function useProjectList(projects: CardItems[], query: string, sort: SortMode) {
+type Options = {
+  query?: string;
+  sort?: SortMode;
+  // 필터 조건이 확정되기 전까지는 predicate 형태로 열어두면
+  // UI/요구사항이 바뀌어도 훅은 그대로 재사용 가능...
+  filterFn?: (project: CardItems) => boolean;
+};
+export function useProjectList(projects: CardItems[], options?: Options) {
   return useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const filtered = q ? projects.filter((p) => p.title.toLowerCase().includes(q)) : projects;
+    const query = options?.query ?? '';
+    const sort = options?.sort ?? 'recent';
+    const filterFn = options?.filterFn;
 
-    if (sort === 'recent') return filtered;
+    // 1) filter
+    let result = filterFn ? projects.filter(filterFn) : projects;
+
+    // 2) search
+    const q = query.trim().toLowerCase();
+    if (q) {
+      result = result.filter((p) => p.title.toLowerCase().includes(q));
+    }
+
+    // 3) sort
+    if (sort === 'recent') return result;
+
+    const next = [...result];
     if (sort === 'commentCount') {
-      return [...filtered].sort((a, b) => b.commentCount - a.commentCount);
+      return next.sort((a, b) => b.commentCount - a.commentCount);
     }
     if (sort === 'name') {
-      return [...filtered].sort((a, b) => a.title.localeCompare(b.title));
+      return next.sort((a, b) => a.title.localeCompare(b.title));
     }
-    return filtered;
-  }, [projects, query, sort]);
+    return result;
+  }, [projects, options?.query, options?.sort, options?.filterFn]);
 }

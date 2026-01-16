@@ -9,7 +9,7 @@ import type { CardItems } from '@/types/project';
 
 import { Popover } from '../common';
 
-export default function ProjectsCard({
+export default function ProjectCard({
   title,
   updatedAt,
   pageCount,
