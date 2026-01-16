@@ -1,3 +1,10 @@
+/**
+ * @file FeedbackSlidePage.tsx
+ * @description 피드백 슬라이드 페이지
+ *
+ * 슬라이드 뷰어, 댓글 목록, 리액션 버튼을 포함합니다.
+ * 좌우 화살표 키로 슬라이드 이동이 가능합니다.
+ */
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -36,16 +43,9 @@ export default function FeedbackSlidePage() {
     setCommentDraft('');
   };
 
-  // 단축키 설정: 좌우 방향키로 슬라이드 이동
-  useHotkey(
-    {
-      ArrowLeft: goPrev,
-      ArrowRight: goNext,
-    },
-    { enabled: !isLoading },
-  );
+  useHotkey({ ArrowLeft: goPrev, ArrowRight: goNext }, { enabled: !isLoading });
 
-  // 모든 슬라이드의 의견을 하나의 플랫 배열로 합침 (슬라이드 참조 포함)
+  /** 모든 슬라이드의 의견을 플랫 배열로 합침 */
   const allFlatOpinions = useMemo(() => {
     if (!slides) return [];
     return slides.flatMap((slide, index) => {
@@ -59,7 +59,7 @@ export default function FeedbackSlidePage() {
     });
   }, [slides]);
 
-  // 현재 슬라이드 데이터를 store에 초기화
+  /** 슬라이드 변경 시 store 초기화 */
   useEffect(() => {
     if (!currentSlide) return;
 

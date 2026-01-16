@@ -1,15 +1,29 @@
 /**
  * @file ReactionButtons.tsx
  * @description 이모지 리액션 버튼 목록
+ *
+ * 피드백 화면 하단에서 슬라이드에 대한 리액션을 표시합니다.
  */
 import { type EmojiReaction, REACTION_CONFIG, type ReactionType } from '@/types/script';
 
-interface Props {
+interface ReactionButtonsProps {
+  /** 리액션 목록 (타입, 카운트, 활성화 여부) */
   reactions: EmojiReaction[];
+  /** 리액션 토글 핸들러 */
   onToggleReaction: (type: ReactionType) => void;
 }
 
-export default function ReactionButtons({ reactions, onToggleReaction }: Props) {
+/**
+ * 이모지 리액션 버튼 목록
+ *
+ * @example
+ * <ReactionButtons
+ *   reactions={reactions}
+ *   onToggleReaction={toggleReaction}
+ * />
+ */
+export default function ReactionButtons({ reactions, onToggleReaction }: ReactionButtonsProps) {
+  /** 99 초과 시 '99+'로 표시 */
   const formatReactionCount = (count: number) => (count > 99 ? '99+' : count);
 
   return (

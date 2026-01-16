@@ -13,13 +13,24 @@ import { SlideImage } from '@/components/common';
 import type { Slide } from '@/types/slide';
 
 interface SlideThumbnailProps {
+  /** 슬라이드 데이터 */
   slide?: Slide;
+  /** 슬라이드 순서 (0-indexed) */
   index: number;
+  /** 현재 선택된 슬라이드 여부 */
   isActive?: boolean;
+  /** 슬라이드 링크 기본 경로 */
   basePath?: string;
+  /** 로딩 상태 (스켈레톤 표시) */
   isLoading?: boolean;
 }
 
+/**
+ * 개별 슬라이드 썸네일
+ *
+ * 슬라이드 번호와 16:9 비율의 미리보기 이미지를 표시합니다.
+ * isLoading 시 스켈레톤 UI를 렌더링합니다.
+ */
 export default function SlideThumbnail({
   slide,
   index,
@@ -45,7 +56,7 @@ export default function SlideThumbnail({
         isActive ? 'bg-main-variant1' : 'hover:bg-white',
       )}
     >
-      {/* 번호 - 썸네일 바깥 왼쪽 */}
+      {/* 번호 - 썸네일 왼쪽 */}
       <span
         className={clsx(
           'w-4 pt-1 text-right text-caption font-semibold select-none transition-colors',
@@ -55,7 +66,7 @@ export default function SlideThumbnail({
         {index + 1}
       </span>
 
-      {/* 썸네일 - 16:9 비율 */}
+      {/* 썸네일 */}
       <div className="relative flex-1 aspect-video rounded overflow-hidden bg-gray-200">
         <SlideImage src={slide.thumb} alt={`슬라이드 ${index + 1}: ${slide.title}`} />
       </div>

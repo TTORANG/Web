@@ -19,36 +19,44 @@ import { formatRelativeTime } from '@/utils/format';
 import CommentInput from './CommentInput';
 
 interface CommentItemProps {
+  /** 댓글 데이터 */
   comment: CommentItemType;
-  /** 현재 답글 입력 활성화 여부 */
+  /** 답글 입력창 활성화 여부 */
   isActive: boolean;
-  /** 답글 입력 값 */
+  /** 답글 입력값 */
   replyText: string;
-  /** 답글 입력 변경 핸들러 */
+  /** 답글 입력값 변경 핸들러 */
   onReplyTextChange: (text: string) => void;
-  /** 답글 버튼 토글 */
+  /** 답글 버튼 토글 핸들러 */
   onToggleReply: () => void;
-  /** 답글 제출 */
+  /** 답글 제출 핸들러 */
   onSubmitReply: () => void;
-  /** 답글 취소 */
+  /** 답글 취소 핸들러 */
   onCancelReply: () => void;
-  /** 삭제 핸들러 (선택적) */
+  /** 댓글 삭제 핸들러 */
   onDelete?: () => void;
-  // 재귀를 위해 "ID로 삭제하는 원본 함수"도 받아야 함
+  /** ID로 댓글 삭제 (재귀 렌더링용) */
   onDeleteComment?: (id: string) => void;
-  /** 슬라이드 참조 클릭 핸들러 (선택적) */
+  /** 슬라이드 참조 클릭 핸들러 */
   onGoToSlideRef?: (ref: string) => void;
-  /** 들여쓰기 여부 (플랫 구조에서 답글 표시용) */
+  /** 답글 들여쓰기 여부 */
   isIndented?: boolean;
-  // 재귀(무한 대댓글)를 위해 필요한 상태 Props
+  /** 현재 답글 작성 중인 댓글 ID (재귀용) */
   replyingToId?: string | null;
+  /** 답글 작성 대상 설정 (재귀용) */
   setReplyingToId?: (id: string | null) => void;
-
-  // 재귀에서 특정 댓글 id로 submit/toggle 호출하려고 추가
+  /** ID로 답글 제출 (재귀용) */
   onReplySubmit?: (targetId: string) => void;
+  /** ID로 답글 토글 (재귀용) */
   onToggleReplyById?: (targetId: string) => void;
 }
 
+/**
+ * 댓글 항목 컴포넌트
+ *
+ * 댓글 내용, 작성자 정보, 답글 버튼, 삭제 버튼을 표시합니다.
+ * 대댓글은 재귀적으로 렌더링됩니다.
+ */
 function CommentItem({
   comment,
   isActive,
@@ -61,18 +69,15 @@ function CommentItem({
   onDeleteComment,
   onGoToSlideRef,
   isIndented = false,
-  // 재귀용 Props (기본값 처리로 에러 방지)
   replyingToId,
   setReplyingToId,
   onReplySubmit,
   onToggleReplyById,
 }: CommentItemProps) {
-  // 사용자 정보 조회 (Mock Data Lookup)
   const user = MOCK_USERS.find((u) => u.id === comment.authorId);
   const authorName = user?.name ?? '알 수 없음';
   const authorProfileImage = user?.profileImage;
 
-  // 렌더링될 때마다 새로운 익명 함수 () => ... 를 생성하는 것을 방지
   const handleChildToggle = useCallback(
     (id: string) => {
       onToggleReplyById?.(id);
@@ -102,7 +107,6 @@ function CommentItem({
 
   return (
     <div>
-      {/* 댓글 항목 */}
       <div
         className={clsx(
           'flex gap-3 py-3 pr-4 transition-colors',
@@ -110,7 +114,6 @@ function CommentItem({
           isActive ? 'bg-gray-200' : 'bg-gray-100',
         )}
       >
-        {/* 프로필 이미지 */}
         <div className="w-8 shrink-0">
           {authorProfileImage ? (
             <img
@@ -123,7 +126,6 @@ function CommentItem({
           )}
         </div>
 
-        {/* 댓글 내용 */}
         <div className="flex flex-1 flex-col gap-1 pt-1.5 min-w-0">
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
@@ -162,7 +164,6 @@ function CommentItem({
             </div>
           </div>
 
-          {/* 답글 버튼 */}
           <div className="flex items-center">
             <button
               type="button"
@@ -183,7 +184,6 @@ function CommentItem({
         </div>
       </div>
 
-      {/* 답글 입력 */}
       {isActive && (
         <CommentInput
           value={replyText}
@@ -196,7 +196,6 @@ function CommentItem({
         />
       )}
 
-      {/* 무한 답글(재귀) 렌더링 */}
       {comment.replies && comment.replies.length > 0 && (
         <div className="pl-8">
           {comment.replies.map((reply) => (

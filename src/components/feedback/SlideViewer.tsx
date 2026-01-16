@@ -6,7 +6,7 @@ import type { Slide } from '@/types/slide';
 
 import SlideInfoPanel from './SlideInfoPanel';
 
-interface Props {
+interface SlideViewerProps {
   slide: Slide | undefined;
   slideIndex: number;
   totalSlides: number;
@@ -24,7 +24,7 @@ export default function SlideViewer({
   isLast,
   onPrev,
   onNext,
-}: Props) {
+}: SlideViewerProps) {
   if (!slide) {
     return (
       <div className="flex-1 flex items-center justify-center bg-gray-100">

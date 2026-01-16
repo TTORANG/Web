@@ -2,26 +2,45 @@
  * @file CommentInput.tsx
  * @description 댓글/답글 입력 공통 컴포넌트
  *
- * FeedbackInput과 CommentItem에서 재사용됩니다.
+ * FeedbackSlidePage, CommentItem 등에서 재사용됩니다.
+ * textarea 높이 자동 조절, Enter 키 제출을 지원합니다.
  */
 import { useCallback, useEffect, useRef } from 'react';
 
 import clsx from 'clsx';
 
 interface CommentInputProps {
+  /** 입력값 (controlled) */
   value: string;
+  /** 입력값 변경 핸들러 */
   onChange: (value: string) => void;
+  /** 제출 핸들러 (Enter 키 또는 버튼 클릭) */
   onSubmit: () => void;
+  /** 취소 핸들러 */
   onCancel: () => void;
+  /** textarea placeholder */
   placeholder?: string;
+  /** 제출 버튼 라벨 */
   submitLabel?: string;
+  /** 마운트 시 자동 포커스 */
   autoFocus?: boolean;
-  /** 컨테이너 className (레이아웃 커스텀용) */
+  /** 컨테이너 className */
   className?: string;
-  /** textarea className (텍스트 스타일 커스텀용) */
+  /** textarea className */
   textareaClassName?: string;
 }
 
+/**
+ * 댓글/답글 입력 컴포넌트
+ *
+ * @example
+ * <CommentInput
+ *   value={draft}
+ *   onChange={setDraft}
+ *   onSubmit={handleSubmit}
+ *   onCancel={() => setDraft('')}
+ * />
+ */
 export default function CommentInput({
   value,
   onChange,
@@ -37,7 +56,7 @@ export default function CommentInput({
 
   const isEmpty = !value.trim();
 
-  // 높이 자동 조절
+  /** textarea 높이를 내용에 맞게 자동 조절 */
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -45,7 +64,6 @@ export default function CommentInput({
     }
   }, [value]);
 
-  // autoFocus 처리
   useEffect(() => {
     if (autoFocus && textareaRef.current) {
       textareaRef.current.focus();

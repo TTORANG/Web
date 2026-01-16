@@ -6,7 +6,7 @@ import type { Slide } from '@/types/slide';
 
 import SlideNavigation from './SlideNavigation';
 
-interface Props {
+interface SlideInfoPanelProps {
   slide: Slide;
   slideIndex: number;
   totalSlides: number;
@@ -24,7 +24,7 @@ export default function SlideInfoPanel({
   isLast,
   onPrev,
   onNext,
-}: Props) {
+}: SlideInfoPanelProps) {
   return (
     <div className="shrink-0 flex flex-col gap-4 px-5 py-4">
       <div className="flex justify-between items-center gap-4">

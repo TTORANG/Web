@@ -11,7 +11,7 @@ import type { CommentItem as CommentItemType } from '@/types/comment';
 
 import CommentItem from './CommentItem';
 
-interface Props {
+interface CommentListProps {
   comments: CommentItemType[];
   onAddReply: (targetId: string, content: string) => void;
   onGoToSlideRef: (ref: string) => void;
@@ -23,7 +23,7 @@ export default function CommentList({
   onAddReply,
   onGoToSlideRef,
   onDeleteComment,
-}: Props) {
+}: CommentListProps) {
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
 
