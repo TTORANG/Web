@@ -1,6 +1,6 @@
 import type { CardItems } from '@/types/project';
 
-import ProjectsCard from '../projects/ProjectCard';
+import ProjectCard from '../projects/ProjectCard';
 import { ProjectCardSkeleton } from '../projects/ProjectCardSkeleton';
 import ProjectHeader from '../projects/ProjectHeader';
 
@@ -34,7 +34,7 @@ export default function ProjectsSection({ isLoading, query, onChangeQuery, proje
           ? Array.from({ length: SKELETON_CARD_COUNT }).map((_, index) => (
               <ProjectCardSkeleton key={index} />
             ))
-          : projects.map((project) => <ProjectsCard key={project.id} {...project} />)}
+          : projects.map((project) => <ProjectCard key={project.id} {...project} />)}
       </div>
     </section>
   );
