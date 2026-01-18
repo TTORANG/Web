@@ -36,7 +36,7 @@ export default function ProjectCard({
           <h3 className="text-body-m-bold text-gray-800">{title}</h3>
           <Popover
             trigger={({ isOpen }) => (
-              <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-500')} />
+              <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-400')} />
             )}
             position="bottom"
             align="end"
@@ -56,9 +56,9 @@ export default function ProjectCard({
             </div>
           </Popover>
         </div>
-        <p className="mt-1 text-body-s text-gray-500">{updatedAt}</p>
+        <p className="mt-1 text-body-s text-gray-400">{updatedAt}</p>
 
-        <div className="mt-5 flex items-center justify-between gap-3 text-caption text-gray-500">
+        <div className="mt-5 flex items-center justify-between gap-3 text-caption text-gray-400">
           <div className="flex gap-1">
             <PageCountIcon />
             <span>{pageCount} 페이지</span>
