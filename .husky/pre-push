@@ -53,7 +53,7 @@ if ! echo "$type" | grep -qE "^($allowed_types)$"; then
 fi
 
 # 5. 이슈 번호 체크 (끝에 -숫자)
-if ! echo "$branch" | grep -qE "-[0-9]+$"; then
+if ! echo "$branch" | grep -qE -- "-[0-9]+$"; then
   echo ""
   echo "❌ 브랜치 이름에 이슈 번호가 없습니다."
   echo ""
@@ -64,7 +64,7 @@ if ! echo "$branch" | grep -qE "-[0-9]+$"; then
 fi
 
 # 6. 허용되지 않는 문자 체크
-if echo "$branch" | grep -qE "[^a-z0-9/\-]"; then
+if echo "$branch" | grep -qE -- "[^a-z0-9/-]"; then
   echo ""
   echo "❌ 브랜치 이름에 허용되지 않는 문자가 있습니다."
   echo ""
