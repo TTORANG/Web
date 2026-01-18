@@ -33,6 +33,7 @@
 |  `design`  | UI/UX 디자인 변경  |
 |  `chore`   | 빌드, 설정 등 기타 |
 |   `docs`   | 문서 작업          |
+|    `ci`    | CI/CD 관련 변경    |
 
 ## 네이밍 컨벤션
 
@@ -56,7 +57,7 @@
 
 | 대상            |        규칙         | 예시                   |
 | :-------------- | :-----------------: | :--------------------- |
-| 컴포넌트명      |    `PascalCase`     | `Header`, `LoginForm`  |
+| 컴포넌트명      |    `PascalCase`     | `Layout`, `LoginForm`  |
 | 페이지 컴포넌트 | `PascalCase + Page` | `MainPage`, `CartPage` |
 
 ### Export 규칙
