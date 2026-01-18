@@ -25,7 +25,7 @@ import '@/styles/index.css';
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Layout right={<LoginButton />} />,
+    element: <Layout right={<LoginButton />} scrollable />,
     children: [{ index: true, element: <HomePage /> }],
   },
   {
