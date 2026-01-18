@@ -7,10 +7,11 @@ import ViewCardIcon from '@/assets/icons/icon-view-card.svg?react';
 import ViewListIcon from '@/assets/icons/icon-view-list.svg?react';
 import type { ProjectHeaderProps } from '@/types/project';
 
-import { Popover } from '../common';
+import { Dropdown } from '../common';
 
 // TODO
 // - 필터, 정렬 기능 추가
+//  ㄴ> onClick에 상태 업데이트 추가
 
 //검색 + 우측 컨트롤
 export default function ProjectHeader({ value, onChange }: ProjectHeaderProps) {
@@ -30,7 +31,7 @@ export default function ProjectHeader({ value, onChange }: ProjectHeaderProps) {
 
       <div className="flex flex-wrap items-center gap-2">
         {/* 필터 및 정렬 */}
-        <Popover
+        <Dropdown
           trigger={({ isOpen }) => (
             <button
               type="button"
@@ -46,23 +47,17 @@ export default function ProjectHeader({ value, onChange }: ProjectHeaderProps) {
           position="bottom"
           align="start"
           ariaLabel="필터"
-          className="border border-gray-200 w-32 overflow-hidden"
-        >
-          <div className="text-sm">
-            <button className="w-full px-3 py-2 text-left hover:bg-gray-100" type="button">
-              전체
-            </button>
-            <button className="w-full px-3 py-2 text-left hover:bg-gray-100" type="button">
-              3분 이하
-            </button>
-            <button className="w-full px-3 py-2 text-left hover:bg-gray-100" type="button">
-              5분 이하
-            </button>
-          </div>
-        </Popover>
+          menuClassName="w-32"
+          items={[
+            { id: 'all', label: '전체', onClick: () => {} },
+            { id: '3m', label: '3분 이하', onClick: () => {} },
+            { id: '5m', label: '5분 이하', onClick: () => {} },
+          ]}
+        />
 
         <div className="h-4 w-px bg-gray-300" />
-        <Popover
+
+        <Dropdown
           trigger={({ isOpen }) => (
             <button
               className={clsx(
@@ -78,20 +73,13 @@ export default function ProjectHeader({ value, onChange }: ProjectHeaderProps) {
           position="bottom"
           align="start"
           ariaLabel="정렬"
-          className="border border-gray-200 w-36 overflow-hidden"
-        >
-          <div className="text-sm">
-            <button className="w-full px-3 py-2 text-left hover:bg-gray-100" type="button">
-              최신순
-            </button>
-            <button className="w-full px-3 py-2 text-left hover:bg-gray-100" type="button">
-              피드백 많은 순
-            </button>
-            <button className="w-full px-3 py-2 text-left hover:bg-gray-100" type="button">
-              가나다순
-            </button>
-          </div>
-        </Popover>
+          menuClassName="w-36"
+          items={[
+            { id: 'recent', label: '최신순', onClick: () => {} },
+            { id: 'commentCount', label: '피드백 많은 순', onClick: () => {} },
+            { id: 'name', label: '가나다순', onClick: () => {} },
+          ]}
+        />
 
         {/* 보기 방식 | 카드 or 리스트 */}
         <div className="ml-1 flex items-center">
