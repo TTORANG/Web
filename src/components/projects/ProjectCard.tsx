@@ -9,6 +9,10 @@ import type { CardItems } from '@/types/project';
 
 import { Popover } from '../common';
 
+type ProjectCardProps = CardItems & {
+  className?: string;
+};
+
 export default function ProjectCard({
   title,
   updatedAt,
@@ -17,16 +21,13 @@ export default function ProjectCard({
   reactionCount,
   viewCount = 0,
   thumbnailUrl,
-}: CardItems) {
+  className,
+}: ProjectCardProps) {
   return (
-    <article className="overflow-hidden rounded-2xl border-none bg-white">
+    <article className={clsx('overflow-hidden rounded-2xl border-none bg-white', className)}>
       <div className="w-full aspect-video bg-gray-200">
         {thumbnailUrl && (
-          <img
-            className="h-full w-full object-cover outline-none"
-            src={thumbnailUrl}
-            alt={`${title}`}
-          />
+          <img className="h-full w-full object-cover outline-none" src={thumbnailUrl} alt={title} />
         )}
       </div>
 

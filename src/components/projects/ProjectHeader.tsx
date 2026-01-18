@@ -14,7 +14,15 @@ import { Dropdown } from '../common';
 //  ㄴ> onClick에 상태 업데이트 추가
 
 //검색 + 우측 컨트롤
-export default function ProjectHeader({ value, onChange }: ProjectHeaderProps) {
+export default function ProjectHeader({
+  value,
+  onChange,
+  viewMode,
+  onChangeViewMode,
+}: ProjectHeaderProps) {
+  const isCard = viewMode === 'card';
+  const isList = viewMode === 'list';
+
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       {/* 검색 부분 */}
@@ -83,10 +91,22 @@ export default function ProjectHeader({ value, onChange }: ProjectHeaderProps) {
 
         {/* 보기 방식 | 카드 or 리스트 */}
         <div className="ml-1 flex items-center">
-          <button aria-label="카드 보기" className="rounded-lg p-2 cursor-pointer" type="button">
+          <button
+            aria-label="카드뷰"
+            aria-pressed={isCard}
+            className={clsx('rounded-lg p-2', isCard ? 'text-gray-700' : 'text-gray-400')}
+            type="button"
+            onClick={() => onChangeViewMode('card')}
+          >
             <ViewCardIcon className="h-6 w-6" />
           </button>
-          <button aria-label="리스트 보기" className="rounded-lg p-2 cursor-pointer" type="button">
+          <button
+            aria-label="리스트뷰"
+            aria-pressed={isList}
+            className={clsx('rounded-lg p-2', isList ? 'text-gray-700' : 'text-gray-400')}
+            type="button"
+            onClick={() => onChangeViewMode('list')}
+          >
             <ViewListIcon className="h-6 w-6" />
           </button>
         </div>
