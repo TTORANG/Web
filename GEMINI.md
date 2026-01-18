@@ -81,8 +81,8 @@
   - Example: `feat: implement login page (#123)`
   - Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `design`, `ci`, `perf`
 - **Branches:**
-  - Format: `type/description#issue`
-  - Example: `feat/login#12`
+  - Format: `type/description-issue`
+  - Example: `feat/login-12`
 
 ## Architecture Highlights
 
