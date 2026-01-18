@@ -19,18 +19,19 @@ import { ScriptBox } from './script';
 
 interface SlideWorkspaceProps {
   slide?: Slide;
+  slideIndex: number;
   isLoading?: boolean;
 }
 
-export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps) {
+export default function SlideWorkspace({ slide, slideIndex, isLoading }: SlideWorkspaceProps) {
   const [isScriptCollapsed, setIsScriptCollapsed] = useState(false);
   const { initSlide } = useSlideActions();
 
   useEffect(() => {
     if (slide) {
-      initSlide(slide);
+      initSlide(slide, slideIndex);
     }
-  }, [slide, initSlide]);
+  }, [slide, slideIndex, initSlide]);
 
   if (isLoading) {
     return (
