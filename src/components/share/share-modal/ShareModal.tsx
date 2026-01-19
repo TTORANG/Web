@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import clsx from 'clsx';
-import { toast } from 'sonner';
 
 import IconCopy from '@/assets/icons/icon-copy.svg?react';
 import IconLink from '@/assets/icons/icon-link.svg?react';
@@ -15,6 +14,7 @@ import { Modal } from '@/components/common/Modal';
 import { type ShareType, useShareStore } from '@/stores/shareStore';
 // sns공유테스트
 import { shareToFacebook, shareToInstagram, shareToKakao, shareToX } from '@/utils/snsShare';
+import { showToast } from '@/utils/toast.ts';
 
 const KAKAO_JS_KEY = import.meta.env?.VITE_KAKAO_JS_KEY ?? '';
 const SHARE_TEXT = '내 발표를 확인하고 피드백을 남겨주세요!';
@@ -60,7 +60,7 @@ export function ShareModal() {
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
       setCopied(false);
-      toast.error('복사에 실패했습니다.');
+      showToast.error('복사에 실패했습니다.');
     }
   };
   const handleGenerate = () => {
@@ -243,7 +243,7 @@ export function ShareModal() {
               aria-label="카카오톡으로 공유"
               onClick={() => {
                 if (!KAKAO_JS_KEY) {
-                  toast.error('카카오 JS 키가 설정되지 않았습니다. (.env 확인)');
+                  showToast.error('카카오 JS 키가 설정되지 않았습니다.', '.env를 확인해주세요.');
                   return;
                 }
                 shareToKakao({

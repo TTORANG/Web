@@ -11,7 +11,7 @@ import type { CommentItem as CommentItemType } from '@/types/comment';
 
 import CommentItem from './CommentItem';
 
-interface Props {
+interface CommentListProps {
   comments: CommentItemType[];
   onAddReply: (targetId: string, content: string) => void;
   onGoToSlideRef: (ref: string) => void;
@@ -23,7 +23,7 @@ export default function CommentList({
   onAddReply,
   onGoToSlideRef,
   onDeleteComment,
-}: Props) {
+}: CommentListProps) {
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
 
@@ -46,12 +46,11 @@ export default function CommentList({
   };
 
   return (
-    <div className="mr-35 mt-2 flex-1 space-y-2 overflow-y-auto">
+    <div className="mt-2 flex-1 space-y-2 overflow-y-auto">
       {comments.map((comment) => (
         <CommentItem
           key={comment.id}
           comment={comment}
-          theme="dark"
           isActive={replyingToId === comment.id}
           replyText={replyDraft}
           onReplyTextChange={setReplyDraft}
@@ -61,7 +60,6 @@ export default function CommentList({
           onDeleteComment={onDeleteComment}
           onCancelReply={handleCancelReply}
           onGoToSlideRef={onGoToSlideRef}
-          // 재귀에 필요한 props 전달
           replyingToId={replyingToId}
           setReplyingToId={setReplyingToId}
           onReplySubmit={handleReplySubmit}

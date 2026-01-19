@@ -19,7 +19,7 @@ export const SCRIPT_BOX = {
 } as const;
 
 /** ScriptBox 접힘 시 슬라이드 이동 오프셋 (px) */
-export const SLIDE_COLLAPSED_OFFSET = 120;
+export const SLIDE_COLLAPSED_OFFSET = 140;
 
 /**
  * 슬라이드 최대 너비 계산식

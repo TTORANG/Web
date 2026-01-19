@@ -7,19 +7,25 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'sonner';
 
 import { queryClient } from '@/api';
-import { LoginButton, Logo } from '@/components/common';
-import { Gnb } from '@/components/layout/Gnb';
-import { Layout } from '@/components/layout/Layout';
+import { Gnb, Layout, LoginButton, Logo, ShareButton } from '@/components/common';
+import { DevFab } from '@/components/common/DevFab';
 import { DEFAULT_SLIDE_ID } from '@/constants/navigation';
-import { DevTestPage, FdSlidePage, HomePage, InsightPage, SlidePage, VideoPage } from '@/pages';
+import {
+  DevTestPage,
+  FdSlidePage,
+  HomePage,
+  InsightPage,
+  SlidePage,
+  VideoPage,
+  VideoRecordPage,
+} from '@/pages';
+import { useThemeListener, useThemeStore } from '@/stores/themeStore';
 import '@/styles/index.css';
-
-import { ShareButton } from './components/common/ShareButton';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Layout right={<LoginButton />} />,
+    element: <Layout right={<LoginButton />} scrollable />,
     children: [{ index: true, element: <HomePage /> }],
   },
   {
@@ -38,7 +44,7 @@ const router = createBrowserRouter([
         }
         center={<Gnb />}
         right={
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-8">
             <ShareButton />
             <LoginButton />
           </div>
@@ -53,24 +59,40 @@ const router = createBrowserRouter([
     ],
   },
   {
-    path: '/feedback',
+    path: '/feedback/slide/:projectId',
     element: (
       <Layout
+        theme="dark"
         left={
           <>
             <Logo />
-            <span className="text-body-m-bold text-gray-800">내 발표</span>
+            <span className="text-body-m-bold text-black">발표 피드백</span>
           </>
         }
-        right={<LoginButton />}
       />
     ),
-    children: [
-      { index: true, element: <Navigate to={`fslide/${DEFAULT_SLIDE_ID}`} replace /> },
-      { path: 'fslide/:slideId', element: <FdSlidePage /> },
-    ],
+    children: [{ index: true, element: <FdSlidePage /> }],
+  },
+  {
+    path: '/:projectId/video/record',
+    element: <VideoRecordPage />,
   },
 ]);
+
+function App() {
+  useThemeListener();
+  return (
+    <>
+      <RouterProvider router={router} />
+      <DevFab />
+    </>
+  );
+}
+
+function AppToaster() {
+  const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
+  return <Toaster position="bottom-center" closeButton theme={resolvedTheme} />;
+}
 
 /**
  * MSW 활성화 (개발 환경 전용)
@@ -94,8 +116,8 @@ enableMocking().then(() => {
   createRoot(document.querySelector('#root')!).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-        <Toaster position="bottom-center" closeButton />
+        <App />
+        <AppToaster />
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </StrictMode>,

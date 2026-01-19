@@ -90,3 +90,9 @@
 .animate-zoom-out {
   animation: zoom-out 150ms ease-in forwards;
 }
+
+body {
+  background-color: var(--color-white);
+  color: var(--color-black);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}

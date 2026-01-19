@@ -15,7 +15,7 @@ export const VolumeIndicator = ({ volume }: VolumeIndicatorProps) => {
         <div
           key={i}
           className={`w-1 h-1 rounded-full transition-colors duration-75 ${
-            i < activeDots ? 'bg-[#5162ff]' : 'bg-[#4a4d55]'
+            i < activeDots ? 'bg-main' : 'bg-gray-400'
           }`}
         />
       ))}
