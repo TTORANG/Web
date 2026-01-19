@@ -5,8 +5,6 @@
 ```
 .env.example          # 변수 목록 예시 (Git에 포함됨)
 .env.local.example    # 로컬 개발용 예시 (Git에 포함됨)
-.env.development      # 개발 서버 설정 (Git에서 제외됨)
-.env.production       # 프로덕션 설정 (Git에서 제외됨)
 .env.local            # 로컬 개발용 (Git에서 제외됨)
 ```
 
@@ -19,12 +17,11 @@
 
 ## 스크립트
 
-| 명령어              | 환경        | 설명                 |
-| ------------------- | ----------- | -------------------- |
-| `npm run dev`       | development | 개발 서버에 연결     |
-| `npm run dev:local` | local       | 로컬 API 서버에 연결 |
-| `npm run build`     | production  | 프로덕션 빌드        |
-| `npm run build:dev` | development | 개발 환경 빌드       |
+| 명령어              | 설명                    |
+| ------------------- | ----------------------- |
+| `npm run dev`       | 개발 서버 시작          |
+| `npm run dev:local` | 로컬 API 서버 모킹 모드 |
+| `npm run build`     | 프로덕션 빌드           |
 
 ## 로컬 개발 설정
 
@@ -47,7 +44,7 @@ Vite는 다음 순서로 환경 변수를 로드합니다 (나중에 로드된 �
 
 1. `.env` - 모든 환경
 2. `.env.local` - 모든 환경, Git에서 제외됨
-3. `.env.[mode]` - 특정 모드 (development, production, local)
+3. `.env.[mode]` - 특정 모드 (예: local)
 4. `.env.[mode].local` - 특정 모드, Git에서 제외됨
 
 ## 코드에서 사용
