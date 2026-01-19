@@ -19,8 +19,6 @@ interface SlideThumbnailProps {
   index: number;
   /** 현재 선택된 슬라이드 여부 */
   isActive?: boolean;
-  /** 슬라이드 링크 기본 경로 */
-  basePath?: string;
   /** 로딩 상태 (스켈레톤 표시) */
   isLoading?: boolean;
 }
@@ -35,7 +33,6 @@ export default function SlideThumbnail({
   slide,
   index,
   isActive = false,
-  basePath = '',
   isLoading,
 }: SlideThumbnailProps) {
   if (isLoading || !slide) {

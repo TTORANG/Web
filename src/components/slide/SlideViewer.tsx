@@ -5,7 +5,7 @@
  * 슬라이드 이미지를 표시하며, 로딩 상태일 때 스켈레톤을 보여줍니다.
  * ScriptBox의 접힘 상태에 따라 위치가 조정됩니다.
  */
-import { Skeleton, SlideImage } from '@/components/common';
+import { SlideImage } from '@/components/common';
 import { SLIDE_MAX_WIDTH } from '@/constants/layout';
 import { useSlideThumb, useSlideTitle } from '@/hooks';
 

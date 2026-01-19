@@ -50,17 +50,10 @@ export default function SlidePage() {
     }
   }, [projectId, currentSlide?.id]);
 
-  const basePath = projectId ? `/${projectId}` : '';
-
   return (
     <div className="h-full bg-gray-100">
       <div className="flex h-full gap-12 pl-14 pr-20 pt-6">
-        <SlideList
-          slides={slides}
-          currentSlideId={currentSlide?.id}
-          basePath={basePath}
-          isLoading={isLoading}
-        />
+        <SlideList slides={slides} currentSlideId={currentSlide?.id} isLoading={isLoading} />
 
         <main className="flex-1 h-full min-w-0 overflow-hidden">
           <SlideWorkspace slide={currentSlide} isLoading={isLoading} />
