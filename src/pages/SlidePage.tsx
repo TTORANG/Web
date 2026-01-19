@@ -13,8 +13,7 @@ export default function SlidePage() {
   const { data: slides, isLoading, isError } = useSlides(projectId ?? '');
 
   const slideIdParam = searchParams.get('slideId');
-  const currentSlide =
-    slides?.find((s) => s.id === slideIdParam) ?? slides?.find((s) => s.id === '1') ?? slides?.[0];
+  const currentSlide = slides?.find((s) => s.id === slideIdParam) ?? slides?.[0];
 
   /**
    * 슬라이드 로드 에러 처리
