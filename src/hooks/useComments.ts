@@ -1,9 +1,12 @@
 /**
- * @file useComments.ts
- * @description 댓글/의견 관련 통합 훅
+ * 댓글/의견 통합 훅
  *
- * SlidePage(Opinion)와 FeedbackSlidePage(CommentList) 모두에서 사용됩니다.
- * Optimistic UI 패턴으로 로컬 store 업데이트 후 API 호출합니다.
+ * Optimistic UI 패턴으로 로컬 store 업데이트 후 API를 호출합니다.
+ *
+ * @returns comments - 트리 구조의 댓글 목록
+ * @returns addComment - 새 댓글 추가
+ * @returns addReply - 답글 추가
+ * @returns deleteComment - 댓글 삭제
  */
 import { useMemo } from 'react';
 
@@ -27,15 +30,11 @@ export function useComments() {
   const { mutate: createOpinionApi } = useCreateOpinion();
   const { mutate: deleteOpinionApi } = useDeleteOpinion();
 
-  // FeedbackSlidePage의 CommentList에서 사용 (tree 구조)
   const comments = useMemo(() => {
     if (!flatComments) return EMPTY_COMMENTS;
     return flatToTree(flatComments);
   }, [flatComments]);
 
-  /**
-   * 새 댓글 추가 (Optimistic UI)
-   */
   const addComment = (content: string, currentSlideIndex: number) => {
     if (!slideId) return;
 
@@ -53,9 +52,6 @@ export function useComments() {
     );
   };
 
-  /**
-   * 답글 추가 (Optimistic UI)
-   */
   const addReply = (parentId: string, content: string) => {
     if (!slideId) return;
 
@@ -73,9 +69,6 @@ export function useComments() {
     );
   };
 
-  /**
-   * 댓글 삭제 (Optimistic UI)
-   */
   const deleteComment = (commentId: string) => {
     if (!slideId) return;
 

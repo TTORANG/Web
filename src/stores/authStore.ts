@@ -1,3 +1,9 @@
+/**
+ * 인증 상태 관리 스토어
+ *
+ * 사용자 정보, 토큰, 로그인 모달 상태를 관리합니다.
+ * persist 미들웨어로 브라우저 세션 유지를 지원합니다.
+ */
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
@@ -6,13 +12,11 @@ import type { User } from '@/types/auth';
 interface AuthState {
   user: User | null;
   accessToken: string | null;
+  isLoginModalOpen: boolean;
 
   login: (user: User, accessToken: string) => void;
   logout: () => void;
   updateUser: (user: Partial<User>) => void;
-
-  // 로그인 모달 상태/액션 추가
-  isLoginModalOpen: boolean;
   openLoginModal: () => void;
   closeLoginModal: () => void;
 }
