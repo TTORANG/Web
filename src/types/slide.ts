@@ -9,6 +9,7 @@ import type { History, Reaction } from './script';
  */
 export interface Slide {
   id: string;
+  projectId: string;
   title: string;
   thumb: string;
   script: string;
