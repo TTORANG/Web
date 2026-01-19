@@ -1,21 +1,12 @@
 import type { Project } from '@/types/project';
 
-const dates = {
-  daysAgo: (days: number) => {
-    const d = new Date();
-    d.setDate(d.getDate() - days);
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    return `${yyyy}. ${mm}. ${dd}`;
-  },
-};
+import { daysAgo } from './utils';
 
 export const MOCK_PROJECTS: Project[] = [
   {
     id: 'p1',
     title: 'Q4 마케팅 전략 발표',
-    updatedAt: dates.daysAgo(1),
+    updatedAt: daysAgo(1),
     pageCount: 11,
     commentCount: 0,
     reactionCount: 0,
@@ -25,7 +16,7 @@ export const MOCK_PROJECTS: Project[] = [
   {
     id: 'p2',
     title: '신제품 론칭 계획',
-    updatedAt: dates.daysAgo(2),
+    updatedAt: daysAgo(2),
     pageCount: 8,
     commentCount: 0,
     reactionCount: 0,
@@ -35,7 +26,7 @@ export const MOCK_PROJECTS: Project[] = [
   {
     id: 'p3',
     title: '2024 연간 실적 리뷰',
-    updatedAt: dates.daysAgo(3),
+    updatedAt: daysAgo(3),
     pageCount: 17,
     commentCount: 1,
     reactionCount: 2,
@@ -45,7 +36,7 @@ export const MOCK_PROJECTS: Project[] = [
   {
     id: 'p4',
     title: '브랜드 리뉴얼 컨셉 제안서',
-    updatedAt: dates.daysAgo(5),
+    updatedAt: daysAgo(5),
     pageCount: 14,
     commentCount: 3,
     reactionCount: 6,
@@ -55,7 +46,7 @@ export const MOCK_PROJECTS: Project[] = [
   {
     id: 'p5',
     title: '서비스 온보딩 개선안',
-    updatedAt: dates.daysAgo(6),
+    updatedAt: daysAgo(6),
     pageCount: 9,
     commentCount: 2,
     reactionCount: 1,
@@ -65,7 +56,7 @@ export const MOCK_PROJECTS: Project[] = [
   {
     id: 'p6',
     title: '시장 경쟁사 분석 보고서',
-    updatedAt: dates.daysAgo(8),
+    updatedAt: daysAgo(8),
     pageCount: 12,
     commentCount: 4,
     reactionCount: 3,
@@ -75,7 +66,7 @@ export const MOCK_PROJECTS: Project[] = [
   {
     id: 'p7',
     title: 'AI 기능 기획 초안',
-    updatedAt: dates.daysAgo(9),
+    updatedAt: daysAgo(9),
     pageCount: 6,
     commentCount: 0,
     reactionCount: 1,
@@ -85,7 +76,7 @@ export const MOCK_PROJECTS: Project[] = [
   {
     id: 'p8',
     title: '파트너십 제안서',
-    updatedAt: dates.daysAgo(12),
+    updatedAt: daysAgo(12),
     pageCount: 10,
     commentCount: 1,
     reactionCount: 0,
@@ -95,7 +86,7 @@ export const MOCK_PROJECTS: Project[] = [
   {
     id: 'p9',
     title: '2025 로드맵',
-    updatedAt: dates.daysAgo(15),
+    updatedAt: daysAgo(15),
     pageCount: 20,
     commentCount: 5,
     reactionCount: 9,
