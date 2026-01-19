@@ -9,7 +9,7 @@ export interface CardViewProps<T> {
   className?: string;
   itemClassName?: string;
   empty?: ReactNode;
-  ariaLabal?: string;
+  ariaLabel?: string;
 }
 
 export function CardView<T>({
@@ -19,14 +19,14 @@ export function CardView<T>({
   className,
   itemClassName,
   empty,
-  ariaLabal,
+  ariaLabel,
 }: CardViewProps<T>) {
   if (items.length === 0) {
     return <div className="cardView__empty">{empty ?? 'No items'}</div>;
   }
 
   return (
-    <div className={clsx('cardView', className)} role="list" aria-label={ariaLabal}>
+    <div className={clsx('cardView', className)} role="list" aria-label={ariaLabel}>
       {items.map((item, index) => (
         <div
           key={getKey(item, index)}

@@ -60,20 +60,6 @@ export function ListView<T>({
           >
             {renderLeading && <div className="listView__leading">{renderLeading(item)}</div>}
 
-            {/* <div className="listView__content">
-              <div className="listView__title">{renderTitle(item)}</div>
-
-              {(renderUpdatedAt || renderMeta) && (
-                <div className="listView__meta">
-                  {renderUpdatedAt && (
-                    <span className="listView__updated">{renderUpdatedAt(item)}</span>
-                  )}
-                  {renderMeta && <span className="listView__metaExtra">{renderMeta(item)}</span>}
-                </div>
-              )}
-
-              {renderStats && <div className="listView__stats">{renderStats(item)}</div>}
-            </div> */}
             <div className="listView__content">{renderInfo(item)}</div>
 
             {renderTrailing && (

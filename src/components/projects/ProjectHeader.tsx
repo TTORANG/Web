@@ -94,7 +94,10 @@ export default function ProjectHeader({
           <button
             aria-label="카드뷰"
             aria-pressed={isCard}
-            className={clsx('rounded-lg p-2', isCard ? 'text-gray-800' : 'text-gray-400')}
+            className={clsx(
+              'rounded-lg p-2 cursor-pointer',
+              isCard ? 'text-gray-800' : 'text-gray-400',
+            )}
             type="button"
             onClick={() => onChangeViewMode('card')}
           >
@@ -103,7 +106,10 @@ export default function ProjectHeader({
           <button
             aria-label="리스트뷰"
             aria-pressed={isList}
-            className={clsx('rounded-lg p-2', isList ? 'text-gray-800' : 'text-gray-400')}
+            className={clsx(
+              'rounded-lg p-2 cursor-pointer',
+              isList ? 'text-gray-800' : 'text-gray-400',
+            )}
             type="button"
             onClick={() => onChangeViewMode('list')}
           >
