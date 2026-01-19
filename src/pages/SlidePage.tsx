@@ -36,6 +36,9 @@ export default function SlidePage() {
   const currentSlide = slides?.find((s) => s.id === slideId) ?? slides?.[0];
   const basePath = projectId ? `/${projectId}` : '';
 
+  // 현재 슬라이드가 배열의 몇 번째인지 계산 (없으면 0번)
+  const currentSlideIndex = slides?.findIndex((s) => s.id === currentSlide?.id) ?? 0;
+
   return (
     <div className="h-full bg-gray-100">
       <div className="flex h-full gap-12 pl-14 pr-20 pt-6">
@@ -47,7 +50,11 @@ export default function SlidePage() {
         />
 
         <main className="flex-1 h-full min-w-0 overflow-hidden">
-          <SlideWorkspace slide={currentSlide} isLoading={isLoading} />
+          <SlideWorkspace
+            slide={currentSlide}
+            isLoading={isLoading}
+            slideIndex={currentSlideIndex}
+          />
         </main>
       </div>
     </div>
