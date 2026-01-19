@@ -178,8 +178,8 @@ classDiagram
         +string content
         +string script
         +OpinionItem[] opinions
-        +HistoryItem[] history
-        +EmojiReaction[] emojiReactions
+        +History[] history
+        +Reaction[] emojiReactions
     }
 
     class OpinionItem {
@@ -192,20 +192,20 @@ classDiagram
         +number parentId
     }
 
-    class HistoryItem {
+    class History {
         +string id
         +string timestamp
         +string content
     }
 
-    class EmojiReaction {
+    class Reaction {
         +string emoji
         +number count
     }
 
     Slide "1" --> "*" OpinionItem
-    Slide "1" --> "*" HistoryItem
-    Slide "1" --> "*" EmojiReaction
+    Slide "1" --> "*" History
+    Slide "1" --> "*" Reaction
 ```
 
 ## 7. 컴포넌트별 Context 사용

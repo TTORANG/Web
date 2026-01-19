@@ -1,5 +1,5 @@
 import type { SortMode, ViewMode } from '@/types/home';
-import type { CardItems } from '@/types/project';
+import type { Project } from '@/types/project';
 
 import ProjectCard from '../projects/ProjectCard';
 import { ProjectCardSkeleton } from '../projects/ProjectCardSkeleton';
@@ -11,18 +11,16 @@ type Props = {
   isLoading: boolean;
   query: string;
   onChangeQuery: (value: string) => void;
-  sort: SortMode;
   onChangeSort: (value: SortMode) => void;
   viewMode: ViewMode;
   onChangeViewMode: (value: ViewMode) => void;
-  projects: CardItems[];
+  projects: Project[];
 };
 
 export default function ProjectsSection({
   isLoading,
   query,
   onChangeQuery,
-  sort,
   onChangeSort,
   viewMode,
   onChangeViewMode,
@@ -43,7 +41,6 @@ export default function ProjectsSection({
       <ProjectHeader
         value={query}
         onChange={onChangeQuery}
-        sort={sort}
         onChangeSort={onChangeSort}
         viewMode={viewMode}
         onChangeViewMode={onChangeViewMode}

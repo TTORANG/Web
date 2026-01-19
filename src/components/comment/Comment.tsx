@@ -1,5 +1,5 @@
 /**
- * @file CommentItem.tsx
+ * @file Comment.tsx
  * @description 댓글 항목 공통 컴포넌트
  *
  * 슬라이드 화면(CommentPopover)과 피드백 화면(CommentList) 모두에서 사용됩니다.
@@ -13,14 +13,14 @@ import FileIcon from '@/assets/icons/icon-document.svg?react';
 import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
 import { MOCK_USERS } from '@/mocks/users';
-import type { CommentItem as CommentItemType } from '@/types/comment';
+import type { Comment as CommentType } from '@/types/comment';
 import { formatRelativeTime } from '@/utils/format';
 
 import CommentInput from './CommentInput';
 
-interface CommentItemProps {
+interface CommentProps {
   /** 댓글 데이터 */
-  comment: CommentItemType;
+  comment: CommentType;
   /** 답글 입력창 활성화 여부 */
   isActive: boolean;
   /** 답글 입력값 */
@@ -57,7 +57,7 @@ interface CommentItemProps {
  * 댓글 내용, 작성자 정보, 답글 버튼, 삭제 버튼을 표시합니다.
  * 대댓글은 재귀적으로 렌더링됩니다.
  */
-function CommentItem({
+function Comment({
   comment,
   isActive,
   replyText,
@@ -73,7 +73,7 @@ function CommentItem({
   setReplyingToId,
   onReplySubmit,
   onToggleReplyById,
-}: CommentItemProps) {
+}: CommentProps) {
   const user = MOCK_USERS.find((u) => u.id === comment.authorId);
   const authorName = user?.name ?? '알 수 없음';
   const authorProfileImage = user?.profileImage;
@@ -199,7 +199,7 @@ function CommentItem({
       {comment.replies && comment.replies.length > 0 && (
         <div className="pl-8">
           {comment.replies.map((reply) => (
-            <CommentItem
+            <Comment
               key={reply.id}
               comment={reply}
               isActive={replyingToId === reply.id}
@@ -224,4 +224,4 @@ function CommentItem({
   );
 }
 
-export default React.memo(CommentItem);
+export default React.memo(Comment);

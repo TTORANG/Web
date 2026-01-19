@@ -1,4 +1,4 @@
-export interface CommentItem {
+export interface Comment {
   id: string;
   authorId: string;
   content: string;
@@ -13,7 +13,7 @@ export interface CommentItem {
   /** 부모 댓글 ID - 플랫 구조에서 답글 관계 표현 */
   parentId?: string;
   /** 자식 댓글 목록 - 중첩 구조에서 답글 관계 표현 */
-  replies?: CommentItem[];
+  replies?: Comment[];
 }
 
 /**

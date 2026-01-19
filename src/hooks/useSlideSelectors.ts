@@ -20,13 +20,13 @@
 import { useShallow } from 'zustand/shallow';
 
 import { useSlideStore } from '@/stores/slideStore';
-import type { CommentItem } from '@/types/comment';
-import type { EmojiReaction, HistoryItem } from '@/types/script';
+import type { Comment } from '@/types/comment';
+import type { History, Reaction } from '@/types/script';
 
 // 빈 배열 상수 (참조 안정성을 위해)
-const EMPTY_OPINIONS: CommentItem[] = [];
-const EMPTY_HISTORY: HistoryItem[] = [];
-const EMPTY_EMOJIS: EmojiReaction[] = [];
+const EMPTY_OPINIONS: Comment[] = [];
+const EMPTY_HISTORY: History[] = [];
+const EMPTY_EMOJIS: Reaction[] = [];
 
 /**
  * 슬라이드 ID를 구독합니다.

@@ -8,13 +8,13 @@
 import { useMemo } from 'react';
 
 import { useSlideStore } from '@/stores/slideStore';
-import type { CommentItem } from '@/types/comment';
+import type { Comment } from '@/types/comment';
 import { flatToTree } from '@/utils/comment';
 import { showToast } from '@/utils/toast';
 
 import { useCreateOpinion, useDeleteOpinion } from './queries/useOpinions';
 
-const EMPTY_COMMENTS: CommentItem[] = [];
+const EMPTY_COMMENTS: Comment[] = [];
 
 export function useComments() {
   const slideId = useSlideStore((state) => state.slide?.id);

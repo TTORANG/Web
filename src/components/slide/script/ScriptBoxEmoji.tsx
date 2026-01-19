@@ -6,8 +6,8 @@
  * Zustand store를 통해 이모지 반응 데이터를 읽습니다.
  */
 import { Popover } from '@/components/common';
+import { REACTION_CONFIG } from '@/constants/reaction';
 import { useSlideEmojis } from '@/hooks';
-import { REACTION_CONFIG } from '@/types/script';
 
 export default function ScriptBoxEmoji() {
   const emojiReactions = useSlideEmojis();

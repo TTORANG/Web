@@ -223,8 +223,8 @@ classDiagram
         +string content
         +string script
         +OpinionItem[] opinions
-        +HistoryItem[] history
-        +EmojiReaction[] emojiReactions
+        +History[] history
+        +Reaction[] emojiReactions
     }
 
     class OpinionItem {
@@ -237,21 +237,21 @@ classDiagram
         +number parentId
     }
 
-    class HistoryItem {
+    class History {
         +string id
         +string timestamp
         +string content
     }
 
-    class EmojiReaction {
+    class Reaction {
         +string emoji
         +number count
     }
 
     SlideStore --> Slide
     Slide --> "*" OpinionItem
-    Slide --> "*" HistoryItem
-    Slide --> "*" EmojiReaction
+    Slide --> "*" History
+    Slide --> "*" Reaction
 ```
 
 ## 7. Context vs Zustand 비교

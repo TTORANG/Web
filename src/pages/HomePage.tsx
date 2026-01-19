@@ -52,7 +52,6 @@ export default function HomePage() {
         isLoading={isLoading}
         query={query}
         onChangeQuery={setQuery}
-        sort={sort}
         onChangeSort={setSort}
         viewMode={viewMode}
         onChangeViewMode={setViewMode}

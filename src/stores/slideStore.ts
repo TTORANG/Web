@@ -33,8 +33,8 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
 import { MOCK_CURRENT_USER } from '@/mocks/users';
-import type { CommentItem } from '@/types/comment';
-import type { HistoryItem, ReactionType } from '@/types/script';
+import type { Comment } from '@/types/comment';
+import type { History, ReactionType } from '@/types/script';
 import type { Slide } from '@/types/slide';
 import { addReplyToFlat, createComment, deleteFromFlat } from '@/utils/comment';
 
@@ -69,7 +69,7 @@ interface SlideState {
    * 특정 시점의 대본으로 복원합니다.
    * @param item - 복원할 히스토리 아이템
    */
-  restoreFromHistory: (item: HistoryItem) => void;
+  restoreFromHistory: (item: History) => void;
 
   /**
    * 의견을 삭제합니다.
@@ -96,7 +96,7 @@ interface SlideState {
    * (Optimistic UI 롤백용)
    * @param opinions - 교체할 의견 목록
    */
-  setOpinions: (opinions: CommentItem[]) => void;
+  setOpinions: (opinions: Comment[]) => void;
 }
 
 export const useSlideStore = create<SlideState>()(
@@ -134,7 +134,7 @@ export const useSlideStore = create<SlideState>()(
             // 슬라이드가 없거나 대본이 비어있으면 저장하지 않음
             if (!state.slide || !state.slide.script.trim()) return state;
 
-            const historyItem: HistoryItem = {
+            const historyItem: History = {
               id: crypto.randomUUID(),
               timestamp: new Date().toISOString(),
               content: state.slide.script,

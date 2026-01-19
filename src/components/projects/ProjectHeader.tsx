@@ -6,20 +6,20 @@ import SearchIcon from '@/assets/icons/icon-search.svg?react';
 import ViewCardIcon from '@/assets/icons/icon-view-card.svg?react';
 import ViewListIcon from '@/assets/icons/icon-view-list.svg?react';
 import type { SortMode, ViewMode } from '@/types/home';
-import type { ProjectHeaderProps } from '@/types/project';
 
 import { Dropdown } from '../common';
 
-const SORT_LABELS: Record<SortMode, string> = {
-  recent: '최신순',
-  commentCount: '피드백 많은 순',
-  name: '가나다순',
-};
+interface ProjectHeaderProps {
+  value: string;
+  onChange: (value: string) => void;
+  onChangeSort: (sort: SortMode) => void;
+  viewMode: ViewMode;
+  onChangeViewMode: (viewMode: ViewMode) => void;
+}
 
 export default function ProjectHeader({
   value,
   onChange,
-  sort,
   onChangeSort,
   viewMode,
   onChangeViewMode,

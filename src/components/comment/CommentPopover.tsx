@@ -12,7 +12,7 @@ import clsx from 'clsx';
 import { Popover } from '@/components/common';
 import { useSlideActions, useSlideOpinions } from '@/hooks';
 
-import CommentItem from './CommentItem';
+import Comment from './Comment';
 
 export default function CommentPopover() {
   const opinions = useSlideOpinions();
@@ -86,7 +86,7 @@ export default function CommentPopover() {
       {/* 의견 목록 */}
       <div className="h-80 overflow-y-auto">
         {opinions.map((opinion) => (
-          <CommentItem
+          <Comment
             key={opinion.id}
             comment={opinion}
             isActive={activeReplyId === opinion.id}

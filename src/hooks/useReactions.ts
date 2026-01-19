@@ -1,11 +1,11 @@
 // hooks/useReactions.ts
 import { useSlideStore } from '@/stores/slideStore';
-import type { EmojiReaction, ReactionType } from '@/types/script';
+import type { Reaction, ReactionType } from '@/types/script';
 import { showToast } from '@/utils/toast';
 
 import { useToggleReaction } from './queries/useReactionQueries';
 
-const EMPTY_REACTIONS: EmojiReaction[] = [];
+const EMPTY_REACTIONS: Reaction[] = [];
 
 export function useReactions() {
   const slideId = useSlideStore((state) => state.slide?.id);

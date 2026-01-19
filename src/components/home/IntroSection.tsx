@@ -1,8 +1,18 @@
 import clsx from 'clsx';
 
-import type { IntroSectionProps } from '@/types/home';
+import type { UploadState } from '@/types/uploadFile';
 
 import FileDropzone from '../common/FileDropzone';
+
+interface IntroSectionProps {
+  accept: string;
+  disabled: boolean;
+  uploadState: UploadState;
+  progress: number;
+  error?: string | null;
+  onFilesSelected: (files: File[]) => void;
+  isEmpty: boolean;
+}
 
 export default function IntroSection({
   accept,

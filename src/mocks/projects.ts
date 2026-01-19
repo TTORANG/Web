@@ -1,4 +1,4 @@
-import type { CardItems } from '@/types/project';
+import type { Project } from '@/types/project';
 
 const dates = {
   daysAgo: (days: number) => {
@@ -11,7 +11,7 @@ const dates = {
   },
 };
 
-export const MOCK_PROJECTS: CardItems[] = [
+export const MOCK_PROJECTS: Project[] = [
   {
     id: 'p1',
     title: 'Q4 마케팅 전략 발표',

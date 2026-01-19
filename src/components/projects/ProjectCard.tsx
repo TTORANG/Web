@@ -5,7 +5,7 @@ import MoreIcon from '@/assets/icons/icon-more.svg?react';
 import PageCountIcon from '@/assets/icons/icon-page-count.svg?react';
 import ReactionCountIcon from '@/assets/icons/icon-reaction-count.svg?react';
 import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
-import type { CardItems } from '@/types/project';
+import type { Project } from '@/types/project';
 
 import { Popover } from '../common';
 
@@ -17,7 +17,7 @@ export default function ProjectCard({
   reactionCount,
   viewCount = 0,
   thumbnailUrl,
-}: CardItems) {
+}: Project) {
   return (
     <article className="overflow-hidden rounded-2xl border-none bg-white">
       <div className="w-full aspect-video bg-gray-200">
