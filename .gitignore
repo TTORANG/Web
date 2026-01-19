@@ -15,8 +15,6 @@ bun.lock
 # 환경 변수
 .env
 .env.local
-.env.development
-.env.production
 .env.*.local
 *.local
 !.env.local.example
