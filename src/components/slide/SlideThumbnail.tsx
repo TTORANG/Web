@@ -39,7 +39,7 @@ export default function SlideThumbnail({
     return (
       <div className="flex items-start gap-2 p-2">
         <span className="w-4" />
-        <div className="flex-1 min-h-[100px] rounded bg-gray-200 animate-pulse" />
+        <div className="flex-1 aspect-video rounded bg-gray-200 animate-pulse" />
       </div>
     );
   }
