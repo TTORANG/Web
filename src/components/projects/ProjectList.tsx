@@ -13,9 +13,15 @@ type ProjectListProps = {
   items: ProjectItem[];
   className?: string;
   itemClassName?: string;
+  onDeleteClick?: (item: ProjectItem) => void; // 상위로 올릴 콜백 (플젝 삭제)
 };
 
-export default function ProjectList({ items, className, itemClassName }: ProjectListProps) {
+export default function ProjectList({
+  items,
+  className,
+  itemClassName,
+  onDeleteClick,
+}: ProjectListProps) {
   return (
     <ListView
       items={items}
@@ -41,7 +47,7 @@ export default function ProjectList({ items, className, itemClassName }: Project
 
           {/* 날짜 | 페이지 수 + 댓글/이모티콘/조회 */}
           <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-2 text-caption text-gray-500">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-5">
               <span>{item.updatedAt}</span>
               <span className="text-gray-300">|</span>
               <span className="flex items-center gap-1">
@@ -67,27 +73,39 @@ export default function ProjectList({ items, className, itemClassName }: Project
           </div>
         </div>
       )}
-      renderTrailing={() => (
+      renderTrailing={(item) => (
         <Popover
           trigger={({ isOpen }) => (
-            <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-500')} />
+            <button
+              type="button"
+              aria-label="더보기"
+              className={clsx(isOpen ? 'text-main' : 'text-gray-500')}
+            >
+              <MoreIcon />
+            </button>
           )}
           position="bottom"
           align="end"
           ariaLabel="더보기"
           className="border border-gray-200 w-32 overflow-hidden"
         >
-          <div className="text-sm">
-            <button className="w-full px-3 py-2 text-left hover:bg-gray-100" type="button">
-              이름 변경
-            </button>
-            <button
-              className="w-full px-3 py-2 text-left text-red-500 hover:bg-gray-100"
-              type="button"
-            >
-              삭제
-            </button>
-          </div>
+          {({ close }) => (
+            <div className="text-sm">
+              <button className="w-full px-3 py-2 text-left hover:bg-gray-100" type="button">
+                이름 변경
+              </button>
+              <button
+                className="w-full px-3 py-2 text-left text-red-500 hover:bg-gray-100"
+                type="button"
+                onClick={() => {
+                  close();
+                  onDeleteClick?.(item);
+                }}
+              >
+                삭제
+              </button>
+            </div>
+          )}
         </Popover>
       )}
     />
