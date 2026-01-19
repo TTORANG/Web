@@ -56,7 +56,7 @@ export default function ProjectCard({
       <div className="aspect-video w-full overflow-hidden rounded-t-2xl bg-gray-200">
         {thumbnailUrl && (
           <img
-            className="h-full w-full object-cover outline-none"
+            className="h-full w-full object-contain outline-none"
             src={thumbnailUrl}
             alt={`${title}`}
           />

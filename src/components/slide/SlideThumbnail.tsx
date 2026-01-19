@@ -42,7 +42,7 @@ export default function SlideThumbnail({
     return (
       <div className="flex items-start gap-2 p-2">
         <span className="w-4" />
-        <div className="flex-1 aspect-video rounded bg-gray-200 animate-pulse" />
+        <div className="flex-1 min-h-[100px] rounded bg-gray-200 animate-pulse" />
       </div>
     );
   }
@@ -68,7 +68,7 @@ export default function SlideThumbnail({
       </span>
 
       {/* 썸네일 */}
-      <div className="relative flex-1 aspect-video rounded overflow-hidden bg-gray-200">
+      <div className="relative flex-1 rounded overflow-hidden bg-gray-200">
         <SlideImage src={slide.thumb} alt={`슬라이드 ${index + 1}: ${slide.title}`} />
       </div>
     </Link>

@@ -21,9 +21,9 @@ export default function SlideViewer({ isLoading }: SlideViewerProps) {
   return (
     <section className="flex flex-1 min-h-0 flex-col justify-center overflow-hidden">
       <div className="mx-auto w-full" style={{ maxWidth: SLIDE_MAX_WIDTH }}>
-        <div className="relative w-full aspect-video bg-gray-200 shadow-sm overflow-hidden">
+        <div className="relative w-full shadow-sm overflow-hidden rounded-lg">
           {isLoading ? (
-            <Skeleton height="100%" />
+            <div className="w-full aspect-video bg-gray-200 animate-pulse" />
           ) : (
             thumb && <SlideImage key={thumb} src={thumb} alt={title} />
           )}
