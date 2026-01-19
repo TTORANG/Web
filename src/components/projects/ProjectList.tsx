@@ -67,7 +67,7 @@ export default function ProjectList({ items, className, itemClassName }: Project
           </div>
         </div>
       )}
-      renderTrailing={(item) => (
+      renderTrailing={() => (
         <Popover
           trigger={({ isOpen }) => (
             <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-500')} />
