@@ -10,7 +10,6 @@ export interface ListViewProps<T> {
   renderTrailing?: (item: T) => ReactNode;
   renderInfo: (item: T) => ReactNode;
 
-  onItemClick?: (item: T) => void;
   className?: string;
   itemClassName?: string;
   empty?: ReactNode;
@@ -23,7 +22,6 @@ export function ListView<T>({
   renderLeading,
   renderTrailing,
   renderInfo,
-  onItemClick,
   className,
   itemClassName,
   empty,
@@ -33,41 +31,23 @@ export function ListView<T>({
     return <div className="listView__empty">{empty ?? 'No items'}</div>;
   }
 
-  const isClickable = Boolean(onItemClick);
-
   return (
     <div className={clsx('listView', className)} role="list" aria-label={ariaLabel}>
-      {items.map((item, index) => {
-        const key = getKey(item, index);
+      {items.map((item, index) => (
+        <div
+          key={getKey(item, index)}
+          className={clsx('listView__item', itemClassName)}
+          role="listitem"
+        >
+          {renderLeading && <div className="listView__leading">{renderLeading(item)}</div>}
 
-        return (
-          <div
-            key={key}
-            className={clsx('listView__item', itemClassName, isClickable && 'is-clickable')}
-            role="listitem"
-            tabIndex={isClickable ? 0 : undefined}
-            onClick={isClickable ? () => onItemClick?.(item) : undefined}
-            onKeyDown={
-              isClickable
-                ? (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      onItemClick?.(item);
-                    }
-                  }
-                : undefined
-            }
-          >
-            {renderLeading && <div className="listView__leading">{renderLeading(item)}</div>}
+          <div className="listView__content">{renderInfo(item)}</div>
 
-            <div className="listView__content">{renderInfo(item)}</div>
-
-            {renderTrailing && (
-              <div className="listView__trailing ml-auto shrink-0">{renderTrailing(item)}</div>
-            )}
-          </div>
-        );
-      })}
+          {renderTrailing && (
+            <div className="listView__trailing ml-auto shrink-0">{renderTrailing(item)}</div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

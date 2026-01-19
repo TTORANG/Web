@@ -5,7 +5,9 @@ import clsx from 'clsx';
 export interface CardViewProps<T> {
   items: readonly T[];
   getKey: (item: T, index: number) => Key;
+
   renderCard: (item: T) => ReactNode;
+
   className?: string;
   itemClassName?: string;
   empty?: ReactNode;
