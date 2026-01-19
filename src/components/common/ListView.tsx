@@ -5,12 +5,11 @@ import clsx from 'clsx';
 export interface ListViewProps<T> {
   items: readonly T[];
   getKey: (item: T, index: number) => Key;
-  renderTitle: (item: T) => ReactNode;
-  renderUpdatedAt?: (item: T) => ReactNode;
-  renderMeta?: (item: T) => ReactNode;
+
   renderLeading?: (item: T) => ReactNode;
   renderTrailing?: (item: T) => ReactNode;
-  renderStats?: (item: T) => ReactNode;
+  renderInfo: (item: T) => ReactNode;
+
   onItemClick?: (item: T) => void;
   className?: string;
   itemClassName?: string;
@@ -21,12 +20,9 @@ export interface ListViewProps<T> {
 export function ListView<T>({
   items,
   getKey,
-  renderTitle,
-  renderUpdatedAt,
-  renderMeta,
   renderLeading,
   renderTrailing,
-  renderStats,
+  renderInfo,
   onItemClick,
   className,
   itemClassName,
@@ -64,7 +60,7 @@ export function ListView<T>({
           >
             {renderLeading && <div className="listView__leading">{renderLeading(item)}</div>}
 
-            <div className="listView__content">
+            {/* <div className="listView__content">
               <div className="listView__title">{renderTitle(item)}</div>
 
               {(renderUpdatedAt || renderMeta) && (
@@ -77,9 +73,12 @@ export function ListView<T>({
               )}
 
               {renderStats && <div className="listView__stats">{renderStats(item)}</div>}
-            </div>
+            </div> */}
+            <div className="listView__content">{renderInfo(item)}</div>
 
-            {renderTrailing && <div className="listView__trailing">{renderTrailing(item)}</div>}
+            {renderTrailing && (
+              <div className="listView__trailing ml-auto shrink-0">{renderTrailing(item)}</div>
+            )}
           </div>
         );
       })}

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import IntroSection from '@/components/home/IntroSection';
 import ProjectsSection from '@/components/home/ProjectsSection';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useHomeActions, useHomeQuery } from '@/hooks/useHomeSelectors';
+import { useHomeActions, useHomeQuery, useHomeViewMode } from '@/hooks/useHomeSelectors';
 import { useProjectList } from '@/hooks/useProjectList';
 import { useUpload } from '@/hooks/useUpload';
 import { MOCK_PROJECTS } from '@/mocks/projects';
@@ -14,7 +14,8 @@ export default function HomePage() {
   const { progress, state, error, uploadFiles } = useUpload();
   const [isLoading, setIsLoading] = useState(true);
   const query = useHomeQuery();
-  const { setQuery } = useHomeActions();
+  const viewMode = useHomeViewMode();
+  const { setQuery, setViewMode } = useHomeActions();
   const debouncedQuery = useDebounce(query, 300);
 
   // TODO : 나중에 mock_projects 말고 서버데이터로 바꿔주기..
@@ -46,6 +47,8 @@ export default function HomePage() {
         query={query}
         onChangeQuery={setQuery}
         projects={projects}
+        viewMode={viewMode}
+        onChangeViewMode={setViewMode}
       />
     </main>
   );

@@ -5,24 +5,26 @@ import MoreIcon from '@/assets/icons/icon-more.svg?react';
 import PageCountIcon from '@/assets/icons/icon-page-count.svg?react';
 import ReactionCountIcon from '@/assets/icons/icon-reaction-count.svg?react';
 import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
-import type { CardItems } from '@/types/project';
+import type { ProjectItem } from '@/types/project';
 
 import { Popover } from '../common';
 
-type ProjectCardProps = CardItems & {
+type ProjectCardProps = {
+  item: ProjectItem;
   className?: string;
 };
 
-export default function ProjectCard({
-  title,
-  updatedAt,
-  pageCount,
-  commentCount,
-  reactionCount,
-  viewCount = 0,
-  thumbnailUrl,
-  className,
-}: ProjectCardProps) {
+export default function ProjectCard({ item, className }: ProjectCardProps) {
+  const {
+    title,
+    updatedAt,
+    pageCount,
+    commentCount,
+    reactionCount,
+    viewCount = 0,
+    thumbnailUrl,
+  } = item;
+
   return (
     <article className={clsx('overflow-hidden rounded-2xl border-none bg-white', className)}>
       <div className="w-full aspect-video bg-gray-200">
