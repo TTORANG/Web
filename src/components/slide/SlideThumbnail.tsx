@@ -49,7 +49,8 @@ export default function SlideThumbnail({
 
   return (
     <Link
-      to={`${basePath}/slide/${slide.id}`}
+      to={{ search: `?slideId=${slide.id}` }}
+      replace
       aria-current={isActive ? 'true' : undefined}
       className={clsx(
         'group flex items-start gap-2 p-2 rounded transition-colors focus-visible:outline-2 focus-visible:outline-main',

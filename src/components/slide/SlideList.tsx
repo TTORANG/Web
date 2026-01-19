@@ -42,9 +42,9 @@ export default function SlideList({ slides, currentSlideId, basePath, isLoading 
   const navigateToSlide = useCallback(
     (index: number) => {
       if (!slides || index < 0 || index >= slides.length) return;
-      navigate(`${basePath}/slide/${slides[index].id}`);
+      navigate({ search: `?slideId=${slides[index].id}` }, { replace: true });
     },
-    [slides, basePath, navigate],
+    [slides, navigate],
   );
 
   const keyMap = useMemo(
