@@ -2,11 +2,11 @@
 // components/feedback/FeedbackInput.tsx
 import { useRef, useState } from 'react';
 
-import type { EmojiReaction } from '@/types/script';
+import { type EmojiReaction, REACTION_CONFIG, type ReactionType } from '@/types/script';
 
 interface Props {
   reactions: EmojiReaction[];
-  onToggleReaction: (emoji: string) => void;
+  onToggleReaction: (emoji: ReactionType) => void;
   onAddComment: (content: string) => void;
   // 'all'(기존), 'reactions-only'(중간바), 'input-only'(댓글탭하단)
   viewType?: 'all' | 'reactions-only' | 'input-only';
@@ -100,35 +100,39 @@ export default function FeedbackInput({
                   'grid grid-cols-2 gap-2'
             }`}
           >
-            {reactions.map((reaction) => (
-              <button
-                key={reaction.emoji}
-                onClick={() => onToggleReaction(reaction.emoji)}
-                className={[
-                  'flex items-center justify-between px-2 py-1.5 rounded-full transition',
-                  reaction.active
-                    ? 'bg-gray-100 text-main-variant2 text-body-m-bold ring-1 ring-main-variant1'
-                    : 'bg-gray-800 ring-1 text-body-m ring-gray-600 text-white hover:bg-gray-800',
+            {reactions.map((reaction) => {
+              const config = REACTION_CONFIG[reaction.type];
 
-                  isMobileReactionsOnly ? 'flex-1 basis-[35px] max-w-[120px]' : '',
-                ].join(' ')}
-              >
-                <div className="flex items-center min-w-0">
-                  <span className="flex-shrink-0">{reaction.emoji}</span>
-                  <span
-                    className={`whitespace-nowrap overflow-hidden ${viewType === 'reactions-only' ? 'hidden' : ''}`}
-                  >
-                    {reaction.label}
-                  </span>
-                </div>
+              return (
+                <button
+                  key={reaction.type}
+                  onClick={() => onToggleReaction(reaction.type)}
+                  className={[
+                    'flex items-center justify-between px-2 py-1.5 rounded-full transition',
+                    reaction.active
+                      ? 'bg-gray-100 text-main-variant2 text-body-m-bold ring-1 ring-main-variant1'
+                      : 'bg-gray-800 ring-1 text-body-m ring-gray-600 text-white hover:bg-gray-800',
 
-                {reaction.count > 0 && (
-                  <span className={`flex-shrink-0 ml-1 ${reaction.active ? 'font-bold' : ''}`}>
-                    {formatReactionCount(reaction.count)}
-                  </span>
-                )}
-              </button>
-            ))}
+                    isMobileReactionsOnly ? 'flex-1 basis-[35px] max-w-[120px]' : '',
+                  ].join(' ')}
+                >
+                  <div className="flex items-center min-w-0">
+                    <span className="flex-shrink-0">{config.emoji}</span>
+                    <span
+                      className={`whitespace-nowrap overflow-hidden ${viewType === 'reactions-only' ? 'hidden' : ''}`}
+                    >
+                      {config.label}
+                    </span>
+                  </div>
+
+                  {reaction.count > 0 && (
+                    <span className={`flex-shrink-0 ml-1 ${reaction.active ? 'font-bold' : ''}`}>
+                      {formatReactionCount(reaction.count)}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

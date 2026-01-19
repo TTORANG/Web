@@ -36,12 +36,12 @@ export const DarkHeader = ({
                   isOpen ? 'text-white' : 'text-gray-200 hover:text-white',
                 )}
               >
-                <Informaion />
+                <Informaion className="h-4 w-4 translate-y-[1px]" />
               </button>
             )}
             align="end" // 팝오버 왼쪽 정렬 (취향에 따라 center로 변경 가능)
             position="bottom"
-            className="w-[250px] rounded-lg bg-white p-4 shadow-lg ring-1 ring-black/5 translate-x-20"
+            className="w-[250px] max-w-[calc(100vw-2rem)] rounded-lg bg-white p-4 shadow-lg ring-1 ring-black/5 left-1/2 right-auto -translate-x-1/2 md:left-auto md:right-0 md:translate-x-0"
           >
             {/* 팝오버 내부 콘텐츠 (사진 디자인 반영) */}
             <div className="flex flex-col gap-2">

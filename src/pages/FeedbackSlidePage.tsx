@@ -1,31 +1,116 @@
+/**
+ * @file FeedbackSlidePage.tsx
+ * @description 피드백 슬라이드 페이지 (Logic: Develop, UI: HEAD + Develop Components)
+ */
 import { useEffect, useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
+import { queryClient, queryKeys } from '@/api';
+// 아이콘 및 공통 컴포넌트
 import LeftArrow from '@/assets/icons/icon-arrow-left.svg?react';
 import RightArrow from '@/assets/icons/icon-arrow-right.svg?react';
+// [New] 분리된 컴포넌트 Import
+import { CommentInput } from '@/components/comment';
+// 하위 컴포넌트
+import CommentList from '@/components/comment/CommentList';
+import { Spinner } from '@/components/common';
 import DarkHeader from '@/components/common/DarkHeader';
-import { MOCK_SLIDES, MOCK_UI_SLIDES } from '@/mocks/slides';
-import { useSlideStore } from '@/stores/slideStore';
+// develop 브랜치의 입력창
+import ReactionButtons from '@/components/feedback/ReactionButtons';
+import SlideViewer from '@/components/feedback/SlideViewer';
+import { useHotkey } from '@/hooks';
+// develop 브랜치의 리액션 버튼
 
-import CommentList from '../components/comment/CommentList';
-import FeedbackInput from '../components/feedback/FeedbackInput';
-import SlideViewer from '../components/feedback/SlideViewer';
-import { useComments } from '../hooks/useComments';
-import { useReactions } from '../hooks/useReactions';
-import { useSlides } from '../hooks/useSlides';
+// API 및 네비게이션
+import { useSlides, useUpdateSlide } from '@/hooks/queries/useSlides';
+import { useComments } from '@/hooks/useComments';
+import { useReactions } from '@/hooks/useReactions';
+import { useSlideNavigation } from '@/hooks/useSlideNavigation';
+import { useSlideStore } from '@/stores/slideStore';
+import type { Slide } from '@/types/slide';
 
 export default function FeedbackSlidePage() {
-  const slideLogic = useSlides();
-  const { slideIndex, totalSlides, isFirst, isLast, goPrev, goNext } = slideLogic;
+  const { projectId } = useParams<{ projectId: string }>();
+  const resolvedProjectId = projectId ?? (import.meta.env.DEV ? 'mock' : '');
+  const { data: slides, isLoading } = useSlides(resolvedProjectId);
+
+  const totalSlides = slides?.length ?? 0;
+  const navigation = useSlideNavigation(totalSlides);
+  const { slideIndex, goPrev, goNext, isFirst, isLast, goToSlideRef } = navigation;
+
+  const currentSlide = slides?.[slideIndex];
 
   const { comments, addComment, addReply, deleteComment } = useComments();
   const { reactions, toggleReaction } = useReactions();
   const initSlide = useSlideStore((state) => state.initSlide);
+  const { mutate: updateSlideTitle } = useUpdateSlide();
 
-  // 모바일 전용 탭 상태 ('script' | 'comment')
+  // 모바일 탭 상태
   const [mobileTab, setMobileTab] = useState<'script' | 'comment'>('script');
 
+  // [New] 댓글 입력 상태 관리 (CommentInput을 위해 상위로 끌어올림)
+  const [commentDraft, setCommentDraft] = useState('');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [draftTitle, setDraftTitle] = useState('');
+
+  // [New] 댓글 전송 핸들러
+  const handleAddComment = () => {
+    if (!commentDraft.trim()) return;
+    addComment(commentDraft, slideIndex);
+    setCommentDraft('');
+  };
+
+  const startTitleEdit = () => {
+    if (!currentSlide) return;
+    setDraftTitle(currentSlide.title);
+    setIsEditingTitle(true);
+  };
+
+  const cancelTitleEdit = () => {
+    setIsEditingTitle(false);
+    setDraftTitle(currentSlide?.title ?? '');
+  };
+
+  const commitTitle = () => {
+    if (!currentSlide) return;
+    const fallbackTitle = `슬라이드 ${slideIndex + 1}`;
+    const nextTitle = draftTitle.trim() || fallbackTitle;
+
+    if (!nextTitle || nextTitle === currentSlide.title) {
+      setIsEditingTitle(false);
+      setDraftTitle(currentSlide.title || fallbackTitle);
+      return;
+    }
+
+    // Optimistically update list cache for immediate UI feedback.
+    queryClient.setQueryData<Slide[] | undefined>(
+      queryKeys.slides.list(resolvedProjectId),
+      (prev) =>
+        prev
+          ? prev.map((slide) =>
+              slide.id === currentSlide.id ? { ...slide, title: nextTitle } : slide,
+            )
+          : prev,
+    );
+
+    updateSlideTitle(
+      { slideId: currentSlide.id, data: { title: nextTitle } },
+      {
+        onError: () => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.slides.list(resolvedProjectId) });
+          setDraftTitle(currentSlide.title);
+        },
+      },
+    );
+
+    setIsEditingTitle(false);
+  };
+
+  useHotkey({ ArrowLeft: goPrev, ArrowRight: goNext }, { enabled: !isLoading });
+
   const allFlatOpinions = useMemo(() => {
-    return MOCK_SLIDES.flatMap((slide, index) => {
+    if (!slides) return [];
+    return slides.flatMap((slide, index) => {
       const slideLabel = `슬라이드 ${index + 1}`;
       return (slide.opinions || []).map((op) => ({
         ...op,
@@ -34,64 +119,100 @@ export default function FeedbackSlidePage() {
         slideRef: slideLabel,
       }));
     });
-  }, []);
+  }, [slides]);
 
   useEffect(() => {
-    const rawData = MOCK_SLIDES[slideIndex];
-    const uiData = MOCK_UI_SLIDES[slideIndex];
+    if (!currentSlide) return;
+    initSlide(
+      {
+        ...currentSlide,
+        opinions: allFlatOpinions,
+        emojiReactions: currentSlide.emojiReactions || [],
+      },
+      slideIndex,
+    );
+  }, [slideIndex, currentSlide, initSlide, allFlatOpinions]);
 
-    if (rawData && uiData) {
-      // initSlide 호출 시 두 번째 인자로 slideIndex를 넘겨줍니다.
-      initSlide(
-        {
-          ...rawData,
-          opinions: allFlatOpinions,
-          emojiReactions: uiData.emojiReactions,
-        },
-        slideIndex,
-      ); // <--- 여기 slideIndex 추가!
-    }
-  }, [slideIndex, initSlide, allFlatOpinions]);
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-gray-900">
+        <Spinner size={40} />
+      </div>
+    );
+  }
+
+  // SlideViewer에 넘길 더미 props
+  const titleEditProps = {
+    isEditingTitle,
+    draftTitle,
+    setDraftTitle,
+    startTitleEdit,
+    commitTitle,
+    cancelTitleEdit,
+  };
 
   return (
     <div className="fixed inset-0 z-[60] flex h-screen w-screen flex-col overflow-hidden bg-gray-900">
       <DarkHeader title="Q4 마케팅 전략 발표" />
 
-      {/** [Desktop Layout] md 이상일 때만 표시 */}
+      {/** [Desktop Layout] */}
       <div className="hidden md:flex flex-1 w-full min-h-0">
-        <SlideViewer {...slideLogic} viewMode="desktop" />
+        <SlideViewer
+          slide={currentSlide}
+          slideIndex={slideIndex}
+          totalSlides={totalSlides}
+          isFirst={isFirst}
+          isLast={isLast}
+          goPrev={goPrev}
+          goNext={goNext}
+          viewMode="desktop"
+          {...titleEditProps}
+        />
 
         <aside className="w-[520px] bg-gray-900 flex flex-col border-l border-gray-800">
           <div className="flex-1 min-h-0 overflow-y-auto">
             <CommentList
               comments={comments}
               onAddReply={addReply}
-              onGoToSlideRef={slideLogic.goToSlideRef}
+              onGoToSlideRef={goToSlideRef}
               onDeleteComment={deleteComment}
+              theme="dark"
             />
           </div>
 
-          <div className="shrink-0">
-            <FeedbackInput
-              reactions={reactions}
-              onToggleReaction={toggleReaction}
-              onAddComment={(content) => addComment(content, slideLogic.slideIndex)}
-              viewType="all"
+          {/* [Changed] develop 스타일: CommentInput + ReactionButtons 조합 */}
+          <div className="shrink-0 flex flex-col gap-4 px-4 pb-6 pt-4 bg-gray-900">
+            <CommentInput
+              value={commentDraft}
+              onChange={setCommentDraft}
+              onSubmit={handleAddComment}
+              onCancel={() => setCommentDraft('')}
+              // 다크 모드용 스타일 추가 (필요 시 CommentInput 내부 수정 필요)
+              className="items-end w-full pr-10 md:pr-35"
+              theme="dark"
             />
+            <ReactionButtons reactions={reactions} onToggleReaction={toggleReaction} theme="dark" />
           </div>
         </aside>
       </div>
 
-      {/** [Mobile Layout] md 미만일 때만 표시 */}
+      {/** [Mobile Layout] */}
       <div className="flex md:hidden flex-col flex-1 w-full overflow-hidden">
-        {/* 1. 슬라이드 뷰어 (화면만) */}
         <div className="w-full shrink-0">
-          <SlideViewer {...slideLogic} viewMode="mobile-screen" />
+          <SlideViewer
+            slide={currentSlide}
+            slideIndex={slideIndex}
+            totalSlides={totalSlides}
+            isFirst={isFirst}
+            isLast={isLast}
+            goPrev={goPrev}
+            goNext={goNext}
+            viewMode="mobile-screen"
+            {...titleEditProps}
+          />
         </div>
 
-        {/* 2. 컨트롤 바 (2단 구조로 변경) */}
         <div className="flex flex-col gap-3 p-3 bg-gray-900 shrink-0">
-          {/* 윗줄: < 1/5 > 네비게이션 */}
           <div className="flex items-center justify-between">
             <button
               onClick={goPrev}
@@ -105,7 +226,6 @@ export default function FeedbackSlidePage() {
               <LeftArrow className="text-white h-5 w-5" />
             </button>
 
-            {/* 페이지 번호 텍스트 */}
             <span className="text-body-m-bold text-gray-200 text-center">
               {slideIndex + 1} / {totalSlides}
             </span>
@@ -123,18 +243,19 @@ export default function FeedbackSlidePage() {
             </button>
           </div>
 
-          {/* 아랫줄: 이모지 리스트 */}
           <div className="w-full overflow-hidden">
-            <FeedbackInput
+            {/* 모바일 상단 바에는 리액션 버튼만 표시 */}
+            <ReactionButtons
               reactions={reactions}
               onToggleReaction={toggleReaction}
-              onAddComment={() => {}}
-              viewType="reactions-only"
+              theme="dark"
+              layout="row"
+              className="w-full"
             />
           </div>
         </div>
 
-        {/* 3. 탭 버튼 */}
+        {/* 탭 버튼 */}
         <div className="flex border-b border-gray-800 shrink-0 bg-gray-900">
           <button
             onClick={() => setMobileTab('script')}
@@ -160,28 +281,42 @@ export default function FeedbackSlidePage() {
           </button>
         </div>
 
-        {/* 4. 탭 콘텐츠 영역 */}
+        {/* 탭 콘텐츠 */}
         <div className="flex-1 min-h-0 overflow-y-auto bg-gray-900">
           {mobileTab === 'script' ? (
             <div className="h-full">
-              <SlideViewer {...slideLogic} viewMode="mobile-script" />
+              <SlideViewer
+                slide={currentSlide}
+                slideIndex={slideIndex}
+                totalSlides={totalSlides}
+                isFirst={isFirst}
+                isLast={isLast}
+                goPrev={goPrev}
+                goNext={goNext}
+                viewMode="mobile-script"
+                {...titleEditProps}
+              />
             </div>
           ) : (
             <div className="flex flex-col min-h-full">
-              <div className="flex-1 ">
+              <div className="flex-1">
                 <CommentList
                   comments={comments}
                   onAddReply={addReply}
-                  onGoToSlideRef={slideLogic.goToSlideRef}
+                  onGoToSlideRef={goToSlideRef}
                   onDeleteComment={deleteComment}
+                  theme="dark"
                 />
               </div>
-              <div className="sticky bottom-0 bg-gray-900">
-                <FeedbackInput
-                  reactions={reactions}
-                  onToggleReaction={() => {}}
-                  onAddComment={(content) => addComment(content, slideLogic.slideIndex)}
-                  viewType="input-only"
+              {/* 모바일 댓글 탭 하단: 입력창만 표시 */}
+              <div className="sticky bottom-0 bg-gray-900 p-2 border-t border-gray-800">
+                <CommentInput
+                  value={commentDraft}
+                  onChange={setCommentDraft}
+                  onSubmit={handleAddComment}
+                  onCancel={() => setCommentDraft('')}
+                  className="w-full"
+                  theme="dark"
                 />
               </div>
             </div>

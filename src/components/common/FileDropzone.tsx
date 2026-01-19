@@ -1,18 +1,9 @@
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import UploadIcon from '@/assets/icons/icon-upload.svg?react';
+import type { FileDropProps } from '@/types/uploadFile';
 
 import ProgressBar from './ProgressBar';
-
-type UploadState = 'idle' | 'uploading' | 'done' | 'error';
-
-type FileDropProps = {
-  onFilesSelected: (files: File[]) => void;
-  accept?: string;
-  disabled?: boolean;
-  uploadState?: UploadState;
-  progress?: number; // 0~100
-};
 
 export default function FileDropzone({
   onFilesSelected,
@@ -59,7 +50,7 @@ export default function FileDropzone({
   const showUploadOverlay = uploadState === 'uploading';
 
   return (
-    <div className="w-full mt-10 max-w-3xl">
+    <div className="w-full mt-10">
       <input
         ref={inputRef}
         type="file"

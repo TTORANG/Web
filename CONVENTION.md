@@ -57,7 +57,7 @@
 
 | 대상            |        규칙         | 예시                   |
 | :-------------- | :-----------------: | :--------------------- |
-| 컴포넌트명      |    `PascalCase`     | `Header`, `LoginForm`  |
+| 컴포넌트명      |    `PascalCase`     | `Layout`, `LoginForm`  |
 | 페이지 컴포넌트 | `PascalCase + Page` | `MainPage`, `CartPage` |
 
 ### Export 규칙

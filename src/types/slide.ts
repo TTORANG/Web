@@ -17,6 +17,4 @@ export interface Slide {
   /** 최신순 정렬 */
   history: HistoryItem[];
   emojiReactions: EmojiReaction[];
-  viewerText?: string; // 슬라이드 화면 중앙에 뜨는 텍스트
-  body?: string; // 하단 설명 박스에 뜨는 텍스트
 }

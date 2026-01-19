@@ -1,10 +1,7 @@
-import type { CommentItem } from '@/types/comment';
-import type { EmojiReaction } from '@/types/script';
-// UI용 댓글 타입
-import type { Slide as UiSlide } from '@/types/slide';
 import type { Slide } from '@/types/slide';
-// UI용 슬라이드/리액션 타입
 import dayjs, { type ManipulateType } from '@/utils/dayjs';
+
+import { MOCK_USERS } from './users';
 
 /**
  * 목 데이터용 타임스탬프 헬퍼
@@ -32,20 +29,20 @@ export const MOCK_SLIDES: Slide[] = [
   {
     id: '1',
     title: '도입',
-    thumb: 'https://via.placeholder.com/160x90?text=1',
+    thumb: '/thumbnails/slide-0.webp',
     script:
       '안녕하세요, 오늘 발표를 맡은 김또랑입니다.\n이번 프로젝트는 프레젠테이션 협업 도구입니다.',
     opinions: [
       {
         id: '1',
-        author: '김철수',
+        authorId: MOCK_USERS[1].id,
         content: '도입부가 인상적이에요!',
         timestamp: ts.ago(2, 'minute'),
         isMine: false,
       },
       {
         id: '2',
-        author: '나',
+        authorId: MOCK_USERS[0].id,
         content: '감사합니다~',
         timestamp: ts.ago(1, 'minute'),
         isMine: true,
@@ -54,7 +51,7 @@ export const MOCK_SLIDES: Slide[] = [
       },
       {
         id: '3',
-        author: '이영희',
+        authorId: MOCK_USERS[2].id,
         content: '첫 문장을 질문으로 시작하면 어떨까요?',
         timestamp: ts.ago(30, 'second'),
         isMine: false,
@@ -73,9 +70,11 @@ export const MOCK_SLIDES: Slide[] = [
       },
     ],
     emojiReactions: [
-      { emoji: '👍', count: 5 },
-      { emoji: '❤️', count: 3 },
-      { emoji: '🔥', count: 2 },
+      { type: 'fire', count: 8 },
+      { type: 'sleepy', count: 4 },
+      { type: 'good', count: 99, active: true },
+      { type: 'bad', count: 1 },
+      { type: 'confused', count: 13 },
     ],
   },
 
@@ -83,19 +82,19 @@ export const MOCK_SLIDES: Slide[] = [
   {
     id: '2',
     title: '문제 정의',
-    thumb: 'https://via.placeholder.com/160x90?text=2',
+    thumb: '/thumbnails/slide-1.webp',
     script: '',
     opinions: [
       {
         id: '1',
-        author: '김철수',
+        authorId: MOCK_USERS[1].id,
         content: '문제 정의가 명확하네요',
         timestamp: ts.ago(10, 'minute'),
         isMine: false,
       },
       {
         id: '2',
-        author: '이영희',
+        authorId: MOCK_USERS[2].id,
         content: '동의합니다!',
         timestamp: ts.ago(9, 'minute'),
         isMine: false,
@@ -104,14 +103,14 @@ export const MOCK_SLIDES: Slide[] = [
       },
       {
         id: '3',
-        author: '박민수',
+        authorId: MOCK_USERS[3].id,
         content: '추가로 이런 문제도 있어요',
         timestamp: ts.ago(8, 'minute'),
         isMine: false,
       },
       {
         id: '4',
-        author: '나',
+        authorId: MOCK_USERS[0].id,
         content: '좋은 의견이에요',
         timestamp: ts.ago(7, 'minute'),
         isMine: true,
@@ -120,28 +119,28 @@ export const MOCK_SLIDES: Slide[] = [
       },
       {
         id: '5',
-        author: '최지훈',
+        authorId: MOCK_USERS[4].id,
         content: '사용자 인터뷰 결과도 추가하면 좋겠어요',
         timestamp: ts.ago(6, 'minute'),
         isMine: false,
       },
       {
         id: '6',
-        author: '정수진',
+        authorId: MOCK_USERS[1].id,
         content: '데이터로 뒷받침하면 더 설득력 있을 것 같아요',
         timestamp: ts.ago(5, 'minute'),
         isMine: false,
       },
       {
         id: '7',
-        author: '강동원',
+        authorId: MOCK_USERS[2].id,
         content: '경쟁사 분석도 넣어보는 건 어떨까요?',
         timestamp: ts.ago(4, 'minute'),
         isMine: false,
       },
       {
         id: '8',
-        author: '나',
+        authorId: MOCK_USERS[0].id,
         content: '네, 반영해볼게요!',
         timestamp: ts.ago(3, 'minute'),
         isMine: true,
@@ -150,14 +149,20 @@ export const MOCK_SLIDES: Slide[] = [
       },
     ],
     history: [],
-    emojiReactions: [{ emoji: '👀', count: 8 }],
+    emojiReactions: [
+      { type: 'fire', count: 0 },
+      { type: 'sleepy', count: 0 },
+      { type: 'good', count: 8 },
+      { type: 'bad', count: 0 },
+      { type: 'confused', count: 0 },
+    ],
   },
 
   // 3. 히스토리 많음 - 스크롤 테스트
   {
     id: '3',
     title: '문제 분석',
-    thumb: 'https://via.placeholder.com/160x90?text=3',
+    thumb: '/thumbnails/slide-2.webp',
     script:
       '문제의 근본 원인은 세 가지로 분류할 수 있습니다.\n첫째, 기능적 한계입니다.\n둘째, 구조적 문제입니다.\n셋째, 사용 흐름의 복잡성입니다.',
     opinions: [],
@@ -195,19 +200,25 @@ export const MOCK_SLIDES: Slide[] = [
         content: '문제 분석 초안입니다.',
       },
     ],
-    emojiReactions: [{ emoji: '🤔', count: 3 }],
+    emojiReactions: [
+      { type: 'fire', count: 0 },
+      { type: 'sleepy', count: 0 },
+      { type: 'good', count: 0 },
+      { type: 'bad', count: 0 },
+      { type: 'confused', count: 3 },
+    ],
   },
 
   // 4. 이모지 많음 - 더보기 팝오버 테스트
   {
     id: '4',
     title: '해결 목표',
-    thumb: 'https://via.placeholder.com/160x90?text=4',
+    thumb: '/thumbnails/slide-3.webp',
     script: '',
     opinions: [
       {
         id: '1',
-        author: '팀장',
+        authorId: MOCK_USERS[3].id,
         content: '목표가 명확해요!',
         timestamp: ts.ago(1, 'hour'),
         isMine: false,
@@ -215,13 +226,11 @@ export const MOCK_SLIDES: Slide[] = [
     ],
     history: [],
     emojiReactions: [
-      { emoji: '🎯', count: 12 },
-      { emoji: '👍', count: 8 },
-      { emoji: '🔥', count: 6 },
-      { emoji: '💡', count: 5 },
-      { emoji: '✨', count: 4 },
-      { emoji: '🚀', count: 3 },
-      { emoji: '💪', count: 2 },
+      { type: 'fire', count: 12 },
+      { type: 'sleepy', count: 0 },
+      { type: 'good', count: 8 },
+      { type: 'bad', count: 2 },
+      { type: 'confused', count: 0 },
     ],
   },
 
@@ -229,7 +238,7 @@ export const MOCK_SLIDES: Slide[] = [
   {
     id: '5',
     title: '해결 방안',
-    thumb: 'https://via.placeholder.com/160x90?text=5',
+    thumb: '/thumbnails/slide-4.webp',
     script: '핵심 해결 방안은 다음과 같습니다.',
     opinions: [],
     history: [
@@ -240,8 +249,11 @@ export const MOCK_SLIDES: Slide[] = [
       },
     ],
     emojiReactions: [
-      { emoji: '👍', count: 150 },
-      { emoji: '🎉', count: 99 },
+      { type: 'fire', count: 0 },
+      { type: 'sleepy', count: 0 },
+      { type: 'good', count: 150 },
+      { type: 'bad', count: 0 },
+      { type: 'confused', count: 0 },
     ],
   },
 
@@ -249,26 +261,32 @@ export const MOCK_SLIDES: Slide[] = [
   {
     id: '6',
     title: '기능 구성 및 상세 설계 - 핵심 모듈 분석',
-    thumb: 'https://via.placeholder.com/160x90?text=6',
+    thumb: '/thumbnails/slide-5.webp',
     script: '',
     opinions: [
       {
         id: '1',
-        author: '개발자A',
+        authorId: MOCK_USERS[4].id,
         content: '기능 정의가 잘 되어있네요',
         timestamp: ts.ago(2, 'hour'),
         isMine: false,
       },
     ],
     history: [],
-    emojiReactions: [{ emoji: '👀', count: 5 }],
+    emojiReactions: [
+      { type: 'fire', count: 5 },
+      { type: 'sleepy', count: 0 },
+      { type: 'good', count: 0 },
+      { type: 'bad', count: 0 },
+      { type: 'confused', count: 0 },
+    ],
   },
 
   // 7. 긴 대본 - 스크롤 테스트
   {
     id: '7',
     title: '화면 흐름',
-    thumb: 'https://via.placeholder.com/160x90?text=7',
+    thumb: '/thumbnails/slide-6.webp',
     script: `사용자 화면 흐름을 설명드리겠습니다.
 
 1. 로그인 화면
@@ -298,26 +316,32 @@ Google, Kakao, Naver 로그인을 지원합니다.
         content: '사용자 화면 흐름 초안',
       },
     ],
-    emojiReactions: [],
+    emojiReactions: [
+      { type: 'fire', count: 0 },
+      { type: 'sleepy', count: 0 },
+      { type: 'good', count: 0 },
+      { type: 'bad', count: 0 },
+      { type: 'confused', count: 0 },
+    ],
   },
 
   // 8. 내 의견만 - 삭제 버튼 테스트
   {
     id: '8',
     title: '기술적 구현',
-    thumb: 'https://via.placeholder.com/160x90?text=8',
+    thumb: '/thumbnails/slide-7.webp',
     script: 'React 19, TypeScript, Zustand를 사용합니다.',
     opinions: [
       {
         id: '1',
-        author: '나',
+        authorId: MOCK_USERS[0].id,
         content: 'Zustand로 상태 관리하면 좋을 것 같아요',
         timestamp: ts.ago(3, 'hour'),
         isMine: true,
       },
       {
         id: '2',
-        author: '나',
+        authorId: MOCK_USERS[0].id,
         content: 'Context보다 성능이 좋습니다',
         timestamp: ts.ago(2, 'hour'),
         isMine: true,
@@ -326,40 +350,46 @@ Google, Kakao, Naver 로그인을 지원합니다.
       },
       {
         id: '3',
-        author: '나',
+        authorId: MOCK_USERS[0].id,
         content: 'Selector 패턴으로 최적화 가능해요',
         timestamp: ts.ago(1, 'hour'),
         isMine: true,
       },
     ],
     history: [],
-    emojiReactions: [{ emoji: '💻', count: 2 }],
+    emojiReactions: [
+      { type: 'fire', count: 0 },
+      { type: 'sleepy', count: 0 },
+      { type: 'good', count: 2 },
+      { type: 'bad', count: 0 },
+      { type: 'confused', count: 0 },
+    ],
   },
 
   // 9. 타인 의견만 - 답글 테스트
   {
     id: '9',
     title: '기대 효과',
-    thumb: 'https://via.placeholder.com/160x90?text=9',
+    thumb: '/thumbnails/slide-8.webp',
     script: '',
     opinions: [
       {
         id: '1',
-        author: '김대리',
+        authorId: MOCK_USERS[1].id,
         content: '기대 효과가 구체적이에요',
         timestamp: ts.ago(4, 'hour'),
         isMine: false,
       },
       {
         id: '2',
-        author: '박과장',
+        authorId: MOCK_USERS[2].id,
         content: '수치화된 목표가 있으면 더 좋겠어요',
         timestamp: ts.ago(3, 'hour'),
         isMine: false,
       },
       {
         id: '3',
-        author: '이부장',
+        authorId: MOCK_USERS[3].id,
         content: '비즈니스 임팩트도 추가해주세요',
         timestamp: ts.ago(2, 'hour'),
         isMine: false,
@@ -367,8 +397,11 @@ Google, Kakao, Naver 로그인을 지원합니다.
     ],
     history: [],
     emojiReactions: [
-      { emoji: '📈', count: 7 },
-      { emoji: '💰', count: 3 },
+      { type: 'fire', count: 7 },
+      { type: 'sleepy', count: 0 },
+      { type: 'good', count: 3 },
+      { type: 'bad', count: 0 },
+      { type: 'confused', count: 0 },
     ],
   },
 
@@ -376,103 +409,16 @@ Google, Kakao, Naver 로그인을 지원합니다.
   {
     id: '10',
     title: '결론',
-    thumb: 'https://via.placeholder.com/160x90?text=10',
+    thumb: '/thumbnails/slide-9.webp',
     script: '',
     opinions: [],
     history: [],
-    emojiReactions: [],
+    emojiReactions: [
+      { type: 'fire', count: 0 },
+      { type: 'sleepy', count: 0 },
+      { type: 'good', count: 0 },
+      { type: 'bad', count: 0 },
+      { type: 'confused', count: 0 },
+    ],
   },
 ];
-
-// FD_SLD
-
-/**
- * UI용 리액션 라벨 정의
- */
-const EMOJI_LABELS: Record<string, string> = {
-  '🔥': '인상적이에요',
-  '💤': '지루해요',
-  '👍': '잘했어요',
-  '👎': '별로예요',
-  '🤷': '이해 안돼요',
-};
-
-/**
- * - UI용 슬라이드 데이터
- * - 슬라이드별 이모지 상태(count)를 기본 템플릿과 병합합니다.
- */
-export const MOCK_UI_SLIDES: UiSlide[] = MOCK_SLIDES.map((slide, index) => {
-  const displayTitle = slide.title.trim() ? slide.title : `슬라이드 ${index + 1}`;
-
-  const emojiReactions: EmojiReaction[] = Object.entries(EMOJI_LABELS).map(([emoji, label]) => ({
-    emoji,
-    label,
-    count: slide.emojiReactions?.find((r) => r.emoji === emoji)?.count || 0,
-    active: false,
-  }));
-
-  return {
-    id: slide.id,
-    title: displayTitle,
-    thumb: slide.thumb,
-    script: slide.script,
-    opinions: [],
-    history: [],
-    emojiReactions,
-    body: slide.script || `${displayTitle} 내용입니다.`,
-    viewerText: `${displayTitle}의 본문 내용입니다.`,
-  };
-});
-
-/**
- * - UI용 댓글 목록
- * - Flat 구조 -> Nested 구조 변환
- * - 슬라이드 번호(slideRef) 주입
- */
-export const MOCK_UI_COMMENTS: CommentItem[] = MOCK_SLIDES.flatMap((slide, index) => {
-  const opinions = slide.opinions || [];
-  const slideLabel = `슬라이드 ${index + 1}`;
-
-  // 댓글 매핑 로직 재사용을 위한 헬퍼 함수
-  const mapComment = (c: CommentItem, replies: CommentItem[] = []) => ({
-    id: `${slide.id}-${c.id}`,
-    author: c.author,
-    timestamp: c.timestamp,
-    slideRef: slideLabel,
-    content: c.content,
-    isMine: c.isMine || false,
-    replies,
-  });
-
-  // 부모 댓글만 필터링 후 매핑 (자식 댓글은 mapComment 재귀 호출로 해결)
-  return opinions
-    .filter((op) => !op.isReply)
-    .map((root) => {
-      const replies = opinions.filter((op) => op.isReply && op.parentId === root.id);
-      return mapComment(
-        root,
-        replies.map((r) => mapComment(r)),
-      );
-    });
-}).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-/**
- * - UI용 전체 리액션 집계 (Dashboard용)
- * - 모든 슬라이드의 이모지 카운트를 합산합니다.
- */
-export const MOCK_UI_REACTIONS: EmojiReaction[] = Object.entries(EMOJI_LABELS).map(
-  ([emoji, label]) => {
-    // Map 사용 없이 reduce로 한방에 계산
-    const totalCount = MOCK_SLIDES.reduce((acc, slide) => {
-      const found = slide.emojiReactions?.find((r) => r.emoji === emoji);
-      return acc + (found ? found.count : 0);
-    }, 0);
-
-    return {
-      emoji,
-      label,
-      count: totalCount,
-      active: false,
-    };
-  },
-);

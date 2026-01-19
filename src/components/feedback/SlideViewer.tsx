@@ -1,17 +1,37 @@
-// 좌측 슬라이드 뷰어
-// components/feedback/SlideViewer.tsx
+/**
+ * @file SlideViewer.tsx
+ * @description 피드백 화면 좌측 슬라이드 뷰어
+ */
 import LeftArrow from '@/assets/icons/icon-arrow-left.svg?react';
 import RightArrow from '@/assets/icons/icon-arrow-right.svg?react';
+import type { Slide } from '@/types/slide';
 
-import { useSlides } from '../../hooks/useSlides';
+interface SlideViewerProps {
+  // 1. 핵심 데이터
+  slide: Slide | undefined;
+  slideIndex: number;
+  totalSlides: number;
 
-// viewMode 추가: 'desktop'(기존), 'mobile-screen'(화면만), 'mobile-script'(대본만)
-interface Props extends ReturnType<typeof useSlides> {
+  // 2. 네비게이션
+  isFirst: boolean;
+  isLast: boolean;
+  goPrev: () => void;
+  goNext: () => void;
+
+  // 3. 제목 수정 관련
+  isEditingTitle: boolean;
+  draftTitle: string;
+  setDraftTitle: (value: string) => void;
+  startTitleEdit: () => void;
+  commitTitle: () => void;
+  cancelTitleEdit: () => void;
+
+  // 4. 뷰 모드
   viewMode?: 'desktop' | 'mobile-screen' | 'mobile-script';
 }
 
 export default function SlideViewer({
-  currentSlide,
+  slide,
   slideIndex,
   totalSlides,
   isFirst,
@@ -25,25 +45,35 @@ export default function SlideViewer({
   commitTitle,
   cancelTitleEdit,
   viewMode = 'desktop', // 기본값
-}: Props) {
+}: SlideViewerProps) {
   const showScreen = viewMode === 'desktop' || viewMode === 'mobile-screen';
   const showScript = viewMode === 'desktop' || viewMode === 'mobile-script';
-
   // 모바일 스크립트 뷰에서는 버튼을 숨긴다
   const showButtons = viewMode === 'desktop';
+
+  // slide가 없을 때 안전 장치
+  if (!slide) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-gray-900">
+        <p className="text-gray-500">슬라이드 로딩 중...</p>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`${viewMode === 'desktop' ? 'ml-35' : ''} flex-1 flex flex-col min-w-0 bg-gray-900`}
     >
-      {/* 1. 좌측 상단: 슬라이드 뷰어 */}
-      {/* 1. 상단 영역 (슬라이드가 들어갈 공간 확보) */}
-      {/* 이 div는 남는 공간을 꽉 채우고, 내용물을 정중앙에 배치합니다. */}
+      {/* 1. 상단 영역 (화면) */}
       {showScreen && (
         <div className="flex-1 flex items-center justify-center overflow-hidden relative">
-          {/* 2. 슬라이드 본체 (회색 박스) */}
-          {/* w-full max-h-full: 가로를 꽉 채우되, 세로 공간이 모자라면 높이에 맞춤 (반응형) */}
           <div className="aspect-[16/9] w-full max-h-full bg-gray-600 relative flex items-center justify-center shadow-lg">
-            <p className="text-gray-300 text-lg font-medium">{currentSlide.viewerText}</p>
+            {/* 이미지가 있으면 이미지, 없으면 제목 텍스트 */}
+            {slide.thumb ? (
+              <img src={slide.thumb} alt={slide.title} className="w-full h-full object-cover" />
+            ) : (
+              <p className="text-gray-300 text-lg font-medium">{slide.title}</p>
+            )}
           </div>
         </div>
       )}
@@ -66,18 +96,19 @@ export default function SlideViewer({
                   if (e.key === 'Enter') commitTitle();
                   if (e.key === 'Escape') cancelTitleEdit();
                 }}
-                className="text-body-m-bold text-white bg-gray-800 border-white rounded px-1"
+                className="text-body-m-bold text-white bg-transparent border-b border-gray-500 rounded-none px-1 focus:outline-none focus:border-white"
               />
             ) : (
               <h2
-                className="text-body-m-bold text-white"
+                className="text-body-m-bold text-white cursor-pointer hover:underline decoration-gray-500 underline-offset-4"
                 onDoubleClick={startTitleEdit}
                 title="더블클릭해서 제목 수정"
               >
-                {currentSlide.title}
+                {slide.title}
               </h2>
             )}
-            {/* 데스크탑 모드에서만 내부 버튼 표시 */}
+
+            {/* 데스크탑 모드에서만 네비게이션 버튼 표시 */}
             {showButtons && (
               <div className="bottom-6 inline-flex items-center gap-1 rounded-full py-2 backdrop-blur">
                 <button
@@ -115,7 +146,7 @@ export default function SlideViewer({
 
           <div className="bg-gray-800 rounded-xl p-3 my-2 ">
             <p className="text-body-s text-white" style={{ whiteSpace: 'pre-line' }}>
-              {currentSlide.body}
+              {slide.script}
             </p>
           </div>
         </div>

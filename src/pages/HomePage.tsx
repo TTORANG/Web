@@ -1,49 +1,52 @@
-import FileDropzone from '@/components/common/FileDropzone';
-// import ProgressBar from '@/components/common/ProgressBar';
+import { useEffect, useState } from 'react';
+
+import IntroSection from '@/components/home/IntroSection';
+import ProjectsSection from '@/components/home/ProjectsSection';
+import { useDebounce } from '@/hooks/useDebounce';
+import { useHomeActions, useHomeQuery } from '@/hooks/useHomeSelectors';
+import { useProjectList } from '@/hooks/useProjectList';
 import { useUpload } from '@/hooks/useUpload';
+import { MOCK_PROJECTS } from '@/mocks/projects';
 
 const ACCEPTED_FILES_TYPES = '.pdf,.ppt,.pptx,.txt,.mp4';
 
 export default function HomePage() {
   const { progress, state, error, uploadFiles } = useUpload();
+  const [isLoading, setIsLoading] = useState(true);
+  const query = useHomeQuery();
+  const { setQuery } = useHomeActions();
+  const debouncedQuery = useDebounce(query, 300);
+
+  // TODO : 나중에 mock_projects 말고 서버데이터로 바꿔주기..
+  const projects = useProjectList(MOCK_PROJECTS, { query: debouncedQuery });
+  const isEmpty = !isLoading && MOCK_PROJECTS.length === 0;
+
+  // TODO : 실제 데이터 패칭 훅의 isLoading으로 교체
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <main className="mx-auto min-h-screen max-w-6xl px-6 py-8">
+    <main className="mx-auto min-h-screen max-w-4xl px-6 py-8">
       {/* 소개글 & 파일 업로드 */}
-      <section className="flex flex-col items-center text-center">
-        {/* 소개글 */}
-        <div className="mt-10">
-          <h1 className="text-body-l-bold text-gray-900">발표 연습을 시작하세요.</h1>
-          <p className="mt-2 text-body-s text-gray-600">
-            파일을 업로드해서 바로 연습을 시작해보세요.
-          </p>
-        </div>
-
-        {/* Dropzone */}
-        <FileDropzone
-          disabled={state === 'uploading'}
-          accept={ACCEPTED_FILES_TYPES}
-          uploadState={state}
-          progress={progress}
-          // UI 확인용
-          //onFilesSelected={() => simulateUpload()}
-          // 실제 업로드용
-          onFilesSelected={uploadFiles}
-        />
-
-        {error && <p className="mt-3 text-body-s text-error">업로드 실패: {error}</p>}
-      </section>
+      <IntroSection
+        accept={ACCEPTED_FILES_TYPES}
+        disabled={state === 'uploading'}
+        uploadState={state}
+        progress={progress}
+        error={error}
+        onFilesSelected={uploadFiles}
+        isEmpty={isEmpty}
+      />
 
       {/* 내발표 */}
-      <section className="mt-14">
-        {/* 제목 */}
-        <div className="mb-4">
-          <h2 className="text-body-m-bold">내 발표</h2>
-        </div>
-
-        {/* 검색 */}
-
-        {/* 프레젠테이션 목록 */}
-      </section>
+      <ProjectsSection
+        isLoading={isLoading}
+        query={query}
+        onChangeQuery={setQuery}
+        projects={projects}
+      />
     </main>
   );
 }

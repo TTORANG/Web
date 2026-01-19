@@ -21,8 +21,15 @@
 
   /* 토스트 내용 (아이콘 + 텍스트) */
   [data-sonner-toast] [data-content] {
-    @apply flex shrink-0;
+    @apply flex min-w-0;
     gap: 0px !important;
+  }
+
+  /* 제목/설명 텍스트 오버플로우 처리 */
+  [data-sonner-toast] [data-title],
+  [data-sonner-toast] [data-description] {
+    @apply break-words;
+    word-break: break-word !important;
   }
 
   /* description이 있을 때 세로 배치 */
@@ -48,6 +55,7 @@
     font-size: 14px !important;
     font-weight: 400 !important;
     line-height: 1.5 !important;
+    color: inherit !important;
     opacity: 0.7 !important;
   }
 

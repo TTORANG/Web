@@ -15,8 +15,8 @@ if ! echo "$branch" | grep -qE "^[a-zA-Z]+/"; then
   echo ""
   echo "❌ 브랜치 이름 형식이 올바르지 않습니다."
   echo ""
-  echo "올바른 형식: type/설명#이슈번호"
-  echo "예시: feat/login#12, fix/button-click#34"
+  echo "올바른 형식: type/설명-이슈번호"
+  echo "예시: feat/login-12, fix/button-click-34"
   echo ""
   exit 1
 fi
@@ -29,8 +29,8 @@ if echo "$branch" | grep -qE "[A-Z]"; then
   echo ""
   echo "❌ 브랜치 이름은 소문자만 사용해야 합니다."
   echo ""
-  echo "잘못된 예: Feat/login#12, feat/Login#12"
-  echo "올바른 예: feat/login#12, fix/button#34"
+  echo "잘못된 예: Feat/login-12, feat/Login-12"
+  echo "올바른 예: feat/login-12, fix/button-34"
   echo ""
   exit 1
 fi
@@ -47,28 +47,29 @@ if ! echo "$type" | grep -qE "^($allowed_types)$"; then
   echo "  design   - UI/UX 디자인 변경"
   echo "  chore    - 빌드, 설정 등 기타"
   echo "  docs     - 문서 작업"
+  echo "  ci       - CI/CD 관련"
   echo ""
   exit 1
 fi
 
-# 5. 이슈 번호 체크 (끝에 #숫자)
-if ! echo "$branch" | grep -qE "#[0-9]+$"; then
+# 5. 이슈 번호 체크 (끝에 -숫자)
+if ! echo "$branch" | grep -qE -- "-[0-9]+$"; then
   echo ""
   echo "❌ 브랜치 이름에 이슈 번호가 없습니다."
   echo ""
-  echo "올바른 형식: type/설명#이슈번호"
-  echo "예시: feat/login#12, fix/button-click#34"
+  echo "올바른 형식: type/설명-이슈번호"
+  echo "예시: feat/login-12, fix/button-click-34"
   echo ""
   exit 1
 fi
 
 # 6. 허용되지 않는 문자 체크
-if echo "$branch" | grep -qE "[^a-z0-9/#\-]"; then
+if echo "$branch" | grep -qE -- "[^a-z0-9/-]"; then
   echo ""
   echo "❌ 브랜치 이름에 허용되지 않는 문자가 있습니다."
   echo ""
-  echo "허용: 소문자(a-z), 숫자(0-9), 하이픈(-), 슬래시(/), 샵(#)"
-  echo "예시: feat/user-login#12"
+  echo "허용: 소문자(a-z), 숫자(0-9), 하이픈(-), 슬래시(/)"
+  echo "예시: feat/user-login-12"
   echo ""
   exit 1
 fi

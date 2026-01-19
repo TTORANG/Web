@@ -1,7 +1,7 @@
-import GoogleIcon from '@/assets/icons/icon-google.svg?react';
-import KakaoIcon from '@/assets/icons/icon-kakao.svg?react';
-import NaverIcon from '@/assets/icons/icon-naver.svg?react';
 import LogoIcon from '@/assets/logo-icon.svg?react';
+import GoogleIcon from '@/assets/social-icons/login-google.png';
+import KakaoIcon from '@/assets/social-icons/login-kakao.svg?react';
+import NaverIcon from '@/assets/social-icons/login-naver.svg?react';
 import { Modal } from '@/components/common/Modal';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -27,19 +27,19 @@ export default function LoginModal() {
         {/* Social Login Buttons */}
         <div className="flex flex-col gap-2">
           <SocialLoginButton
-            leftIcon={<GoogleIcon />}
+            leftIcon={<img src={GoogleIcon} alt="Google" className="size-10" />}
             label="구글로 계속하기"
-            className="bg-[#F5F6F8] cursor-pointer"
+            className="bg-[#F5F6F8] text-[#1a1a1a] cursor-pointer"
           />
           <SocialLoginButton
             leftIcon={<NaverIcon />}
             label="네이버로 계속하기"
-            className="bg-[#2DB400] text-white cursor-pointer"
+            className="bg-[#2DB400] text-[#ffffff] cursor-pointer"
           />
           <SocialLoginButton
             leftIcon={<KakaoIcon />}
             label="카카오로 계속하기"
-            className="bg-[#F7E600] cursor-pointer"
+            className="bg-[#F7E600] text-[#1a1a1a] cursor-pointer"
           />
         </div>
 

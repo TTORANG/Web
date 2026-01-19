@@ -7,17 +7,10 @@
 import LoginIcon from '@/assets/icons/icon-login.svg?react';
 import { useAuthStore } from '@/stores/authStore';
 
+import { HeaderButton } from './HeaderButton';
+
 export function LoginButton() {
   const openLoginModal = useAuthStore((s) => s.openLoginModal);
 
-  return (
-    <button
-      type="button"
-      onClick={openLoginModal}
-      className="flex items-center gap-1 text-body-s-bold text-gray-800 cursor-pointer"
-    >
-      로그인
-      <LoginIcon />
-    </button>
-  );
+  return <HeaderButton text="로그인" icon={<LoginIcon />} onClick={openLoginModal} />;
 }
