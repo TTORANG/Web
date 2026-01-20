@@ -1,33 +1,38 @@
 name: Deploy to Firebase Hosting on PR
 
-on: pull_request
+on:
+  workflow_run:
+    workflows: ['PR Check']
+    types: [completed]
+    branches: [main, develop]
+
+concurrency:
+  group: firebase-preview-${{ github.event.workflow_run.pull_requests[0].number }}
+  cancel-in-progress: true
 
 permissions:
   checks: write
   contents: read
   pull-requests: write
+  actions: read
 
 jobs:
-  build_and_preview:
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+  deploy_preview:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.pull_requests[0] != null &&
+      github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Download build artifact
+        uses: dawidd6/action-download-artifact@v6
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-        env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
-          VITE_KAKAO_JS_KEY: ${{ secrets.VITE_KAKAO_JS_KEY }}
+          workflow: pr-check.yml
+          run_id: ${{ github.event.workflow_run.id }}
+          name: build-${{ github.event.workflow_run.pull_requests[0].number }}
+          path: dist
 
       - name: Deploy Preview to Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0
@@ -35,3 +40,5 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TTORANG }}
           projectId: ttorang
+        env:
+          GITHUB_PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
