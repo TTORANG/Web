@@ -230,8 +230,12 @@ export function Dropdown({
                     'text-error': item.variant === 'danger' && !item.selected,
                     'text-gray-800': item.variant !== 'danger' && !item.selected,
                     'bg-gray-100': !item.disabled && isFocused && !item.selected,
-                    'bg-main-variant1 text-white': item.selected,
-                    'active:bg-main-variant1 active:text-white': !item.disabled && !item.selected,
+                    'bg-main-variant1 text-white': item.selected && item.variant !== 'danger',
+                    'bg-error text-white': item.selected && item.variant === 'danger',
+                    'active:bg-main-variant1 active:text-white':
+                      !item.disabled && !item.selected && item.variant !== 'danger',
+                    'active:bg-error active:text-white':
+                      !item.disabled && !item.selected && item.variant === 'danger',
                   },
                 )}
               >

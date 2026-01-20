@@ -1,9 +1,10 @@
 /**
- * @file useSlideNavigation.ts
- * @description 슬라이드 네비게이션 훅
+ * 슬라이드 네비게이션 훅
  *
- * 슬라이드 간 이동(이전/다음)과 인덱스 관리를 담당합니다.
- * 데이터 fetching과 분리된 순수 네비게이션 로직입니다.
+ * 슬라이드 간 이동과 인덱스 관리를 담당합니다.
+ *
+ * @param totalSlides - 전체 슬라이드 수
+ * @param options.initialIndex - 초기 인덱스 (기본값: 0)
  */
 import { useState } from 'react';
 
@@ -33,9 +34,7 @@ export function useSlideNavigation(totalSlides: number, options: UseSlideNavigat
     setSlideIndex(index);
   };
 
-  /**
-   * 슬라이드 참조 문자열로 이동 (예: "슬라이드 3")
-   */
+  /** 슬라이드 참조 문자열로 이동 (예: "슬라이드 3") */
   const goToSlideRef = (slideRef: string) => {
     const match = slideRef.match(/\d+/);
     if (!match) return;

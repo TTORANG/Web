@@ -2,7 +2,7 @@
  * @file CommentInput.tsx
  * @description 댓글/답글 입력 공통 컴포넌트
  *
- * FeedbackSlidePage, CommentItem 등에서 재사용됩니다.
+ * FeedbackSlidePage, Comment 등에서 재사용됩니다.
  * textarea 높이 자동 조절, Enter 키 제출을 지원합니다.
  */
 import { useCallback, useEffect, useRef } from 'react';

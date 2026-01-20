@@ -1,4 +1,5 @@
-import type { CardItems } from '@/types/project';
+import type { SortMode, ViewMode } from '@/types/home';
+import type { Project } from '@/types/project';
 
 import ProjectCard from '../projects/ProjectCard';
 import { ProjectCardSkeleton } from '../projects/ProjectCardSkeleton';
@@ -10,10 +11,21 @@ type Props = {
   isLoading: boolean;
   query: string;
   onChangeQuery: (value: string) => void;
-  projects: CardItems[];
+  onChangeSort: (value: SortMode) => void;
+  viewMode: ViewMode;
+  onChangeViewMode: (value: ViewMode) => void;
+  projects: Project[];
 };
 
-export default function ProjectsSection({ isLoading, query, onChangeQuery, projects }: Props) {
+export default function ProjectsSection({
+  isLoading,
+  query,
+  onChangeQuery,
+  onChangeSort,
+  viewMode,
+  onChangeViewMode,
+  projects,
+}: Props) {
   const hasProjects = projects.length > 0;
 
   if (!isLoading && !hasProjects) return null;
@@ -25,8 +37,14 @@ export default function ProjectsSection({ isLoading, query, onChangeQuery, proje
         <h2 className="text-body-m-bold">내 발표</h2>
       </div>
 
-      {/* 검색 */}
-      <ProjectHeader value={query} onChange={onChangeQuery} />
+      {/* 검색 및 필터 */}
+      <ProjectHeader
+        value={query}
+        onChange={onChangeQuery}
+        onChangeSort={onChangeSort}
+        viewMode={viewMode}
+        onChangeViewMode={onChangeViewMode}
+      />
 
       {/* 프레젠테이션 목록 */}
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">

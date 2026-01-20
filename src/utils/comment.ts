@@ -1,4 +1,4 @@
-import type { CommentItem, CreateCommentInput } from '@/types/comment';
+import type { Comment, CreateCommentInput } from '@/types/comment';
 
 /**
  * 고유 ID 생성
@@ -10,7 +10,7 @@ export function generateCommentId(): string {
 /**
  * 새 댓글 객체 생성
  */
-export function createComment(input: CreateCommentInput): CommentItem {
+export function createComment(input: CreateCommentInput): Comment {
   const isReply = Boolean(input.parentId);
 
   return {
@@ -32,10 +32,10 @@ export function createComment(input: CreateCommentInput): CommentItem {
  * SlidePage(Opinion) 방식: 플랫 배열 + parentId 참조
  */
 export function addReplyToFlat(
-  comments: CommentItem[],
+  comments: Comment[],
   parentId: string,
   input: Omit<CreateCommentInput, 'parentId'>,
-): CommentItem[] {
+): Comment[] {
   const newReply = createComment({ ...input, parentId });
 
   const parentIndex = comments.findIndex((c) => c.id === parentId);
@@ -52,13 +52,13 @@ export function addReplyToFlat(
  * FeedbackSlidePage(Comment) 방식: 중첩 배열 구조
  */
 export function addReplyToTree(
-  comments: CommentItem[],
+  comments: Comment[],
   parentId: string,
   input: Omit<CreateCommentInput, 'parentId'>,
-): CommentItem[] {
+): Comment[] {
   const newReply = createComment({ ...input, parentId });
 
-  const addToTree = (list: CommentItem[]): CommentItem[] => {
+  const addToTree = (list: Comment[]): Comment[] => {
     return list.map((node) => {
       if (node.id === parentId) {
         return { ...node, replies: [...(node.replies ?? []), newReply] };
@@ -76,15 +76,15 @@ export function addReplyToTree(
 /**
  * 플랫 배열에서 댓글 삭제 (부모 삭제 시 자식도 함께 삭제)
  */
-export function deleteFromFlat(comments: CommentItem[], targetId: string): CommentItem[] {
+export function deleteFromFlat(comments: Comment[], targetId: string): Comment[] {
   return comments.filter((c) => c.id !== targetId && c.parentId !== targetId);
 }
 
 /**
  * 중첩 배열에서 댓글 삭제
  */
-export function deleteFromTree(comments: CommentItem[], targetId: string): CommentItem[] {
-  const removeFromTree = (list: CommentItem[]): CommentItem[] => {
+export function deleteFromTree(comments: Comment[], targetId: string): Comment[] {
+  const removeFromTree = (list: Comment[]): Comment[] => {
     return list
       .filter((node) => node.id !== targetId)
       .map((node) => {
@@ -103,9 +103,9 @@ export function deleteFromTree(comments: CommentItem[], targetId: string): Comme
  *
  * parentId를 기반으로 replies 중첩 구조로 변환합니다.
  */
-export function flatToTree(comments: CommentItem[]): CommentItem[] {
-  const map = new Map<string, CommentItem>();
-  const roots: CommentItem[] = [];
+export function flatToTree(comments: Comment[]): Comment[] {
+  const map = new Map<string, Comment>();
+  const roots: Comment[] = [];
 
   // 1. 모든 댓글을 맵에 저장 (replies 초기화)
   for (const comment of comments) {
@@ -133,10 +133,10 @@ export function flatToTree(comments: CommentItem[]): CommentItem[] {
  *
  * 부모 바로 다음에 자식들이 오도록 순서 보장합니다.
  */
-export function treeToFlat(comments: CommentItem[]): CommentItem[] {
-  const result: CommentItem[] = [];
+export function treeToFlat(comments: Comment[]): Comment[] {
+  const result: Comment[] = [];
 
-  const flatten = (list: CommentItem[], parentId?: string) => {
+  const flatten = (list: Comment[], parentId?: string) => {
     for (const comment of list) {
       const { replies, ...rest } = comment;
       result.push({ ...rest, parentId, isReply: Boolean(parentId) });

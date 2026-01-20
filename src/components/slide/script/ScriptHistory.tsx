@@ -11,7 +11,7 @@ import RevertIcon from '@/assets/icons/icon-revert.svg?react';
 import { Popover } from '@/components/common';
 import { useSlideActions, useSlideHistory, useSlideId, useSlideScript } from '@/hooks';
 import { useUpdateSlide } from '@/hooks/queries/useSlides';
-import type { HistoryItem } from '@/types/script';
+import type { History } from '@/types/script';
 import { formatTimestamp } from '@/utils/format';
 import { showToast } from '@/utils/toast';
 
@@ -23,7 +23,7 @@ export default function ScriptHistory() {
 
   const { mutate: updateSlide } = useUpdateSlide();
 
-  const handleRestore = (item: HistoryItem) => {
+  const handleRestore = (item: History) => {
     if (!slideId) return;
 
     // 1. 로컬 상태 업데이트 (Optimistic)
