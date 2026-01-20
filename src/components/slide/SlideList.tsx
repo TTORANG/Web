@@ -21,8 +21,6 @@ interface SlideListProps {
   slides?: Slide[];
   /** 현재 선택된 슬라이드 ID */
   currentSlideId?: string;
-  /** 슬라이드 링크 기본 경로 */
-  basePath: string;
   /** 로딩 상태 */
   isLoading?: boolean;
 }
@@ -33,7 +31,7 @@ interface SlideListProps {
  * - 위/아래 화살표 키로 슬라이드 이동
  * - 현재 슬라이드 변경 시 자동 스크롤
  */
-export default function SlideList({ slides, currentSlideId, basePath, isLoading }: SlideListProps) {
+export default function SlideList({ slides, currentSlideId, isLoading }: SlideListProps) {
   const navigate = useNavigate();
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -42,9 +40,9 @@ export default function SlideList({ slides, currentSlideId, basePath, isLoading 
   const navigateToSlide = useCallback(
     (index: number) => {
       if (!slides || index < 0 || index >= slides.length) return;
-      navigate(`${basePath}/slide/${slides[index].id}`);
+      navigate({ search: `?slideId=${slides[index].id}` }, { replace: true });
     },
-    [slides, basePath, navigate],
+    [slides, navigate],
   );
 
   const keyMap = useMemo(
@@ -82,7 +80,6 @@ export default function SlideList({ slides, currentSlideId, basePath, isLoading 
                 slide={slide}
                 index={idx}
                 isActive={slide.id === currentSlideId}
-                basePath={basePath}
               />
             ))}
       </div>

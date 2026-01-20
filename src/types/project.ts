@@ -1,10 +1,4 @@
-export interface ProjectHeaderProps {
-  value: string;
-  onChange: (value: string) => void;
-}
-
-// 프로젝트 전체의 코멘트 수, 리액션 수 => 슬라이드와 연결할 것..
-export interface CardItems {
+export interface Project {
   id: string;
   title: string;
   updatedAt: string;

@@ -9,7 +9,7 @@ import { useState } from 'react';
 
 import clsx from 'clsx';
 
-import CommentItem from '@/components/comment/CommentItem';
+import Comment from '@/components/comment/Comment';
 import { Popover, Skeleton } from '@/components/common';
 import { useSlideOpinions } from '@/hooks';
 import { useComments } from '@/hooks/useComments';
@@ -95,7 +95,7 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
       {/* 의견 목록 */}
       <div className="h-80 overflow-y-auto">
         {treeOpinions.map((opinion) => (
-          <CommentItem
+          <Comment
             key={opinion.id}
             comment={opinion}
             isActive={activeReplyId === opinion.id}

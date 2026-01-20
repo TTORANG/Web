@@ -4,11 +4,12 @@
  *
  * 피드백 화면 하단에서 슬라이드에 대한 리액션을 표시합니다.
  */
-import { type EmojiReaction, REACTION_CONFIG, type ReactionType } from '@/types/script';
+import { REACTION_CONFIG } from '@/constants/reaction';
+import type { Reaction, ReactionType } from '@/types/script';
 
 interface ReactionButtonsProps {
   /** 리액션 목록 (타입, 카운트, 활성화 여부) */
-  reactions: EmojiReaction[];
+  reactions: Reaction[];
   /** 리액션 토글 핸들러 */
   onToggleReaction: (type: ReactionType) => void;
 }

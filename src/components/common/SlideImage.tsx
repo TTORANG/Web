@@ -18,17 +18,15 @@ export default function SlideImage({ src, alt }: SlideImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
 
   return (
-    <>
-      {!isLoaded && <div className="absolute inset-0 animate-pulse bg-black/10" />}
-      <img
-        src={src}
-        alt={alt}
-        onLoad={() => setIsLoaded(true)}
-        className={clsx(
-          'h-full w-full object-cover transition-opacity duration-300',
-          isLoaded ? 'opacity-100' : 'opacity-0',
-        )}
-      />
-    </>
+    <img
+      src={src}
+      alt={alt}
+      onLoad={() => setIsLoaded(true)}
+      className={clsx(
+        'block w-full h-auto transition-opacity duration-300',
+        !isLoaded && 'animate-pulse bg-gray-200',
+        isLoaded ? 'opacity-100' : 'opacity-0',
+      )}
+    />
   );
 }

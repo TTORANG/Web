@@ -1,8 +1,18 @@
 import clsx from 'clsx';
 
-import type { IntroSectionProps } from '@/types/home';
+import type { UploadState } from '@/types/uploadFile';
 
 import FileDropzone from '../common/FileDropzone';
+
+interface IntroSectionProps {
+  accept: string;
+  disabled: boolean;
+  uploadState: UploadState;
+  progress: number;
+  error?: string | null;
+  onFilesSelected: (files: File[]) => void;
+  isEmpty: boolean;
+}
 
 export default function IntroSection({
   accept,
@@ -23,7 +33,7 @@ export default function IntroSection({
       {/* 소개글 */}
       <div className="mt-10">
         <h1 className="text-body-l-bold text-gray-900">발표 연습을 시작하세요.</h1>
-        <p className="mt-2 text-body-s text-gray-500">
+        <p className="mt-2 text-body-s text-gray-400">
           파일을 업로드해서 바로 연습을 시작해보세요.
         </p>
       </div>

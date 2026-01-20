@@ -1,4 +1,4 @@
-export { default as CommentItem } from '../comment/CommentItem';
+export { default as Comment } from '../comment/Comment';
 
 export { Gnb } from './layout/Gnb';
 export { Layout } from './layout/Layout';
