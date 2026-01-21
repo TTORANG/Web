@@ -13,8 +13,8 @@ import FileIcon from '@/assets/icons/icon-document.svg?react';
 import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
 import { MOCK_USERS } from '@/mocks/users';
-import type { CommentItem as CommentItemType } from '@/types/comment';
-import { formatRelativeTime } from '@/utils/format';
+import type { CommentItem as CommentItemType, CommentRef } from '@/types/comment';
+import { formatRelativeTime, formatVideoTimestamp } from '@/utils/format';
 
 import CommentInput from './CommentInput';
 
@@ -38,7 +38,10 @@ interface CommentItemProps {
   /** ID로 댓글 삭제 (재귀 렌더링용) */
   onDeleteComment?: (id: string) => void;
   /** 슬라이드 참조 클릭 핸들러 */
-  onGoToRef?: (ref: string) => void;
+  onGoToRef?: (ref: CommentRef) => void;
+
+  /** NEW: 영상 시간 이동(초) */
+  onGoToTime?: (seconds: number) => void; // CHANGED
   /** 답글 들여쓰기 여부 */
   isIndented?: boolean;
   /** 현재 답글 작성 중인 댓글 ID (재귀용) */
@@ -98,11 +101,23 @@ function CommentItem({
     },
     [onDeleteComment],
   );
-  const handleGoToRef = useCallback(() => {
-    if (comment.slideRef && onGoToRef) {
-      onGoToRef(comment.slideRef);
+  // CHANGED: 영상/슬라이드 참조를 분리해서 사용
+  const slideRef = comment.slideRef;
+  const videoSecondsRef = comment.videoSecondsRef;
+
+  // CHANGED: 영상 타임스탬프 클릭 → onGoToRef({ kind: 'video', seconds })
+  const handleGoToVideo = useCallback(() => {
+    if (typeof videoSecondsRef === 'number' && onGoToRef) {
+      onGoToRef({ kind: 'video', seconds: videoSecondsRef });
     }
-  }, [comment.slideRef, onGoToRef]);
+  }, [videoSecondsRef, onGoToRef]);
+
+  // CHANGED: 슬라이드 참조 클릭 → onGoToRef({ kind: 'slide', ref })
+  const handleGoToSlide = useCallback(() => {
+    if (slideRef && onGoToRef) {
+      onGoToRef({ kind: 'slide', ref: slideRef });
+    }
+  }, [slideRef, onGoToRef]);
 
   return (
     <div>
@@ -149,20 +164,33 @@ function CommentItem({
             </div>
 
             <div className="text-body-s text-black">
-              {comment.slideRef && onGoToRef && (
+              {/* CHANGED: 영상 댓글이면 아이콘 없이 1:30 형식만 표시 */}
+              {typeof videoSecondsRef === 'number' && onGoToRef && (
                 <button
                   type="button"
-                  onClick={handleGoToRef}
-                  className="text-body-s-bold text-main-variant1 hover:underline mr-1 inline-flex items-center align-middle rounded focus-visible:outline-2 focus-visible:outline-main"
+                  onClick={handleGoToVideo}
+                  className="mr-2 inline-flex items-center align-middle rounded text-body-s-bold text-main hover:underline focus-visible:outline-2 focus-visible:outline-main"
+                  aria-label={`영상 ${formatVideoTimestamp(videoSecondsRef)}로 이동`}
                 >
-                  <FileIcon className="text-main-variant1" />
-                  &nbsp;{comment.slideRef}
+                  {formatVideoTimestamp(videoSecondsRef)}
                 </button>
               )}
+
+              {/* CHANGED: 슬라이드 참조는 기존대로 아이콘 + ref */}
+              {slideRef && onGoToRef && (
+                <button
+                  type="button"
+                  onClick={handleGoToSlide}
+                  className="mr-1 inline-flex items-center align-middle rounded text-body-s-bold text-main-variant1 hover:underline focus-visible:outline-2 focus-visible:outline-main"
+                >
+                  <FileIcon className="text-main-variant1" />
+                  &nbsp;{slideRef}
+                </button>
+              )}
+
               <span className="align-middle">{comment.content}</span>
             </div>
           </div>
-
           <div className="flex items-center">
             <button
               type="button"

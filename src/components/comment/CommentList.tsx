@@ -7,14 +7,14 @@
  */
 import { useState } from 'react';
 
-import type { CommentItem as CommentItemType } from '@/types/comment';
+import type { CommentItem as CommentItemType, CommentRef } from '@/types/comment';
 
 import CommentItem from './CommentItem';
 
 interface CommentListProps {
   comments: CommentItemType[];
   onAddReply: (targetId: string, content: string) => void;
-  onGoToRef: (ref: string) => void; // 슬라이드와 비디오 페이지의 링크 기능
+  onGoToRef: (ref: CommentRef) => void; // 슬라이드와 비디오 페이지의 링크 기능
   onDeleteComment?: (commentId: string) => void;
 }
 
