@@ -38,7 +38,7 @@ interface CommentItemProps {
   /** ID로 댓글 삭제 (재귀 렌더링용) */
   onDeleteComment?: (id: string) => void;
   /** 슬라이드 참조 클릭 핸들러 */
-  onGoToSlideRef?: (ref: string) => void;
+  onGoToRef?: (ref: string) => void;
   /** 답글 들여쓰기 여부 */
   isIndented?: boolean;
   /** 현재 답글 작성 중인 댓글 ID (재귀용) */
@@ -67,7 +67,7 @@ function CommentItem({
   onCancelReply,
   onDelete,
   onDeleteComment,
-  onGoToSlideRef,
+  onGoToRef,
   isIndented = false,
   replyingToId,
   setReplyingToId,
@@ -98,12 +98,11 @@ function CommentItem({
     },
     [onDeleteComment],
   );
-
-  const handleGoToSlideRef = useCallback(() => {
-    if (comment.slideRef && onGoToSlideRef) {
-      onGoToSlideRef(comment.slideRef);
+  const handleGoToRef = useCallback(() => {
+    if (comment.slideRef && onGoToRef) {
+      onGoToRef(comment.slideRef);
     }
-  }, [comment.slideRef, onGoToSlideRef]);
+  }, [comment.slideRef, onGoToRef]);
 
   return (
     <div>
@@ -150,10 +149,10 @@ function CommentItem({
             </div>
 
             <div className="text-body-s text-black">
-              {comment.slideRef && onGoToSlideRef && (
+              {comment.slideRef && onGoToRef && (
                 <button
                   type="button"
-                  onClick={handleGoToSlideRef}
+                  onClick={handleGoToRef}
                   className="text-body-s-bold text-main-variant1 hover:underline mr-1 inline-flex items-center align-middle rounded focus-visible:outline-2 focus-visible:outline-main"
                 >
                   <FileIcon className="text-main-variant1" />
@@ -212,7 +211,7 @@ function CommentItem({
               onCancelReply={onCancelReply}
               onDelete={() => handleChildDelete(reply.id)}
               onDeleteComment={onDeleteComment}
-              onGoToSlideRef={onGoToSlideRef}
+              onGoToRef={onGoToRef}
               onReplySubmit={onReplySubmit}
               onToggleReplyById={onToggleReplyById}
               isIndented={false}

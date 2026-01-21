@@ -94,7 +94,7 @@ export default function FeedbackSlidePage() {
           <CommentList
             comments={comments}
             onAddReply={addReply}
-            onGoToSlideRef={goToSlideRef}
+            onGoToRef={goToSlideRef}
             onDeleteComment={deleteComment}
           />
         </div>

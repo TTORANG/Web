@@ -14,14 +14,14 @@ import CommentItem from './CommentItem';
 interface CommentListProps {
   comments: CommentItemType[];
   onAddReply: (targetId: string, content: string) => void;
-  onGoToSlideRef: (ref: string) => void;
+  onGoToRef: (ref: string) => void; // 슬라이드와 비디오 페이지의 링크 기능
   onDeleteComment?: (commentId: string) => void;
 }
 
 export default function CommentList({
   comments,
   onAddReply,
-  onGoToSlideRef,
+  onGoToRef,
   onDeleteComment,
 }: CommentListProps) {
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
@@ -59,7 +59,7 @@ export default function CommentList({
           onDelete={() => onDeleteComment?.(comment.id)}
           onDeleteComment={onDeleteComment}
           onCancelReply={handleCancelReply}
-          onGoToSlideRef={onGoToSlideRef}
+          onGoToRef={onGoToRef}
           replyingToId={replyingToId}
           setReplyingToId={setReplyingToId}
           onReplySubmit={handleReplySubmit}
