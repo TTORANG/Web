@@ -1,9 +1,10 @@
 /**
  * @file videoFeedbackStore.ts
  * @description 영상 피드백 상태 관리 Zustand 스토어
- *
- * 영상의 타임스탬프별 댓글과 리액션을 관리합니다.
- * slideStore와 유사한 구조로 현재 타임스탬프의 피드백을 관리합니다.
+ * ✅ CHANGED:
+ * - requestSeek / clearSeek / seekTo 값을 추가
+ * - CommentList의 onGoToSlideRef가 requestSeek를 호출하면
+ *   VideoViewer가 seekTo를 구독해서 실제 video.currentTime을 변경함
  */
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
@@ -11,49 +12,42 @@ import { devtools } from 'zustand/middleware';
 import { MOCK_CURRENT_USER } from '@/mocks/users';
 import type { CommentItem } from '@/types/comment';
 import type { ReactionType } from '@/types/script';
-import type { VideoFeedback, VideoTimestampFeedback } from '@/types/video';
+import type { VideoFeedback } from '@/types/video';
 import { addReplyToFlat, createComment, deleteFromFlat } from '@/utils/comment';
 
 interface VideoFeedbackState {
   video: VideoFeedback | null;
-  /** 현재 활성 타임스탐프 (초 단위) */
-  currentTimestamp: number;
 
   /**
-   * 영상 데이터를 초기화합니다.
+   * ✅ CHANGED:
+   * - currentTime: 실제 재생 시간(초). 마커(±5초 필터) 같은 "현재시점 UI" 기준
    */
+  currentTime: number;
+
+  /**
+   * ✅ CHANGED:
+   * - activeTimestamp: 5초 단위 버킷 시간(0,5,10,15...)
+   * - ReactionButtons / addComment / toggleReaction 등 "피드백 저장/노출 기준"은 이 값을 씀
+   */
+  activeTimestamp: number;
+
+  seekTo: number | null;
+
   initVideo: (video: VideoFeedback) => void;
 
   /**
-   * 현재 타임스탬프를 업데이트합니다.
-   * 일치하는 피드백이 없으면 새로 생성합니다.
-   * @param timestamp - 영상 현재 시간 (초)
+   * ✅ CHANGED:
+   * - updateTimestamp가 currentTime + activeTimestamp 둘 다 갱신
    */
   updateTimestamp: (timestamp: number) => void;
 
-  /**
-   * 현재 타임스탬프에 댓글을 추가합니다.
-   */
+  requestSeek: (timeSec: number) => void;
+  clearSeek: () => void;
+
   addComment: (content: string) => void;
-
-  /**
-   * 현재 타임스탬프의 댓글에 답글을 추가합니다.
-   */
   addReply: (parentId: string, content: string) => void;
-
-  /**
-   * 댓글을 삭제합니다.
-   */
   deleteComment: (commentId: string) => void;
-
-  /**
-   * 현재 타임스탬프의 리액션을 토글합니다.
-   */
   toggleReaction: (type: ReactionType) => void;
-
-  /**
-   * 댓글 목록을 통째로 교체합니다. (롤백용)
-   */
   setComments: (comments: CommentItem[]) => void;
 }
 
@@ -61,10 +55,22 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
   devtools(
     (set) => ({
       video: null,
-      currentTimestamp: 0,
+      currentTime: 0,
+      activeTimestamp: 0,
+
+      seekTo: null,
 
       initVideo: (video) => {
-        set({ video, currentTimestamp: 0 }, false, 'videoFeedback/initVideo');
+        set(
+          {
+            video,
+            currentTime: 0,
+            activeTimestamp: 0,
+            seekTo: null,
+          },
+          false,
+          'videoFeedback/initVideo',
+        );
       },
 
       updateTimestamp: (timestamp) => {
@@ -72,17 +78,33 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
           (state) => {
             if (!state.video) return state;
 
-            // 0.5초 단위로 반올림 (미세한 변화 무시)
-            const roundedTimestamp = Math.round(timestamp * 2) / 2;
+            // (기존 유지) 0.5초 단위로 반올림
+            const roundedTime = Math.round(timestamp * 2) / 2;
 
-            // 이미 같은 타임스탐프면 업데이트 안함
-            if (state.currentTimestamp === roundedTimestamp) return state;
+            // CHANGED: 5초 단위 버킷 (0,5,10,15...)
+            const bucket = Math.floor(roundedTime / 5) * 5;
 
-            return { currentTimestamp: roundedTimestamp };
+            // 둘 다 동일하면 상태 업데이트 생략
+            if (state.currentTime === roundedTime && state.activeTimestamp === bucket) {
+              return state;
+            }
+
+            return {
+              currentTime: roundedTime,
+              activeTimestamp: bucket,
+            };
           },
           false,
           'videoFeedback/updateTimestamp',
         );
+      },
+
+      requestSeek: (timeSec) => {
+        set({ seekTo: timeSec }, false, 'videoFeedback/requestSeek');
+      },
+
+      clearSeek: () => {
+        set({ seekTo: null }, false, 'videoFeedback/clearSeek');
       },
 
       addComment: (content) => {
@@ -93,21 +115,18 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
             const trimmed = content.trim();
             if (!trimmed) return state;
 
+            // CHANGED: 댓글이 "현재 재생 시간"이 아니라 "5초 버킷(activeTimestamp)"에 저장
             const newComment = createComment({
               content: trimmed,
               authorId: MOCK_CURRENT_USER.id,
-              slideRef: `${state.currentTimestamp}초`,
+              slideRef: `${state.activeTimestamp}초`,
             });
 
-            // 현재 타임스탐프의 피드백 찾기
-            let feedback = state.video.feedbacks.find(
-              (f) => f.timestamp === state.currentTimestamp,
-            );
+            let feedback = state.video.feedbacks.find((f) => f.timestamp === state.activeTimestamp);
 
-            // 없으면 새로 생성
             if (!feedback) {
               feedback = {
-                timestamp: state.currentTimestamp,
+                timestamp: state.activeTimestamp,
                 comments: [],
                 reactions: [
                   { type: 'fire', count: 0 },
@@ -120,7 +139,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
             }
 
             const updatedFeedbacks = state.video.feedbacks
-              .filter((f) => f.timestamp !== state.currentTimestamp)
+              .filter((f) => f.timestamp !== state.activeTimestamp)
               .concat({
                 ...feedback,
                 comments: [newComment, ...feedback.comments],
@@ -141,8 +160,9 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
           (state) => {
             if (!state.video) return state;
 
+            // CHANGED: activeTimestamp 기준
             const feedback = state.video.feedbacks.find(
-              (f) => f.timestamp === state.currentTimestamp,
+              (f) => f.timestamp === state.activeTimestamp,
             );
             if (!feedback) return state;
 
@@ -152,7 +172,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
             });
 
             const updatedFeedbacks = state.video.feedbacks.map((f) =>
-              f.timestamp === state.currentTimestamp ? { ...f, comments: updatedComments } : f,
+              f.timestamp === state.activeTimestamp ? { ...f, comments: updatedComments } : f,
             );
 
             return {
@@ -169,15 +189,16 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
           (state) => {
             if (!state.video) return state;
 
+            // CHANGED: activeTimestamp 기준
             const feedback = state.video.feedbacks.find(
-              (f) => f.timestamp === state.currentTimestamp,
+              (f) => f.timestamp === state.activeTimestamp,
             );
             if (!feedback) return state;
 
             const updatedComments = deleteFromFlat(feedback.comments, commentId);
 
             const updatedFeedbacks = state.video.feedbacks.map((f) =>
-              f.timestamp === state.currentTimestamp ? { ...f, comments: updatedComments } : f,
+              f.timestamp === state.activeTimestamp ? { ...f, comments: updatedComments } : f,
             );
 
             return {
@@ -194,14 +215,12 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
           (state) => {
             if (!state.video) return state;
 
-            let feedback = state.video.feedbacks.find(
-              (f) => f.timestamp === state.currentTimestamp,
-            );
+            // CHANGED: activeTimestamp 기준
+            let feedback = state.video.feedbacks.find((f) => f.timestamp === state.activeTimestamp);
 
-            // 없으면 새로 생성
             if (!feedback) {
               feedback = {
-                timestamp: state.currentTimestamp,
+                timestamp: state.activeTimestamp,
                 comments: [],
                 reactions: [
                   { type: 'fire', count: 0 },
@@ -223,7 +242,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
             });
 
             const updatedFeedbacks = state.video.feedbacks
-              .filter((f) => f.timestamp !== state.currentTimestamp)
+              .filter((f) => f.timestamp !== state.activeTimestamp)
               .concat({
                 ...feedback,
                 reactions: updatedReactions,
@@ -244,13 +263,14 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
           (state) => {
             if (!state.video) return state;
 
+            // CHANGED: activeTimestamp 기준
             const feedback = state.video.feedbacks.find(
-              (f) => f.timestamp === state.currentTimestamp,
+              (f) => f.timestamp === state.activeTimestamp,
             );
             if (!feedback) return state;
 
             const updatedFeedbacks = state.video.feedbacks.map((f) =>
-              f.timestamp === state.currentTimestamp ? { ...f, comments } : f,
+              f.timestamp === state.activeTimestamp ? { ...f, comments } : f,
             );
 
             return {

@@ -8,12 +8,12 @@ import { useMemo } from 'react';
 
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { EmojiReaction, ReactionType } from '@/types/script';
-import { showToast } from '@/utils/toast';
 
 const EMPTY_REACTIONS: EmojiReaction[] = [];
 
 export function useVideoReactions() {
-  const currentTimestamp = useVideoFeedbackStore((state) => state.currentTimestamp);
+  //CHANGED: currentTime(0.5초) 말고 activeTimestamp(5초 버킷) 기준으로 노출
+  const activeTimestamp = useVideoFeedbackStore((state) => state.activeTimestamp);
   const video = useVideoFeedbackStore((state) => state.video);
   const toggleReactionStore = useVideoFeedbackStore((state) => state.toggleReaction);
 
@@ -21,9 +21,9 @@ export function useVideoReactions() {
   const reactions = useMemo(() => {
     if (!video) return EMPTY_REACTIONS;
 
-    const feedback = video.feedbacks.find((f) => f.timestamp === currentTimestamp);
+    const feedback = video.feedbacks.find((f) => f.timestamp === activeTimestamp);
     return feedback?.reactions ?? EMPTY_REACTIONS;
-  }, [video, currentTimestamp]);
+  }, [video, activeTimestamp]);
 
   const toggleReaction = (type: ReactionType) => {
     // 1. Optimistic Update

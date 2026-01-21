@@ -4,8 +4,8 @@
  *
  * 영상 뷰어, 타임스탬프별 댓글, 리액션을 포함합니다.
  * 구조는 FeedbackSlidePage와 동일합니다.
- */
-import { useEffect, useState } from 'react';
+//  */
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
@@ -21,9 +21,9 @@ import { useVideoReactions } from '../hooks/useVideoReactions';
 // Mock 데이터 (개발용)
 const MOCK_VIDEO = {
   videoId: 'vid-1',
-  videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/BigBuckBunny.mp4',
-  title: '테스트 영상',
-  duration: 596, // BigBuckBunny는 약 596초
+  videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+  title: '테스트영상',
+  duration: 596,
   feedbacks: [
     {
       timestamp: 5,
@@ -73,8 +73,12 @@ export default function FeedbackVideoPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const initVideo = useVideoFeedbackStore((state) => state.initVideo);
+
   const { comments, addComment, addReply, deleteComment } = useVideoComments();
   const { reactions, toggleReaction } = useVideoReactions();
+
+  // CHANGED: seek 요청 액션
+  const requestSeek = useVideoFeedbackStore((s) => s.requestSeek);
 
   const [commentDraft, setCommentDraft] = useState('');
 
@@ -84,7 +88,20 @@ export default function FeedbackVideoPage() {
     setCommentDraft('');
   };
 
-  // 페이지 로드 시 Mock 데이터 초기화
+  // CHANGED: throw 제거. "5초" → 숫자 파싱 → requestSeek(sec)
+  const handleGoToTimeRef = useCallback(
+    (ref: string) => {
+      const match = ref.match(/(\d+(\.\d+)?)/);
+      if (!match) return;
+
+      const sec = Number(match[1]);
+      if (Number.isNaN(sec) || sec < 0) return;
+
+      requestSeek(sec);
+    },
+    [requestSeek],
+  );
+
   useEffect(() => {
     const timer = window.setTimeout(() => {
       initVideo(MOCK_VIDEO);
@@ -104,10 +121,7 @@ export default function FeedbackVideoPage() {
 
   return (
     <div className="flex h-full w-full px-35">
-      <VideoViewer
-        videoUrl="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-        videoTitle="테스트 영상"
-      />
+      <VideoViewer videoUrl={MOCK_VIDEO.videoUrl} videoTitle={MOCK_VIDEO.title} />
 
       <aside className="w-96 shrink-0 bg-gray-100 flex flex-col border-l border-gray-200">
         <div className="flex-1 min-h-0 overflow-y-auto">
@@ -115,9 +129,8 @@ export default function FeedbackVideoPage() {
             comments={comments}
             onAddReply={addReply}
             onDeleteComment={deleteComment}
-            onGoToSlideRef={function (ref: string): void {
-              throw new Error('Function not implemented.');
-            }}
+            // ✅ CHANGED
+            onGoToRef={handleGoToTimeRef}
           />
         </div>
 
