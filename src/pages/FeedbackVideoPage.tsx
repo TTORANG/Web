@@ -4,7 +4,7 @@
  *
  * 영상 뷰어, 타임스탬프별 댓글, 리액션을 포함합니다.
  * 구조는 FeedbackSlidePage와 동일합니다.
-//  */
+ */
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -14,6 +14,9 @@ import { Spinner } from '@/components/common';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
 import VideoViewer from '@/components/feedback/VideoViewer';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
+import type { CommentRef } from '@/types/comment';
+
+// CHANGED: CommentRef 타입 import
 
 import { useVideoComments } from '../hooks/useVideoComments';
 import { useVideoReactions } from '../hooks/useVideoReactions';
@@ -34,7 +37,7 @@ const MOCK_VIDEO = {
           content: '오프닝이 멋있네요!',
           timestamp: new Date().toISOString(),
           isMine: true,
-          slideRef: '5초',
+          videoSecondsRef: 5,
         },
       ],
       reactions: [
@@ -54,7 +57,7 @@ const MOCK_VIDEO = {
           content: '배경 음악이 좋습니다.',
           timestamp: new Date().toISOString(),
           isMine: false,
-          slideRef: '15초',
+          videoSecondsRef: 15,
         },
       ],
       reactions: [
@@ -63,6 +66,26 @@ const MOCK_VIDEO = {
         { type: 'good' as const, count: 3 },
         { type: 'bad' as const, count: 0 },
         { type: 'confused' as const, count: 0 },
+      ],
+    },
+    {
+      timestamp: 21,
+      comments: [
+        {
+          id: 'comment-3',
+          authorId: 'user-2',
+          content: '전 17초에 방해를 하러 왔어요.',
+          timestamp: new Date().toISOString(),
+          isMine: false,
+          videoSecondsRef: 21,
+        },
+      ],
+      reactions: [
+        { type: 'fire' as const, count: 5 },
+        { type: 'sleepy' as const, count: 4 },
+        { type: 'good' as const, count: 3 },
+        { type: 'bad' as const, count: 0 },
+        { type: 'confused' as const, count: 990 },
       ],
     },
   ],
@@ -77,7 +100,7 @@ export default function FeedbackVideoPage() {
   const { comments, addComment, addReply, deleteComment } = useVideoComments();
   const { reactions, toggleReaction } = useVideoReactions();
 
-  // CHANGED: seek 요청 액션
+  // seek 요청 액션
   const requestSeek = useVideoFeedbackStore((s) => s.requestSeek);
 
   const [commentDraft, setCommentDraft] = useState('');
@@ -88,16 +111,14 @@ export default function FeedbackVideoPage() {
     setCommentDraft('');
   };
 
-  // CHANGED: throw 제거. "5초" → 숫자 파싱 → requestSeek(sec)
+  // CommentList의 onGoToRef는 이제 "슬라이드/영상"을 한 번에 받음
+  // - video면: requestSeek(seconds) 로 처리
   const handleGoToTimeRef = useCallback(
-    (ref: string) => {
-      const match = ref.match(/(\d+(\.\d+)?)/);
-      if (!match) return;
-
-      const sec = Number(match[1]);
-      if (Number.isNaN(sec) || sec < 0) return;
-
-      requestSeek(sec);
+    (ref: CommentRef) => {
+      if (ref.kind === 'video') {
+        requestSeek(ref.seconds);
+        return;
+      }
     },
     [requestSeek],
   );
@@ -129,8 +150,7 @@ export default function FeedbackVideoPage() {
             comments={comments}
             onAddReply={addReply}
             onDeleteComment={deleteComment}
-            // ✅ CHANGED
-            onGoToRef={handleGoToTimeRef}
+            onGoToRef={handleGoToTimeRef} // CHANGED: 기존 handleGoToTimeRef -> handleGoToRef
           />
         </div>
 

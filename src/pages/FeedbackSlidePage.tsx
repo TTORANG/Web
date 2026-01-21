@@ -5,7 +5,7 @@
  * 슬라이드 뷰어, 댓글 목록, 리액션 버튼을 포함합니다.
  * 좌우 화살표 키로 슬라이드 이동이 가능합니다.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
@@ -17,6 +17,7 @@ import { useHotkey } from '@/hooks';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
 import { useSlideStore } from '@/stores/slideStore';
+import type { CommentRef } from '@/types/comment';
 
 import { useComments } from '../hooks/useComments';
 import { useReactions } from '../hooks/useReactions';
@@ -69,6 +70,15 @@ export default function FeedbackSlidePage() {
     });
   }, [slideIndex, currentSlide, initSlide, allFlatOpinions]);
 
+  // slidePage는 slide ref만 처리하도록
+  const handleGoToSlideRef = useCallback(
+    (ref: CommentRef) => {
+      if (ref.kind !== 'slide') return;
+      goToSlideRef(ref.ref); // 기존 goToSlideRef(string) 재사용
+    },
+    [goToSlideRef],
+  );
+
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center bg-white">
@@ -94,7 +104,7 @@ export default function FeedbackSlidePage() {
           <CommentList
             comments={comments}
             onAddReply={addReply}
-            onGoToRef={goToSlideRef}
+            onGoToRef={handleGoToSlideRef}
             onDeleteComment={deleteComment}
           />
         </div>
