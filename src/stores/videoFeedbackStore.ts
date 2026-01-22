@@ -1,12 +1,10 @@
-/**
- * @file videoFeedbackStore.ts
- * @description 영상 피드백 상태 관리 Zustand 스토어
-
- * - 댓글의 "영상 이동 참조"는 slideRef(문자열) 대신 videoSecondsRef(숫자)로 저장
- * - 댓글은 feedback bucket(activeTimestamp)에 "보관"하되,
- *   실제 이동 링크는 currentTime(정확한 재생 위치)로 저장하여 UX 개선
- * - requestSeek / clearSeek / seekTo는 그대로 유지 (VideoViewer가 seekTo를 구독해 이동)
- */
+// /**
+//  * @file videoFeedbackStore.ts
+//  * @description 영상 피드백 상태 관리 Zustand 스토어
+//  * - 댓글의 "영상 이동 참조"는 slideRef(문자열) 대신 videoSecondsRef(숫자)로 저장
+// * - 리액션/댓글은 "누른 정확한 시점(currentTime)" 그대로 저장
+// * - store는 데이터 저장만 담당 (판단x)
+//  */
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
@@ -16,276 +14,217 @@ import type { ReactionType } from '@/types/script';
 import type { VideoFeedback } from '@/types/video';
 import { addReplyToFlat, createComment, deleteFromFlat } from '@/utils/comment';
 
+// ±구간 설정 (useVideoReactions.ts와 동일)
+const WINDOW = 5;
+
 interface VideoFeedbackState {
   video: VideoFeedback | null;
 
-  /**
-   * - currentTime: 실제 재생 시간(초). 마커(±5초 필터) 같은 "현재시점 UI" 기준
-   */
+  /** 실제 영상 재생 시간 */
   currentTime: number;
 
-  /**
-   * - activeTimestamp: 5초 단위 버킷 시간(0,5,10,15...)
-   * - ReactionButtons / toggleReaction 같은 "버킷형 피드백" 저장 기준은 이 값을 씀
-   */
-  activeTimestamp: number;
-
-  /**
-   * seekTo: "이동 요청" (VideoViewer가 구독해서 video.currentTime 변경)
-   */
+  /** seek 요청 */
   seekTo: number | null;
 
   initVideo: (video: VideoFeedback) => void;
+  updateCurrentTime: (time: number) => void;
 
-  /**
-   * - updateTimestamp가 currentTime + activeTimestamp 둘 다 갱신
-   */
-  updateTimestamp: (timestamp: number) => void;
-
-  requestSeek: (timeSec: number) => void;
+  requestSeek: (time: number) => void;
   clearSeek: () => void;
 
+  /** 리액션 관련 - feedbacks의 reactions 업데이트 */
+  toggleReaction: (type: ReactionType) => void;
+
+  /** 댓글 관련 메서드들 - feedbacks의 comments 업데이트 */
   addComment: (content: string) => void;
   addReply: (parentId: string, content: string) => void;
   deleteComment: (commentId: string) => void;
-  toggleReaction: (type: ReactionType) => void;
-  setComments: (comments: CommentItem[]) => void;
 }
 
 function hasCommentId(flat: CommentItem[], id: string) {
   return flat.some((c) => c.id === id);
 }
 
+// function getAllComments(feedbacks: any[]): CommentItem[] {
+//   return feedbacks.flatMap((f) => f.comments);
+// }
+
 export const useVideoFeedbackStore = create<VideoFeedbackState>()(
-  devtools(
-    (set) => ({
-      video: null,
-      currentTime: 0,
-      activeTimestamp: 0,
-      seekTo: null,
+  devtools((set) => ({
+    video: null,
+    currentTime: 0,
+    seekTo: null,
 
-      initVideo: (video) => {
-        set(
-          {
-            video,
-            currentTime: 0,
-            activeTimestamp: 0,
-            seekTo: null,
-          },
-          false,
-          'videoFeedback/initVideo',
-        );
-      },
+    initVideo: (video) => set({ video, currentTime: 0, seekTo: null }, false, 'video/init'),
 
-      updateTimestamp: (timestamp) => {
-        set(
-          (state) => {
-            if (!state.video) return state;
+    updateCurrentTime: (time) => set({ currentTime: time }, false, 'video/updateTime'),
 
-            // (기존 유지) 0.5초 단위로 반올림
-            const roundedTime = Math.round(timestamp * 2) / 2;
+    requestSeek: (time) => set({ seekTo: time }, false, 'video/requestSeek'),
 
-            // (기존 유지) 5초 단위 버킷 (0,5,10,15...)
-            const bucket = Math.floor(roundedTime / 5) * 5;
+    clearSeek: () => set({ seekTo: null }, false, 'video/clearSeek'),
 
-            if (state.currentTime === roundedTime && state.activeTimestamp === bucket) {
-              return state;
-            }
+    toggleReaction: (type) =>
+      set(
+        (state) => {
+          if (!state.video) return state;
 
-            return {
-              currentTime: roundedTime,
-              activeTimestamp: bucket,
+          // 현재 시간에 해당하는 ±WINDOW 버킷 찾기
+          const targetFeedback = state.video.feedbacks.find(
+            (f) => Math.abs(f.timestamp - state.currentTime) <= WINDOW,
+          );
+
+          // 해당하는 피드백이 없으면 새로 생성
+          if (!targetFeedback) {
+            const newFeedback = {
+              timestamp: Math.round(state.currentTime / 5) * 5, // 5초 버킷
+              comments: [],
+              reactions: [
+                { type: 'fire' as const, count: 0, active: false },
+                { type: 'sleepy' as const, count: 0, active: false },
+                { type: 'good' as const, count: 0, active: false },
+                { type: 'bad' as const, count: 0, active: false },
+                { type: 'confused' as const, count: 0, active: false },
+              ],
             };
-          },
-          false,
-          'videoFeedback/updateTimestamp',
-        );
-      },
+            return {
+              video: {
+                ...state.video,
+                feedbacks: [...state.video.feedbacks, newFeedback].sort(
+                  (a, b) => a.timestamp - b.timestamp,
+                ),
+              },
+            };
+          }
 
-      requestSeek: (timeSec) => {
-        set({ seekTo: timeSec }, false, 'videoFeedback/requestSeek');
-      },
-      // VideoViewer가 seekTo를 구독하고, 처리 후 clearSeek()로 비움
+          // 해당 피드백에서 리액션 토글 (슬라이드처럼)
+          const updatedReactions = targetFeedback.reactions.map((r) => {
+            if (r.type !== type) return r;
 
-      clearSeek: () => {
-        set({ seekTo: null }, false, 'videoFeedback/clearSeek');
-      },
+            // active -> 비활성 (카운트 감소)
+            if (r.active) {
+              return { ...r, active: false, count: Math.max(0, r.count - 1) };
+            }
+            // 비활성 -> 활성 (카운트 증가)
+            return { ...r, active: true, count: r.count + 1 };
+          });
 
-      addComment: (content) => {
-        set(
-          (state) => {
-            if (!state.video) return state;
+          const updatedFeedbacks = state.video.feedbacks.map((f) =>
+            f.timestamp === targetFeedback!.timestamp ? { ...f, reactions: updatedReactions } : f,
+          );
 
-            const trimmed = content.trim();
-            if (!trimmed) return state;
+          return {
+            video: { ...state.video, feedbacks: updatedFeedbacks },
+          };
+        },
+        false,
+        'video/toggleReaction',
+      ),
 
-            // - 댓글은 "버킷(activeTimestamp)"에 보관하되
-            // - 댓글 클릭 시 이동할 시간은 "정확한 currentTime"으로 저장한다.
-            //   (버킷으로 저장하면 5초 단위로만 점프해서 UX가 구려짐)
-            const base = createComment({
+    addComment: (content) =>
+      set(
+        (state) => {
+          if (!state.video) return state;
+
+          const trimmed = content.trim();
+          if (!trimmed) return state;
+
+          // 현재 시간에 해당하는 ±WINDOW 버킷 찾기
+          let targetFeedback = state.video.feedbacks.find(
+            (f) => Math.abs(f.timestamp - state.currentTime) <= WINDOW,
+          );
+
+          // 해당하는 피드백이 없으면 새로 생성
+          if (!targetFeedback) {
+            const newFeedback = {
+              timestamp: Math.round(state.currentTime / 5) * 5,
+              comments: [],
+              reactions: [
+                { type: 'fire' as const, count: 0, active: false },
+                { type: 'sleepy' as const, count: 0, active: false },
+                { type: 'good' as const, count: 0, active: false },
+                { type: 'bad' as const, count: 0, active: false },
+                { type: 'confused' as const, count: 0, active: false },
+              ],
+            };
+            state.video.feedbacks.push(newFeedback);
+            targetFeedback = newFeedback;
+          }
+
+          const newComment: CommentItem = {
+            ...createComment({
               content: trimmed,
               authorId: MOCK_CURRENT_USER.id,
-              // slideRef는 더 이상 쓰지 않음 (슬라이드 아이콘/문자열 꼬임 방지)
-            });
+            }),
+            videoSecondsRef: state.currentTime,
+            slideRef: undefined,
+          };
 
-            // videoSecondsRef 추가 (정확한 영상 위치)
-            const newComment: CommentItem = {
-              ...base,
-              videoSecondsRef: state.currentTime, // 예: 256.5 같은 값도 가능
-              slideRef: undefined, // 안전하게 제거
-            };
+          const updatedFeedbacks = state.video.feedbacks.map((f) =>
+            f.timestamp === targetFeedback!.timestamp
+              ? { ...f, comments: [newComment, ...f.comments] }
+              : f,
+          );
 
-            // (기존 유지) 댓글은 feedback bucket에 "보관" (데이터 구조 유지용)
-            let feedback = state.video.feedbacks.find((f) => f.timestamp === state.activeTimestamp);
+          return {
+            video: { ...state.video, feedbacks: updatedFeedbacks },
+          };
+        },
+        false,
+        'video/addComment',
+      ),
 
-            if (!feedback) {
-              feedback = {
-                timestamp: state.activeTimestamp,
-                comments: [],
-                reactions: [
-                  { type: 'fire', count: 0 },
-                  { type: 'sleepy', count: 0 },
-                  { type: 'good', count: 0 },
-                  { type: 'bad', count: 0 },
-                  { type: 'confused', count: 0 },
-                ],
-              };
-            }
+    addReply: (parentId, content) =>
+      set(
+        (state) => {
+          if (!state.video) return state;
 
-            const updatedFeedbacks = state.video.feedbacks
-              .filter((f) => f.timestamp !== state.activeTimestamp)
-              .concat({
-                ...feedback,
-                comments: [newComment, ...feedback.comments],
-              })
-              .sort((a, b) => a.timestamp - b.timestamp);
+          //const allComments = getAllComments(state.video.feedbacks);
+          const targetFeedback = state.video.feedbacks.find((f) =>
+            hasCommentId(f.comments, parentId),
+          );
 
-            return {
-              video: { ...state.video, feedbacks: updatedFeedbacks },
-            };
-          },
-          false,
-          'videoFeedback/addComment',
-        );
-      },
+          if (!targetFeedback) return state;
 
-      addReply: (parentId, content) => {
-        set(
-          (state) => {
-            if (!state.video) return state;
+          const updatedComments = addReplyToFlat(targetFeedback.comments, parentId, {
+            content: content.trim(),
+            authorId: MOCK_CURRENT_USER.id,
+          });
 
-            // (기존 유지) parentId가 들어있는 feedback을 찾아서 답글 추가
-            const target = state.video.feedbacks.find((f) => hasCommentId(f.comments, parentId));
-            if (!target) return state;
+          const updatedFeedbacks = state.video.feedbacks.map((f) =>
+            f.timestamp === targetFeedback.timestamp ? { ...f, comments: updatedComments } : f,
+          );
 
-            const updatedComments = addReplyToFlat(target.comments, parentId, {
-              content: content.trim(),
-              authorId: MOCK_CURRENT_USER.id,
-            });
+          return {
+            video: { ...state.video, feedbacks: updatedFeedbacks },
+          };
+        },
+        false,
+        'video/addReply',
+      ),
 
-            const updatedFeedbacks = state.video.feedbacks.map((f) =>
-              f.timestamp === target.timestamp ? { ...f, comments: updatedComments } : f,
-            );
+    deleteComment: (commentId) =>
+      set(
+        (state) => {
+          if (!state.video) return state;
 
-            return { video: { ...state.video, feedbacks: updatedFeedbacks } };
-          },
-          false,
-          'videoFeedback/addReply',
-        );
-      },
+          const targetFeedback = state.video.feedbacks.find((f) =>
+            hasCommentId(f.comments, commentId),
+          );
 
-      deleteComment: (commentId) => {
-        set(
-          (state) => {
-            if (!state.video) return state;
+          if (!targetFeedback) return state;
 
-            const target = state.video.feedbacks.find((f) => hasCommentId(f.comments, commentId));
-            if (!target) return state;
+          const updatedComments = deleteFromFlat(targetFeedback.comments, commentId);
 
-            const updatedComments = deleteFromFlat(target.comments, commentId);
+          const updatedFeedbacks = state.video.feedbacks.map((f) =>
+            f.timestamp === targetFeedback.timestamp ? { ...f, comments: updatedComments } : f,
+          );
 
-            const updatedFeedbacks = state.video.feedbacks.map((f) =>
-              f.timestamp === target.timestamp ? { ...f, comments: updatedComments } : f,
-            );
-
-            return { video: { ...state.video, feedbacks: updatedFeedbacks } };
-          },
-          false,
-          'videoFeedback/deleteComment',
-        );
-      },
-
-      toggleReaction: (type) => {
-        set(
-          (state) => {
-            if (!state.video) return state;
-
-            // (기존 유지) 리액션은 "버킷(activeTimestamp)" 기준이 합리적
-            let feedback = state.video.feedbacks.find((f) => f.timestamp === state.activeTimestamp);
-
-            if (!feedback) {
-              feedback = {
-                timestamp: state.activeTimestamp,
-                comments: [],
-                reactions: [
-                  { type: 'fire', count: 0 },
-                  { type: 'sleepy', count: 0 },
-                  { type: 'good', count: 0 },
-                  { type: 'bad', count: 0 },
-                  { type: 'confused', count: 0 },
-                ],
-              };
-            }
-
-            const updatedReactions = feedback.reactions.map((r) => {
-              if (r.type !== type) return r;
-
-              if (r.active) {
-                return { ...r, active: false, count: Math.max(0, r.count - 1) };
-              }
-              return { ...r, active: true, count: r.count + 1 };
-            });
-
-            const updatedFeedbacks = state.video.feedbacks
-              .filter((f) => f.timestamp !== state.activeTimestamp)
-              .concat({
-                ...feedback,
-                reactions: updatedReactions,
-              })
-              .sort((a, b) => a.timestamp - b.timestamp);
-
-            return {
-              video: { ...state.video, feedbacks: updatedFeedbacks },
-            };
-          },
-          false,
-          'videoFeedback/toggleReaction',
-        );
-      },
-
-      setComments: (comments) => {
-        set(
-          (state) => {
-            if (!state.video) return state;
-
-            const feedback = state.video.feedbacks.find(
-              (f) => f.timestamp === state.activeTimestamp,
-            );
-            if (!feedback) return state;
-
-            const updatedFeedbacks = state.video.feedbacks.map((f) =>
-              f.timestamp === state.activeTimestamp ? { ...f, comments } : f,
-            );
-
-            return {
-              video: { ...state.video, feedbacks: updatedFeedbacks },
-            };
-          },
-          false,
-          'videoFeedback/setComments',
-        );
-      },
-    }),
-    { name: 'VideoFeedbackStore' },
-  ),
+          return {
+            video: { ...state.video, feedbacks: updatedFeedbacks },
+          };
+        },
+        false,
+        'video/deleteComment',
+      ),
+  })),
 );

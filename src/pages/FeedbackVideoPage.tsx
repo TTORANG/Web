@@ -27,6 +27,8 @@ const MOCK_VIDEO = {
   videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
   title: '테스트영상',
   duration: 596,
+  comments: [],
+  reactionEvents: [],
   feedbacks: [
     {
       timestamp: 5,
@@ -41,11 +43,11 @@ const MOCK_VIDEO = {
         },
       ],
       reactions: [
-        { type: 'fire' as const, count: 2, active: true },
-        { type: 'sleepy' as const, count: 0 },
-        { type: 'good' as const, count: 1 },
-        { type: 'bad' as const, count: 0 },
-        { type: 'confused' as const, count: 0 },
+        { type: 'fire' as const, count: 2, active: false },
+        { type: 'sleepy' as const, count: 0, active: false },
+        { type: 'good' as const, count: 1, active: false },
+        { type: 'bad' as const, count: 0, active: false },
+        { type: 'confused' as const, count: 0, active: false },
       ],
     },
     {
@@ -61,31 +63,31 @@ const MOCK_VIDEO = {
         },
       ],
       reactions: [
-        { type: 'fire' as const, count: 0 },
-        { type: 'sleepy' as const, count: 0 },
-        { type: 'good' as const, count: 3 },
-        { type: 'bad' as const, count: 0 },
-        { type: 'confused' as const, count: 0 },
+        { type: 'fire' as const, count: 0, active: false },
+        { type: 'sleepy' as const, count: 0, active: false },
+        { type: 'good' as const, count: 3, active: false },
+        { type: 'bad' as const, count: 0, active: false },
+        { type: 'confused' as const, count: 0, active: false },
       ],
     },
     {
-      timestamp: 21,
+      timestamp: 17,
       comments: [
         {
           id: 'comment-3',
           authorId: 'user-2',
-          content: '전 17초에 방해를 하러 왔어요.',
+          content: '같은 구간에서 누적이 되나 테스트합니다.',
           timestamp: new Date().toISOString(),
           isMine: false,
-          videoSecondsRef: 21,
+          videoSecondsRef: 17,
         },
       ],
       reactions: [
-        { type: 'fire' as const, count: 5 },
-        { type: 'sleepy' as const, count: 4 },
-        { type: 'good' as const, count: 3 },
-        { type: 'bad' as const, count: 0 },
-        { type: 'confused' as const, count: 990 },
+        { type: 'fire' as const, count: 5, active: false },
+        { type: 'sleepy' as const, count: 4, active: false },
+        { type: 'good' as const, count: 3, active: false },
+        { type: 'bad' as const, count: 0, active: false },
+        { type: 'confused' as const, count: 990, active: false },
       ],
     },
   ],
@@ -111,7 +113,7 @@ export default function FeedbackVideoPage() {
     setCommentDraft('');
   };
 
-  // CommentList의 onGoToRef는 이제 "슬라이드/영상"을 한 번에 받음
+  // CommentList의 onGoToRef는 "슬라이드/영상"을 한 번에 받음
   // - video면: requestSeek(seconds) 로 처리
   const handleGoToTimeRef = useCallback(
     (ref: CommentRef) => {
@@ -149,8 +151,8 @@ export default function FeedbackVideoPage() {
           <CommentList
             comments={comments}
             onAddReply={addReply}
+            onGoToRef={handleGoToTimeRef} //
             onDeleteComment={deleteComment}
-            onGoToRef={handleGoToTimeRef} // CHANGED: 기존 handleGoToTimeRef -> handleGoToRef
           />
         </div>
 

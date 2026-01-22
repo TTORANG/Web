@@ -17,7 +17,7 @@ export default function VideoViewer({ videoUrl, videoTitle }: VideoViewerProps) 
   // video DOM에 접근하기 위한 ref (기존 그대로)
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  const updateTimestamp = useVideoFeedbackStore((s) => s.updateTimestamp);
+  const updateCurrentTime = useVideoFeedbackStore((s) => s.updateCurrentTime);
 
   // 댓글 클릭 등으로 "seek 요청"이 들어오면 여기서 처리
   const seekTo = useVideoFeedbackStore((s) => s.seekTo);
@@ -26,8 +26,8 @@ export default function VideoViewer({ videoUrl, videoTitle }: VideoViewerProps) 
   //  timeupdate 이벤트 때 현재 재생 시간을 store로 전달 (기존 그대로)
   const handleTimeUpdate = useCallback(() => {
     const t = videoRef.current?.currentTime ?? 0;
-    updateTimestamp(t);
-  }, [updateTimestamp]);
+    updateCurrentTime(t);
+  }, [updateCurrentTime]);
 
   //  seekTo 값이 오면 video.currentTime 변경 + 처리 후 clear
   useEffect(() => {

@@ -5,7 +5,7 @@
  * 영상의 특정 타임스탬프에 대한 댓글과 리액션을 관리합니다.
  */
 import type { CommentItem } from './comment';
-import type { EmojiReaction } from './script';
+import type { EmojiReaction, ReactionEvent } from './script';
 
 /**
  * 타임스탬프별 피드백 데이터
@@ -33,4 +33,10 @@ export interface VideoFeedback {
   duration: number; // 초 단위
   /** 타임스탐프별 피드백 (타임스탐프 오름차순 정렬) */
   feedbacks: VideoTimestampFeedback[];
+
+  /** 댓글은 그냥 배열  */
+  comments: CommentItem[];
+
+  /** 모든 리액션 이벤트 */
+  reactionEvents: ReactionEvent[];
 }
