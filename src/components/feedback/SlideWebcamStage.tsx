@@ -190,6 +190,8 @@ export default function SlideWebcamStage({
             videoRef={videoRef as React.RefObject<HTMLVideoElement>}
             duration={duration}
             fullscreenTargetRef={stageRootRef as React.RefObject<HTMLElement>}
+            slides={slides}
+            slideChangeTimes={slideChangeTimes}
           />
         </div>
       </div>
