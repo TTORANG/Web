@@ -1,9 +1,10 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import clsx from 'clsx';
 
 import UploadIcon from '@/assets/icons/icon-upload.svg?react';
 import type { UploadState } from '@/types/uploadFile';
+import { showToast } from '@/utils/toast';
 
 import ProgressBar from './ProgressBar';
 
@@ -13,6 +14,7 @@ interface FileDropProps {
   disabled?: boolean;
   uploadState?: UploadState;
   progress?: number;
+  error?: string | null;
 }
 
 export default function FileDropzone({
@@ -21,11 +23,17 @@ export default function FileDropzone({
   disabled,
   uploadState = 'idle',
   progress = 0,
+  error,
 }: FileDropProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   // dragCounter : 실제로 영역을 완전히 벗어났을 때만 카운터를 false로 바꿈
   const dragCounter = useRef(0);
   const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    if (!error) return;
+    showToast.warning('업로드에 실패했어요.', error);
+  }, [error]);
 
   const openFileDialog = () => {
     if (disabled) return;
