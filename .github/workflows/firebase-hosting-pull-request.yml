@@ -7,7 +7,7 @@ on:
     branches: [main, develop]
 
 concurrency:
-  group: firebase-preview-${{ github.event.workflow_run.pull_requests[0].number }}
+  group: firebase-preview-${{ github.event.workflow_run.pull_requests[0].number || github.run_id }}
   cancel-in-progress: true
 
 permissions:
