@@ -56,8 +56,6 @@ export default function HomePage() {
         viewMode={viewMode}
         onChangeViewMode={setViewMode}
         projects={projects}
-        viewMode={viewMode}
-        onChangeViewMode={setViewMode}
       />
     </main>
   );
