@@ -1,10 +1,10 @@
-// /**
-//  * @file videoFeedbackStore.ts
-//  * @description 영상 피드백 상태 관리 Zustand 스토어
-//  * - 댓글의 "영상 이동 참조"는 slideRef(문자열) 대신 videoSecondsRef(숫자)로 저장
-// * - 리액션/댓글은 "누른 정확한 시점(currentTime)" 그대로 저장
-// * - store는 데이터 저장만 담당 (판단x)
-//  */
+/**
+ * @file videoFeedbackStore.ts
+ * @description 영상 피드백 상태 관리 Zustand 스토어
+ * - 댓글 참조는 ref: { kind: 'video', seconds } 형태로 저장
+ * - 리액션/댓글은 "누른 정확한 시점(currentTime)" 그대로 저장
+ * - store는 데이터 저장만 담당 (판단x)
+ */
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
@@ -150,14 +150,11 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
             targetFeedback = newFeedback;
           }
 
-          const newComment: Comment = {
-            ...createComment({
-              content: trimmed,
-              authorId: MOCK_CURRENT_USER.id,
-            }),
-            videoSecondsRef: state.currentTime,
-            slideRef: undefined,
-          };
+          const newComment: Comment = createComment({
+            content: trimmed,
+            authorId: MOCK_CURRENT_USER.id,
+            ref: { kind: 'video', seconds: state.currentTime },
+          });
 
           const updatedFeedbacks = state.video.feedbacks.map((f) =>
             f.timestamp === targetFeedback!.timestamp

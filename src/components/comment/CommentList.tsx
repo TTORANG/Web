@@ -7,14 +7,14 @@
  */
 import { useState } from 'react';
 
-import type { CommentRef, Comment as CommentType } from '@/types/comment';
+import type { Comment as CommentType } from '@/types/comment';
 
 import Comment from './Comment';
 
 interface CommentListProps {
   comments: CommentType[];
   onAddReply: (targetId: string, content: string) => void;
-  onGoToRef: (ref: CommentRef) => void;
+  onGoToRef: (ref: NonNullable<CommentType['ref']>) => void;
   onDeleteComment?: (commentId: string) => void;
 }
 

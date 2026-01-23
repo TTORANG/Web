@@ -13,7 +13,7 @@ import FileIcon from '@/assets/icons/icon-document.svg?react';
 import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
 import { MOCK_USERS } from '@/mocks/users';
-import type { CommentRef, Comment as CommentType } from '@/types/comment';
+import type { Comment as CommentType } from '@/types/comment';
 import { formatRelativeTime, formatVideoTimestamp } from '@/utils/format';
 
 import CommentInput from './CommentInput';
@@ -37,11 +37,8 @@ interface CommentProps {
   onDelete?: () => void;
   /** ID로 댓글 삭제 (재귀 렌더링용) */
   onDeleteComment?: (id: string) => void;
-  /** 슬라이드 참조 클릭 핸들러 */
-  onGoToRef?: (ref: CommentRef) => void;
-
-  /** NEW: 영상 시간 이동(초) */
-  onGoToTime?: (seconds: number) => void; // CHANGED
+  /** 참조 클릭 핸들러 (슬라이드/영상 이동) */
+  onGoToRef?: (ref: NonNullable<CommentType['ref']>) => void;
   /** 답글 들여쓰기 여부 */
   isIndented?: boolean;
   /** 현재 답글 작성 중인 댓글 ID (재귀용) */
@@ -101,23 +98,19 @@ function Comment({
     },
     [onDeleteComment],
   );
-  // CHANGED: 영상/슬라이드 참조를 분리해서 사용
-  const slideRef = comment.slideRef;
-  const videoSecondsRef = comment.videoSecondsRef;
 
-  // CHANGED: 영상 타임스탬프 클릭 → onGoToRef({ kind: 'video', seconds })
-  const handleGoToVideo = useCallback(() => {
-    if (typeof videoSecondsRef === 'number' && onGoToRef) {
-      onGoToRef({ kind: 'video', seconds: videoSecondsRef });
+  const handleGoToRef = useCallback(() => {
+    if (comment.ref && onGoToRef) {
+      onGoToRef(comment.ref);
     }
-  }, [videoSecondsRef, onGoToRef]);
+  }, [comment.ref, onGoToRef]);
 
-  // CHANGED: 슬라이드 참조 클릭 → onGoToRef({ kind: 'slide', ref })
-  const handleGoToSlide = useCallback(() => {
-    if (slideRef && onGoToRef) {
-      onGoToRef({ kind: 'slide', ref: slideRef });
-    }
-  }, [slideRef, onGoToRef]);
+  // ref에서 표시할 라벨 생성
+  const refLabel = comment.ref
+    ? comment.ref.kind === 'slide'
+      ? `슬라이드 ${comment.ref.index + 1}`
+      : formatVideoTimestamp(comment.ref.seconds)
+    : null;
 
   return (
     <div>
@@ -164,27 +157,23 @@ function Comment({
             </div>
 
             <div className="text-body-s text-black">
-              {/* CHANGED: 영상 댓글이면 아이콘 없이 1:30 형식만 표시 */}
-              {typeof videoSecondsRef === 'number' && onGoToRef && (
+              {comment.ref && onGoToRef && (
                 <button
                   type="button"
-                  onClick={handleGoToVideo}
-                  className="mr-2 inline-flex items-center align-middle rounded text-body-s-bold text-main hover:underline focus-visible:outline-2 focus-visible:outline-main"
-                  aria-label={`영상 ${formatVideoTimestamp(videoSecondsRef)}로 이동`}
+                  onClick={handleGoToRef}
+                  className={clsx(
+                    'mr-2 inline-flex items-center align-middle rounded text-body-s-bold hover:underline focus-visible:outline-2 focus-visible:outline-main',
+                    comment.ref.kind === 'slide' ? 'text-main-variant1' : 'text-main',
+                  )}
+                  aria-label={
+                    comment.ref.kind === 'slide' ? `${refLabel}로 이동` : `영상 ${refLabel}로 이동`
+                  }
                 >
-                  {formatVideoTimestamp(videoSecondsRef)}
-                </button>
-              )}
-
-              {/* CHANGED: 슬라이드 참조는 기존대로 아이콘 + ref */}
-              {slideRef && onGoToRef && (
-                <button
-                  type="button"
-                  onClick={handleGoToSlide}
-                  className="mr-1 inline-flex items-center align-middle rounded text-body-s-bold text-main-variant1 hover:underline focus-visible:outline-2 focus-visible:outline-main"
-                >
-                  <FileIcon className="text-main-variant1" />
-                  &nbsp;{slideRef}
+                  {comment.ref.kind === 'slide' && (
+                    <FileIcon className="text-main-variant1" aria-hidden="true" />
+                  )}
+                  {comment.ref.kind === 'slide' ? <>&nbsp;</> : null}
+                  {refLabel}
                 </button>
               )}
 

@@ -163,7 +163,7 @@ import ReactionButtons from '@/components/feedback/ReactionButtons';
 import SlideWebcamStage from '@/components/feedback/SlideWebcamStage';
 import { MOCK_SLIDES } from '@/mocks/slides';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
-import type { CommentRef } from '@/types/comment';
+import type { Comment } from '@/types/comment';
 
 import { useVideoComments } from '../hooks/useVideoComments';
 import { useVideoReactions } from '../hooks/useVideoReactions';
@@ -186,7 +186,7 @@ const MOCK_VIDEO = {
           content: '오프닝이 멋있네요!',
           timestamp: new Date().toISOString(),
           isMine: true,
-          videoSecondsRef: 5,
+          ref: { kind: 'video' as const, seconds: 5 },
         },
       ],
       reactions: [
@@ -206,7 +206,7 @@ const MOCK_VIDEO = {
           content: '배경 음악이 좋습니다.',
           timestamp: new Date().toISOString(),
           isMine: false,
-          videoSecondsRef: 15,
+          ref: { kind: 'video' as const, seconds: 15 },
         },
       ],
       reactions: [
@@ -226,7 +226,7 @@ const MOCK_VIDEO = {
           content: '같은 구간에서 누적이 되나 테스트합니다.',
           timestamp: new Date().toISOString(),
           isMine: false,
-          videoSecondsRef: 17,
+          ref: { kind: 'video' as const, seconds: 17 },
         },
       ],
       reactions: [
@@ -266,7 +266,7 @@ export default function FeedbackVideoPage() {
   };
 
   const handleGoToTimeRef = useCallback(
-    (ref: CommentRef) => {
+    (ref: NonNullable<Comment['ref']>) => {
       if (ref.kind === 'video') requestSeek(ref.seconds);
     },
     [requestSeek],

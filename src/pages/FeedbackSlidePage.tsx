@@ -17,7 +17,7 @@ import { useHotkey } from '@/hooks';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
 import { useSlideStore } from '@/stores/slideStore';
-import type { CommentRef } from '@/types/comment';
+import type { Comment } from '@/types/comment';
 
 import { useComments } from '../hooks/useComments';
 import { useReactions } from '../hooks/useReactions';
@@ -28,7 +28,7 @@ export default function FeedbackSlidePage() {
 
   const totalSlides = slides?.length ?? 0;
   const navigation = useSlideNavigation(totalSlides);
-  const { slideIndex, goPrev, goNext, isFirst, isLast, goToSlideRef } = navigation;
+  const { slideIndex, goPrev, goNext, isFirst, isLast, goToIndex } = navigation;
 
   const currentSlide = slides?.[slideIndex];
 
@@ -50,12 +50,11 @@ export default function FeedbackSlidePage() {
   const allFlatOpinions = useMemo(() => {
     if (!slides) return [];
     return slides.flatMap((slide, index) => {
-      const slideLabel = `슬라이드 ${index + 1}`;
       return (slide.opinions || []).map((op) => ({
         ...op,
         id: `${slide.id}-${op.id}`,
         parentId: op.parentId ? `${slide.id}-${op.parentId}` : undefined,
-        slideRef: slideLabel,
+        ref: { kind: 'slide' as const, index },
       }));
     });
   }, [slides]);
@@ -70,13 +69,13 @@ export default function FeedbackSlidePage() {
     });
   }, [slideIndex, currentSlide, initSlide, allFlatOpinions]);
 
-  // slidePage는 slide ref만 처리하도록
-  const handleGoToSlideRef = useCallback(
-    (ref: CommentRef) => {
+  // slidePage는 slide ref만 처리
+  const handleGoToRef = useCallback(
+    (ref: NonNullable<Comment['ref']>) => {
       if (ref.kind !== 'slide') return;
-      goToSlideRef(ref.ref); // 기존 goToSlideRef(string) 재사용
+      goToIndex(ref.index);
     },
-    [goToSlideRef],
+    [goToIndex],
   );
 
   if (isLoading) {
@@ -104,7 +103,7 @@ export default function FeedbackSlidePage() {
           <CommentList
             comments={comments}
             onAddReply={addReply}
-            onGoToRef={handleGoToSlideRef}
+            onGoToRef={handleGoToRef}
             onDeleteComment={deleteComment}
           />
         </div>
