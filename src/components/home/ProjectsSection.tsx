@@ -28,6 +28,7 @@ export default function ProjectsSection({
   onChangeViewMode,
 }: Props) {
   const hasProjects = projects.length > 0;
+  const [deleteTarget, setDeleteTarget] = useState<ProjectItem | null>(null);
 
   if (!isLoading && !hasProjects) return null;
 

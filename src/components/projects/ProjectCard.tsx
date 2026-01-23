@@ -46,19 +46,26 @@ export default function ProjectCard({ item, className }: ProjectCardProps) {
             ariaLabel="더보기"
             className="border border-gray-200 w-32 overflow-hidden"
           >
-            <div className="text-sm">
-              <button className="w-full px-3 py-2 text-left hover:bg-gray-100" type="button">
-                이름 변경
-              </button>
-              <button
-                className="w-full px-3 py-2 text-left text-red-500 hover:bg-gray-100"
-                type="button"
-              >
-                삭제
-              </button>
-            </div>
+            {({ close }) => (
+              <div className="text-sm">
+                <button className="w-full px-3 py-2 text-left hover:bg-gray-100" type="button">
+                  이름 변경
+                </button>
+                <button
+                  className="w-full px-3 py-2 text-left text-red-500 hover:bg-gray-100"
+                  type="button"
+                  onClick={() => {
+                    close();
+                    onDeleteClick?.(item);
+                  }}
+                >
+                  삭제
+                </button>
+              </div>
+            )}
           </Popover>
         </div>
+
         <p className="mt-1 text-body-s text-gray-500">{updatedAt}</p>
 
         <div className="mt-5 flex items-center justify-between gap-3 text-caption text-gray-500">
@@ -68,18 +75,18 @@ export default function ProjectCard({ item, className }: ProjectCardProps) {
           </div>
 
           {/* 반응 모음 */}
-          <div className="flex gap-3">
-            <div className="flex gap-1">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
               <CommentCountIcon />
-              <span>{commentCount}</span>
+              {commentCount}
             </div>
-            <div className="flex gap-1">
+            <div className="flex items-center gap-1">
               <ReactionCountIcon />
-              <span>{reactionCount}</span>
+              {reactionCount}
             </div>
-            <div className="flex gap-1">
+            <div className="flex items-center gap-1">
               <ViewCountIcon />
-              <span>{viewCount}</span>
+              {viewCount}
             </div>
           </div>
         </div>
