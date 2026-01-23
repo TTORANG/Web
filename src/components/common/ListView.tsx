@@ -5,11 +5,9 @@ import clsx from 'clsx';
 export interface ListViewProps<T> {
   items: readonly T[];
   getKey: (item: T, index: number) => Key;
-
   renderLeading?: (item: T) => ReactNode;
   renderTrailing?: (item: T) => ReactNode;
   renderInfo: (item: T) => ReactNode;
-
   onItemClick?: (item: T) => void;
   className?: string;
   itemClassName?: string;
@@ -23,7 +21,6 @@ export function ListView<T>({
   renderLeading,
   renderTrailing,
   renderInfo,
-  onItemClick,
   className,
   itemClassName,
   empty,
@@ -33,47 +30,15 @@ export function ListView<T>({
     return <div className="listView__empty">{empty ?? 'No items'}</div>;
   }
 
-  const isClickable = Boolean(onItemClick);
-
   return (
     <div className={clsx('listView', className)} role="list" aria-label={ariaLabel}>
       {items.map((item, index) => {
         const key = getKey(item, index);
 
         return (
-          <div
-            key={key}
-            className={clsx('listView__item', itemClassName, isClickable && 'is-clickable')}
-            role="listitem"
-            tabIndex={isClickable ? 0 : undefined}
-            onClick={isClickable ? () => onItemClick?.(item) : undefined}
-            onKeyDown={
-              isClickable
-                ? (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      onItemClick?.(item);
-                    }
-                  }
-                : undefined
-            }
-          >
+          <div key={key} className={clsx('listView__item', itemClassName)} role="listitem">
             {renderLeading && <div className="listView__leading">{renderLeading(item)}</div>}
 
-            {/* <div className="listView__content">
-              <div className="listView__title">{renderTitle(item)}</div>
-
-              {(renderUpdatedAt || renderMeta) && (
-                <div className="listView__meta">
-                  {renderUpdatedAt && (
-                    <span className="listView__updated">{renderUpdatedAt(item)}</span>
-                  )}
-                  {renderMeta && <span className="listView__metaExtra">{renderMeta(item)}</span>}
-                </div>
-              )}
-
-              {renderStats && <div className="listView__stats">{renderStats(item)}</div>}
-            </div> */}
             <div className="listView__content">{renderInfo(item)}</div>
 
             {renderTrailing && (
