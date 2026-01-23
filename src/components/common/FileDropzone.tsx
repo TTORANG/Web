@@ -98,7 +98,7 @@ export default function FileDropzone({
             (showDragOverlay || showUploadOverlay) && 'blur-sm opacity-40',
           )}
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800 transition group-hover:bg-gray-900">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800 not-visited:transition group-hover:bg-gray-900">
             <UploadIcon className="h-5 w-5 text-white" />
           </div>
           <div className="space-y-2 text-center">

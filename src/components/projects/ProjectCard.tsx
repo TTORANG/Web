@@ -12,12 +12,18 @@ import { Popover } from '../common';
 type ProjectCardProps = {
   item: ProjectItem;
   className?: string;
-  onDeleteClick?: (item: ProjectItem) => void; // 상위로 올릴 콜백 (플젝 삭제)
 };
 
-export default function ProjectCard({ item, className, onDeleteClick }: ProjectCardProps) {
-  const { title, updatedAt, pageCount, commentCount, reactionCount, viewCount, thumbnailUrl } =
-    item;
+export default function ProjectCard({ item, className }: ProjectCardProps) {
+  const {
+    title,
+    updatedAt,
+    pageCount,
+    commentCount,
+    reactionCount,
+    viewCount = 0,
+    thumbnailUrl,
+  } = item;
 
   return (
     <article className={clsx('overflow-hidden rounded-2xl border-none bg-white', className)}>

@@ -5,13 +5,11 @@ import clsx from 'clsx';
 export interface CardViewProps<T> {
   items: readonly T[];
   getKey: (item: T, index: number) => Key;
-
   renderCard: (item: T) => ReactNode;
-
   className?: string;
   itemClassName?: string;
   empty?: ReactNode;
-  ariaLabel?: string;
+  ariaLabal?: string;
 }
 
 export function CardView<T>({
@@ -21,14 +19,14 @@ export function CardView<T>({
   className,
   itemClassName,
   empty,
-  ariaLabel,
+  ariaLabal,
 }: CardViewProps<T>) {
   if (items.length === 0) {
     return <div className="cardView__empty">{empty ?? 'No items'}</div>;
   }
 
   return (
-    <div className={clsx('cardView', className)} role="list" aria-label={ariaLabel}>
+    <div className={clsx('cardView', className)} role="list" aria-label={ariaLabal}>
       {items.map((item, index) => (
         <div
           key={getKey(item, index)}
