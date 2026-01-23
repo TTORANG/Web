@@ -1,3 +1,9 @@
+/**
+ * 테마 관리 스토어
+ *
+ * light/dark/auto 테마 설정을 관리하고 시스템 설정과 동기화합니다.
+ * persist 미들웨어로 사용자 선호도를 저장합니다.
+ */
 import { useEffect } from 'react';
 
 import { create } from 'zustand';
@@ -21,11 +27,11 @@ export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
       theme: 'auto',
-      resolvedTheme: 'light', // 초기값, initTheme에서 보정됨
+      resolvedTheme: 'light',
 
       setTheme: (theme) => {
         set({ theme });
-        get().initTheme(); // 테마 변경 시 재계산 및 적용
+        get().initTheme();
       },
 
       initTheme: () => {
@@ -40,9 +46,6 @@ export const useThemeStore = create<ThemeState>()(
 
         set({ resolvedTheme: nextResolved });
         document.documentElement.dataset.theme = nextResolved;
-
-        // 시스템 설정 변경 감지 리스너 (한 번만 등록되도록 관리 필요하지만, 간단히 구현)
-        // Zustand persist가 hydarate 될 때 실행되거나, 앱 진입 시 실행됨.
       },
     }),
     {
@@ -55,13 +58,13 @@ export const useThemeStore = create<ThemeState>()(
 );
 
 /**
- * 시스템 테마 변경 및 스토리지 동기화 리스너 훅
- * 앱의 최상위 컴포넌트에서 한 번만 호출해야 합니다.
+ * 시스템 테마 변경 및 탭 간 동기화 리스너 훅
+ *
+ * 앱 최상위 컴포넌트에서 한 번만 호출해야 합니다.
  */
 export function useThemeListener() {
   const initTheme = useThemeStore((state) => state.initTheme);
 
-  // 시스템 테마 변경 감지
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = () => {
@@ -74,7 +77,6 @@ export function useThemeListener() {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [initTheme]);
 
-  // 탭 간 테마 동기화 (Storage 이벤트 감지)
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
       if (e.key === 'ttorang-theme') {

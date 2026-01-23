@@ -28,7 +28,8 @@ export const handlers = [
     const { projectId } = params;
     console.log(`[MSW] GET /projects/${projectId}/slides`);
 
-    return HttpResponse.json(slides);
+    const projectSlides = slides.filter((s) => s.projectId === projectId);
+    return HttpResponse.json(projectSlides);
   }),
 
   /**
@@ -104,12 +105,13 @@ export const handlers = [
   http.post(`${BASE_URL}/projects/:projectId/slides`, async ({ params, request }) => {
     await delay(300);
 
-    const { projectId } = params;
+    const { projectId } = params as { projectId: string };
     const data = (await request.json()) as { title: string; script?: string };
     console.log(`[MSW] POST /projects/${projectId}/slides`, data);
 
     const newSlide: Slide = {
       id: crypto.randomUUID(),
+      projectId,
       title: data.title,
       thumb: `/thumbnails/slide-${slides.length % 52}.webp`,
       script: data.script || '',

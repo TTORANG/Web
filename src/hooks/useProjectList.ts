@@ -1,31 +1,38 @@
+/**
+ * 프로젝트 목록 필터/정렬 훅
+ *
+ * 검색, 정렬, 커스텀 필터를 적용한 프로젝트 목록을 반환합니다.
+ *
+ * @param projects - 원본 프로젝트 배열
+ * @param options.query - 검색어 (제목 기준)
+ * @param options.sort - 정렬 모드 ('recent' | 'commentCount' | 'name')
+ * @param options.filterFn - 커스텀 필터 함수
+ * @returns 필터링/정렬된 프로젝트 배열
+ */
 import { useMemo } from 'react';
 
 import type { SortMode } from '@/types/home';
-import type { ProjectItem } from '@/types/project';
+import type { Project } from '@/types/project';
 
 type Options = {
   query?: string;
   sort?: SortMode;
-  // 필터 조건이 확정되기 전까지는 predicate 형태로 열어두면
-  // UI/요구사항이 바뀌어도 훅은 그대로 재사용 가능...
-  filterFn?: (project: ProjectItem) => boolean;
+  filterFn?: (project: Project) => boolean;
 };
-export function useProjectList(projects: ProjectItem[], options?: Options) {
+
+export function useProjectList(projects: Project[], options?: Options) {
   return useMemo(() => {
     const query = options?.query ?? '';
     const sort = options?.sort ?? 'recent';
     const filterFn = options?.filterFn;
 
-    // 1) filter
     let result = filterFn ? projects.filter(filterFn) : projects;
 
-    // 2) search
     const q = query.trim().toLowerCase();
     if (q) {
       result = result.filter((p) => p.title.toLowerCase().includes(q));
     }
 
-    // 3) sort
     if (sort === 'recent') return result;
 
     const next = [...result];

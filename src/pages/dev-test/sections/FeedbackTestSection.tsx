@@ -2,12 +2,12 @@ import { useState } from 'react';
 
 import { CommentInput } from '@/components/comment';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
-import { type EmojiReaction, type ReactionType } from '@/types/script';
+import { type Reaction, type ReactionType } from '@/types/script';
 import { showToast } from '@/utils/toast';
 
 export function FeedbackTestSection() {
   const [commentDraft, setCommentDraft] = useState('');
-  const [reactions, setReactions] = useState<EmojiReaction[]>([
+  const [reactions, setReactions] = useState<Reaction[]>([
     { type: 'fire', count: 8 },
     { type: 'sleepy', count: 4 },
     { type: 'good', count: 99, active: true },

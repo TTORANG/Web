@@ -3,9 +3,17 @@ import { useRef, useState } from 'react';
 import clsx from 'clsx';
 
 import UploadIcon from '@/assets/icons/icon-upload.svg?react';
-import type { FileDropProps } from '@/types/uploadFile';
+import type { UploadState } from '@/types/uploadFile';
 
 import ProgressBar from './ProgressBar';
+
+interface FileDropProps {
+  onFilesSelected: (files: File[]) => void;
+  accept?: string;
+  disabled?: boolean;
+  uploadState?: UploadState;
+  progress?: number;
+}
 
 export default function FileDropzone({
   onFilesSelected,

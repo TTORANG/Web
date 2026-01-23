@@ -1,9 +1,23 @@
+/**
+ * 홈 화면 UI 상태 관리 스토어
+ *
+ * 프로젝트 검색, 정렬, 보기 모드를 관리합니다.
+ */
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
-import type { HomeStateProps } from '@/types/home';
+import type { SortMode, ViewMode } from '@/types/home';
 
-export const useHomeStore = create<HomeStateProps>()(
+interface HomeState {
+  query: string;
+  viewMode: ViewMode;
+  sort: SortMode;
+  setQuery: (query: string) => void;
+  setViewMode: (viewMode: ViewMode) => void;
+  setSort: (sort: SortMode) => void;
+}
+
+export const useHomeStore = create<HomeState>()(
   devtools(
     (set) => ({
       query: '',

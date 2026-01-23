@@ -1,5 +1,5 @@
-import type { ViewMode } from '@/types/home';
-import type { ProjectItem } from '@/types/project';
+import type { SortMode, ViewMode } from '@/types/home';
+import type { Project } from '@/types/project';
 
 import { CardView, ListView } from '../common';
 import ProjectCard from '../projects/ProjectCard';
@@ -14,18 +14,20 @@ type Props = {
   isLoading: boolean;
   query: string;
   onChangeQuery: (value: string) => void;
-  projects: ProjectItem[];
+  onChangeSort: (value: SortMode) => void;
   viewMode: ViewMode;
-  onChangeViewMode: (viewMode: ViewMode) => void;
+  onChangeViewMode: (value: ViewMode) => void;
+  projects: Project[];
 };
 
 export default function ProjectsSection({
   isLoading,
   query,
   onChangeQuery,
-  projects,
+  onChangeSort,
   viewMode,
   onChangeViewMode,
+  projects,
 }: Props) {
   const hasProjects = projects.length > 0;
   const [deleteTarget, setDeleteTarget] = useState<ProjectItem | null>(null);
@@ -39,10 +41,11 @@ export default function ProjectsSection({
         <h2 className="text-body-m-bold">내 발표</h2>
       </div>
 
-      {/* 검색 */}
+      {/* 검색 및 필터 */}
       <ProjectHeader
         value={query}
         onChange={onChangeQuery}
+        onChangeSort={onChangeSort}
         viewMode={viewMode}
         onChangeViewMode={onChangeViewMode}
       />
