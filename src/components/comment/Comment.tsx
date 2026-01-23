@@ -13,8 +13,8 @@ import FileIcon from '@/assets/icons/icon-document.svg?react';
 import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
 import { MOCK_USERS } from '@/mocks/users';
-import type { Comment as CommentType } from '@/types/comment';
-import { formatRelativeTime } from '@/utils/format';
+import type { CommentRef, Comment as CommentType } from '@/types/comment';
+import { formatRelativeTime, formatVideoTimestamp } from '@/utils/format';
 
 import CommentInput from './CommentInput';
 

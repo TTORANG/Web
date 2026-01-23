@@ -9,7 +9,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
 import { MOCK_CURRENT_USER } from '@/mocks/users';
-import type { CommentItem } from '@/types/comment';
+import type { Comment } from '@/types/comment';
 import type { ReactionType } from '@/types/script';
 import type { VideoFeedback } from '@/types/video';
 import { addReplyToFlat, createComment, deleteFromFlat } from '@/utils/comment';
@@ -41,11 +41,11 @@ interface VideoFeedbackState {
   deleteComment: (commentId: string) => void;
 }
 
-function hasCommentId(flat: CommentItem[], id: string) {
+function hasCommentId(flat: Comment[], id: string) {
   return flat.some((c) => c.id === id);
 }
 
-// function getAllComments(feedbacks: any[]): CommentItem[] {
+// function getAllComments(feedbacks: any[]): Comment[] {
 //   return feedbacks.flatMap((f) => f.comments);
 // }
 
@@ -150,7 +150,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
             targetFeedback = newFeedback;
           }
 
-          const newComment: CommentItem = {
+          const newComment: Comment = {
             ...createComment({
               content: trimmed,
               authorId: MOCK_CURRENT_USER.id,

@@ -9,10 +9,10 @@
 import { useMemo } from 'react';
 
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
-import type { CommentItem } from '@/types/comment';
+import type { Comment } from '@/types/comment';
 import { flatToTree } from '@/utils/comment';
 
-const EMPTY_COMMENTS: CommentItem[] = [];
+const EMPTY_COMMENTS: Comment[] = [];
 
 export function useVideoComments() {
   const video = useVideoFeedbackStore((state) => state.video);
