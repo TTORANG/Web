@@ -13,11 +13,6 @@ export interface History {
 export type ReactionType = 'fire' | 'sleepy' | 'good' | 'bad' | 'confused';
 
 /**
- * 리액션 타입 배열 (UI 렌더링용)
- */
-export const REACTION_TYPES: ReactionType[] = ['fire', 'sleepy', 'good', 'bad', 'confused'];
-
-/**
  * 이모지 반응 정보
  */
 export interface Reaction {

@@ -8,9 +8,9 @@
  */
 import { useMemo } from 'react';
 
+import { REACTION_TYPES } from '@/constants/reaction';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { EmojiReaction, ReactionType } from '@/types/script';
-import { REACTION_TYPES } from '@/types/script';
 
 // 구간설정 +-
 const WINDOW = 5;
