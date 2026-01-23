@@ -89,18 +89,18 @@ export default function ProjectCard({
           </div>
 
           {/* 반응 모음 */}
-          <div className="flex gap-3">
-            <div className="flex gap-1">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
               <CommentCountIcon />
-              <span>{commentCount}</span>
+              {commentCount}
             </div>
-            <div className="flex gap-1">
+            <div className="flex items-center gap-1">
               <ReactionCountIcon />
-              <span>{reactionCount}</span>
+              {reactionCount}
             </div>
-            <div className="flex gap-1">
+            <div className="flex items-center gap-1">
               <ViewCountIcon />
-              <span>{viewCount}</span>
+              {viewCount}
             </div>
           </div>
         </div>

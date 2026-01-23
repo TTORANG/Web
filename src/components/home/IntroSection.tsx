@@ -45,6 +45,7 @@ export default function IntroSection({
         uploadState={uploadState}
         progress={progress}
         onFilesSelected={onFilesSelected}
+        error={error}
       />
 
       {error && <p className="mt-3 text-body-s text-red-500">업로드 실패: {error}</p>}
