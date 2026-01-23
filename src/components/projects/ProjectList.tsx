@@ -5,12 +5,12 @@ import MoreIcon from '@/assets/icons/icon-more.svg?react';
 import PageCountIcon from '@/assets/icons/icon-page-count.svg?react';
 import ReactionCountIcon from '@/assets/icons/icon-reaction-count.svg?react';
 import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
-import type { ProjectItem } from '@/types/project';
+import type { Project } from '@/types/project';
 
 import { ListView, Popover } from '../common';
 
 type ProjectListProps = {
-  items: ProjectItem[];
+  items: Project[];
   className?: string;
   itemClassName?: string;
 };

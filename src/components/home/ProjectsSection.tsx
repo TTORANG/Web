@@ -1,7 +1,7 @@
 import type { SortMode, ViewMode } from '@/types/home';
 import type { Project } from '@/types/project';
 
-import { CardView, ListView } from '../common';
+import { CardView } from '../common';
 import ProjectCard from '../projects/ProjectCard';
 import { ProjectCardSkeleton } from '../projects/ProjectCardSkeleton';
 import ProjectHeader from '../projects/ProjectHeader';
@@ -30,7 +30,6 @@ export default function ProjectsSection({
   projects,
 }: Props) {
   const hasProjects = projects.length > 0;
-  const [deleteTarget, setDeleteTarget] = useState<ProjectItem | null>(null);
 
   if (!isLoading && !hasProjects) return null;
 
@@ -62,7 +61,7 @@ export default function ProjectsSection({
             items={projects}
             getKey={(item) => item.id}
             className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3"
-            renderCard={(item) => <ProjectCard item={item} />}
+            renderCard={(item) => <ProjectCard {...item} />}
           />
         )
       ) : isLoading ? (
