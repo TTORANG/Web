@@ -1,3 +1,16 @@
+/**
+ * 미디어 스트림 훅
+ *
+ * 카메라/마이크 스트림과 오디오 볼륨 분석을 제공합니다.
+ *
+ * @param videoDeviceId - 비디오 장치 ID
+ * @param audioDeviceId - 오디오 장치 ID
+ * @returns stream - MediaStream 객체
+ * @returns volume - 현재 오디오 볼륨 (0-255)
+ * @returns error - 에러 메시지
+ * @returns isLoading - 스트림 로딩 중 여부
+ * @returns restartStream - 스트림 재시작 함수
+ */
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 declare global {

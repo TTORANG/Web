@@ -1,4 +1,4 @@
-export { default as CommentItem } from '../comment/CommentItem';
+export { default as Comment } from '../comment/Comment';
 
 export { Gnb } from './layout/Gnb';
 export { Layout } from './layout/Layout';
@@ -16,3 +16,5 @@ export { default as SlideImage } from './SlideImage';
 export { Spinner } from './Spinner';
 export { default as FileDropzone } from './FileDropzone';
 export { default as ProgressBar } from './ProgressBar';
+export { default as ListView } from './ListView';
+export { default as CardView } from './CardView';

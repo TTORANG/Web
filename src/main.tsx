@@ -9,7 +9,6 @@ import { Toaster } from 'sonner';
 import { queryClient } from '@/api';
 import { Gnb, Layout, LoginButton, Logo, ShareButton } from '@/components/common';
 import { DevFab } from '@/components/common/DevFab';
-import { DEFAULT_SLIDE_ID } from '@/constants/navigation';
 import {
   DevTestPage,
   FdSlidePage,
@@ -53,8 +52,8 @@ const router = createBrowserRouter([
       />
     ),
     children: [
-      { index: true, element: <Navigate to={`slide/${DEFAULT_SLIDE_ID}`} replace /> },
-      { path: 'slide/:slideId', element: <SlidePage /> },
+      { index: true, element: <Navigate to="slide" replace /> },
+      { path: 'slide', element: <SlidePage /> },
       { path: 'video', element: <VideoPage /> },
       { path: 'insight', element: <InsightPage /> },
     ],

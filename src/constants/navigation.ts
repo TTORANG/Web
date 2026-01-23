@@ -49,7 +49,7 @@ export const getLastSlideId = (projectId: string): string => {
 export const getTabPath = (projectId: string, tab: Tab, slideId?: string): string => {
   switch (tab) {
     case 'slide':
-      return `/${projectId}/slide/${slideId ?? getLastSlideId(projectId)}`;
+      return `/${projectId}/slide?slideId=${slideId ?? getLastSlideId(projectId)}`;
     case 'video':
       return `/${projectId}/video`;
     case 'insight':

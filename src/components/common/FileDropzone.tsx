@@ -1,9 +1,21 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+import clsx from 'clsx';
 
 import UploadIcon from '@/assets/icons/icon-upload.svg?react';
-import type { FileDropProps } from '@/types/uploadFile';
+import type { UploadState } from '@/types/uploadFile';
+import { showToast } from '@/utils/toast';
 
 import ProgressBar from './ProgressBar';
+
+interface FileDropProps {
+  onFilesSelected: (files: File[]) => void;
+  accept?: string;
+  disabled?: boolean;
+  uploadState?: UploadState;
+  progress?: number;
+  error?: string | null;
+}
 
 export default function FileDropzone({
   onFilesSelected,
@@ -11,9 +23,17 @@ export default function FileDropzone({
   disabled,
   uploadState = 'idle',
   progress = 0,
+  error,
 }: FileDropProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  // dragCounter : 실제로 영역을 완전히 벗어났을 때만 카운터를 false로 바꿈
+  const dragCounter = useRef(0);
   const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    if (!error) return;
+    showToast.warning('업로드에 실패했어요.', error);
+  }, [error]);
 
   const openFileDialog = () => {
     if (disabled) return;
@@ -27,21 +47,34 @@ export default function FileDropzone({
     onFilesSelected(files);
   };
 
-  const handleDragEnterOrOver = (e: React.DragEvent<HTMLButtonElement>) => {
+  const handleDragEnter = (e: React.DragEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!disabled) setIsDragging(true);
+    if (disabled) return;
+    // 드래그가 영역 안에 있는 동안 지속적으로 true 유지
+    dragCounter.current += 1;
+    setIsDragging(true);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   const handleDragLeave = (e: React.DragEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragging(false);
+    if (disabled) return;
+    // 자식 요소 진입/이탈에서 발생하는 잦은 leave 이벤트로 하이라이트가 꺼지는 현상을 방지
+    dragCounter.current = Math.max(0, dragCounter.current - 1);
+    if (dragCounter.current === 0) setIsDragging(false);
   };
 
   const handleDrop = (e: React.DragEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    // 드롭 시 카운터 초기화해서 다음 드래그 상태가 꼬이지 않도록 함
+    dragCounter.current = 0;
     setIsDragging(false);
     handleFiles(e.dataTransfer.files);
   };
@@ -64,27 +97,24 @@ export default function FileDropzone({
         type="button"
         onClick={openFileDialog}
         disabled={disabled}
-        onDragEnter={handleDragEnterOrOver}
-        onDragOver={handleDragEnterOrOver}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={[
+        className={clsx(
           'group relative w-full overflow-hidden rounded-2xl border bg-white px-8 py-14 shadow-sm transition focus:ring-1 focus:ring-gray-200',
           disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-gray-100',
           showDragOverlay ? 'border-gray-900 ring-1 ring-gray-200' : 'border-gray-200',
-        ].join(' ')}
+        )}
       >
         {/* 드래그/업로드 중이면 블러/흐리게 */}
         <div
-          className={[
+          className={clsx(
             'flex flex-col items-center gap-4 transition',
-            showDragOverlay || showUploadOverlay ? 'blur-sm opacity-40' : '',
-          ].join(' ')}
+            (showDragOverlay || showUploadOverlay) && 'blur-sm opacity-40',
+          )}
         >
-          <div
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800
-                      transition group-hover:bg-gray-900"
-          >
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800 not-visited:transition group-hover:bg-gray-900">
             <UploadIcon className="h-5 w-5 text-white" />
           </div>
           <div className="space-y-2 text-center">

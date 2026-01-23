@@ -19,8 +19,6 @@ interface SlideThumbnailProps {
   index: number;
   /** 현재 선택된 슬라이드 여부 */
   isActive?: boolean;
-  /** 슬라이드 링크 기본 경로 */
-  basePath?: string;
   /** 로딩 상태 (스켈레톤 표시) */
   isLoading?: boolean;
 }
@@ -35,7 +33,6 @@ export default function SlideThumbnail({
   slide,
   index,
   isActive = false,
-  basePath = '',
   isLoading,
 }: SlideThumbnailProps) {
   if (isLoading || !slide) {
@@ -49,7 +46,8 @@ export default function SlideThumbnail({
 
   return (
     <Link
-      to={`${basePath}/slide/${slide.id}`}
+      to={{ search: `?slideId=${slide.id}` }}
+      replace
       aria-current={isActive ? 'true' : undefined}
       className={clsx(
         'group flex items-start gap-2 p-2 rounded transition-colors focus-visible:outline-2 focus-visible:outline-main',
@@ -67,7 +65,7 @@ export default function SlideThumbnail({
       </span>
 
       {/* 썸네일 */}
-      <div className="relative flex-1 aspect-video rounded overflow-hidden bg-gray-200">
+      <div className="relative flex-1 rounded overflow-hidden bg-gray-200">
         <SlideImage src={slide.thumb} alt={`슬라이드 ${index + 1}: ${slide.title}`} />
       </div>
     </Link>

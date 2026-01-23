@@ -3,16 +3,16 @@
  * @description 피드백 화면 우측 댓글 리스트
  *
  * 댓글 리스트 렌더링과 답글 입력 상태를 관리합니다.
- * 공통 CommentItem 컴포넌트를 사용합니다.
+ * 공통 Comment 컴포넌트를 사용합니다.
  */
 import { useState } from 'react';
 
-import type { CommentItem as CommentItemType, CommentRef } from '@/types/comment';
+import type { Comment as CommentType } from '@/types/comment';
 
-import CommentItem from './CommentItem';
+import Comment from './Comment';
 
 interface CommentListProps {
-  comments: CommentItemType[];
+  comments: CommentType[];
   onAddReply: (targetId: string, content: string) => void;
   onGoToRef: (ref: CommentRef) => void; // 슬라이드와 비디오 페이지의 링크 기능
   onDeleteComment?: (commentId: string) => void;
@@ -48,7 +48,7 @@ export default function CommentList({
   return (
     <div className="mt-2 flex-1 space-y-2 overflow-y-auto">
       {comments.map((comment) => (
-        <CommentItem
+        <Comment
           key={comment.id}
           comment={comment}
           isActive={replyingToId === comment.id}
