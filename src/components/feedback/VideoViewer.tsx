@@ -52,7 +52,7 @@ export default function VideoViewer({ videoUrl, videoTitle }: VideoViewerProps) 
           ref={videoRef}
           src={videoUrl}
           controls
-          className="w-full rounded-2xl bg-black"
+          className="w-full rounded-2xl bg-[#000000]"
           onTimeUpdate={handleTimeUpdate}
         />
       </div>

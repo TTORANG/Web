@@ -213,11 +213,11 @@ export default function VideoPlaybackBar({
               <img
                 src={slides[hoverSlideIndex].thumb}
                 alt="slide thumbnail"
-                className="h-22.5 w-40 rounded border border-white/15 bg-gray-200 object-cover"
+                className="h-22.5 w-40 rounded border border-[#ffffff]/15 bg-gray-200 object-cover"
               />
             )}
 
-            <div className="rounded-full border border-white/10 bg-[rgba(26,26,26,0.66)] px-3 py-1 text-xs font-medium tabular-nums text-white whitespace-nowrap">
+            <div className="rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.66)] px-3 py-1 text-xs font-medium tabular-nums text-[#ffffff] whitespace-nowrap">
               {formatVideoTimestamp(hoverX * max)}
             </div>
           </div>
@@ -260,7 +260,7 @@ export default function VideoPlaybackBar({
             {/* pill: 기본은 숨김 -> hover 시 나타남 */}
             <div className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 opacity-0 group-hover/vol:opacity-100 transition-opacity duration-150">
               {/* pill 배경 */}
-              <div className="flex items-center gap-2 rounded-full bg-black/45 px-3 h-8">
+              <div className="flex items-center gap-2 rounded-full bg-[#000000]/45 px-3 h-8">
                 {/* 아이콘 자리(이미 왼쪽에 실아이콘이 있으니 빈공간만) */}
                 <div className="h-7 w-5 shrink-0" />
 
@@ -282,7 +282,7 @@ export default function VideoPlaybackBar({
             </div>
 
             {/* 시간 - hover 시 오른쪽으로 슬라이드 */}
-            <div className="whitespace-nowrap rounded-full border border-white/10 bg-[rgba(26,26,26,0.66)] px-3 py-1.5 text-xs font-medium tabular-nums text-white transition-all duration-150 group-hover/vol:translate-x-19">
+            <div className="whitespace-nowrap rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.66)] px-3 py-1.5 text-xs font-medium tabular-nums text-[#ffffff] transition-all duration-150 group-hover/vol:translate-x-19">
               <span>{formatVideoTimestamp(currentTime)}</span>
               <span className="mx-1">/</span>
               <span>{formatVideoTimestamp(max)}</span>
