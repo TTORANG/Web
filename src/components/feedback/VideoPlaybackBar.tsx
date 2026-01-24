@@ -17,6 +17,7 @@ import unmuteIcon from '@/assets/playbackBar-icons/unmute-icon.webp';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Slide } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';
+import { getSlideIndexFromTime } from '@/utils/video';
 
 type VideoPlaybackBarProps = {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -128,7 +129,8 @@ export default function VideoPlaybackBar({
     return Math.max(0, Math.min(raw, 1));
   };
 
-  const getSlideIndexFromTime = (time: number): number | null => {
+  // 슬라이드 인덱스 계산 헬퍼 (slides가 없으면 null 반환)
+  const computeSlideIndex = (time: number): number | null => {
     if (!slides || !slides.length) return null;
 
     const times =
@@ -136,13 +138,7 @@ export default function VideoPlaybackBar({
         ? slideChangeTimes
         : slides.map((_, i) => i * 10);
 
-    let idx = 0;
-    for (let i = 0; i < times.length; i += 1) {
-      if (times[i] <= time) idx = i;
-      else break;
-    }
-
-    return Math.max(0, Math.min(idx, slides.length - 1));
+    return getSlideIndexFromTime(time, times, slides.length - 1);
   };
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -155,7 +151,7 @@ export default function VideoPlaybackBar({
     setHoverX(p);
 
     const hoverTime = p * max;
-    const slideIdx = getSlideIndexFromTime(hoverTime);
+    const slideIdx = computeSlideIndex(hoverTime);
     setHoverSlideIndex(slideIdx);
 
     if (isScrubbing) scrubTo(p * max);
@@ -185,7 +181,7 @@ export default function VideoPlaybackBar({
       setHoverX(p);
 
       const hoverTime = p * max;
-      const slideIdx = getSlideIndexFromTime(hoverTime);
+      const slideIdx = computeSlideIndex(hoverTime);
       setHoverSlideIndex(slideIdx);
 
       scrubTo(p * max);

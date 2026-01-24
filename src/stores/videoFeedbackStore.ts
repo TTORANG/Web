@@ -9,21 +9,21 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
 import { createDefaultReactions } from '@/constants/reaction';
+import { FEEDBACK_WINDOW } from '@/constants/video';
 import { MOCK_CURRENT_USER } from '@/mocks/users';
 import type { Comment } from '@/types/comment';
 import type { Reaction, ReactionType } from '@/types/script';
 import type { VideoFeedback, VideoTimestampFeedback } from '@/types/video';
 import { addReplyToFlat, createComment, deleteFromFlat } from '@/utils/comment';
 
-// ±구간 설정 (useVideoReactions.ts와 동일)
-const WINDOW = 5;
-
 // 현재 시간대에 리액션 찾기
 const getOrCreateFeedback = (
   feedbacks: VideoTimestampFeedback[],
   currentTime: number,
 ): { target: VideoTimestampFeedback; feedbacks: VideoTimestampFeedback[] } => {
-  const targetFeedback = feedbacks.find((f) => Math.abs(f.timestamp - currentTime) <= WINDOW);
+  const targetFeedback = feedbacks.find(
+    (f) => Math.abs(f.timestamp - currentTime) <= FEEDBACK_WINDOW,
+  );
 
   if (targetFeedback) {
     return { target: targetFeedback, feedbacks };

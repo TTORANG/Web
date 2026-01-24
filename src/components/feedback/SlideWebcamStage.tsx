@@ -13,25 +13,13 @@ import clsx from 'clsx';
 import VideoPlaybackBar from '@/components/feedback/VideoPlaybackBar';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Slide } from '@/types/slide';
+import { getSlideIndexFromTime } from '@/utils/video';
 
 type SlideWebcamStageProps = {
   slides: Slide[];
   slideChangeTimes: number[];
   webcamVideoUrl: string;
 };
-
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
-}
-
-function getActiveSlideIndex(currentTime: number, changeTimes: number[]) {
-  let idx = 0;
-  for (let i = 0; i < changeTimes.length; i += 1) {
-    if (changeTimes[i] <= currentTime) idx = i;
-    else break;
-  }
-  return idx;
-}
 
 export default function SlideWebcamStage({
   slides,
@@ -91,8 +79,7 @@ export default function SlideWebcamStage({
     if (!slides.length) return 0;
 
     const safeTimes = slideChangeTimes.length > 0 ? slideChangeTimes : slides.map((_, i) => i * 10);
-    const idx = getActiveSlideIndex(currentTime, safeTimes);
-    return clamp(idx, 0, slides.length - 1);
+    return getSlideIndexFromTime(currentTime, safeTimes, slides.length - 1);
   }, [currentTime, slideChangeTimes, slides]);
 
   const activeSlide = slides[activeIndex];

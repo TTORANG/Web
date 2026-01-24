@@ -9,11 +9,10 @@
 import { useMemo } from 'react';
 
 import { REACTION_TYPES } from '@/constants/reaction';
+import { FEEDBACK_WINDOW } from '@/constants/video';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Reaction, ReactionType } from '@/types/script';
 
-// 구간설정 +-
-const WINDOW = 5;
 export function useVideoReactions() {
   const video = useVideoFeedbackStore((s) => s.video);
   const currentTime = useVideoFeedbackStore((s) => s.currentTime);
@@ -23,9 +22,9 @@ export function useVideoReactions() {
       return REACTION_TYPES.map((type) => ({ type, count: 0, active: false }));
     }
 
-    // 현재 시간과 겹치는 모든 feedbacks 찾기 (±WINDOW 범위)
+    // 현재 시간과 겹치는 모든 feedbacks 찾기 (±FEEDBACK_WINDOW 범위)
     const overlappingFeedbacks = video.feedbacks.filter(
-      (f) => Math.abs(f.timestamp - currentTime) <= WINDOW,
+      (f) => Math.abs(f.timestamp - currentTime) <= FEEDBACK_WINDOW,
     );
 
     // 겹치는 feedbacks이 없으면 기본값
