@@ -176,11 +176,33 @@ export default function VideoPlaybackBar({
     setHoverSlideIndex(null);
   };
 
+  // 전역 마우스 이벤트로 스크러빙 처리 (바 밖에서도 동작)
   useEffect(() => {
-    const onUp = () => setIsScrubbing(false);
+    if (!isScrubbing) return;
+
+    const onMove = (e: MouseEvent) => {
+      const p = getPercentFromClientX(e.clientX);
+      setHoverX(p);
+
+      const hoverTime = p * max;
+      const slideIdx = getSlideIndexFromTime(hoverTime);
+      setHoverSlideIndex(slideIdx);
+
+      scrubTo(p * max);
+    };
+
+    const onUp = () => {
+      setIsScrubbing(false);
+    };
+
+    window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
-    return () => window.removeEventListener('mouseup', onUp);
-  }, []);
+
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [isScrubbing, max]);
 
   return (
     <div className="flex w-full flex-col gap-2">
@@ -192,7 +214,7 @@ export default function VideoPlaybackBar({
         onMouseEnter={onBarMouseEnter}
         onMouseLeave={onBarMouseLeave}
         onMouseDown={onBarMouseDown}
-        className="relative h-1 w-full cursor-pointer rounded-full bg-gray-700/70 transition-all duration-150 hover:h-1.5 hover:ring-2 hover:ring-blue-500/30 select-none"
+        className="group relative h-1 w-full cursor-pointer rounded-full bg-gray-700/70 transition-all duration-150 hover:h-1.5 hover:ring-2 hover:ring-blue-500/30 select-none"
       >
         <div
           className="absolute h-full rounded-full bg-blue-600"
@@ -204,16 +226,19 @@ export default function VideoPlaybackBar({
           style={{ left: `${progressPercentage}%`, marginLeft: '-6px' }}
         />
 
-        {isHoveringBar && hoverX !== null && (
+        {(isHoveringBar || isScrubbing) && hoverX !== null && (
           <div
             className="absolute -top-33 flex flex-col items-center gap-2 pointer-events-none"
-            style={{ left: `${hoverX * 100}%`, transform: 'translateX(-50%)' }}
+            style={{
+              left: `clamp(90px, ${hoverX * 100}%, calc(100% - 90px))`,
+              transform: 'translateX(-50%)',
+            }}
           >
             {slides && hoverSlideIndex !== null && slides[hoverSlideIndex] && (
               <img
                 src={slides[hoverSlideIndex].thumb}
                 alt="slide thumbnail"
-                className="h-22.5 w-40 rounded border border-[#ffffff]/15 bg-gray-200 object-cover"
+                className="h-22.5 w-40 min-w-40 shrink-0 rounded border border-[#ffffff]/15 bg-gray-200 object-cover"
               />
             )}
 
@@ -231,7 +256,7 @@ export default function VideoPlaybackBar({
           <button
             type="button"
             onClick={togglePlay}
-            className="flex h-8 w-8 items-center justify-center"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.66)]"
             aria-label={isPlaying ? '일시정지' : '재생'}
           >
             <img
@@ -243,11 +268,11 @@ export default function VideoPlaybackBar({
 
           {/* 볼륨: 아이콘에 hover하면 pill + 슬라이더가 펼쳐짐 */}
           <div className="group/vol relative flex items-center gap-2">
-            {/* 아이콘(항상 노출) */}
+            {/* 아이콘(항상 노출) - pill 위에 보이도록 z-10 */}
             <button
               type="button"
               onClick={() => changeVolume(volume === 0 ? 1 : 0)}
-              className="flex h-8 w-8 items-center justify-center"
+              className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.66)]"
               aria-label="음소거"
             >
               <img
@@ -294,7 +319,7 @@ export default function VideoPlaybackBar({
         <button
           type="button"
           onClick={toggleFullscreen}
-          className="flex h-8 w-8 items-center justify-center"
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.66)]"
           aria-label="전체화면"
         >
           <img src={fullscreenIcon} alt="전체화면" className="h-7 w-7" />

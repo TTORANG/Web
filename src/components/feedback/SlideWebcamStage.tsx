@@ -109,7 +109,7 @@ export default function SlideWebcamStage({
 
   return (
     <div ref={stageRootRef} className="flex-1 min-w-0 flex flex-col" data-stage-root>
-      <div className="relative w-full aspect-video bg-gray-900 rounded-xl overflow-hidden">
+      <div className="relative w-full aspect-video bg-gray-900 rounded-xl">
         {/* 슬라이드도 "메인/작은 박스" 위치가 토글되도록 class를 바꿈 */}
         <div
           className={clsx(
@@ -184,8 +184,8 @@ export default function SlideWebcamStage({
           )}
         </div>
 
-        {/* 재생바/조작 오버레이 */}
-        <div className="absolute bottom-0 left-0 right-0 z-40 bg-linear-to-t from-[#000000]/60 to-transparent pt-8 pb-4 px-4">
+        {/* 재생바/조작 오버레이 - overflow-visible로 썸네일 미리보기 표시 */}
+        <div className="absolute bottom-0 left-0 right-0 z-40 overflow-visible bg-linear-to-t from-[#000000]/60 to-transparent pt-8 pb-4 px-4">
           <VideoPlaybackBar
             videoRef={videoRef as React.RefObject<HTMLVideoElement>}
             duration={duration}
