@@ -6,12 +6,12 @@
  * - 웹캠 녹화본은 webcamVideoUrl(MOCK_VIDEO.videoUrl)을 사용
  * - "작은 박스(PiP)"를 hover하면 디밍+텍스트, 클릭하면 슬라이드/웹캠 위치가 토글됨
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import clsx from 'clsx';
 
 import VideoPlaybackBar from '@/components/feedback/VideoPlaybackBar';
-import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
+import { useVideoSync } from '@/hooks/useVideoSync';
 import type { Slide } from '@/types/slide';
 import { getSlideIndexFromTime } from '@/utils/video';
 
@@ -27,52 +27,12 @@ export default function SlideWebcamStage({
   webcamVideoUrl,
 }: SlideWebcamStageProps) {
   const stageRootRef = useRef<HTMLDivElement | null>(null);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  const currentTime = useVideoFeedbackStore((s) => s.currentTime);
-  const updateCurrentTime = useVideoFeedbackStore((s) => s.updateCurrentTime);
-
-  const seekTo = useVideoFeedbackStore((s) => s.seekTo);
-  const clearSeek = useVideoFeedbackStore((s) => s.clearSeek);
+  // 비디오 동기화 훅 (videoRef, duration, currentTime, seekTo 처리)
+  const { videoRef, duration, currentTime } = useVideoSync();
 
   const [layout, setLayout] = useState<'slide-main' | 'webcam-main'>('slide-main');
   const isSlideMain = layout === 'slide-main';
-
-  // duration은 재생바 컴포넌트가 필요해서 Stage에서 계산해 props로 내림
-  const [duration, setDuration] = useState(0);
-
-  useEffect(() => {
-    const el = videoRef.current;
-    if (!el) return;
-
-    const onLoadedMetadata = () => {
-      const d = Number.isFinite(el.duration) ? el.duration : 0;
-      setDuration(d);
-    };
-
-    const onTimeUpdate = () => {
-      updateCurrentTime(el.currentTime);
-    };
-
-    el.addEventListener('loadedmetadata', onLoadedMetadata);
-    el.addEventListener('timeupdate', onTimeUpdate);
-
-    return () => {
-      el.removeEventListener('loadedmetadata', onLoadedMetadata);
-      el.removeEventListener('timeupdate', onTimeUpdate);
-    };
-  }, [updateCurrentTime]);
-
-  // store.seekTo 구독 -> 실제 video seek
-  useEffect(() => {
-    const el = videoRef.current;
-    if (!el) return;
-    if (seekTo == null) return;
-
-    el.currentTime = seekTo;
-    updateCurrentTime(seekTo);
-    clearSeek();
-  }, [seekTo, clearSeek, updateCurrentTime]);
 
   // currentTime -> slideIndex 계산
   const activeIndex = useMemo(() => {

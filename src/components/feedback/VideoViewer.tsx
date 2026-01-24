@@ -4,9 +4,7 @@
  *
  * 영상을 재생하고 현재 시간을 추적합니다.
  */
-import { useCallback, useEffect, useRef } from 'react';
-
-import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
+import { useVideoSync } from '@/hooks/useVideoSync';
 
 interface VideoViewerProps {
   videoUrl: string;
@@ -14,30 +12,8 @@ interface VideoViewerProps {
 }
 
 export default function VideoViewer({ videoUrl, videoTitle }: VideoViewerProps) {
-  // video DOM에 접근하기 위한 ref (기존 그대로)
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-
-  const updateCurrentTime = useVideoFeedbackStore((s) => s.updateCurrentTime);
-
-  // 댓글 클릭 등으로 "seek 요청"이 들어오면 여기서 처리
-  const seekTo = useVideoFeedbackStore((s) => s.seekTo);
-  const clearSeek = useVideoFeedbackStore((s) => s.clearSeek);
-
-  //  timeupdate 이벤트 때 현재 재생 시간을 store로 전달 (기존 그대로)
-  const handleTimeUpdate = useCallback(() => {
-    const t = videoRef.current?.currentTime ?? 0;
-    updateCurrentTime(t);
-  }, [updateCurrentTime]);
-
-  //  seekTo 값이 오면 video.currentTime 변경 + 처리 후 clear
-  useEffect(() => {
-    const el = videoRef.current;
-    if (!el) return;
-    if (seekTo == null) return;
-
-    el.currentTime = seekTo;
-    clearSeek(); // seek 요청 1회 처리 후 비움(중복 방지)
-  }, [seekTo, clearSeek]);
+  // 비디오 동기화 훅 (네이티브 controls 사용)
+  const { videoRef, handleTimeUpdate } = useVideoSync({ useNativeControls: true });
 
   return (
     <section className="flex-1 min-w-0">
