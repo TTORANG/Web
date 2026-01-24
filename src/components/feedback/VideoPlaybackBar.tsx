@@ -206,14 +206,14 @@ export default function VideoPlaybackBar({
 
         {isHoveringBar && hoverX !== null && (
           <div
-            className="absolute -top-24 flex flex-col items-center gap-2 pointer-events-none"
+            className="absolute -top-33 flex flex-col items-center gap-2 pointer-events-none"
             style={{ left: `${hoverX * 100}%`, transform: 'translateX(-50%)' }}
           >
             {slides && hoverSlideIndex !== null && slides[hoverSlideIndex] && (
               <img
                 src={slides[hoverSlideIndex].thumb}
                 alt="slide thumbnail"
-                className="h-[90px] w-40 rounded border border-white/15 bg-gray-200 object-cover"
+                className="h-22.5 w-40 rounded border border-white/15 bg-gray-200 object-cover"
               />
             )}
 

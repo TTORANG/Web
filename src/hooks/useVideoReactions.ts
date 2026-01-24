@@ -10,7 +10,7 @@ import { useMemo } from 'react';
 
 import { REACTION_TYPES } from '@/constants/reaction';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
-import type { EmojiReaction, ReactionType } from '@/types/script';
+import type { Reaction, ReactionType } from '@/types/script';
 
 // 구간설정 +-
 const WINDOW = 5;
@@ -18,7 +18,7 @@ export function useVideoReactions() {
   const video = useVideoFeedbackStore((s) => s.video);
   const currentTime = useVideoFeedbackStore((s) => s.currentTime);
   const toggleReaction = useVideoFeedbackStore((s) => s.toggleReaction);
-  const reactions: EmojiReaction[] = useMemo(() => {
+  const reactions: Reaction[] = useMemo(() => {
     if (!video) {
       return REACTION_TYPES.map((type) => ({ type, count: 0, active: false }));
     }

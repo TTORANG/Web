@@ -1,4 +1,4 @@
-import type { ReactionType } from '@/types/script';
+import type { Reaction, ReactionType } from '@/types/script';
 
 /**
  * 리액션 설정 (이모지, 라벨 매핑)
@@ -15,3 +15,14 @@ export const REACTION_CONFIG: Record<ReactionType, { emoji: string; label: strin
  * 리액션 타입 배열 (REACTION_CONFIG 키에서 추출)
  */
 export const REACTION_TYPES = Object.keys(REACTION_CONFIG) as ReactionType[];
+
+/**
+ * 기본 리액션 상태 생성 (count/active 초기화)
+ */
+export function createDefaultReactions(): Reaction[] {
+  return REACTION_TYPES.map((type) => ({
+    type,
+    count: 0,
+    active: false,
+  }));
+}

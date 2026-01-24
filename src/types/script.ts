@@ -19,6 +19,7 @@ export interface Reaction {
   type: ReactionType;
   count: number;
   active?: boolean;
+  timestamp?: number; // 선택적: 반응의 타임스탬프
 }
 
 /**
@@ -29,13 +30,4 @@ export interface ReactionEvent {
   type: ReactionType;
   at: number; // 영상 재생 시간 (초, 소수 가능)
   userId?: string;
-}
-
-/**
- * UI에 내려줄 리액션 결과
- */
-export interface EmojiReaction {
-  type: ReactionType;
-  count: number;
-  active?: boolean; // 현재 유저가 window 안에서 눌렀는지 (선택)
 }

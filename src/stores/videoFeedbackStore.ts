@@ -8,14 +8,38 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
+import { createDefaultReactions } from '@/constants/reaction';
 import { MOCK_CURRENT_USER } from '@/mocks/users';
 import type { Comment } from '@/types/comment';
-import type { ReactionType } from '@/types/script';
-import type { VideoFeedback } from '@/types/video';
+import type { Reaction, ReactionType } from '@/types/script';
+import type { VideoFeedback, VideoTimestampFeedback } from '@/types/video';
 import { addReplyToFlat, createComment, deleteFromFlat } from '@/utils/comment';
 
 // ±구간 설정 (useVideoReactions.ts와 동일)
 const WINDOW = 5;
+
+// 현재 시간대에 리액션 찾기
+const getOrCreateFeedback = (
+  feedbacks: VideoTimestampFeedback[],
+  currentTime: number,
+): { target: VideoTimestampFeedback; feedbacks: VideoTimestampFeedback[] } => {
+  const targetFeedback = feedbacks.find((f) => Math.abs(f.timestamp - currentTime) <= WINDOW);
+
+  if (targetFeedback) {
+    return { target: targetFeedback, feedbacks };
+  }
+
+  const newFeedback: VideoTimestampFeedback = {
+    timestamp: Math.round(currentTime / 5) * 5,
+    comments: [],
+    reactions: createDefaultReactions(),
+  };
+
+  return {
+    target: newFeedback,
+    feedbacks: [...feedbacks, newFeedback].sort((a, b) => a.timestamp - b.timestamp),
+  };
+};
 
 interface VideoFeedbackState {
   video: VideoFeedback | null;
@@ -68,36 +92,12 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
         (state) => {
           if (!state.video) return state;
 
-          // 현재 시간에 해당하는 ±WINDOW 버킷 찾기
-          const targetFeedback = state.video.feedbacks.find(
-            (f) => Math.abs(f.timestamp - state.currentTime) <= WINDOW,
+          const { target: targetFeedback, feedbacks } = getOrCreateFeedback(
+            state.video.feedbacks,
+            state.currentTime,
           );
 
-          // 해당하는 피드백이 없으면 새로 생성
-          if (!targetFeedback) {
-            const newFeedback = {
-              timestamp: Math.round(state.currentTime / 5) * 5, // 5초 버킷
-              comments: [],
-              reactions: [
-                { type: 'fire' as const, count: 0, active: false },
-                { type: 'sleepy' as const, count: 0, active: false },
-                { type: 'good' as const, count: 0, active: false },
-                { type: 'bad' as const, count: 0, active: false },
-                { type: 'confused' as const, count: 0, active: false },
-              ],
-            };
-            return {
-              video: {
-                ...state.video,
-                feedbacks: [...state.video.feedbacks, newFeedback].sort(
-                  (a, b) => a.timestamp - b.timestamp,
-                ),
-              },
-            };
-          }
-
-          // 해당 피드백에서 리액션 토글 (슬라이드처럼)
-          const updatedReactions = targetFeedback.reactions.map((r) => {
+          const updatedReactions = targetFeedback.reactions.map((r: Reaction) => {
             if (r.type !== type) return r;
 
             // active -> 비활성 (카운트 감소)
@@ -108,8 +108,8 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
             return { ...r, active: true, count: r.count + 1 };
           });
 
-          const updatedFeedbacks = state.video.feedbacks.map((f) =>
-            f.timestamp === targetFeedback!.timestamp ? { ...f, reactions: updatedReactions } : f,
+          const updatedFeedbacks = feedbacks.map((f) =>
+            f.timestamp === targetFeedback.timestamp ? { ...f, reactions: updatedReactions } : f,
           );
 
           return {
@@ -128,27 +128,10 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
           const trimmed = content.trim();
           if (!trimmed) return state;
 
-          // 현재 시간에 해당하는 ±WINDOW 버킷 찾기
-          let targetFeedback = state.video.feedbacks.find(
-            (f) => Math.abs(f.timestamp - state.currentTime) <= WINDOW,
+          const { target: targetFeedback, feedbacks } = getOrCreateFeedback(
+            state.video.feedbacks,
+            state.currentTime,
           );
-
-          // 해당하는 피드백이 없으면 새로 생성
-          if (!targetFeedback) {
-            const newFeedback = {
-              timestamp: Math.round(state.currentTime / 5) * 5,
-              comments: [],
-              reactions: [
-                { type: 'fire' as const, count: 0, active: false },
-                { type: 'sleepy' as const, count: 0, active: false },
-                { type: 'good' as const, count: 0, active: false },
-                { type: 'bad' as const, count: 0, active: false },
-                { type: 'confused' as const, count: 0, active: false },
-              ],
-            };
-            state.video.feedbacks.push(newFeedback);
-            targetFeedback = newFeedback;
-          }
 
           const newComment: Comment = createComment({
             content: trimmed,
@@ -156,8 +139,8 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
             ref: { kind: 'video', seconds: state.currentTime },
           });
 
-          const updatedFeedbacks = state.video.feedbacks.map((f) =>
-            f.timestamp === targetFeedback!.timestamp
+          const updatedFeedbacks = feedbacks.map((f) =>
+            f.timestamp === targetFeedback.timestamp
               ? { ...f, comments: [newComment, ...f.comments] }
               : f,
           );
