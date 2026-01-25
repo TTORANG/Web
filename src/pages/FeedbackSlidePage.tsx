@@ -53,6 +53,7 @@ export default function FeedbackSlidePage() {
   const allFlatOpinions = useMemo(() => {
     if (!slides) return [];
     return slides.flatMap((slide, index) => {
+      const slideLabel = `Slide ${index + 1}`;
       return (slide.opinions || []).map((op) => ({
         ...op,
         id: `${slide.id}-${op.id}`,
@@ -75,7 +76,6 @@ export default function FeedbackSlidePage() {
     });
   }, [slideIndex, currentSlide, initSlide, allFlatOpinions]);
 
-  // slidePage는 slide ref만 처리
   const handleGoToRef = useCallback(
     (ref: NonNullable<Comment['ref']>) => {
       if (ref.kind !== 'slide') return;
@@ -110,7 +110,7 @@ export default function FeedbackSlidePage() {
             <CommentList
               comments={comments}
               onAddReply={addReply}
-              onGoToSlideRef={goToSlideRef}
+              onGoToRef={handleGoToRef}
               onDeleteComment={deleteComment}
             />
           </div>
@@ -205,7 +205,7 @@ export default function FeedbackSlidePage() {
                 <CommentList
                   comments={comments}
                   onAddReply={addReply}
-                  onGoToSlideRef={goToSlideRef}
+                  onGoToRef={handleGoToRef}
                   onDeleteComment={deleteComment}
                 />
               </div>
