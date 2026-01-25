@@ -1,4 +1,10 @@
-import type { SortMode, ViewMode } from '@/types/home';
+import type { FilterMode, SortMode, ViewMode } from '@/types/home';
+
+export const FILTER_OPTIONS: { value: FilterMode; label: string }[] = [
+  { value: 'all', label: '전체' },
+  { value: '3m', label: '3분 이하' },
+  { value: '5m', label: '5분 이하' },
+];
 
 export const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: 'recent', label: '최신순' },

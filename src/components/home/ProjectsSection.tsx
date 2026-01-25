@@ -1,4 +1,4 @@
-import type { SortMode, ViewMode } from '@/types/home';
+import type { FilterMode, SortMode, ViewMode } from '@/types/home';
 import type { Project } from '@/types/project';
 
 import { CardView, ListView } from '../common';
@@ -15,6 +15,7 @@ type Props = {
   query: string;
   onChangeQuery: (value: string) => void;
   onChangeSort: (value: SortMode) => void;
+  onChangeFilter: (value: FilterMode) => void;
   viewMode: ViewMode;
   onChangeViewMode: (value: ViewMode) => void;
   projects: Project[];
@@ -25,6 +26,7 @@ export default function ProjectsSection({
   query,
   onChangeQuery,
   onChangeSort,
+  onChangeFilter,
   viewMode,
   onChangeViewMode,
   projects,
@@ -45,6 +47,7 @@ export default function ProjectsSection({
         value={query}
         onChange={onChangeQuery}
         onChangeSort={onChangeSort}
+        onChangeFilter={onChangeFilter}
         viewMode={viewMode}
         onChangeViewMode={onChangeViewMode}
       />

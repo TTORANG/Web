@@ -5,7 +5,7 @@ import FilterIcon from '@/assets/icons/icon-filter.svg?react';
 import SearchIcon from '@/assets/icons/icon-search.svg?react';
 import ViewCardIcon from '@/assets/icons/icon-view-card.svg?react';
 import ViewListIcon from '@/assets/icons/icon-view-list.svg?react';
-import type { SortMode, ViewMode } from '@/types/home';
+import type { FilterMode, SortMode, ViewMode } from '@/types/home';
 
 import { Dropdown } from '../common';
 
@@ -13,6 +13,7 @@ interface ProjectHeaderProps {
   value: string;
   onChange: (value: string) => void;
   onChangeSort: (sort: SortMode) => void;
+  onChangeFilter: (filter: FilterMode) => void;
   viewMode: ViewMode;
   onChangeViewMode: (viewMode: ViewMode) => void;
 }
@@ -21,6 +22,7 @@ export default function ProjectHeader({
   value,
   onChange,
   onChangeSort,
+  onChangeFilter,
   viewMode,
   onChangeViewMode,
 }: ProjectHeaderProps) {
@@ -58,9 +60,9 @@ export default function ProjectHeader({
           ariaLabel="필터"
           menuClassName="w-32"
           items={[
-            { id: 'all', label: '전체', onClick: () => {} },
-            { id: '3m', label: '3분 이하', onClick: () => {} },
-            { id: '5m', label: '5분 이하', onClick: () => {} },
+            { id: 'all', label: '전체', onClick: () => onChangeFilter('all') },
+            { id: '3m', label: '3분 이하', onClick: () => onChangeFilter('3m') },
+            { id: '5m', label: '5분 이하', onClick: () => onChangeFilter('5m') },
           ]}
         />
 

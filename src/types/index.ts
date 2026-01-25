@@ -5,7 +5,7 @@ export type { AuthProvider, User } from './auth';
 export type { Comment, CreateCommentInput } from './comment';
 
 // Home
-export type { SortMode, ViewMode } from './home';
+export type { SortMode, ViewMode, FilterMode } from './home';
 
 // Navigation
 export type { TabItem, TabKey } from './navigation';

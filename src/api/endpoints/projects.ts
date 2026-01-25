@@ -6,7 +6,7 @@
  * 서버와 통신하는 함수들을 정의합니다.
  * 이 함수들은 직접 호출하지 않고, hooks/queries에서 사용합니다.
  */
-import type { Project } from '@/types';
+import type { Project } from '@/types/project';
 
 import { apiClient } from '../client';
 
@@ -46,7 +46,6 @@ export async function updateProject(
 /**
  * 프로젝트 생성
  *
- * @param projectId - 프로젝트 ID
  * @param data - 생성할 프로젝트 데이터
  * @returns 생성된 프로젝트
  */

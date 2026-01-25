@@ -6,15 +6,17 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
-import type { SortMode, ViewMode } from '@/types/home';
+import type { FilterMode, SortMode, ViewMode } from '@/types/home';
 
 interface HomeState {
   query: string;
   viewMode: ViewMode;
   sort: SortMode;
+  filter: FilterMode;
   setQuery: (query: string) => void;
   setViewMode: (viewMode: ViewMode) => void;
   setSort: (sort: SortMode) => void;
+  setFilter: (filter: FilterMode) => void;
 }
 
 export const useHomeStore = create<HomeState>()(
@@ -23,9 +25,11 @@ export const useHomeStore = create<HomeState>()(
       query: '',
       viewMode: 'card',
       sort: 'recent',
+      filter: 'all',
       setQuery: (query) => set({ query }, false, 'home/setQuery'),
       setViewMode: (viewMode) => set({ viewMode }, false, 'home/setViewMode'),
       setSort: (sort) => set({ sort }, false, 'home/setSort'),
+      setFilter: (filter) => set({ filter }, false, 'home/setFilter'),
     }),
     { name: 'HomeStore' },
   ),
