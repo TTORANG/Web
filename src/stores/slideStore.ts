@@ -161,7 +161,7 @@ export const useSlideStore = create<SlideState>()(
         const newComment = createComment({
           content: trimmed,
           authorId: MOCK_CURRENT_USER.id,
-          slideRef: `슬라이드 ${slideIndex + 1}`,
+          ref: { kind: 'slide', index: slideIndex },
         });
 
         set(

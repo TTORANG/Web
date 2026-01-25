@@ -14,7 +14,7 @@ import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
 import { MOCK_USERS } from '@/mocks/users';
 import type { Comment as CommentType } from '@/types/comment';
-import { formatRelativeTime } from '@/utils/format';
+import { formatRelativeTime, formatVideoTimestamp } from '@/utils/format';
 
 import CommentInput from './CommentInput';
 
@@ -37,8 +37,8 @@ interface CommentProps {
   onDelete?: () => void;
   /** ID로 댓글 삭제 (재귀 렌더링용) */
   onDeleteComment?: (id: string) => void;
-  /** 슬라이드 참조 클릭 핸들러 */
-  onGoToSlideRef?: (ref: string) => void;
+  /** 참조 클릭 핸들러 (슬라이드/영상 이동) */
+  onGoToRef?: (ref: NonNullable<CommentType['ref']>) => void;
   /** 답글 들여쓰기 여부 */
   isIndented?: boolean;
   /** 현재 답글 작성 중인 댓글 ID (재귀용) */
@@ -67,7 +67,7 @@ function Comment({
   onCancelReply,
   onDelete,
   onDeleteComment,
-  onGoToSlideRef,
+  onGoToRef,
   isIndented = false,
   replyingToId,
   setReplyingToId,
@@ -99,11 +99,18 @@ function Comment({
     [onDeleteComment],
   );
 
-  const handleGoToSlideRef = useCallback(() => {
-    if (comment.slideRef && onGoToSlideRef) {
-      onGoToSlideRef(comment.slideRef);
+  const handleGoToRef = useCallback(() => {
+    if (comment.ref && onGoToRef) {
+      onGoToRef(comment.ref);
     }
-  }, [comment.slideRef, onGoToSlideRef]);
+  }, [comment.ref, onGoToRef]);
+
+  // ref에서 표시할 라벨 생성
+  const refLabel = comment.ref
+    ? comment.ref.kind === 'slide'
+      ? `슬라이드 ${comment.ref.index + 1}`
+      : formatVideoTimestamp(comment.ref.seconds)
+    : null;
 
   return (
     <div>
@@ -150,16 +157,26 @@ function Comment({
             </div>
 
             <div className="text-body-s text-black">
-              {comment.slideRef && onGoToSlideRef && (
+              {comment.ref && onGoToRef && (
                 <button
                   type="button"
-                  onClick={handleGoToSlideRef}
-                  className="text-body-s-bold text-main-variant1 hover:underline mr-1 inline-flex items-center align-middle rounded focus-visible:outline-2 focus-visible:outline-main"
+                  onClick={handleGoToRef}
+                  className={clsx(
+                    'mr-2 inline-flex items-center align-middle rounded text-body-s-bold hover:underline focus-visible:outline-2 focus-visible:outline-main',
+                    comment.ref.kind === 'slide' ? 'text-main-variant1' : 'text-main',
+                  )}
+                  aria-label={
+                    comment.ref.kind === 'slide' ? `${refLabel}로 이동` : `영상 ${refLabel}로 이동`
+                  }
                 >
-                  <FileIcon className="text-main-variant1" />
-                  &nbsp;{comment.slideRef}
+                  {comment.ref.kind === 'slide' && (
+                    <FileIcon className="text-main-variant1" aria-hidden="true" />
+                  )}
+                  {comment.ref.kind === 'slide' ? <>&nbsp;</> : null}
+                  {refLabel}
                 </button>
               )}
+
               <span className="align-middle">{comment.content}</span>
             </div>
           </div>
@@ -212,7 +229,7 @@ function Comment({
               onCancelReply={onCancelReply}
               onDelete={() => handleChildDelete(reply.id)}
               onDeleteComment={onDeleteComment}
-              onGoToSlideRef={onGoToSlideRef}
+              onGoToRef={onGoToRef}
               onReplySubmit={onReplySubmit}
               onToggleReplyById={onToggleReplyById}
               isIndented={false}

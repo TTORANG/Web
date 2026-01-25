@@ -14,14 +14,14 @@ import Comment from './Comment';
 interface CommentListProps {
   comments: CommentType[];
   onAddReply: (targetId: string, content: string) => void;
-  onGoToSlideRef: (ref: string) => void;
+  onGoToRef: (ref: NonNullable<CommentType['ref']>) => void;
   onDeleteComment?: (commentId: string) => void;
 }
 
 export default function CommentList({
   comments,
   onAddReply,
-  onGoToSlideRef,
+  onGoToRef,
   onDeleteComment,
 }: CommentListProps) {
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
@@ -59,7 +59,7 @@ export default function CommentList({
           onDelete={() => onDeleteComment?.(comment.id)}
           onDeleteComment={onDeleteComment}
           onCancelReply={handleCancelReply}
-          onGoToSlideRef={onGoToSlideRef}
+          onGoToRef={onGoToRef}
           replyingToId={replyingToId}
           setReplyingToId={setReplyingToId}
           onReplySubmit={handleReplySubmit}

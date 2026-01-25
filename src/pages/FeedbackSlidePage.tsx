@@ -5,7 +5,7 @@
  * 슬라이드 뷰어, 댓글 목록, 리액션 버튼을 포함합니다.
  * 좌우 화살표 키로 슬라이드 이동이 가능합니다.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
@@ -17,6 +17,7 @@ import { useHotkey } from '@/hooks';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
 import { useSlideStore } from '@/stores/slideStore';
+import type { Comment } from '@/types/comment';
 
 import { useComments } from '../hooks/useComments';
 import { useReactions } from '../hooks/useReactions';
@@ -27,7 +28,7 @@ export default function FeedbackSlidePage() {
 
   const totalSlides = slides?.length ?? 0;
   const navigation = useSlideNavigation(totalSlides);
-  const { slideIndex, goPrev, goNext, isFirst, isLast, goToSlideRef } = navigation;
+  const { slideIndex, goPrev, goNext, isFirst, isLast, goToIndex } = navigation;
 
   const currentSlide = slides?.[slideIndex];
 
@@ -49,12 +50,11 @@ export default function FeedbackSlidePage() {
   const allFlatOpinions = useMemo(() => {
     if (!slides) return [];
     return slides.flatMap((slide, index) => {
-      const slideLabel = `슬라이드 ${index + 1}`;
       return (slide.opinions || []).map((op) => ({
         ...op,
         id: `${slide.id}-${op.id}`,
         parentId: op.parentId ? `${slide.id}-${op.parentId}` : undefined,
-        slideRef: slideLabel,
+        ref: { kind: 'slide' as const, index },
       }));
     });
   }, [slides]);
@@ -68,6 +68,15 @@ export default function FeedbackSlidePage() {
       opinions: allFlatOpinions,
     });
   }, [slideIndex, currentSlide, initSlide, allFlatOpinions]);
+
+  // slidePage는 slide ref만 처리
+  const handleGoToRef = useCallback(
+    (ref: NonNullable<Comment['ref']>) => {
+      if (ref.kind !== 'slide') return;
+      goToIndex(ref.index);
+    },
+    [goToIndex],
+  );
 
   if (isLoading) {
     return (
@@ -94,7 +103,7 @@ export default function FeedbackSlidePage() {
           <CommentList
             comments={comments}
             onAddReply={addReply}
-            onGoToSlideRef={goToSlideRef}
+            onGoToRef={handleGoToRef}
             onDeleteComment={deleteComment}
           />
         </div>
