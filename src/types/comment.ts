@@ -1,5 +1,9 @@
 export interface Comment {
   id: string;
+  /** API 의견 ID (피드백 화면에서 prefixed id를 쓰는 경우 원본 ID) */
+  serverId?: string;
+  /** 의견이 속한 슬라이드 ID (피드백 화면에서 필요) */
+  slideId?: string;
   authorId: string;
   content: string;
   /** ISO 8601 형식 또는 상대 시간 문자열 */

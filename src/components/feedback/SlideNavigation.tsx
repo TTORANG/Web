@@ -4,24 +4,28 @@ import LeftArrow from '@/assets/icons/icon-arrow-left.svg?react';
 import RightArrow from '@/assets/icons/icon-arrow-right.svg?react';
 
 interface SlideNavigationProps {
-  /** 현재 슬라이드 인덱스 (0-indexed) */
+  /** ?�재 ?�라?�드 ?�덱??(0-indexed) */
   slideIndex: number;
-  /** 전체 슬라이드 개수 */
+  /** ?�체 ?�라?�드 개수 */
   totalSlides: number;
-  /** 첫 번째 슬라이드 여부 */
+  /** �?번째 ?�라?�드 ?��? */
   isFirst: boolean;
-  /** 마지막 슬라이드 여부 */
+  /** 마�?�??�라?�드 ?��? */
   isLast: boolean;
-  /** 이전 슬라이드로 이동 */
+  /** ?�전 ?�라?�드�??�동 */
   onPrev: () => void;
-  /** 다음 슬라이드로 이동 */
+  /** ?�음 ?�라?�드�??�동 */
   onNext: () => void;
+  /** layout style */
+  layout?: 'inline' | 'spread';
+  /** container className */
+  className?: string;
 }
 
 /**
- * 슬라이드 네비게이션
+ * ?�라?�드 ?�비게이??
  *
- * 이전/다음 버튼과 현재 위치(n/total)를 표시합니다.
+ * ?�전/?�음 버튼�??�재 ?�치(n/total)�??�시?�니??
  */
 export default function SlideNavigation({
   slideIndex,
@@ -30,9 +34,14 @@ export default function SlideNavigation({
   isLast,
   onPrev,
   onNext,
+  layout = 'inline',
+  className,
 }: SlideNavigationProps) {
+  const isSpread = layout === 'spread';
   return (
-    <div className="inline-flex items-center gap-4 shrink-0">
+    <div
+      className={`${isSpread ? 'flex w-full items-center justify-between' : 'inline-flex items-center gap-4'} shrink-0 ${className ?? ''}`}
+    >
       <button
         onClick={onPrev}
         disabled={isFirst}
@@ -46,7 +55,12 @@ export default function SlideNavigation({
         <LeftArrow className="text-black" />
       </button>
 
-      <div className="text-body-m-bold text-gray-800 shrink-0">
+      <div
+        className={clsx(
+          'text-body-m-bold text-gray-800',
+          isSpread ? 'flex-1 text-center' : 'shrink-0',
+        )}
+      >
         {slideIndex + 1} / {totalSlides}
       </div>
 

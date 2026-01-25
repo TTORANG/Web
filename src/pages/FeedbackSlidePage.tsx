@@ -12,7 +12,9 @@ import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
 import { Spinner } from '@/components/common';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
+import SlideNavigation from '@/components/feedback/SlideNavigation';
 import SlideViewer from '@/components/feedback/SlideViewer';
+import SlideTitle from '@/components/slide/script/SlideTitle';
 import { useHotkey } from '@/hooks';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
@@ -35,6 +37,7 @@ export default function FeedbackSlidePage() {
   const { reactions, toggleReaction } = useReactions();
   const initSlide = useSlideStore((state) => state.initSlide);
 
+  const [mobileTab, setMobileTab] = useState<'script' | 'comment'>('script');
   const [commentDraft, setCommentDraft] = useState('');
 
   const handleAddComment = () => {
@@ -54,6 +57,8 @@ export default function FeedbackSlidePage() {
         ...op,
         id: `${slide.id}-${op.id}`,
         parentId: op.parentId ? `${slide.id}-${op.parentId}` : undefined,
+        serverId: op.id,
+        slideId: slide.id,
         slideRef: slideLabel,
       }));
     });
@@ -78,38 +83,135 @@ export default function FeedbackSlidePage() {
   }
 
   return (
-    <div className="flex h-full w-full px-35">
-      <SlideViewer
-        slide={currentSlide}
-        slideIndex={slideIndex}
-        totalSlides={totalSlides}
-        isFirst={isFirst}
-        isLast={isLast}
-        onPrev={goPrev}
-        onNext={goNext}
-      />
+    <div className="flex h-full w-full">
+      <div className="hidden md:flex flex-1 px-35">
+        <SlideViewer
+          slide={currentSlide}
+          slideIndex={slideIndex}
+          totalSlides={totalSlides}
+          isFirst={isFirst}
+          isLast={isLast}
+          onPrev={goPrev}
+          onNext={goNext}
+        />
 
-      <aside className="w-96 shrink-0 bg-gray-100 flex flex-col border-l border-gray-200">
+        <aside className="w-96 shrink-0 bg-gray-100 flex flex-col border-l border-gray-200">
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <CommentList
+              comments={comments}
+              onAddReply={addReply}
+              onGoToSlideRef={goToSlideRef}
+              onDeleteComment={deleteComment}
+            />
+          </div>
+
+          <div className="shrink-0 flex flex-col gap-6 px-4 pb-6 pt-2">
+            <CommentInput
+              value={commentDraft}
+              onChange={setCommentDraft}
+              onSubmit={handleAddComment}
+              onCancel={() => setCommentDraft('')}
+              className="items-end w-86"
+            />
+            <ReactionButtons reactions={reactions} onToggleReaction={toggleReaction} />
+          </div>
+        </aside>
+      </div>
+
+      <div className="flex md:hidden flex-1 flex-col bg-gray-100">
+        <div className="py-2 px-4 pt-4">
+          {currentSlide ? (
+            <div className="flex items-center justify-center">
+              <img
+                src={currentSlide.thumb}
+                alt={currentSlide.title}
+                className="max-h-full max-w-full shadow-lg"
+              />
+            </div>
+          ) : (
+            <div className="flex h-full items-center justify-center text-gray-600">
+              슬라이드를 불러오는 중...
+            </div>
+          )}
+        </div>
+
+        <div className="shrink-0 px-4 pb-3 pt-2 flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <SlideNavigation
+              slideIndex={slideIndex}
+              totalSlides={totalSlides}
+              isFirst={isFirst}
+              isLast={isLast}
+              onPrev={goPrev}
+              onNext={goNext}
+              layout="spread"
+              className="w-full"
+            />
+          </div>
+          <ReactionButtons
+            reactions={reactions}
+            onToggleReaction={toggleReaction}
+            showLabel={false}
+            className="w-full flex-nowrap justify-between"
+            buttonClassName="flex-1 min-w-0"
+          />
+        </div>
+
+        <div className="flex border-b border-gray-200">
+          <button
+            onClick={() => setMobileTab('script')}
+            className={`flex-1 py-3 text-body-m-bold transition-colors ${
+              mobileTab === 'script' ? 'text-main border-b border-main-variant1' : 'text-gray-600'
+            }`}
+          >
+            스크립트
+          </button>
+          <button
+            onClick={() => setMobileTab('comment')}
+            className={`flex-1 py-3 text-body-m-bold transition-colors ${
+              mobileTab === 'comment' ? 'text-main border-b border-main-variant1' : 'text-gray-600'
+            }`}
+          >
+            댓글 {comments.length > 0 && `${comments.length}`}
+          </button>
+        </div>
+
         <div className="flex-1 min-h-0 overflow-y-auto">
-          <CommentList
-            comments={comments}
-            onAddReply={addReply}
-            onGoToSlideRef={goToSlideRef}
-            onDeleteComment={deleteComment}
-          />
+          {mobileTab === 'script' ? (
+            <div className="px-4 py-4">
+              <SlideTitle fallbackTitle={`슬라이드 ${slideIndex + 1}`} />
+              <div className="mt-3 bg-gray-200 rounded-lg px-4 py-3 h-48 overflow-y-auto">
+                <p
+                  className={`text-body-s ${currentSlide?.script ? 'text-black' : 'text-gray-600'}`}
+                  style={{ whiteSpace: 'pre-line' }}
+                >
+                  {currentSlide?.script || '대본이 없습니다.'}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col min-h-full">
+              <div className="flex-1">
+                <CommentList
+                  comments={comments}
+                  onAddReply={addReply}
+                  onGoToSlideRef={goToSlideRef}
+                  onDeleteComment={deleteComment}
+                />
+              </div>
+              <div className="sticky bottom-0 border-t border-gray-200 bg-gray-100 px-4 py-3">
+                <CommentInput
+                  value={commentDraft}
+                  onChange={setCommentDraft}
+                  onSubmit={handleAddComment}
+                  onCancel={() => setCommentDraft('')}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          )}
         </div>
-
-        <div className="shrink-0 border-t border-black/5 flex flex-col gap-6 px-4 pb-6 pt-2">
-          <CommentInput
-            value={commentDraft}
-            onChange={setCommentDraft}
-            onSubmit={handleAddComment}
-            onCancel={() => setCommentDraft('')}
-            className="items-end w-86"
-          />
-          <ReactionButtons reactions={reactions} onToggleReaction={toggleReaction} />
-        </div>
-      </aside>
+      </div>
     </div>
   );
 }

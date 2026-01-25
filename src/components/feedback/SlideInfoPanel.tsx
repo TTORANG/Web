@@ -2,6 +2,7 @@
  * @file SlideInfoPanel.tsx
  * @description 슬라이드 제목과 대본을 표시하는 패널
  */
+import SlideTitle from '@/components/slide/script/SlideTitle';
 import type { Slide } from '@/types/slide';
 
 import SlideNavigation from './SlideNavigation';
@@ -28,7 +29,9 @@ export default function SlideInfoPanel({
   return (
     <div className="shrink-0 flex flex-col gap-4 px-5 py-4">
       <div className="flex justify-between items-center gap-4">
-        <h2 className="text-body-m-bold text-black truncate min-w-0">{slide.title}</h2>
+        <div className="min-w-0">
+          <SlideTitle fallbackTitle={`슬라이드 ${slideIndex + 1}`} />
+        </div>
 
         <SlideNavigation
           slideIndex={slideIndex}
