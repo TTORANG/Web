@@ -19,7 +19,7 @@ export function createComment(input: CreateCommentInput): Comment {
     content: input.content.trim(),
     timestamp: new Date().toISOString(),
     isMine: true,
-    slideRef: input.slideRef,
+    ref: input.ref,
     isReply,
     parentId: input.parentId,
     replies: isReply ? undefined : [],
