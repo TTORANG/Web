@@ -11,6 +11,7 @@ import {
   getProjects,
   updateProject,
 } from '@/api/endpoints/projects';
+import { showToast } from '@/utils/toast';
 
 /** 프로젝트 목록 조회 */
 export function useProjects() {
@@ -54,10 +55,14 @@ export function useDeleteProject() {
 
   return useMutation({
     mutationFn: (projectId: string) => deleteProject(projectId),
-    onSuccess: () => {
-      // 프로젝트 목록 다시 받기
+    onSuccess: (_, projectId) => {
+      // 1) 목록 갱신
       void queryClient.invalidateQueries({ queryKey: queryKeys.projects.lists() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.projects.details() });
+      // 2) 해당 detail 캐시 제거
+      void queryClient.removeQueries({ queryKey: queryKeys.projects.detail(projectId) });
+    },
+    onError: () => {
+      showToast.error('삭제 실패', '잠시 후 다시 시도해 주세요.');
     },
   });
 }

@@ -50,6 +50,7 @@ export default function ProjectsSection({
       />
 
       {viewMode === 'card' ? (
+        // 카드로 보기
         isLoading ? (
           <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
             {Array.from({ length: SKELETON_CARD_COUNT }).map((_, index) => (
@@ -64,7 +65,8 @@ export default function ProjectsSection({
             renderCard={(item) => <ProjectCard {...item} />}
           />
         )
-      ) : isLoading ? (
+      ) : // 리스트로 보기
+      isLoading ? (
         <div className="mt-6 flex flex-col gap-3">
           {Array.from({ length: SKELETON_LIST_COUNT }).map((_, index) => (
             // TODO
