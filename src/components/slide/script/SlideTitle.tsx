@@ -35,7 +35,7 @@ export default function SlideTitle({ isCollapsed = false, fallbackTitle }: Slide
    * 변경된 제목을 저장합니다.
    */
   const handleSave = () => {
-    const nextTitle = editTitle.trim() || resolvedFallback || title;
+    const nextTitle = editTitle.trim() || title || resolvedFallback;
     if (!nextTitle) return;
     // ?? store ?? ????
     updateSlide({ title: nextTitle });
