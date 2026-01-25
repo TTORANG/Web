@@ -34,18 +34,6 @@ export function useSlideNavigation(totalSlides: number, options: UseSlideNavigat
     setSlideIndex(index);
   };
 
-  /** 슬라이드 참조 문자열로 이동 (예: "슬라이드 3") */
-  const goToSlideRef = (slideRef: string) => {
-    const match = slideRef.match(/\d+/);
-    if (!match) return;
-
-    const n = Number(match[0]);
-    const idx = n - 1;
-
-    if (Number.isNaN(idx) || idx < 0 || idx >= totalSlides) return;
-    setSlideIndex(idx);
-  };
-
   return {
     slideIndex,
     totalSlides,
@@ -54,6 +42,5 @@ export function useSlideNavigation(totalSlides: number, options: UseSlideNavigat
     goPrev,
     goNext,
     goToIndex,
-    goToSlideRef,
   };
 }
