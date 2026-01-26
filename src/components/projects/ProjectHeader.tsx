@@ -59,7 +59,7 @@ export default function ProjectHeader({
               type="button"
               className={clsx(
                 'flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold',
-                isOpen ? 'text-main' : 'text-gray-600',
+                isOpen ? 'text-main' : 'text-gray-700',
               )}
             >
               <span>{filterLabel}</span>
@@ -85,7 +85,7 @@ export default function ProjectHeader({
             <button
               className={clsx(
                 'flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold',
-                isOpen ? 'text-main' : 'text-gray-600',
+                isOpen ? 'text-main' : 'text-gray-700',
               )}
               type="button"
             >

@@ -6,6 +6,7 @@ import CommentCountIcon from '@/assets/icons/icon-comment-count.svg?react';
 import MoreIcon from '@/assets/icons/icon-more.svg?react';
 import PageCountIcon from '@/assets/icons/icon-page-count.svg?react';
 import ReactionCountIcon from '@/assets/icons/icon-reaction-count.svg?react';
+import RecentIcon from '@/assets/icons/icon-recent.svg?react';
 import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
 import { getTabPath } from '@/constants/navigation';
 import { useProjectDeletion } from '@/hooks/useProjectDeletion';
@@ -19,6 +20,7 @@ export default function ProjectList({
   id,
   title,
   updatedAt,
+  durationMinutes,
   pageCount,
   commentCount,
   reactionCount,
@@ -67,17 +69,26 @@ export default function ProjectList({
           {/* 제목 */}
           <div className="truncate text-body-m-bold text-gray-900">{title}</div>
 
-          {/* 날짜 | 페이지 수 + 댓글/이모티콘/조회 */}
           <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-2 text-caption text-gray-500">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
+              {/* 날짜 */}
               <span>{formatRelativeTime(updatedAt)}</span>
+              {/* 소요 시간 */}
+              <span className="flex items-center gap-1">
+                <RecentIcon />
+                {durationMinutes}
+              </span>
+
               <span className="text-gray-300">|</span>
+
+              {/* 페이지 수 */}
               <span className="flex items-center gap-1">
                 <PageCountIcon />
                 {pageCount} 페이지
               </span>
             </div>
 
+            {/* 반응 모음 */}
             <div className="flex items-center gap-3 text-caption text-gray-500">
               <span className="flex items-center gap-1">
                 <CommentCountIcon />
