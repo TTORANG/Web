@@ -42,10 +42,10 @@ export function useUpdateProject() {
     mutationFn: ({ projectId, data }: { projectId: string; data: UpdateProjectRequest }) =>
       updateProject(projectId, data),
 
-    onSuccess: (_, { projectId }) => {
-      // 1) 해당 프로젝트 detail 최신화
-      void queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
-      //2) 목록 갱신
+    onSuccess: (updateProject) => {
+      // Detail 캐시는 API 응답으로 직접 업데이트 (네트워크 절약)
+      queryClient.setQueryData(queryKeys.projects.detail(updateProject.id), updateProject);
+      // 목록은 최신 데이터 반영을 위해 무효화
       void queryClient.invalidateQueries({ queryKey: queryKeys.projects.lists() });
     },
   });

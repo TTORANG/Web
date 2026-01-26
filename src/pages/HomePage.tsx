@@ -28,9 +28,15 @@ export default function HomePage() {
     if (filter === null || filter === 'all') return undefined;
 
     return (p: Project) => {
-      if (filter === '3m') return p.durationMinutes <= 3;
-      if (filter === '5m') return p.durationMinutes <= 5;
-      return true;
+      switch (filter) {
+        case '3m':
+          return p.durationMinutes <= 3;
+        case '5m':
+          return p.durationMinutes <= 5;
+
+        default:
+          return true;
+      }
     };
   }, [filter]);
 

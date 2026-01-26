@@ -28,9 +28,9 @@ export default function DeleteProjectModal({
         <p className="text-body-m-bold">{projectTitle}</p>
         <p className="text-body-m">발표를 정말 삭제하시겠습니까?</p>
       </div>
-      <div className="flex items-center justify-center text-body-s gap-3 mt-7">
+      <div className="mt-7 flex items-center justify-center gap-3 text-body-s">
         <button
-          className="border border-none rounded-lg flex-1 py-3 bg-gray-200 text-main cursor-pointer "
+          className="flex-1 rounded-lg py-3 bg-gray-200 text-main cursor-pointer"
           type="button"
           onClick={onClose}
           disabled={isPending}
