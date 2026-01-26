@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import clsx from 'clsx';
@@ -9,13 +8,13 @@ import PageCountIcon from '@/assets/icons/icon-page-count.svg?react';
 import ReactionCountIcon from '@/assets/icons/icon-reaction-count.svg?react';
 import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
 import { getTabPath } from '@/constants/navigation';
-import { useDeleteProject } from '@/hooks/queries/useProjects';
+import { useProjectDeletion } from '@/hooks/useProjectDeletion';
 import type { Project } from '@/types/project';
 import { formatRelativeTime } from '@/utils/format';
-import { showToast } from '@/utils/toast';
 
-import { Dropdown, Modal } from '../common';
+import { Dropdown } from '../common';
 import type { DropdownItem } from '../common/Dropdown';
+import DeleteProjectModal from './DeleteProjectModal';
 
 export default function ProjectCard({
   id,
@@ -28,23 +27,8 @@ export default function ProjectCard({
   thumbnailUrl,
 }: Project) {
   const navigate = useNavigate();
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const { mutate: deleteProject, isPending } = useDeleteProject();
-
-  // 프로젝트 더보기 드롭다운 중 삭제 클릭
-  const handleDeleteClick = () => {
-    setIsDeleteModalOpen(true);
-  };
-
-  // 삭제 모달 안에서 삭제 클릭
-  const handleConfirmDelete = () => {
-    deleteProject(id, {
-      onSuccess: () => {
-        setIsDeleteModalOpen(false);
-        showToast.success('삭제 완료', '발표가 삭제되었습니다.');
-      },
-    });
-  };
+  const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
+    useProjectDeletion(id);
 
   const handleCardClick = () => {
     navigate(getTabPath(id, 'slide'));
@@ -62,7 +46,7 @@ export default function ProjectCard({
       id: 'delete',
       label: '삭제',
       variant: 'danger',
-      onClick: handleDeleteClick,
+      onClick: openDeleteModal,
     },
   ];
 
@@ -129,35 +113,13 @@ export default function ProjectCard({
 
       {/* 삭제 확인 모달 */}
       <div onClick={(e) => e.stopPropagation()}>
-        <Modal
+        <DeleteProjectModal
           isOpen={isDeleteModalOpen}
-          onClose={() => setIsDeleteModalOpen(false)}
-          title="발표 삭제"
-          size="sm"
-          closeOnBackdropClick={!isPending}
-          closeOnEscape={!isPending}
-        >
-          <div className="flex flex-col gap-1">
-            <p className="text-body-m-bold">{title}</p>
-            <p className="text-body-m">발표를 정말 삭제하시겠습니까?</p>
-          </div>
-          <div className="flex items-center justify-center text-body-s gap-3 mt-7">
-            <button
-              className="border border-none rounded-lg flex-1 py-3 bg-gray-200 text-main cursor-pointer "
-              type="button"
-              onClick={() => setIsDeleteModalOpen(false)}
-            >
-              취소
-            </button>
-            <button
-              className="border border-none rounded-lg flex-1 py-3 bg-main text-gray-100 cursor-pointer "
-              type="button"
-              onClick={handleConfirmDelete}
-            >
-              {isPending ? '삭제 중...' : '삭제'}
-            </button>
-          </div>
-        </Modal>
+          projectTitle={title}
+          isPending={isPending}
+          onClose={closeDeleteModal}
+          onConfirm={confirmDelete}
+        />
       </div>
     </>
   );

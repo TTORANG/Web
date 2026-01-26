@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import clsx from 'clsx';
@@ -9,13 +8,12 @@ import PageCountIcon from '@/assets/icons/icon-page-count.svg?react';
 import ReactionCountIcon from '@/assets/icons/icon-reaction-count.svg?react';
 import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
 import { getTabPath } from '@/constants/navigation';
-import { useDeleteProject } from '@/hooks/queries/useProjects';
+import { useProjectDeletion } from '@/hooks/useProjectDeletion';
 import type { Project } from '@/types/project';
 import { formatRelativeTime } from '@/utils/format';
-import { showToast } from '@/utils/toast';
 
-import { Modal } from '../common';
 import { Dropdown, type DropdownItem } from '../common/Dropdown';
+import DeleteProjectModal from './DeleteProjectModal';
 
 export default function ProjectList({
   id,
@@ -28,23 +26,8 @@ export default function ProjectList({
   thumbnailUrl,
 }: Project) {
   const navigate = useNavigate();
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const { mutate: deleteProject, isPending } = useDeleteProject();
-
-  // 프로젝트 더보기 드롭다운 중 삭제 클릭
-  const handleDeleteClick = () => {
-    setIsDeleteModalOpen(true);
-  };
-
-  // 삭제 모달 안에서 삭제 클릭
-  const handleConfirmDelete = () => {
-    deleteProject(id, {
-      onSuccess: () => {
-        setIsDeleteModalOpen(false);
-        showToast.success('삭제 완료', '발표가 삭제되었습니다.');
-      },
-    });
-  };
+  const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
+    useProjectDeletion(id);
 
   const handleListClick = () => {
     navigate(getTabPath(id, 'slide'));
@@ -62,7 +45,7 @@ export default function ProjectList({
       id: 'delete',
       label: '삭제',
       variant: 'danger',
-      onClick: handleDeleteClick,
+      onClick: openDeleteModal,
     },
   ];
 
@@ -70,10 +53,10 @@ export default function ProjectList({
     <>
       <article
         onClick={handleListClick}
-        className="flex w-full items-center gap-4 cursor-pointer bg-white px-5 py-3 rounded-2xl border-gray-200 transition-shadow hover:shadow-lg"
+        className="flex w-full items-center gap-4 cursor-pointer bg-white px-5 py-3 rounded-2xl border border-gray-200 transition-shadow hover:shadow-lg"
       >
         {/* 썸네일 */}
-        <div className="h-18 w-32 overflow-hidden rounded-sm bg-gray-200">
+        <div className="h-16 aspect-video overflow-hidden rounded-sm bg-gray-200">
           {thumbnailUrl && (
             <img className="h-full w-full object-cover" src={thumbnailUrl} alt={`${title}`} />
           )}
@@ -129,35 +112,13 @@ export default function ProjectList({
 
       {/* 삭제 확인 모달 */}
       <div onClick={(e) => e.stopPropagation()}>
-        <Modal
+        <DeleteProjectModal
           isOpen={isDeleteModalOpen}
-          onClose={() => setIsDeleteModalOpen(false)}
-          title="발표 삭제"
-          size="sm"
-          closeOnBackdropClick={!isPending}
-          closeOnEscape={!isPending}
-        >
-          <div className="flex flex-col gap-1">
-            <p className="text-body-m-bold">{title}</p>
-            <p className="text-body-m">발표를 정말 삭제하시겠습니까?</p>
-          </div>
-          <div className="flex items-center justify-center text-body-s gap-3 mt-7">
-            <button
-              className="border border-none rounded-lg flex-1 py-3 bg-gray-200 text-main cursor-pointer "
-              type="button"
-              onClick={() => setIsDeleteModalOpen(false)}
-            >
-              취소
-            </button>
-            <button
-              className="border border-none rounded-lg flex-1 py-3 bg-main text-gray-100 cursor-pointer "
-              type="button"
-              onClick={handleConfirmDelete}
-            >
-              {isPending ? '삭제 중...' : '삭제'}
-            </button>
-          </div>
-        </Modal>
+          projectTitle={title}
+          isPending={isPending}
+          onClose={closeDeleteModal}
+          onConfirm={confirmDelete}
+        />
       </div>
     </>
   );
