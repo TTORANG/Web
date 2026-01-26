@@ -11,6 +11,7 @@ export interface Comment {
   isMine: boolean;
   /** 참조 정보 - 답글은 없음 */
   ref?: { kind: 'slide'; index: number } | { kind: 'video'; seconds: number };
+  slideRef?: string;
   /** 답글 여부 */
   isReply?: boolean;
   /** 부모 댓글 ID - 플랫 구조에서 답글 관계 표현 */

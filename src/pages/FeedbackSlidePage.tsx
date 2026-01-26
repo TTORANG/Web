@@ -5,7 +5,7 @@
  * 슬라이드 뷰어, 댓글 목록, 리액션 버튼을 포함합니다.
  * 좌우 화살표 키로 슬라이드 이동이 가능합니다.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { type KeyboardEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
@@ -15,6 +15,7 @@ import ReactionButtons from '@/components/feedback/ReactionButtons';
 import SlideNavigation from '@/components/feedback/SlideNavigation';
 import SlideViewer from '@/components/feedback/SlideViewer';
 import SlideTitle from '@/components/slide/script/SlideTitle';
+import { createDefaultReactions } from '@/constants/reaction';
 import { useHotkey } from '@/hooks';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
@@ -40,6 +41,14 @@ export default function FeedbackSlidePage() {
 
   const [mobileTab, setMobileTab] = useState<'script' | 'comment'>('script');
   const [commentDraft, setCommentDraft] = useState('');
+  const tabIds = {
+    script: 'feedback-tab-script',
+    comment: 'feedback-tab-comment',
+  } as const;
+  const panelIds = {
+    script: 'feedback-panel-script',
+    comment: 'feedback-panel-comment',
+  } as const;
 
   const handleAddComment = () => {
     if (!commentDraft.trim()) return;
@@ -73,6 +82,10 @@ export default function FeedbackSlidePage() {
     initSlide({
       ...currentSlide,
       opinions: allFlatOpinions,
+      emojiReactions:
+        currentSlide.emojiReactions && currentSlide.emojiReactions.length > 0
+          ? currentSlide.emojiReactions
+          : createDefaultReactions(),
     });
   }, [slideIndex, currentSlide, initSlide, allFlatOpinions]);
 
@@ -83,6 +96,15 @@ export default function FeedbackSlidePage() {
     },
     [goToIndex],
   );
+
+  const handleTabKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    setMobileTab((prev) => {
+      if (prev === 'script') return event.key === 'ArrowRight' ? 'comment' : 'script';
+      return event.key === 'ArrowLeft' ? 'script' : 'comment';
+    });
+  }, []);
 
   if (isLoading) {
     return (
@@ -123,7 +145,12 @@ export default function FeedbackSlidePage() {
               onCancel={() => setCommentDraft('')}
               className="items-end w-86"
             />
-            <ReactionButtons reactions={reactions} onToggleReaction={toggleReaction} />
+            <ReactionButtons
+              reactions={reactions}
+              onToggleReaction={toggleReaction}
+              layout="grid-2"
+              buttonClassName="w-42.25"
+            />
           </div>
         </aside>
       </div>
@@ -167,8 +194,17 @@ export default function FeedbackSlidePage() {
           />
         </div>
 
-        <div className="flex border-b border-gray-200">
+        <div
+          role="tablist"
+          aria-label="슬라이드 탭"
+          className="flex border-b border-gray-200"
+          onKeyDown={handleTabKeyDown}
+        >
           <button
+            role="tab"
+            id={tabIds.script}
+            aria-selected={mobileTab === 'script'}
+            aria-controls={panelIds.script}
             onClick={() => setMobileTab('script')}
             className={`flex-1 py-3 text-body-m-bold transition-colors ${
               mobileTab === 'script' ? 'text-main border-b border-main-variant1' : 'text-gray-600'
@@ -177,6 +213,10 @@ export default function FeedbackSlidePage() {
             스크립트
           </button>
           <button
+            role="tab"
+            id={tabIds.comment}
+            aria-selected={mobileTab === 'comment'}
+            aria-controls={panelIds.comment}
             onClick={() => setMobileTab('comment')}
             className={`flex-1 py-3 text-body-m-bold transition-colors ${
               mobileTab === 'comment' ? 'text-main border-b border-main-variant1' : 'text-gray-600'
@@ -188,7 +228,12 @@ export default function FeedbackSlidePage() {
 
         <div className="flex-1 min-h-0 overflow-y-auto">
           {mobileTab === 'script' ? (
-            <div className="px-4 py-4">
+            <div
+              id={panelIds.script}
+              role="tabpanel"
+              aria-labelledby={tabIds.script}
+              className="px-4 py-4"
+            >
               <SlideTitle fallbackTitle={`슬라이드 ${slideIndex + 1}`} />
               <div className="mt-3 bg-gray-200 rounded-lg px-4 py-3 h-48 overflow-y-auto">
                 <p
@@ -200,7 +245,12 @@ export default function FeedbackSlidePage() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col min-h-full">
+            <div
+              id={panelIds.comment}
+              role="tabpanel"
+              aria-labelledby={tabIds.comment}
+              className="flex flex-col min-h-full"
+            >
               <div className="flex-1">
                 <CommentList
                   comments={comments}

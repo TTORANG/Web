@@ -1,17 +1,17 @@
 /**
  * @file ReactionButtons.tsx
- * @description 이모지 리액션 버튼 목록
- *
- * 피드백 화면 하단에서 슬라이드에 대한 리액션을 표시합니다.
+ * @description Emoji reaction buttons
  */
 import { REACTION_CONFIG } from '@/constants/reaction';
 import type { Reaction, ReactionType } from '@/types/script';
 
 interface ReactionButtonsProps {
-  /** 리액션 목록 (타입, 카운트, 활성화 여부) */
+  /** Reaction list */
   reactions: Reaction[];
-  /** 리액션 토글 핸들러 */
+  /** Toggle handler */
   onToggleReaction: (type: ReactionType) => void;
+  /** Layout mode */
+  layout?: 'flex' | 'grid-2';
   /** Show labels */
   showLabel?: boolean;
   /** Container className */
@@ -21,33 +21,36 @@ interface ReactionButtonsProps {
 }
 
 /**
- * 이모지 리액션 버튼 목록
- *
- * @example
- * <ReactionButtons
- *   reactions={reactions}
- *   onToggleReaction={toggleReaction}
- * />
+ * Emoji reaction buttons
  */
 export default function ReactionButtons({
   reactions,
   onToggleReaction,
+  layout = 'flex',
   showLabel = true,
   className,
   buttonClassName,
 }: ReactionButtonsProps) {
-  /** 99 초과 시 '99+'로 표시 */
   const formatReactionCount = (count: number) => (count > 99 ? '99+' : count);
+  const isGrid = layout === 'grid-2';
+  const total = reactions.length;
+  const containerClass = isGrid
+    ? `grid grid-cols-2 gap-2 justify-items-center ${className ?? ''}`
+    : `flex gap-2 ${showLabel ? 'flex-wrap' : 'flex-nowrap'} ${className ?? ''}`;
 
   return (
-    <div className={`flex gap-2 ${showLabel ? 'flex-wrap' : 'flex-nowrap'} ${className ?? ''}`}>
-      {reactions.map((reaction) => {
+    <div className={containerClass}>
+      {reactions.map((reaction, index) => {
         const config = REACTION_CONFIG[reaction.type];
+        const isLastOdd = isGrid && total % 2 === 1 && index === total - 1;
+
         return (
           <button
             key={reaction.type}
             onClick={() => onToggleReaction(reaction.type)}
             className={`flex items-center justify-between px-3 py-2 rounded-full border transition text-body-m focus-visible:outline-2 focus-visible:outline-main ${buttonClassName ?? ''} ${
+              isLastOdd ? 'col-span-2 justify-self-start' : ''
+            } ${
               reaction.active
                 ? 'bg-gray-900 border-main-variant1 text-main-variant2 text-body-m-bold'
                 : 'bg-gray-200 border-gray-400 text-black hover:border-gray-600'

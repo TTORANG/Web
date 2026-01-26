@@ -9,4 +9,5 @@ export * from './useHotkey';
 export * from './useSlideNavigation';
 export * from './useSlideSelectors';
 export * from './queries/useOpinions';
+export * from './queries/useProjects';
 export * from './queries/useSlides';

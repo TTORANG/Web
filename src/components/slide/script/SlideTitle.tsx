@@ -37,10 +37,10 @@ export default function SlideTitle({ isCollapsed = false, fallbackTitle }: Slide
   const handleSave = () => {
     const nextTitle = editTitle.trim() || title || resolvedFallback;
     if (!nextTitle) return;
-    // ?? store ?? ????
+    // 로컬 store 즉시 업데이트
     updateSlide({ title: nextTitle });
 
-    // API ??
+    // API 호출
     if (slideId) {
       updateSlideApi({ slideId, data: { title: nextTitle } });
     }
