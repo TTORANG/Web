@@ -1,5 +1,9 @@
 export interface Comment {
   id: string;
+  /** API 의견 ID (피드백 화면에서 prefixed id를 쓰는 경우 원본 ID) */
+  serverId?: string;
+  /** 의견이 속한 슬라이드 ID (피드백 화면에서 필요) */
+  slideId?: string;
   authorId: string;
   content: string;
   timestamp: string;
@@ -7,6 +11,7 @@ export interface Comment {
   isMine: boolean;
   /** 참조 정보 - 답글은 없음 */
   ref?: { kind: 'slide'; index: number } | { kind: 'video'; seconds: number };
+  slideRef?: string;
   /** 답글 여부 */
   isReply?: boolean;
   /** 부모 댓글 ID - 플랫 구조에서 답글 관계 표현 */
