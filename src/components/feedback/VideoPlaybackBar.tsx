@@ -6,14 +6,17 @@
  * - VolumeControl: 볼륨 조절 + 시간 표시
  * - 재생/일시정지, 전체화면 버튼
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import pauseIcon from '@/assets/playbackBar-icons/pause-icon.webp';
 import playIcon from '@/assets/playbackBar-icons/play-icon.webp';
 import fullscreenIcon from '@/assets/playbackBar-icons/sizeupdown-icon.webp';
 import ProgressBar from '@/components/feedback/ProgressBar';
 import VolumeControl from '@/components/feedback/VolumeControl';
+import { REACTION_TYPES } from '@/constants/reaction';
+import { FEEDBACK_WINDOW } from '@/constants/video';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
+import type { ReactionType } from '@/types/script';
 import type { Slide } from '@/types/slide';
 
 interface VideoPlaybackBarProps {
@@ -33,9 +36,49 @@ export default function VideoPlaybackBar({
 }: VideoPlaybackBarProps) {
   const currentTime = useVideoFeedbackStore((s) => s.currentTime);
   const updateCurrentTime = useVideoFeedbackStore((s) => s.updateCurrentTime);
+  const video = useVideoFeedbackStore((s) => s.video);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
+
+  const topReaction = useMemo(() => {
+    if (!video) return null;
+
+    const sortedFeedbacks = [...video.feedbacks].sort((a, b) => a.timestamp - b.timestamp);
+    const overlapping = sortedFeedbacks.filter((feedback, index) => {
+      const start = feedback.timestamp - FEEDBACK_WINDOW;
+      const rawEnd = feedback.timestamp + FEEDBACK_WINDOW;
+      const nextDifferentTimestamp = sortedFeedbacks
+        .slice(index + 1)
+        .find((f) => f.timestamp > feedback.timestamp)?.timestamp;
+      const end =
+        nextDifferentTimestamp != null ? Math.min(rawEnd, nextDifferentTimestamp) : rawEnd;
+
+      return currentTime >= start && currentTime < end;
+    });
+
+    if (overlapping.length === 0) return null;
+
+    const totals = REACTION_TYPES.reduce<Record<ReactionType, number>>(
+      (acc, type) => {
+        acc[type] = 0;
+        return acc;
+      },
+      {} as Record<ReactionType, number>,
+    );
+
+    overlapping.forEach((feedback) => {
+      feedback.reactions.forEach((reaction) => {
+        totals[reaction.type] += reaction.count || 0;
+      });
+    });
+
+    const top = (Object.entries(totals) as [ReactionType, number][])
+      .filter(([, count]) => count > 0)
+      .sort((a, b) => b[1] - a[1])[0];
+
+    return top ? { type: top[0], count: top[1] } : null;
+  }, [video, currentTime]);
 
   // 비디오 play/pause 이벤트 구독
   useEffect(() => {
@@ -108,6 +151,7 @@ export default function VideoPlaybackBar({
         onSeek={handleSeek}
         slides={slides}
         slideChangeTimes={slideChangeTimes}
+        topReaction={topReaction}
       />
 
       {/* 조작 영역 */}

@@ -8,9 +8,16 @@
  */
 import { useEffect, useRef, useState } from 'react';
 
+import { REACTION_CONFIG } from '@/constants/reaction';
+import type { ReactionType } from '@/types/script';
 import type { Slide } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
+
+interface TopReaction {
+  type: ReactionType;
+  count: number;
+}
 
 interface ProgressBarProps {
   /** 현재 재생 시간 (초) */
@@ -23,6 +30,8 @@ interface ProgressBarProps {
   slides?: Slide[];
   /** 슬라이드 전환 시간 배열 */
   slideChangeTimes?: number[];
+  /** 현재 시간 기준 가장 많은 리액션 */
+  topReaction?: TopReaction | null;
 }
 
 export default function ProgressBar({
@@ -31,6 +40,7 @@ export default function ProgressBar({
   onSeek,
   slides,
   slideChangeTimes,
+  topReaction,
 }: ProgressBarProps) {
   const progressBarRef = useRef<HTMLDivElement>(null);
 
@@ -41,6 +51,9 @@ export default function ProgressBar({
 
   const max = Math.max(duration, 0);
   const progressPercentage = max > 0 ? (currentTime / max) * 100 : 0;
+  const slideMarkers = (slideChangeTimes ?? [])
+    .filter((t) => t > 0 && t < max)
+    .map((t) => ({ time: t, percent: max > 0 ? (t / max) * 100 : 0 }));
 
   // 마우스 X 좌표 → 비율 (0~1) 변환
   const getPercentFromClientX = (clientX: number) => {
@@ -127,19 +140,37 @@ export default function ProgressBar({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onMouseDown={handleMouseDown}
-      className="group relative h-1 w-full cursor-pointer rounded-full bg-gray-700/70 transition-all duration-150 hover:h-1.5 hover:ring-2 hover:ring-blue-500/30 select-none"
+      className="group relative h-1 w-full cursor-pointer rounded-full bg-[rgba(26,26,26,0.66)] transition-all duration-150 hover:h-1.5 hover:ring-2 hover:ring-[#4F5BFF]/30 select-none"
     >
+      {/* 슬라이드 전환 시점 마커 */}
+      {slideMarkers.map((marker) => (
+        <div
+          key={`slide-marker-${marker.time}`}
+          className="absolute top-1/2 h-2 w-0.5 -translate-y-1/2 bg-white"
+          style={{ left: `${marker.percent}%`, marginLeft: '-1px' }}
+        />
+      ))}
       {/* 진행 바 */}
       <div
-        className="absolute h-full rounded-full bg-blue-600"
+        className="absolute h-full rounded-full bg-[#4F5BFF]"
         style={{ width: `${progressPercentage}%` }}
       />
 
       {/* 진행 핸들 */}
       <div
-        className="absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-blue-600 shadow transition-all duration-150 group-hover:h-4 group-hover:w-4"
+        className="absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-[#4F5BFF] shadow transition-all duration-150 group-hover:h-4 group-hover:w-4"
         style={{ left: `${progressPercentage}%`, marginLeft: '-6px' }}
       />
+
+      {/* 현재 구간 최다 리액션 표시 */}
+      {topReaction && topReaction.count > 0 && (
+        <div
+          className="absolute -top-7 text-[12px] leading-none text-white"
+          style={{ left: `${progressPercentage}%`, transform: 'translateX(-50%)' }}
+        >
+          <span>{REACTION_CONFIG[topReaction.type].emoji}</span>
+        </div>
+      )}
 
       {/* 호버 시 썸네일 + 시간 미리보기 */}
       {(isHoveringBar || isScrubbing) && hoverX !== null && (
