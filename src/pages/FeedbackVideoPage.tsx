@@ -5,8 +5,9 @@ import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
 import { Spinner } from '@/components/common';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
+import ScriptSection from '@/components/feedback/ScriptSection';
 import SlideWebcamStage from '@/components/feedback/SlideWebcamStage';
-import { MOCK_SLIDES } from '@/mocks/slides';
+import { MOCK_SLIDES, MOCK_SLIDE_CHANGE_TIMES } from '@/mocks/slides';
 import { MOCK_VIDEO } from '@/mocks/videos';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Comment } from '@/types/comment';
@@ -14,15 +15,10 @@ import type { Comment } from '@/types/comment';
 import { useVideoComments } from '../hooks/useVideoComments';
 import { useVideoReactions } from '../hooks/useVideoReactions';
 
-/**
- * "슬라이드 넘긴 시각(초)" 목데이터
- * - 값은 예시. 실제 녹화 데이터에 맞춰 조정하면 됨.
- */
-const MOCK_SLIDE_CHANGE_TIMES = [0, 12, 24, 38, 52, 75, 96, 130, 160, 210];
-
 export default function FeedbackVideoPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const [isLoading, setIsLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(0);
 
   const initVideo = useVideoFeedbackStore((state) => state.initVideo);
 
@@ -46,6 +42,7 @@ export default function FeedbackVideoPage() {
     [requestSeek],
   );
 
+  // 비디오 초기화
   useEffect(() => {
     const timer = window.setTimeout(() => {
       initVideo(MOCK_VIDEO);
@@ -71,12 +68,15 @@ export default function FeedbackVideoPage() {
           slides={MOCK_SLIDES}
           slideChangeTimes={MOCK_SLIDE_CHANGE_TIMES}
           webcamVideoUrl={MOCK_VIDEO.videoUrl}
+          onTimeUpdate={setCurrentTime}
         />
 
-        {/* 6. 대본 섹션 (현재 시간 기반) */}
-        <div className="flex-1 min-w-0 bg-gray-100 rounded-lg p-4 overflow-y-auto">
-          {/* TODO: 대본 표시 로직 */}
-        </div>
+        {/* 대본 섹션 */}
+        <ScriptSection
+          slides={MOCK_SLIDES}
+          slideChangeTimes={MOCK_SLIDE_CHANGE_TIMES}
+          currentTime={currentTime}
+        />
       </div>
 
       <aside className="w-96 shrink-0 bg-gray-100 flex flex-col border-l border-gray-200">

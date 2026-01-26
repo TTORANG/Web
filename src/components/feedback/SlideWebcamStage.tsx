@@ -6,7 +6,7 @@
  * - 웹캠 녹화본은 webcamVideoUrl(MOCK_VIDEO.videoUrl)을 사용
  * - "작은 박스(PiP)"를 hover하면 디밍+텍스트, 클릭하면 슬라이드/웹캠 위치가 토글됨
  */
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import clsx from 'clsx';
 
@@ -19,12 +19,14 @@ type SlideWebcamStageProps = {
   slides: Slide[];
   slideChangeTimes: number[];
   webcamVideoUrl: string;
+  onTimeUpdate?: (time: number) => void;
 };
 
 export default function SlideWebcamStage({
   slides,
   slideChangeTimes,
   webcamVideoUrl,
+  onTimeUpdate,
 }: SlideWebcamStageProps) {
   const stageRootRef = useRef<HTMLDivElement | null>(null);
 
@@ -33,6 +35,11 @@ export default function SlideWebcamStage({
 
   const [layout, setLayout] = useState<'slide-main' | 'webcam-main'>('slide-main');
   const isSlideMain = layout === 'slide-main';
+
+  // onTimeUpdate 콜백 호출
+  useEffect(() => {
+    onTimeUpdate?.(currentTime);
+  }, [currentTime, onTimeUpdate]);
 
   // currentTime -> slideIndex 계산
   const activeIndex = useMemo(() => {

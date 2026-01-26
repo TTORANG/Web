@@ -146,7 +146,7 @@ export default function ProgressBar({
       {slideMarkers.map((marker) => (
         <div
           key={`slide-marker-${marker.time}`}
-          className="absolute top-1/2 h-2 w-0.5 -translate-y-1/2 bg-white"
+          className="absolute top-1/2 h-1.5 w-1 -translate-y-1/2 bg-white/90"
           style={{ left: `${marker.percent}%`, marginLeft: '-1px' }}
         />
       ))}
