@@ -24,8 +24,8 @@ export const useHomeStore = create<HomeState>()(
     (set) => ({
       query: '',
       viewMode: 'card',
-      sort: 'recent',
-      filter: 'all',
+      sort: null,
+      filter: null,
       setQuery: (query) => set({ query }, false, 'home/setQuery'),
       setViewMode: (viewMode) => set({ viewMode }, false, 'home/setViewMode'),
       setSort: (sort) => set({ sort }, false, 'home/setSort'),

@@ -14,7 +14,9 @@ type Props = {
   isLoading: boolean;
   query: string;
   onChangeQuery: (value: string) => void;
+  sort: SortMode;
   onChangeSort: (value: SortMode) => void;
+  filter: FilterMode;
   onChangeFilter: (value: FilterMode) => void;
   viewMode: ViewMode;
   onChangeViewMode: (value: ViewMode) => void;
@@ -25,7 +27,9 @@ export default function ProjectsSection({
   isLoading,
   query,
   onChangeQuery,
+  sort,
   onChangeSort,
+  filter,
   onChangeFilter,
   viewMode,
   onChangeViewMode,
@@ -46,7 +50,9 @@ export default function ProjectsSection({
       <ProjectHeader
         value={query}
         onChange={onChangeQuery}
+        sort={sort}
         onChangeSort={onChangeSort}
+        filter={filter}
         onChangeFilter={onChangeFilter}
         viewMode={viewMode}
         onChangeViewMode={onChangeViewMode}

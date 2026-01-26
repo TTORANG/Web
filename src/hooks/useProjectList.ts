@@ -5,7 +5,7 @@
  *
  * @param projects - 원본 프로젝트 배열
  * @param options.query - 검색어 (제목 기준)
- * @param options.sort - 정렬 모드 ('recent' | 'commentCount' | 'name')
+ * @param options.sort - 정렬 모드 (null | 'recent' | 'commentCount' | 'name')
  * @param options.filterFn - 커스텀 필터 함수
  * @returns 필터링/정렬된 프로젝트 배열
  */
@@ -36,6 +36,7 @@ export function useProjectList(projects: Project[], options?: Options) {
     if (sort === 'recent') return result;
 
     const next = [...result];
+
     if (sort === 'commentCount') {
       return next.sort((a, b) => b.commentCount - a.commentCount);
     }

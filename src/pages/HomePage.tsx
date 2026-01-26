@@ -25,7 +25,7 @@ export default function HomePage() {
   const filter = useHomeFilter();
 
   const filterFn = useMemo<((p: Project) => boolean) | undefined>(() => {
-    if (filter === 'all') return undefined;
+    if (filter === null || filter === 'all') return undefined;
 
     return (p: Project) => {
       if (filter === '3m') return p.durationMinutes <= 3;
@@ -66,7 +66,9 @@ export default function HomePage() {
         isLoading={isLoading}
         query={query}
         onChangeQuery={setQuery}
+        sort={sort}
         onChangeSort={setSort}
+        filter={filter}
         onChangeFilter={setFilter}
         viewMode={viewMode}
         onChangeViewMode={setViewMode}
