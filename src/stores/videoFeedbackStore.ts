@@ -30,7 +30,7 @@ const getOrCreateFeedback = (
   }
 
   const newFeedback: VideoTimestampFeedback = {
-    timestamp: Math.round(currentTime / 5) * 5,
+    timestamp: Math.round(currentTime),
     comments: [],
     reactions: createDefaultReactions(),
   };

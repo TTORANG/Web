@@ -122,5 +122,26 @@ export const MOCK_VIDEO: VideoFeedback = {
         { type: 'confused' as const, count: 990, active: false },
       ],
     },
+
+    {
+      timestamp: 21,
+      comments: [
+        {
+          id: 'vc-21-1',
+          authorId: MOCK_USERS[4].id, // 가나디
+          content: '21초 테스트 댓글입니다.',
+          timestamp: timeAgo(3, 'minute'),
+          isMine: false,
+          ref: { kind: 'video' as const, seconds: 21 },
+        },
+      ],
+      reactions: [
+        { type: 'fire' as const, count: 1, active: false },
+        { type: 'sleepy' as const, count: 1, active: false },
+        { type: 'good' as const, count: 1, active: false },
+        { type: 'bad' as const, count: 1, active: false },
+        { type: 'confused' as const, count: 1, active: false },
+      ],
+    },
   ],
 };
