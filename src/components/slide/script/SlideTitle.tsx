@@ -15,29 +15,34 @@ import { useSlideActions, useSlideId, useSlideTitle, useUpdateSlide } from '@/ho
 
 interface SlideTitleProps {
   isCollapsed?: boolean;
+  fallbackTitle?: string;
 }
 
-export default function SlideTitle({ isCollapsed = false }: SlideTitleProps) {
+export default function SlideTitle({ isCollapsed = false, fallbackTitle }: SlideTitleProps) {
   const slideId = useSlideId();
   const title = useSlideTitle();
   const { updateSlide } = useSlideActions();
   const { mutate: updateSlideApi } = useUpdateSlide();
-  const [editTitle, setEditTitle] = useState(title);
+  const resolvedFallback = fallbackTitle?.trim() ? fallbackTitle : undefined;
+  const resolvedTitle = title?.trim() ? title : (resolvedFallback ?? '');
+  const [editTitle, setEditTitle] = useState(resolvedTitle);
 
   useEffect(() => {
-    setEditTitle(title);
-  }, [title]);
+    setEditTitle(resolvedTitle);
+  }, [resolvedTitle]);
 
   /**
    * 변경된 제목을 저장합니다.
    */
   const handleSave = () => {
+    const nextTitle = editTitle.trim() || title || resolvedFallback;
+    if (!nextTitle) return;
     // 로컬 store 즉시 업데이트
-    updateSlide({ title: editTitle });
+    updateSlide({ title: nextTitle });
 
     // API 호출
     if (slideId) {
-      updateSlideApi({ slideId, data: { title: editTitle } });
+      updateSlideApi({ slideId, data: { title: nextTitle } });
     }
   };
 
@@ -49,7 +54,7 @@ export default function SlideTitle({ isCollapsed = false }: SlideTitleProps) {
           aria-label="슬라이드 이름 변경"
           className="inline-flex h-7 items-center gap-1.5 rounded-md bg-transparent px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main"
         >
-          <span className="max-w-30 line-clamp-1">{title}</span>
+          <span className="whitespace-normal break-words">{resolvedTitle}</span>
           <ArrowDownIcon
             className={clsx(
               'h-4 w-4 transition-transform duration-300',

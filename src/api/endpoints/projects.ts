@@ -22,6 +22,16 @@ export async function getProjects(): Promise<Project[]> {
 }
 
 /**
+ * 프로젝트 상세 조회
+ *
+ * @param projectId - 프로젝트 ID
+ */
+export async function getProject(projectId: string): Promise<Project> {
+  const response = await apiClient.get<Project>(`/projects/${projectId}`);
+  return response.data;
+}
+
+/**
  * 프로젝트 수정 요청 타입
  */
 export interface UpdateProjectRequest {
