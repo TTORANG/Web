@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type { Slide } from '@/types/slide';
+import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
 
 interface ScriptSectionProps {
@@ -84,16 +85,13 @@ export default function ScriptSection({
     <div
       ref={scriptSectionRef}
       onScroll={handleScriptScroll}
-      className="flex-1 min-w-0 rounded-lg p-4 overflow-y-auto flex flex-col gap-2 "
+      className="flex-1 min-w-0 rounded-lg p-4 overflow-y-auto flex flex-col gap-2"
       style={{ backgroundColor: '#202227' }}
     >
       {slides.map((slide, index) => {
         const slideStartTime = slideChangeTimes[index] || 0;
         const isCurrentSlide = currentSlideIndex === index;
-        const timeStr = `${Math.floor(slideStartTime / 60)}:${String(slideStartTime % 60).padStart(
-          2,
-          '0',
-        )}`;
+        const timeStr = formatVideoTimestamp(slideStartTime);
 
         return (
           <div
@@ -105,7 +103,7 @@ export default function ScriptSection({
               backgroundColor: isCurrentSlide ? '#FFFFFF' : '#343841',
               scrollMarginTop: '0px', // scrollIntoView 시 상단에 딱 붙도록
             }}
-            className="flex gap-3 px-4 py-3 rounded-lg transition-colors"
+            className="flex gap-3 px-4 py-3 rounded-lg transition-colors text-body-s"
           >
             <div
               style={{
