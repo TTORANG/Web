@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type { Slide } from '@/types/slide';
+import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
 
 interface ScriptSectionProps {
@@ -90,10 +91,7 @@ export default function ScriptSection({
       {slides.map((slide, index) => {
         const slideStartTime = slideChangeTimes[index] || 0;
         const isCurrentSlide = currentSlideIndex === index;
-        const timeStr = `${Math.floor(slideStartTime / 60)}:${String(slideStartTime % 60).padStart(
-          2,
-          '0',
-        )}`;
+        const timeStr = formatVideoTimestamp(slideStartTime);
 
         return (
           <div

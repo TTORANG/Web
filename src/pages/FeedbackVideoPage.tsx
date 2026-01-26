@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
@@ -29,6 +29,14 @@ export default function FeedbackVideoPage() {
 
   const [commentDraft, setCommentDraft] = useState('');
 
+  // 현재 프로젝트의 슬라이드만 필터링
+  // URL의 projectId가 "1"이면 "p1"으로 매핑
+  const normalizedProjectId = projectId?.startsWith('p') ? projectId : `p${projectId}`;
+  const slides = useMemo(
+    () => MOCK_SLIDES.filter((slide) => slide.projectId === normalizedProjectId),
+    [normalizedProjectId],
+  );
+
   const handleAddComment = () => {
     if (!commentDraft.trim()) return;
     addComment(commentDraft);
@@ -52,7 +60,7 @@ export default function FeedbackVideoPage() {
     return () => window.clearTimeout(timer);
   }, [projectId, initVideo]);
 
-  if (isLoading) {
+  if (isLoading || slides.length === 0) {
     return (
       <div className="flex h-full items-center justify-center bg-white">
         <Spinner size={40} />
@@ -65,7 +73,7 @@ export default function FeedbackVideoPage() {
       <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-4">
         {/* 슬라이드 + 웹캠 + 재생바 (오버레이) */}
         <SlideWebcamStage
-          slides={MOCK_SLIDES}
+          slides={slides}
           slideChangeTimes={MOCK_SLIDE_CHANGE_TIMES}
           webcamVideoUrl={MOCK_VIDEO.videoUrl}
           onTimeUpdate={setCurrentTime}
@@ -73,7 +81,7 @@ export default function FeedbackVideoPage() {
 
         {/* 대본 섹션 */}
         <ScriptSection
-          slides={MOCK_SLIDES}
+          slides={slides}
           slideChangeTimes={MOCK_SLIDE_CHANGE_TIMES}
           currentTime={currentTime}
         />
