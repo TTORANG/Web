@@ -46,3 +46,19 @@ export function getSlideIndexFromTime(
 export function clamp(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, n));
 }
+
+/**
+ * 현재 시간 기준 ±window 범위 내의 피드백을 필터링
+ *
+ * @param feedbacks - 피드백 배열
+ * @param currentTime - 현재 재생 시간 (초)
+ * @param window - 탐색 범위 (기본값: 5초)
+ * @returns 범위 내 피드백 배열
+ */
+export function getOverlappingFeedbacks<T extends { timestamp: number }>(
+  feedbacks: T[],
+  currentTime: number,
+  window: number = 5,
+): T[] {
+  return feedbacks.filter((f) => Math.abs(f.timestamp - currentTime) <= window);
+}

@@ -84,7 +84,7 @@ export default function ScriptSection({
     <div
       ref={scriptSectionRef}
       onScroll={handleScriptScroll}
-      className="flex-1 min-w-0 rounded-lg p-4 overflow-y-auto flex flex-col gap-2"
+      className="flex-1 min-w-0 rounded-lg p-4 overflow-y-auto flex flex-col gap-2 "
       style={{ backgroundColor: '#202227' }}
     >
       {slides.map((slide, index) => {

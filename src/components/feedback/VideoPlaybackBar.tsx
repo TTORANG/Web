@@ -18,6 +18,7 @@ import { FEEDBACK_WINDOW } from '@/constants/video';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { ReactionType } from '@/types/script';
 import type { Slide } from '@/types/slide';
+import { getOverlappingFeedbacks } from '@/utils/video';
 
 interface VideoPlaybackBarProps {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -44,18 +45,8 @@ export default function VideoPlaybackBar({
   const topReaction = useMemo(() => {
     if (!video) return null;
 
-    const sortedFeedbacks = [...video.feedbacks].sort((a, b) => a.timestamp - b.timestamp);
-    const overlapping = sortedFeedbacks.filter((feedback, index) => {
-      const start = feedback.timestamp - FEEDBACK_WINDOW;
-      const rawEnd = feedback.timestamp + FEEDBACK_WINDOW;
-      const nextDifferentTimestamp = sortedFeedbacks
-        .slice(index + 1)
-        .find((f) => f.timestamp > feedback.timestamp)?.timestamp;
-      const end =
-        nextDifferentTimestamp != null ? Math.min(rawEnd, nextDifferentTimestamp) : rawEnd;
-
-      return currentTime >= start && currentTime < end;
-    });
+    // useVideoReactions와 동일한 로직: currentTime ± FEEDBACK_WINDOW 범위 내 피드백
+    const overlapping = getOverlappingFeedbacks(video.feedbacks, currentTime, FEEDBACK_WINDOW);
 
     if (overlapping.length === 0) return null;
 
