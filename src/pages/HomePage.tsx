@@ -1,6 +1,4 @@
-// TODO: 필터 관련 타입 속성 추가 후, 하단 주석 제거
 import { useEffect, useMemo, useState } from 'react';
-import 'react';
 
 import IntroSection from '@/components/home/IntroSection';
 import ProjectsSection from '@/components/home/ProjectsSection';

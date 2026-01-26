@@ -56,9 +56,11 @@ export function useDeleteProject() {
   return useMutation({
     mutationFn: (projectId: string) => deleteProject(projectId),
     onSuccess: (_, projectId) => {
-      // 1) 목록 갱신
-      void queryClient.invalidateQueries({ queryKey: queryKeys.projects.lists() });
-      // 2) 해당 detail 캐시 제거
+      // 1) 목록 캐시에서 삭제된 프로젝트를 제거하여 즉시 UI에 반영합니다.
+      queryClient.setQueryData(queryKeys.projects.lists(), (oldData) =>
+        oldData?.filter((project) => project.id !== projectId),
+      );
+      // 상세 정보 캐시는 API 응답으로 받은 데이터로 직접 업데이트합니다.
       void queryClient.removeQueries({ queryKey: queryKeys.projects.detail(projectId) });
     },
     onError: () => {
