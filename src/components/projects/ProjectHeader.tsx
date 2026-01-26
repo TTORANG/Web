@@ -40,7 +40,7 @@ export default function ProjectHeader({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       {/* 검색 부분 */}
-      <div className="flex w-full max-w-xl items-center gap-2 px-4 py-3 border border-gray-200 rounded-lg bg-white">
+      <div className="flex w-full sm:flex-1 sm:min-w-0 sm:max-w-none items-center gap-2 px-4 py-3 border border-gray-200 rounded-lg bg-white">
         <input
           className="w-full bg-transparent text-body-m text-gray-900 placeholder:text-gray-400 focus:outline-none"
           placeholder="검색어를 입력하세요"
@@ -48,10 +48,10 @@ export default function ProjectHeader({
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
-        <SearchIcon className="h-6 w-6 text-gray-400" />
+        <SearchIcon className="h-6 w-6 text-gray-400 shrink-0" />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 sm:ml-4">
         {/* 필터 */}
         <Dropdown
           trigger={({ isOpen }) => (
