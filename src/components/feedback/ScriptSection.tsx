@@ -3,9 +3,9 @@
  * @description 비디오 피드백 대본 섹션
  * - 현재 재생 시간에 맞는 슬라이드 대본을 표시
  * - 자동 스크롤로 현재 대본이 최상단에 위치
- * - 수동 스크롤 시 자동 스크롤 일시 정지 후 1초 후 복구
+ * - 수동 스크롤 시 자동 스크롤 일시 정지 후 2초 후 복구
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type { Slide } from '@/types/slide';
 import { getSlideIndexFromTime } from '@/utils/video';
@@ -25,53 +25,60 @@ export default function ScriptSection({
 }: ScriptSectionProps) {
   const scriptSectionRef = useRef<HTMLDivElement>(null);
   const scriptItemsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const prevIndexRef = useRef<number>(-1);
+  const isScrollingRef = useRef(false);
   const [autoScroll, setAutoScroll] = useState(true);
 
-  // 현재 시간에 따른 슬라이드 인덱스 계산
-  const getCurrentSlideIndex = useCallback(() => {
+  // 현재 시간에 따른 슬라이드 인덱스 계산 (메모이제이션)
+  const currentSlideIndex = useMemo(() => {
     return getSlideIndexFromTime(currentTime, slideChangeTimes, slides.length - 1);
   }, [currentTime, slideChangeTimes, slides.length]);
 
-  // 자동 스크롤 로직
+  // 자동 스크롤 로직 - 슬라이드 인덱스가 변경될 때만 실행
   useEffect(() => {
+    // 인덱스가 변경되지 않았으면 스킵
+    if (prevIndexRef.current === currentSlideIndex) return;
+    prevIndexRef.current = currentSlideIndex;
+
     if (!autoScroll || !scriptSectionRef.current) return;
 
-    // requestAnimationFrame을 사용해 브라우저 렌더링 후 스크롤
-    const animationFrameId = requestAnimationFrame(() => {
-      const currentSlideIndex = getCurrentSlideIndex();
-      const currentScriptItem = scriptItemsRef.current[currentSlideIndex];
+    const currentScriptItem = scriptItemsRef.current[currentSlideIndex];
+    if (!currentScriptItem) return;
 
-      if (currentScriptItem && scriptSectionRef.current) {
-        const container = scriptSectionRef.current;
-        const itemTop = currentScriptItem.offsetTop;
-        const containerPadding = 16; // p-4 = 16px
+    // 프로그래매틱 스크롤 플래그 설정
+    isScrollingRef.current = true;
 
-        // 현재 항목이 컨테이너의 첫 번째 위치에 오도록 스크롤
-        const targetScroll = Math.max(0, itemTop - containerPadding);
-
-        container.scrollTop = targetScroll;
-      }
+    // scrollIntoView로 해당 요소를 컨테이너 상단으로 스크롤
+    currentScriptItem.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
     });
 
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [currentTime, autoScroll, getCurrentSlideIndex]);
+    // 스크롤 완료 후 플래그 해제 (300ms 후)
+    const timer = setTimeout(() => {
+      isScrollingRef.current = false;
+    }, 300);
 
-  // 수동 스크롤 감지 - autoScroll 비활성화
-  const handleScriptScroll = useCallback(() => {
+    return () => clearTimeout(timer);
+  }, [currentSlideIndex, autoScroll]);
+
+  // 수동 스크롤 감지 - 프로그래매틱 스크롤이 아닐 때만 autoScroll 비활성화
+  const handleScriptScroll = () => {
+    if (isScrollingRef.current) return; // 프로그래매틱 스크롤은 무시
     setAutoScroll(false);
     onScroll?.();
-  }, [onScroll]);
+  };
 
-  // 슬라이드 변경 시 자동 스크롤 재활성화
+  // 수동 스크롤 후 2초 뒤 자동 스크롤 재활성화
   useEffect(() => {
     if (autoScroll) return;
 
     const timer = setTimeout(() => {
       setAutoScroll(true);
-    }, 1000); // 1초 후 다시 활성화
+    }, 2000);
 
     return () => clearTimeout(timer);
-  }, [getCurrentSlideIndex(), autoScroll]);
+  }, [autoScroll]);
 
   return (
     <div
@@ -82,19 +89,21 @@ export default function ScriptSection({
     >
       {slides.map((slide, index) => {
         const slideStartTime = slideChangeTimes[index] || 0;
-        const isCurrentSlide = getCurrentSlideIndex() === index;
-        const timeStr = `${Math.floor(slideStartTime / 60)}:${String(slideStartTime % 60).padStart(2, '0')}`;
+        const isCurrentSlide = currentSlideIndex === index;
+        const timeStr = `${Math.floor(slideStartTime / 60)}:${String(slideStartTime % 60).padStart(
+          2,
+          '0',
+        )}`;
 
         return (
           <div
             key={`${slide.id}-${index}`}
             ref={(el) => {
-              if (el) {
-                scriptItemsRef.current[index] = el;
-              }
+              scriptItemsRef.current[index] = el;
             }}
             style={{
               backgroundColor: isCurrentSlide ? '#FFFFFF' : '#343841',
+              scrollMarginTop: '0px', // scrollIntoView 시 상단에 딱 붙도록
             }}
             className="flex gap-3 px-4 py-3 rounded-lg transition-colors"
           >
@@ -106,6 +115,7 @@ export default function ScriptSection({
             >
               {timeStr}
             </div>
+
             <div
               style={{
                 color: isCurrentSlide ? '#1A1B1F' : '#E2E4E8',

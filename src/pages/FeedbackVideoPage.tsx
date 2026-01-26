@@ -62,7 +62,7 @@ export default function FeedbackVideoPage() {
 
   return (
     <div className="flex h-full w-full px-35 gap-6">
-      <div className="flex-1 min-w-0 flex flex-col gap-4">
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-4">
         {/* 슬라이드 + 웹캠 + 재생바 (오버레이) */}
         <SlideWebcamStage
           slides={MOCK_SLIDES}
