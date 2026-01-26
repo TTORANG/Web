@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 
 import ArrowDownIcon from '@/assets/icons/icon-arrow-down.svg?react';
+import ArrowUpIcon from '@/assets/icons/icon-arrow-up.svg?react';
 import FilterIcon from '@/assets/icons/icon-filter.svg?react';
 import SearchIcon from '@/assets/icons/icon-search.svg?react';
 import ViewCardIcon from '@/assets/icons/icon-view-card.svg?react';
@@ -41,7 +42,7 @@ export default function ProjectHeader({
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        {/* 필터 및 정렬 */}
+        {/* 필터 */}
         <Dropdown
           trigger={({ isOpen }) => (
             <button
@@ -68,6 +69,7 @@ export default function ProjectHeader({
 
         <div className="h-4 w-px bg-gray-200" />
 
+        {/* 정렬 */}
         <Dropdown
           trigger={({ isOpen }) => (
             <button
@@ -78,7 +80,7 @@ export default function ProjectHeader({
               type="button"
             >
               <span>정렬</span>
-              <ArrowDownIcon className="h-4 w-4" />
+              {isOpen ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />}
             </button>
           )}
           position="bottom"
