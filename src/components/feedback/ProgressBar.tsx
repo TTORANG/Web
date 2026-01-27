@@ -6,7 +6,7 @@
  * - 호버 시 썸네일 + 시간 미리보기
  * - 전역 마우스 이벤트로 바 밖에서도 스크러빙 가능
  */
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { Slide } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';
@@ -43,35 +43,44 @@ export default function ProgressBar({
   const progressPercentage = max > 0 ? (currentTime / max) * 100 : 0;
 
   // 마우스 X 좌표 → 비율 (0~1) 변환
-  const getPercentFromClientX = (clientX: number) => {
-    const bar = progressBarRef.current;
-    if (!bar || !max) return 0;
+  const getPercentFromClientX = useCallback(
+    (clientX: number) => {
+      const bar = progressBarRef.current;
+      if (!bar || !max) return 0;
 
-    const rect = bar.getBoundingClientRect();
-    const raw = (clientX - rect.left) / rect.width;
-    return Math.max(0, Math.min(raw, 1));
-  };
+      const rect = bar.getBoundingClientRect();
+      const raw = (clientX - rect.left) / rect.width;
+      return Math.max(0, Math.min(raw, 1));
+    },
+    [max],
+  );
 
   // 슬라이드 인덱스 계산 헬퍼
-  const computeSlideIndex = (time: number): number | null => {
-    if (!slides || !slides.length) return null;
+  const computeSlideIndex = useCallback(
+    (time: number): number | null => {
+      if (!slides || !slides.length) return null;
 
-    const times =
-      slideChangeTimes && slideChangeTimes.length > 0
-        ? slideChangeTimes
-        : slides.map((_, i) => i * 10);
+      const times =
+        slideChangeTimes && slideChangeTimes.length > 0
+          ? slideChangeTimes
+          : slides.map((_, i) => i * 10);
 
-    return getSlideIndexFromTime(time, times, slides.length - 1);
-  };
+      return getSlideIndexFromTime(time, times, slides.length - 1);
+    },
+    [slides, slideChangeTimes],
+  );
 
   // hover 상태 업데이트 헬퍼
-  const updateHoverState = (clientX: number) => {
-    const p = getPercentFromClientX(clientX);
-    setHoverX(p);
+  const updateHoverState = useCallback(
+    (clientX: number) => {
+      const p = getPercentFromClientX(clientX);
+      setHoverX(p);
 
-    const hoverTime = p * max;
-    setHoverSlideIndex(computeSlideIndex(hoverTime));
-  };
+      const hoverTime = p * max;
+      setHoverSlideIndex(computeSlideIndex(hoverTime));
+    },
+    [getPercentFromClientX, max, computeSlideIndex],
+  );
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const p = getPercentFromClientX(e.clientX);
@@ -117,7 +126,7 @@ export default function ProgressBar({
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
     };
-  }, [isScrubbing, max, onSeek]);
+  }, [isScrubbing, max, onSeek, getPercentFromClientX, updateHoverState]);
 
   return (
     <div
