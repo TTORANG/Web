@@ -4,6 +4,7 @@
  *
  * 슬라이드 화면(CommentPopover)과 피드백 화면(CommentList) 모두에서 사용됩니다.
  * data-theme 속성에 따라 CSS 변수가 자동 반전되어 다크모드를 지원합니다.
+ * CommentContext를 통해 상태를 공유받습니다.
  */
 import React, { useCallback } from 'react';
 
@@ -16,39 +17,14 @@ import { MOCK_USERS } from '@/mocks/users';
 import type { Comment as CommentType } from '@/types/comment';
 import { formatRelativeTime, formatVideoTimestamp } from '@/utils/format';
 
+import { useCommentContext } from './CommentContext';
 import CommentInput from './CommentInput';
 
 interface CommentProps {
   /** 댓글 데이터 */
   comment: CommentType;
-  /** 답글 입력창 활성화 여부 */
-  isActive: boolean;
-  /** 답글 입력값 */
-  replyText: string;
-  /** 답글 입력값 변경 핸들러 */
-  onReplyTextChange: (text: string) => void;
-  /** 답글 버튼 토글 핸들러 */
-  onToggleReply: () => void;
-  /** 답글 제출 핸들러 */
-  onSubmitReply: () => void;
-  /** 답글 취소 핸들러 */
-  onCancelReply: () => void;
-  /** 댓글 삭제 핸들러 */
-  onDelete?: () => void;
-  /** ID로 댓글 삭제 (재귀 렌더링용) */
-  onDeleteComment?: (id: string) => void;
-  /** 참조 클릭 핸들러 (슬라이드/영상 이동) */
-  onGoToRef?: (ref: NonNullable<CommentType['ref']>) => void;
   /** 답글 들여쓰기 여부 */
   isIndented?: boolean;
-  /** 현재 답글 작성 중인 댓글 ID (재귀용) */
-  replyingToId?: string | null;
-  /** 답글 작성 대상 설정 (재귀용) */
-  setReplyingToId?: (id: string | null) => void;
-  /** ID로 답글 제출 (재귀용) */
-  onReplySubmit?: (targetId: string) => void;
-  /** ID로 답글 토글 (재귀용) */
-  onToggleReplyById?: (targetId: string) => void;
 }
 
 /**
@@ -57,53 +33,41 @@ interface CommentProps {
  * 댓글 내용, 작성자 정보, 답글 버튼, 삭제 버튼을 표시합니다.
  * 대댓글은 재귀적으로 렌더링됩니다.
  */
-function Comment({
-  comment,
-  isActive,
-  replyText,
-  onReplyTextChange,
-  onToggleReply,
-  onSubmitReply,
-  onCancelReply,
-  onDelete,
-  onDeleteComment,
-  onGoToRef,
-  isIndented = false,
-  replyingToId,
-  setReplyingToId,
-  onReplySubmit,
-  onToggleReplyById,
-}: CommentProps) {
+function Comment({ comment, isIndented = false }: CommentProps) {
+  const {
+    replyingToId,
+    replyDraft,
+    setReplyDraft,
+    toggleReply,
+    submitReply,
+    cancelReply,
+    deleteComment,
+    goToRef,
+  } = useCommentContext();
+
   const user = MOCK_USERS.find((u) => u.id === comment.authorId);
   const authorName = user?.name ?? '알 수 없음';
   const authorProfileImage = user?.profileImage;
 
-  const handleChildToggle = useCallback(
-    (id: string) => {
-      onToggleReplyById?.(id);
-    },
-    [onToggleReplyById],
-  );
+  const isActive = replyingToId === comment.id;
 
-  const handleChildSubmit = useCallback(
-    (id: string) => {
-      onReplySubmit?.(id);
-    },
-    [onReplySubmit],
-  );
+  const handleToggleReply = useCallback(() => {
+    toggleReply(comment.id);
+  }, [toggleReply, comment.id]);
 
-  const handleChildDelete = useCallback(
-    (id: string) => {
-      onDeleteComment?.(id);
-    },
-    [onDeleteComment],
-  );
+  const handleSubmitReply = useCallback(() => {
+    submitReply(comment.id);
+  }, [submitReply, comment.id]);
+
+  const handleDelete = useCallback(() => {
+    deleteComment?.(comment.id);
+  }, [deleteComment, comment.id]);
 
   const handleGoToRef = useCallback(() => {
-    if (comment.ref && onGoToRef) {
-      onGoToRef(comment.ref);
+    if (comment.ref) {
+      goToRef(comment.ref);
     }
-  }, [comment.ref, onGoToRef]);
+  }, [comment.ref, goToRef]);
 
   // ref에서 표시할 라벨 생성
   const refLabel = comment.ref
@@ -143,10 +107,10 @@ function Comment({
                 </span>
               </div>
 
-              {comment.isMine && onDelete && (
+              {comment.isMine && deleteComment && (
                 <button
                   type="button"
-                  onClick={onDelete}
+                  onClick={handleDelete}
                   aria-label="댓글 삭제"
                   className="flex items-center gap-1 rounded text-caption-bold text-error active:opacity-80 focus-visible:outline-2 focus-visible:outline-error"
                 >
@@ -157,7 +121,7 @@ function Comment({
             </div>
 
             <div className="text-body-s text-black">
-              {comment.ref && onGoToRef && (
+              {comment.ref && (
                 <button
                   type="button"
                   onClick={handleGoToRef}
@@ -184,7 +148,7 @@ function Comment({
           <div className="flex items-center">
             <button
               type="button"
-              onClick={onToggleReply}
+              onClick={handleToggleReply}
               aria-expanded={isActive}
               aria-label={`${authorName}에게 답글 달기`}
               className={clsx(
@@ -203,10 +167,10 @@ function Comment({
 
       {isActive && (
         <CommentInput
-          value={replyText}
-          onChange={onReplyTextChange}
-          onSubmit={onSubmitReply}
-          onCancel={onCancelReply}
+          value={replyDraft}
+          onChange={setReplyDraft}
+          onSubmit={handleSubmitReply}
+          onCancel={cancelReply}
           autoFocus
           className="pb-4 pr-4 pl-15 bg-gray-200"
           textareaClassName="text-body-s text-black"
@@ -216,24 +180,7 @@ function Comment({
       {comment.replies && comment.replies.length > 0 && (
         <div className="pl-8">
           {comment.replies.map((reply) => (
-            <Comment
-              key={reply.id}
-              comment={reply}
-              isActive={replyingToId === reply.id}
-              onToggleReply={() => handleChildToggle(reply.id)}
-              replyingToId={replyingToId}
-              setReplyingToId={setReplyingToId}
-              replyText={replyText}
-              onReplyTextChange={onReplyTextChange}
-              onSubmitReply={() => handleChildSubmit(reply.id)}
-              onCancelReply={onCancelReply}
-              onDelete={() => handleChildDelete(reply.id)}
-              onDeleteComment={onDeleteComment}
-              onGoToRef={onGoToRef}
-              onReplySubmit={onReplySubmit}
-              onToggleReplyById={onToggleReplyById}
-              isIndented={false}
-            />
+            <Comment key={reply.id} comment={reply} />
           ))}
         </div>
       )}
