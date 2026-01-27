@@ -12,12 +12,12 @@ import pauseIcon from '@/assets/playbackBar-icons/pause-icon.webp';
 import playIcon from '@/assets/playbackBar-icons/play-icon.webp';
 import fullscreenIcon from '@/assets/playbackBar-icons/sizeupdown-icon.webp';
 import ProgressBar from '@/components/feedback/ProgressBar';
-import VolumeControl from '@/components/feedback/VolumeControl';
+import VolumeControl from '@/components/feedback/video/VolumeControl';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Slide } from '@/types/slide';
 
 interface VideoPlaybackBarProps {
-  videoRef: React.RefObject<HTMLVideoElement>;
+  videoElement: HTMLVideoElement | null;
   duration: number;
   fullscreenTargetRef?: React.RefObject<HTMLElement>;
   slides?: Slide[];
@@ -25,7 +25,7 @@ interface VideoPlaybackBarProps {
 }
 
 export default function VideoPlaybackBar({
-  videoRef,
+  videoElement,
   duration,
   fullscreenTargetRef,
   slides,
@@ -39,56 +39,55 @@ export default function VideoPlaybackBar({
 
   // 비디오 play/pause 이벤트 구독
   useEffect(() => {
-    const el = videoRef.current;
-    if (!el) return;
+    if (!videoElement) return;
 
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
 
-    el.addEventListener('play', onPlay);
-    el.addEventListener('pause', onPause);
+    videoElement.addEventListener('play', onPlay);
+    videoElement.addEventListener('pause', onPause);
 
-    setIsPlaying(!el.paused);
-    setVolume(el.volume ?? 1);
+    setIsPlaying(!videoElement.paused);
+    setVolume(videoElement.volume ?? 1);
 
     return () => {
-      el.removeEventListener('play', onPlay);
-      el.removeEventListener('pause', onPause);
+      videoElement.removeEventListener('play', onPlay);
+      videoElement.removeEventListener('pause', onPause);
     };
-  }, [videoRef]);
+  }, [videoElement]);
 
   const handleSeek = (time: number) => {
-    const el = videoRef.current;
-    if (!el) return;
+    if (!videoElement) return;
 
-    el.currentTime = time;
+    // eslint-disable-next-line react-hooks/immutability -- DOM API
+    videoElement.currentTime = time;
     updateCurrentTime(time);
   };
 
   const togglePlay = async () => {
-    const el = videoRef.current;
-    if (!el) return;
+    console.log('[VideoPlaybackBar] togglePlay called, videoElement:', videoElement);
+    if (!videoElement) return;
 
-    if (el.paused) {
+    if (videoElement.paused) {
       try {
-        await el.play();
+        await videoElement.play();
       } catch {
         // autoplay 정책 등
       }
     } else {
-      el.pause();
+      videoElement.pause();
     }
   };
 
   const handleVolumeChange = (v: number) => {
-    const el = videoRef.current;
     setVolume(v);
-    if (el) el.volume = v;
+    // eslint-disable-next-line react-hooks/immutability -- DOM API
+    if (videoElement) videoElement.volume = v;
   };
 
   const toggleFullscreen = async () => {
     const target = fullscreenTargetRef?.current;
-    const root = target ?? (videoRef.current?.closest('[data-stage-root]') as HTMLElement | null);
+    const root = target ?? (videoElement?.closest('[data-stage-root]') as HTMLElement | null);
 
     if (!root) return;
 

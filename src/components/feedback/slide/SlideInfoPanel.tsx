@@ -5,7 +5,7 @@
 import SlideTitle from '@/components/slide/script/SlideTitle';
 import type { Slide } from '@/types/slide';
 
-import SlideNavigation from './SlideNavigation';
+import SlideNavigation from '../SlideNavigation';
 
 interface SlideInfoPanelProps {
   slide: Slide;
