@@ -5,14 +5,13 @@ import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
 import { Spinner } from '@/components/common';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
-import SlideWebcamStage from '@/components/feedback/SlideWebcamStage';
+import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
+import { useVideoComments } from '@/hooks/useVideoComments';
+import { useVideoReactions } from '@/hooks/useVideoReactions';
 import { MOCK_SLIDES } from '@/mocks/slides';
 import { MOCK_VIDEO } from '@/mocks/videos';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Comment } from '@/types/comment';
-
-import { useVideoComments } from '../hooks/useVideoComments';
-import { useVideoReactions } from '../hooks/useVideoReactions';
 
 /**
  * "슬라이드 넘긴 시각(초)" 목데이터
@@ -29,13 +28,14 @@ export default function FeedbackVideoPage() {
   const { comments, addComment, addReply, deleteComment } = useVideoComments();
   const { reactions, toggleReaction } = useVideoReactions();
 
+  const currentTime = useVideoFeedbackStore((s) => s.currentTime);
   const requestSeek = useVideoFeedbackStore((s) => s.requestSeek);
 
   const [commentDraft, setCommentDraft] = useState('');
 
   const handleAddComment = () => {
     if (!commentDraft.trim()) return;
-    addComment(commentDraft);
+    addComment(commentDraft, currentTime);
     setCommentDraft('');
   };
 

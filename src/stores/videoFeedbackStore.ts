@@ -60,7 +60,7 @@ interface VideoFeedbackState {
   toggleReaction: (type: ReactionType) => void;
 
   /** 댓글 관련 메서드들 - feedbacks의 comments 업데이트 */
-  addComment: (content: string) => void;
+  addComment: (content: string, seconds: number) => void;
   addReply: (parentId: string, content: string) => void;
   deleteComment: (commentId: string) => void;
 }
@@ -120,7 +120,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
         'video/toggleReaction',
       ),
 
-    addComment: (content) =>
+    addComment: (content, seconds) =>
       set(
         (state) => {
           if (!state.video) return state;
@@ -130,13 +130,13 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
 
           const { target: targetFeedback, feedbacks } = getOrCreateFeedback(
             state.video.feedbacks,
-            state.currentTime,
+            seconds,
           );
 
           const newComment: Comment = createComment({
             content: trimmed,
             authorId: MOCK_CURRENT_USER.id,
-            ref: { kind: 'video', seconds: state.currentTime },
+            ref: { kind: 'video', seconds },
           });
 
           const updatedFeedbacks = feedbacks.map((f) =>
