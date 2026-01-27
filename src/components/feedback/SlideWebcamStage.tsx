@@ -95,7 +95,7 @@ export default function SlideWebcamStage({
             <button
               type="button"
               onClick={toggleLayout}
-              className="group absolute inset-0 font-semi-bold flex items-center justify-center bg-transparent"
+              className="group absolute inset-0 font-semi-bold flex items-center justify-center bg-transparent  text-body-s"
               aria-label="슬라이드 확장"
             >
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition bg-[#000000]/35" />
@@ -127,7 +127,7 @@ export default function SlideWebcamStage({
             <button
               type="button"
               onClick={toggleLayout}
-              className="group absolute inset-0 flex items-center justify-center bg-transparent"
+              className="group absolute inset-0 flex items-center justify-center bg-transparent text-body-s"
               aria-label="웹캠 확장"
             >
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition bg-[#000000]/35" />
