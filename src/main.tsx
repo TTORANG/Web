@@ -9,6 +9,7 @@ import { Toaster } from 'sonner';
 import { queryClient } from '@/api';
 import { Gnb, Layout, LoginButton, Logo, ShareButton } from '@/components/common';
 import { DevFab } from '@/components/common/DevFab';
+import FeedbackHeaderLeft from '@/components/feedback/FeedbackHeaderLeft';
 import {
   DevTestPage,
   FdSlidePage,
@@ -60,17 +61,8 @@ const router = createBrowserRouter([
   },
   {
     path: '/feedback/slide/:projectId',
-    element: (
-      <Layout
-        theme="dark"
-        left={
-          <>
-            <Logo />
-            <span className="text-body-m-bold text-black">발표 피드백</span>
-          </>
-        }
-      />
-    ),
+    element: <Layout theme="dark" left={<FeedbackHeaderLeft />} />,
+
     children: [{ index: true, element: <FdSlidePage /> }],
   },
   {

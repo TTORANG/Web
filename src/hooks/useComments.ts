@@ -30,9 +30,14 @@ export function useComments() {
   const { mutate: createOpinionApi } = useCreateOpinion();
   const { mutate: deleteOpinionApi } = useDeleteOpinion();
 
+  const findOpinion = (opinionId: string) => flatComments?.find((c) => c.id === opinionId);
+
   const comments = useMemo(() => {
     if (!flatComments) return EMPTY_COMMENTS;
-    return flatToTree(flatComments);
+    const tree = flatToTree(flatComments);
+    return [...tree].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    );
   }, [flatComments]);
 
   const addComment = (content: string, currentSlideIndex: number) => {
@@ -53,13 +58,16 @@ export function useComments() {
   };
 
   const addReply = (parentId: string, content: string) => {
-    if (!slideId) return;
+    const target = findOpinion(parentId);
+    const targetSlideId = target?.slideId ?? slideId;
+    const targetServerId = target?.serverId ?? parentId;
+    if (!targetSlideId) return;
 
     const previousOpinions = flatComments ?? [];
     addReplyStore(parentId, content);
 
     createOpinionApi(
-      { slideId, data: { content, parentId } },
+      { slideId: targetSlideId, data: { content, parentId: targetServerId } },
       {
         onError: () => {
           setOpinions(previousOpinions);
@@ -70,13 +78,16 @@ export function useComments() {
   };
 
   const deleteComment = (commentId: string) => {
-    if (!slideId) return;
+    const target = findOpinion(commentId);
+    const targetSlideId = target?.slideId ?? slideId;
+    const targetServerId = target?.serverId ?? commentId;
+    if (!targetSlideId) return;
 
     const previousOpinions = flatComments ?? [];
     deleteOpinionStore(commentId);
 
     deleteOpinionApi(
-      { opinionId: commentId, slideId },
+      { opinionId: targetServerId, slideId: targetSlideId },
       {
         onError: () => {
           setOpinions(previousOpinions);
