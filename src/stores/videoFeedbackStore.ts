@@ -15,6 +15,7 @@ import type { Comment } from '@/types/comment';
 import type { Reaction, ReactionType } from '@/types/script';
 import type { VideoFeedback, VideoTimestampFeedback } from '@/types/video';
 import { addReplyToFlat, createComment, deleteFromFlat } from '@/utils/comment';
+import { extractTimestampFromComment } from '@/utils/format';
 
 // 현재 시간대에 리액션 찾기
 const getOrCreateFeedback = (
@@ -128,15 +129,24 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
           const trimmed = content.trim();
           if (!trimmed) return state;
 
+          // 댓글 텍스트에서 타임스탬프 파싱
+          const parsed = extractTimestampFromComment(trimmed);
+
+          // 타임스탬프가 있으면 해당 시간 사용, 없으면 ref 없음
+          const ref = parsed ? { kind: 'video' as const, seconds: parsed.seconds } : undefined;
+          const finalContent = parsed ? parsed.content : trimmed;
+
+          // ref가 있을 때만 피드백 그룹에 추가
+          const targetTime = ref ? ref.seconds : state.currentTime;
           const { target: targetFeedback, feedbacks } = getOrCreateFeedback(
             state.video.feedbacks,
-            state.currentTime,
+            targetTime,
           );
 
           const newComment: Comment = createComment({
-            content: trimmed,
+            content: finalContent,
             authorId: MOCK_CURRENT_USER.id,
-            ref: { kind: 'video', seconds: state.currentTime },
+            ref,
           });
 
           const updatedFeedbacks = feedbacks.map((f) =>

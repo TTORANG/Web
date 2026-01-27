@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
@@ -11,6 +11,7 @@ import { MOCK_SLIDES, MOCK_SLIDE_CHANGE_TIMES } from '@/mocks/slides';
 import { MOCK_VIDEO } from '@/mocks/videos';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Comment } from '@/types/comment';
+import { formatVideoTimestamp } from '@/utils/format';
 
 import { useVideoComments } from '../hooks/useVideoComments';
 import { useVideoReactions } from '../hooks/useVideoReactions';
@@ -28,6 +29,9 @@ export default function FeedbackVideoPage() {
   const requestSeek = useVideoFeedbackStore((s) => s.requestSeek);
 
   const [commentDraft, setCommentDraft] = useState('');
+
+  // 현재 재생 시간을 타임스탬프 문자열로 변환 (포커스 시 자동 삽입용)
+  const timestampPrefix = useMemo(() => `${formatVideoTimestamp(currentTime)} `, [currentTime]);
 
   const handleAddComment = () => {
     if (!commentDraft.trim()) return;
@@ -96,6 +100,7 @@ export default function FeedbackVideoPage() {
             onSubmit={handleAddComment}
             onCancel={() => setCommentDraft('')}
             className="items-end w-86"
+            initialValueOnFocus={timestampPrefix}
           />
           <ReactionButtons reactions={reactions} onToggleReaction={toggleReaction} />
         </div>
