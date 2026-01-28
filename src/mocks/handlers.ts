@@ -103,9 +103,10 @@ export const handlers = [
       currentSlide.script.trim()
     ) {
       currentSlide.history.unshift({
-        id: crypto.randomUUID(),
-        timestamp: new Date().toISOString(),
-        content: currentSlide.script,
+        versionNumber: currentSlide.history.length + 1,
+        scriptText: currentSlide.script,
+        charCount: currentSlide.script.length,
+        createdAt: new Date().toISOString(),
       });
     }
 
