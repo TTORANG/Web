@@ -1,9 +1,8 @@
-import CommentIcon from '@/assets/icons/icon-comment-count.svg?react';
+﻿import CommentIcon from '@/assets/icons/icon-comment-count.svg?react';
 import { REACTION_CONFIG } from '@/constants/reaction';
 import type { Reaction } from '@/types/script';
 
 interface TopSlideCardProps {
-  id: string;
   title: string;
   thumbUrl?: string;
   reactionMetrics: Reaction[];
@@ -13,7 +12,6 @@ interface TopSlideCardProps {
 }
 
 export default function TopSlideCard({
-  id,
   title,
   thumbUrl,
   reactionMetrics,

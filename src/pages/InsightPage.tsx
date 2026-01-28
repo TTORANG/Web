@@ -240,7 +240,6 @@ export default function InsightPage() {
             return (
               <TopSlideCard
                 key={slide.id}
-                id={slide.id}
                 title={slide.title || `슬라이드 ${slideIndex + 1}`}
                 thumbUrl={getThumb(slideIndex)}
                 reactionMetrics={reactionMetrics}
