@@ -1,3 +1,5 @@
+﻿import SlideThumb from './SlideThumb';
+
 interface RecentCommentItemProps {
   user: string;
   slideLabel: string;
