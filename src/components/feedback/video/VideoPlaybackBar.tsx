@@ -6,7 +6,7 @@
  * - VolumeControl: 볼륨 조절 + 시간 표시
  * - 재생/일시정지, 전체화면 버튼
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import pauseIcon from '@/assets/playbackBar-icons/pause-icon.webp';
 import playIcon from '@/assets/playbackBar-icons/play-icon.webp';
@@ -72,8 +72,7 @@ export default function VideoPlaybackBar({
     updateCurrentTime(time);
   };
 
-  const togglePlay = async () => {
-    console.log('[VideoPlaybackBar] togglePlay called, videoElement:', videoElement);
+  const togglePlay = useCallback(async () => {
     if (!videoElement) return;
 
     if (videoElement.paused) {
@@ -85,7 +84,23 @@ export default function VideoPlaybackBar({
     } else {
       videoElement.pause();
     }
-  };
+  }, [videoElement]);
+
+  // Spacebar로 재생/일시정지 토글
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code !== 'Space') return;
+
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+      e.preventDefault();
+      void togglePlay();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [togglePlay]);
 
   const handleVolumeChange = (v: number) => {
     setVolume(v);
