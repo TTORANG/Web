@@ -16,6 +16,9 @@ export const useHomeViewMode = () => useHomeStore((s) => s.viewMode);
 /** 정렬 모드 구독 ('recent' | 'commentCount' | 'name') */
 export const useHomeSort = () => useHomeStore((s) => s.sort);
 
+/** 필터 모드 구독 ('all' | '3m' | '5m') */
+export const useHomeFilter = () => useHomeStore((s) => s.filter);
+
 /** 홈 스토어 액션들 (참조 안정적) */
 export const useHomeActions = () =>
   useHomeStore(
@@ -23,5 +26,6 @@ export const useHomeActions = () =>
       setQuery: s.setQuery,
       setViewMode: s.setViewMode,
       setSort: s.setSort,
+      setFilter: s.setFilter,
     })),
   );
