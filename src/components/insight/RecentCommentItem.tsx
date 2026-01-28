@@ -17,15 +17,12 @@ export default function RecentCommentItem({
 }: RecentCommentItemProps) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-xs p-4 flex items-start gap-4">
-      {thumbUrl ? (
-        <img
-          src={thumbUrl}
-          alt={`${slideLabel} 썸네일`}
-          className="w-20 h-12 shrink-0 rounded object-cover"
-        />
-      ) : (
-        <div className={`w-20 h-12 ${thumbFallbackClassName} shrink-0`} aria-hidden="true" />
-      )}
+      <SlideThumb
+        src={thumbUrl}
+        alt={`${slideLabel} 썸네일`}
+        className="w-20 h-12 shrink-0 rounded object-cover"
+        fallbackClassName={`w-20 h-12 ${thumbFallbackClassName} shrink-0`}
+      />
       <div>
         <div className="flex items-center gap-2 mb-1">
           <div className="w-6 h-6 rounded-full bg-gray-300" aria-hidden="true" />
