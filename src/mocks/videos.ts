@@ -38,7 +38,7 @@ export const MOCK_VIDEO: VideoFeedback = {
         },
       ],
       reactions: [
-        { type: 'fire' as const, count: 8, active: false },
+        { type: 'fire' as const, count: 8, active: true },
         { type: 'sleepy' as const, count: 0, active: false },
         { type: 'good' as const, count: 5, active: false },
         { type: 'bad' as const, count: 1, active: false },
@@ -95,9 +95,9 @@ export const MOCK_VIDEO: VideoFeedback = {
         },
       ],
       reactions: [
-        { type: 'fire' as const, count: 12, active: false },
+        { type: 'fire' as const, count: 12, active: true },
         { type: 'sleepy' as const, count: 0, active: false },
-        { type: 'good' as const, count: 6, active: false },
+        { type: 'good' as const, count: 6, active: true },
         { type: 'bad' as const, count: 1, active: false },
         { type: 'confused' as const, count: 1, active: false },
       ],
@@ -149,7 +149,7 @@ export const MOCK_VIDEO: VideoFeedback = {
         },
       ],
       reactions: [
-        { type: 'fire' as const, count: 15, active: false },
+        { type: 'fire' as const, count: 15, active: true },
         { type: 'sleepy' as const, count: 0, active: false },
         { type: 'good' as const, count: 8, active: false },
         { type: 'bad' as const, count: 1, active: false },

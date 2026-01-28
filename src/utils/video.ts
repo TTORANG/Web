@@ -3,8 +3,8 @@
  * @description 비디오 피드백 관련 유틸리티 함수
  */
 import { REACTION_TYPES } from '@/constants/reaction';
-import type { ReactionEvent, ReactionType } from '@/types/script';
-import type { SegmentHighlight } from '@/types/video';
+import type { ReactionType } from '@/types/script';
+import type { ReactionEvent, SegmentHighlight } from '@/types/video';
 
 /** 세그먼트 버킷 크기 (초) */
 export const SEGMENT_BUCKET_SIZE = 5;
@@ -156,6 +156,68 @@ export function computeSegmentHighlights(
     .sort((a, b) => b.totalCount - a.totalCount)
     .slice(0, topN)
     .sort((a, b) => a.startTime - b.startTime);
+}
+
+/**
+ * 사용자가 누른 리액션(active: true)만 프로그레스바에 이모지 마커로 표시
+ *
+ * @param feedbacks - VideoTimestampFeedback 배열 (timestamp + reactions)
+ * @param duration - 영상 총 길이 (초)
+ * @returns 세그먼트 하이라이트 배열 (시간순 정렬, topN 제한 없음)
+ *
+ * @description
+ * 1) 각 feedback의 reactions 중 active === true인 것만 필터
+ * 2) 5초 버킷으로 그룹화 (같은 버킷 내 active 타입 union)
+ * 3) 대표 이모지는 REACTION_TYPES 순서 우선 (fire > sleepy > good > bad > confused)
+ * 4) 사용자 리액션은 자연적으로 희소하므로 topN 제한 없음
+ */
+export function computeUserActiveHighlights(
+  feedbacks: Array<{
+    timestamp: number;
+    reactions: Array<{ type: ReactionType; active?: boolean }>;
+  }>,
+  duration: number,
+): SegmentHighlight[] {
+  if (!feedbacks.length || duration <= 0) return [];
+
+  // 버킷 인덱스별 active 리액션 타입 Set
+  const bucketMap = new Map<number, Set<ReactionType>>();
+
+  feedbacks.forEach((feedback) => {
+    const activeTypes = feedback.reactions.filter((r) => r.active);
+    if (!activeTypes.length) return;
+
+    const bucketIndex = Math.floor(feedback.timestamp / SEGMENT_BUCKET_SIZE);
+
+    if (!bucketMap.has(bucketIndex)) {
+      bucketMap.set(bucketIndex, new Set());
+    }
+
+    const typeSet = bucketMap.get(bucketIndex)!;
+    activeTypes.forEach((r) => typeSet.add(r.type));
+  });
+
+  // 각 버킷에서 REACTION_TYPES 순서 기준 대표 이모지 선택
+  const highlights: SegmentHighlight[] = [];
+
+  bucketMap.forEach((typeSet, bucketIndex) => {
+    // REACTION_TYPES 순서대로 순회하여 첫 번째 매칭을 대표로 선택
+    const topType = REACTION_TYPES.find((type) => typeSet.has(type));
+    if (!topType) return;
+
+    const startTime = bucketIndex * SEGMENT_BUCKET_SIZE;
+    const endTime = Math.min((bucketIndex + 1) * SEGMENT_BUCKET_SIZE, duration);
+
+    highlights.push({
+      startTime,
+      endTime,
+      topReactionType: topType,
+      count: 1,
+      totalCount: typeSet.size,
+    });
+  });
+
+  return highlights.sort((a, b) => a.startTime - b.startTime);
 }
 
 /**

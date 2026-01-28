@@ -1,15 +1,24 @@
 /* eslint-disable no-console */
 import { HttpResponse, delay, http } from 'msw';
 
+import { createDefaultReactions } from '@/constants/reaction';
+import { FEEDBACK_WINDOW } from '@/constants/video';
 import type { Slide } from '@/types/slide';
+import type { VideoFeedback, VideoTimestampFeedback } from '@/types/video';
 
 import { MOCK_SLIDES } from './slides';
 import { MOCK_USERS } from './users';
+import { MOCK_VIDEO } from './videos';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 // 메모리 내 데이터 저장소 (상태 유지)
 let slides: Slide[] = [...MOCK_SLIDES];
+
+// 영상 피드백 데이터 저장소
+const videoFeedbacks: Map<string, VideoFeedback> = new Map([
+  [MOCK_VIDEO.videoId, structuredClone(MOCK_VIDEO)],
+]);
 
 // 슬라이드별 스크립트 버전 저장소 (slides의 history로 초기화)
 const scriptVersions: Map<
@@ -288,6 +297,61 @@ export const handlers = [
     }
 
     return HttpResponse.json(slide.emojiReactions);
+  }),
+
+  /**
+   * 영상 리액션 토글
+   * POST /videos/:videoId/reactions
+   */
+  http.post(`${BASE_URL}/videos/:videoId/reactions`, async ({ params, request }) => {
+    await delay(100);
+
+    const { videoId } = params as { videoId: string };
+    const { type, timestamp } = (await request.json()) as { type: string; timestamp: number };
+    console.log(`[MSW] POST /videos/${videoId}/reactions`, { type, timestamp });
+
+    const video = videoFeedbacks.get(videoId);
+
+    if (!video) {
+      return new HttpResponse(null, {
+        status: 404,
+        statusText: 'Video not found',
+      });
+    }
+
+    // 타임스탬프 범위 내 피드백 찾기
+    let targetFeedback = video.feedbacks.find(
+      (f) => Math.abs(f.timestamp - timestamp) <= FEEDBACK_WINDOW,
+    );
+
+    // 없으면 새로 생성
+    if (!targetFeedback) {
+      targetFeedback = {
+        timestamp,
+        comments: [],
+        reactions: createDefaultReactions(),
+      } satisfies VideoTimestampFeedback;
+      video.feedbacks.push(targetFeedback);
+      video.feedbacks.sort((a, b) => a.timestamp - b.timestamp);
+    }
+
+    // 리액션 토글
+    const reactionIndex = targetFeedback.reactions.findIndex((r) => r.type === type);
+    if (reactionIndex !== -1) {
+      const currentReaction = targetFeedback.reactions[reactionIndex];
+      if (currentReaction.active) {
+        currentReaction.count = Math.max(0, currentReaction.count - 1);
+        currentReaction.active = false;
+      } else {
+        currentReaction.count += 1;
+        currentReaction.active = true;
+      }
+    }
+
+    return HttpResponse.json({
+      timestamp: targetFeedback.timestamp,
+      reactions: targetFeedback.reactions,
+    });
   }),
 
   /**

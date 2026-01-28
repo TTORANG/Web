@@ -117,7 +117,11 @@ export default function FeedbackVideoPage() {
             className="items-end w-86"
             initialValueOnFocus={timestampPrefix}
           />
-          <ReactionButtons reactions={reactions} onToggleReaction={toggleReaction} />
+          <ReactionButtons
+            reactions={reactions}
+            onToggleReaction={toggleReaction}
+            layout="grid-2"
+          />
         </div>
       </aside>
     </div>
