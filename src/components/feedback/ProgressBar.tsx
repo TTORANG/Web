@@ -43,6 +43,7 @@ export default function ProgressBar({
   const [scrubPercent, setScrubPercent] = useState<number | null>(null);
   const [hoverX, setHoverX] = useState<number | null>(null);
   const [isHoveringBar, setIsHoveringBar] = useState(false);
+  const [isHoveringEmoji, setIsHoveringEmoji] = useState(false);
   const [hoverSlideIndex, setHoverSlideIndex] = useState<number | null>(null);
 
   const max = Math.max(duration, 0);
@@ -152,7 +153,7 @@ export default function ProgressBar({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onMouseDown={handleMouseDown}
-      className="group relative h-1 w-full cursor-pointer rounded-full bg-[rgba(26,26,26,0.66)] transition-all duration-150 hover:h-1.5 hover:ring-2 hover:ring-[#4F5BFF]/30 select-none"
+      className="group relative h-1 w-full cursor-pointer rounded-full bg-[rgba(26,26,26,0.66)] transition-all duration-150 hover:h-1.5 hover:ring-2 hover:ring-[#4F5BFF]/30 select-none before:content-[''] before:absolute before:-inset-y-3 before:inset-x-0"
     >
       {/* 이모지 반응이 있는 위치의 마커 */}
       {segmentHighlights?.map((segment) => {
@@ -172,9 +173,15 @@ export default function ProgressBar({
         return (
           <div
             key={`segment-${segment.startTime}`}
-            className="absolute -top-7 flex flex-col gap-1 items-center -translate-x-1/2 pointer-events-none"
+            className="absolute -top-7 z-10 flex flex-col gap-1 items-center -translate-x-1/2 cursor-pointer"
             style={{ left: `${leftPercent}%` }}
             title={`${REACTION_CONFIG[segment.topReactionType].label} (${segment.count})`}
+            onMouseEnter={() => setIsHoveringEmoji(true)}
+            onMouseLeave={() => setIsHoveringEmoji(false)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSeek(segment.startTime);
+            }}
           >
             <span className="text-xs leading-none">
               {REACTION_CONFIG[segment.topReactionType].emoji}
@@ -197,7 +204,7 @@ export default function ProgressBar({
       />
 
       {/* 호버 시 썸네일 + 시간 미리보기 */}
-      {(isHoveringBar || isScrubbing) && hoverX !== null && (
+      {(isHoveringBar || isScrubbing) && !isHoveringEmoji && hoverX !== null && (
         <div
           className="absolute -top-33 flex flex-col items-center gap-2 pointer-events-none"
           style={{
