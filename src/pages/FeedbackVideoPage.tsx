@@ -31,7 +31,7 @@ export default function FeedbackVideoPage() {
 
   // URL의 projectId를 활용해 해당 프로젝트 슬라이드만 필터링
   const projectSlides = useMemo(() => {
-    const targetProjectId = `p${projectId ?? '1'}`;
+    const targetProjectId = projectId ?? 'p1';
     return MOCK_SLIDES.filter((slide) => slide.projectId === targetProjectId);
   }, [projectId]);
 

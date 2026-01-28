@@ -51,6 +51,15 @@ export default function SlideWebcamStage({
 
   const activeSlide = slides[activeIndex];
 
+  // slides가 비어있으면 렌더링하지 않음
+  if (!activeSlide) {
+    return (
+      <div className="flex-1 min-w-0 flex items-center justify-center bg-gray-900 rounded-xl aspect-video">
+        <span className="text-gray-400">슬라이드가 없습니다</span>
+      </div>
+    );
+  }
+
   // 토글 함수 (PiP 클릭 / 버튼 클릭 공통 사용)
   const toggleLayout = () => {
     setLayout((prev) => (prev === 'slide-main' ? 'webcam-main' : 'slide-main'));
