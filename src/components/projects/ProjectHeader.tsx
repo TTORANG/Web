@@ -47,6 +47,8 @@ export default function ProjectHeader({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          spellCheck={false}
+          autoCapitalize="off"
         />
         <SearchIcon className="h-6 w-6 text-gray-400 shrink-0" />
       </div>

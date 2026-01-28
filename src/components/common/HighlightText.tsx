@@ -11,16 +11,13 @@ function escapeRegExp(str: string) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-export function HighlightText({
-  text,
-  query,
-  markClassName = 'rounded bg-yellow-200 px-0.5',
-}: Props) {
+export function HighlightText({ text, query, markClassName = 'rounded bg-yellow-200' }: Props) {
   const trimmed = query.trim();
 
   const parts = useMemo(() => {
     if (!trimmed) return [{ value: text, isMatch: false }];
 
+    // 대소문자 무시 (gi)
     const pattern = new RegExp(`(${escapeRegExp(trimmed)})`, 'gi');
     const split = text.split(pattern);
 
@@ -40,6 +37,7 @@ export function HighlightText({
             {p.value}
           </mark>
         ) : (
+          // query 공백이면 그냥 원문 출력
           <span key={index}>{p.value}</span>
         ),
       )}
