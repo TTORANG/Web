@@ -68,14 +68,16 @@ const p1Slides: Slide[] = [
     ],
     history: [
       {
-        id: 'h1',
-        timestamp: timeAt(1, 14, 30),
-        content: '안녕하세요, 오늘 발표를 맡은 김또랑입니다.',
+        versionNumber: 1,
+        scriptText: '안녕하세요.',
+        charCount: 6,
+        createdAt: timeAt(1, 14, 0),
       },
       {
-        id: 'h2',
-        timestamp: timeAt(1, 14, 0),
-        content: '안녕하세요.',
+        versionNumber: 2,
+        scriptText: '안녕하세요, 오늘 발표를 맡은 김또랑입니다.',
+        charCount: 24,
+        createdAt: timeAt(1, 14, 30),
       },
     ],
     emojiReactions: [
@@ -179,36 +181,42 @@ const p1Slides: Slide[] = [
     opinions: [],
     history: [
       {
-        id: 'h1',
-        timestamp: timeAt(2, 10, 30),
-        content:
-          '문제의 근본 원인은 세 가지로 분류할 수 있습니다.\n첫째, 기능적 한계입니다.\n둘째, 구조적 문제입니다.\n셋째, 사용 흐름의 복잡성입니다.',
+        versionNumber: 1,
+        scriptText: '문제 분석 초안입니다.',
+        charCount: 12,
+        createdAt: timeAt(3, 18, 0),
       },
       {
-        id: 'h2',
-        timestamp: timeAt(2, 10, 15),
-        content:
+        versionNumber: 2,
+        scriptText: '문제의 원인을 분석해보겠습니다.',
+        charCount: 17,
+        createdAt: timeAt(2, 9, 30),
+      },
+      {
+        versionNumber: 3,
+        scriptText: '문제의 근본 원인은 세 가지로 분류할 수 있습니다.',
+        charCount: 26,
+        createdAt: timeAt(2, 9, 45),
+      },
+      {
+        versionNumber: 4,
+        scriptText: '문제의 근본 원인은 세 가지로 분류할 수 있습니다.\n첫째, 기능적 한계입니다.',
+        charCount: 41,
+        createdAt: timeAt(2, 10, 0),
+      },
+      {
+        versionNumber: 5,
+        scriptText:
           '문제의 근본 원인은 세 가지로 분류할 수 있습니다.\n첫째, 기능적 한계입니다.\n둘째, 구조적 문제입니다.',
+        charCount: 56,
+        createdAt: timeAt(2, 10, 15),
       },
       {
-        id: 'h3',
-        timestamp: timeAt(2, 10, 0),
-        content: '문제의 근본 원인은 세 가지로 분류할 수 있습니다.\n첫째, 기능적 한계입니다.',
-      },
-      {
-        id: 'h4',
-        timestamp: timeAt(2, 9, 45),
-        content: '문제의 근본 원인은 세 가지로 분류할 수 있습니다.',
-      },
-      {
-        id: 'h5',
-        timestamp: timeAt(2, 9, 30),
-        content: '문제의 원인을 분석해보겠습니다.',
-      },
-      {
-        id: 'h6',
-        timestamp: timeAt(3, 18, 0),
-        content: '문제 분석 초안입니다.',
+        versionNumber: 6,
+        scriptText:
+          '문제의 근본 원인은 세 가지로 분류할 수 있습니다.\n첫째, 기능적 한계입니다.\n둘째, 구조적 문제입니다.\n셋째, 사용 흐름의 복잡성입니다.',
+        charCount: 76,
+        createdAt: timeAt(2, 10, 30),
       },
     ],
     emojiReactions: [
@@ -256,9 +264,10 @@ const p1Slides: Slide[] = [
     opinions: [],
     history: [
       {
-        id: 'h1',
-        timestamp: timeAt(2, 11, 0),
-        content: '핵심 해결 방안은 다음과 같습니다.',
+        versionNumber: 1,
+        scriptText: '핵심 해결 방안은 다음과 같습니다.',
+        charCount: 17,
+        createdAt: timeAt(2, 11, 0),
       },
     ],
     emojiReactions: [
@@ -326,9 +335,10 @@ Google, Kakao, Naver 로그인을 지원합니다.
     opinions: [],
     history: [
       {
-        id: 'h1',
-        timestamp: timeAt(2, 15, 0),
-        content: '사용자 화면 흐름 초안',
+        versionNumber: 1,
+        scriptText: '사용자 화면 흐름 초안',
+        charCount: 11,
+        createdAt: timeAt(2, 15, 0),
       },
     ],
     emojiReactions: [

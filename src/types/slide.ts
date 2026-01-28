@@ -1,5 +1,6 @@
+import type { ScriptVersion } from './api';
 import type { Comment } from './comment';
-import type { History, Reaction } from './script';
+import type { Reaction } from './script';
 
 /**
  * 슬라이드 데이터 모델
@@ -14,6 +15,6 @@ export interface Slide {
   thumb: string;
   script: string;
   opinions: Comment[];
-  history: History[];
+  history: ScriptVersion[];
   emojiReactions: Reaction[];
 }

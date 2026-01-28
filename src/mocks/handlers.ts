@@ -11,11 +11,18 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 // 메모리 내 데이터 저장소 (상태 유지)
 let slides: Slide[] = [...MOCK_SLIDES];
 
-// 슬라이드별 스크립트 버전 저장소
+// 슬라이드별 스크립트 버전 저장소 (slides의 history로 초기화)
 const scriptVersions: Map<
   string,
   { versionNumber: number; scriptText: string; charCount: number; createdAt: string }[]
 > = new Map();
+
+// slides의 history 데이터로 scriptVersions 초기화
+MOCK_SLIDES.forEach((slide) => {
+  if (slide.history.length > 0) {
+    scriptVersions.set(slide.id, [...slide.history]);
+  }
+});
 
 // API 응답 래퍼 헬퍼
 const wrapResponse = <T>(data: T) => ({
