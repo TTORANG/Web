@@ -17,7 +17,66 @@ import { Dropdown } from '../common';
 import type { DropdownItem } from '../common/Dropdown';
 import DeleteProjectModal from './DeleteProjectModal';
 
-export default function ProjectCard({
+function ProjectCardSkeleton() {
+  return (
+    <article className="rounded-2xl border-none bg-white">
+      {/* 썸네일 */}
+      <div className="aspect-video w-full overflow-hidden rounded-t-2xl bg-gray-200 animate-pulse" />
+
+      <div className="p-4">
+        {/* 제목 및 업데이트 날짜 */}
+        <div className="min-h-18">
+          <div className="flex justify-between gap-2">
+            {/* 제목 스켈레톤 */}
+            <div className="flex-1">
+              <div className="h-5 w-3/4 rounded bg-gray-200 animate-pulse" />
+            </div>
+            {/* 더보기 아이콘 - 그대로 유지 */}
+            <div className="shrink-0 mt-1">
+              <div className="p-2 -m-2">
+                <MoreIcon className="text-gray-400" />
+              </div>
+            </div>
+          </div>
+          {/* 날짜 스켈레톤 */}
+          <div className="mt-1 h-4 w-16 rounded bg-gray-200 animate-pulse" />
+        </div>
+
+        <div className="mt-5 flex items-center justify-between text-caption text-gray-600">
+          {/* 왼쪽: 소요 시간, 페이지 수 */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <RecentIcon />
+              <div className="h-3 w-6 rounded bg-gray-200 animate-pulse" />
+            </div>
+            <div className="flex items-center gap-1">
+              <PageCountIcon />
+              <div className="h-3 w-8 rounded bg-gray-200 animate-pulse" />
+            </div>
+          </div>
+
+          {/* 오른쪽: 반응 모음 */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <CommentCountIcon />
+              <div className="h-3 w-3 rounded bg-gray-200 animate-pulse" />
+            </div>
+            <div className="flex items-center gap-1">
+              <ReactionCountIcon />
+              <div className="h-3 w-3 rounded bg-gray-200 animate-pulse" />
+            </div>
+            <div className="flex items-center gap-1">
+              <ViewCountIcon />
+              <div className="h-3 w-3 rounded bg-gray-200 animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function ProjectCard({
   id,
   title,
   updatedAt,
@@ -137,3 +196,7 @@ export default function ProjectCard({
     </>
   );
 }
+
+ProjectCard.Skeleton = ProjectCardSkeleton;
+
+export default ProjectCard;
