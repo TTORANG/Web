@@ -3,37 +3,35 @@
  * @description 대본 변경 기록 팝오버
  *
  * 대본의 이전 버전들을 보여주고, 원하는 버전으로 복원할 수 있습니다.
- * Zustand store를 통해 변경 기록을 읽고 복원합니다.
  */
 import clsx from 'clsx';
 
 import RevertIcon from '@/assets/icons/icon-revert.svg?react';
-import { Popover } from '@/components/common';
-import { useSlideActions, useSlideHistory, useSlideId, useSlideScript } from '@/hooks';
-import { useUpdateSlide } from '@/hooks/queries/useSlides';
-import type { History } from '@/types/script';
+import { Popover, Spinner } from '@/components/common';
+import { useSlideId, useSlideScript } from '@/hooks';
+import { useRestoreScript, useScriptVersions } from '@/hooks/queries/useScript';
+import { useSlideStore } from '@/stores/slideStore';
+import type { ScriptVersion } from '@/types/api';
 import { formatTimestamp } from '@/utils/format';
 import { showToast } from '@/utils/toast';
 
 export default function ScriptHistory() {
   const slideId = useSlideId();
   const script = useSlideScript();
-  const history = useSlideHistory();
-  const { restoreFromHistory } = useSlideActions();
+  const updateScript = useSlideStore((state) => state.updateScript);
 
-  const { mutate: updateSlide } = useUpdateSlide();
+  const { data: versions, isLoading } = useScriptVersions(slideId ?? '');
+  const { mutate: restoreScript, isPending: isRestoring } = useRestoreScript();
 
-  const handleRestore = (item: History) => {
+  const handleRestore = (version: ScriptVersion) => {
     if (!slideId) return;
 
-    // 1. 로컬 상태 업데이트 (Optimistic)
-    restoreFromHistory(item);
-
-    // 2. 서버 저장
-    updateSlide(
-      { slideId, data: { script: item.content } },
+    restoreScript(
+      { slideId, data: { version: version.versionNumber } },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
+          // 로컬 store 업데이트
+          updateScript(data.scriptText);
           showToast.success('대본이 복원되었습니다.');
         },
         onError: () => {
@@ -83,31 +81,42 @@ export default function ScriptHistory() {
           </div>
         </div>
 
-        {/* 히스토리 목록 */}
-        {history.length === 0 ? (
+        {/* 로딩 상태 */}
+        {isLoading ? (
+          <div className="flex items-center justify-center px-4 py-6">
+            <Spinner size={24} />
+          </div>
+        ) : !versions || versions.length === 0 ? (
           <div className="px-4 py-6 text-center text-sm text-gray-600">변경 기록이 없습니다</div>
         ) : (
-          history.map((item) => (
-            <div key={item.id} className="border-b border-gray-200 bg-white px-4 pb-4 pt-2">
+          versions.map((version) => (
+            <div
+              key={version.versionNumber}
+              className="border-b border-gray-200 bg-white px-4 pb-4 pt-2"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium leading-4 text-gray-600">
-                  {formatTimestamp(item.timestamp)}
+                  {formatTimestamp(version.createdAt)}
                 </span>
                 <button
                   type="button"
-                  onClick={() => handleRestore(item)}
-                  aria-label={`${formatTimestamp(item.timestamp)} 버전으로 복원`}
+                  onClick={() => handleRestore(version)}
+                  disabled={isRestoring}
+                  aria-label={`버전 ${version.versionNumber}으로 복원`}
                   className={clsx(
                     'inline-flex items-center gap-1 rounded py-1 pl-2 pr-1.5',
                     'bg-white text-gray-800 outline-1 -outline-offset-1 outline-gray-200',
                     'hover:text-gray-600 active:bg-gray-100 focus-visible:outline-2 focus-visible:outline-main',
+                    'disabled:opacity-50 disabled:cursor-not-allowed',
                   )}
                 >
                   <span className="text-xs font-semibold leading-4">복원</span>
                   <RevertIcon className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
-              <p className="mt-2 text-sm font-medium leading-5 text-gray-800">{item.content}</p>
+              <p className="mt-2 text-sm font-medium leading-5 text-gray-800">
+                {version.scriptText}
+              </p>
             </div>
           ))
         )}

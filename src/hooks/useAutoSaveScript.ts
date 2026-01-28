@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react';
 
-import { useUpdateSlide } from '@/hooks/queries/useSlides';
+import { useUpdateScript } from '@/hooks/queries/useScript';
 import { showToast } from '@/utils/toast';
 
 import { useDebouncedCallback } from './useDebounce';
@@ -23,7 +23,7 @@ const AUTOSAVE_DELAY = 500;
  */
 export function useAutoSaveScript() {
   const slideId = useSlideId();
-  const { mutateAsync, isPending } = useUpdateSlide();
+  const { mutateAsync, isPending } = useUpdateScript();
   const lastSavedRef = useRef<string>('');
 
   const saveScript = useCallback(

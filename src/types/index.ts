@@ -1,3 +1,6 @@
+// API
+export type { ApiError, ApiResponse, PaginatedData, ScriptResponse, ScriptVersion } from './api';
+
 // Auth
 export type { AuthProvider, User } from './auth';
 

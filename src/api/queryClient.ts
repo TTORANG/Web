@@ -60,6 +60,11 @@ export const queryKeys = {
     details: () => [...queryKeys.slides.all, 'detail'] as const,
     detail: (slideId: string) => [...queryKeys.slides.details(), slideId] as const,
   },
+  scripts: {
+    all: ['scripts'] as const,
+    detail: (slideId: string) => [...queryKeys.scripts.all, 'detail', slideId] as const,
+    versions: (slideId: string) => [...queryKeys.scripts.all, 'versions', slideId] as const,
+  },
   projects: {
     all: ['projects'] as const,
     lists: () => [...queryKeys.projects.all, 'list'] as const,

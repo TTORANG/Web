@@ -11,6 +11,19 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 // 메모리 내 데이터 저장소 (상태 유지)
 let slides: Slide[] = [...MOCK_SLIDES];
 
+// 슬라이드별 스크립트 버전 저장소
+const scriptVersions: Map<
+  string,
+  { versionNumber: number; scriptText: string; charCount: number; createdAt: string }[]
+> = new Map();
+
+// API 응답 래퍼 헬퍼
+const wrapResponse = <T>(data: T) => ({
+  resultType: 'SUCCESS' as const,
+  error: null,
+  success: data,
+});
+
 /**
  * MSW 핸들러 정의
  *
@@ -313,5 +326,188 @@ export const handlers = [
     await delay(200);
     console.log('[MSW] GET /users/me');
     return HttpResponse.json(MOCK_USERS[0]);
+  }),
+
+  /**
+   * 대본 조회
+   * GET /presentations/slides/:slideId/script
+   */
+  http.get(`${BASE_URL}/presentations/slides/:slideId/script`, async ({ params }) => {
+    await delay(150);
+
+    const { slideId } = params;
+    console.log(`[MSW] GET /presentations/slides/${slideId}/script`);
+
+    const slide = slides.find((s) => s.id === slideId);
+
+    if (!slide) {
+      return new HttpResponse(
+        JSON.stringify({
+          resultType: 'ERROR',
+          error: { code: 'NOT_FOUND', message: 'Slide not found' },
+          success: null,
+        }),
+        { status: 404 },
+      );
+    }
+
+    return HttpResponse.json(
+      wrapResponse({
+        message: '대본이 성공적으로 조회되었습니다.',
+        slideId: slide.id,
+        charCount: slide.script.length,
+        scriptText: slide.script,
+        estimatedDurationSeconds: Math.ceil(slide.script.length / 5),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }),
+    );
+  }),
+
+  /**
+   * 대본 저장
+   * PATCH /presentations/slides/:slideId/script
+   */
+  http.patch(`${BASE_URL}/presentations/slides/:slideId/script`, async ({ params, request }) => {
+    await delay(200);
+
+    const { slideId } = params as { slideId: string };
+    const { script } = (await request.json()) as { script: string };
+    console.log(`[MSW] PATCH /presentations/slides/${slideId}/script`);
+
+    const slideIndex = slides.findIndex((s) => s.id === slideId);
+
+    if (slideIndex === -1) {
+      return new HttpResponse(
+        JSON.stringify({
+          resultType: 'ERROR',
+          error: { code: 'NOT_FOUND', message: 'Slide not found' },
+          success: null,
+        }),
+        { status: 404 },
+      );
+    }
+
+    const currentSlide = slides[slideIndex];
+
+    // 기존 스크립트가 있으면 버전 저장
+    if (currentSlide.script.trim() && currentSlide.script !== script) {
+      const versions = scriptVersions.get(slideId) || [];
+      versions.unshift({
+        versionNumber: versions.length + 1,
+        scriptText: currentSlide.script,
+        charCount: currentSlide.script.length,
+        createdAt: new Date().toISOString(),
+      });
+      scriptVersions.set(slideId, versions);
+    }
+
+    // 스크립트 업데이트
+    slides[slideIndex] = { ...currentSlide, script };
+
+    return HttpResponse.json(
+      wrapResponse({
+        message: '대본이 성공적으로 저장되었습니다.',
+        slideId,
+        charCount: script.length,
+        scriptText: script,
+        estimatedDurationSeconds: Math.ceil(script.length / 5),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }),
+    );
+  }),
+
+  /**
+   * 대본 버전(히스토리) 목록 조회
+   * GET /presentations/slides/:slideId/versions
+   */
+  http.get(`${BASE_URL}/presentations/slides/:slideId/versions`, async ({ params }) => {
+    await delay(150);
+
+    const { slideId } = params as { slideId: string };
+    console.log(`[MSW] GET /presentations/slides/${slideId}/versions`);
+
+    const slide = slides.find((s) => s.id === slideId);
+
+    if (!slide) {
+      return new HttpResponse(
+        JSON.stringify({
+          resultType: 'ERROR',
+          error: { code: 'NOT_FOUND', message: 'Slide not found' },
+          success: null,
+        }),
+        { status: 404 },
+      );
+    }
+
+    const versions = scriptVersions.get(slideId) || [];
+    return HttpResponse.json(wrapResponse(versions));
+  }),
+
+  /**
+   * 대본 복원
+   * POST /presentations/slides/:slideId/restore
+   */
+  http.post(`${BASE_URL}/presentations/slides/:slideId/restore`, async ({ params, request }) => {
+    await delay(200);
+
+    const { slideId } = params as { slideId: string };
+    const { version } = (await request.json()) as { version: number };
+    console.log(`[MSW] POST /presentations/slides/${slideId}/restore`, { version });
+
+    const slideIndex = slides.findIndex((s) => s.id === slideId);
+
+    if (slideIndex === -1) {
+      return new HttpResponse(
+        JSON.stringify({
+          resultType: 'ERROR',
+          error: { code: 'NOT_FOUND', message: 'Slide not found' },
+          success: null,
+        }),
+        { status: 404 },
+      );
+    }
+
+    const versions = scriptVersions.get(slideId) || [];
+    const targetVersion = versions.find((v) => v.versionNumber === version);
+
+    if (!targetVersion) {
+      return new HttpResponse(
+        JSON.stringify({
+          resultType: 'ERROR',
+          error: { code: 'NOT_FOUND', message: 'Version not found' },
+          success: null,
+        }),
+        { status: 404 },
+      );
+    }
+
+    // 현재 스크립트를 버전으로 저장
+    const currentSlide = slides[slideIndex];
+    if (currentSlide.script.trim()) {
+      versions.unshift({
+        versionNumber: versions.length + 1,
+        scriptText: currentSlide.script,
+        charCount: currentSlide.script.length,
+        createdAt: new Date().toISOString(),
+      });
+      scriptVersions.set(slideId, versions);
+    }
+
+    // 복원
+    slides[slideIndex] = { ...currentSlide, script: targetVersion.scriptText };
+
+    return HttpResponse.json(
+      wrapResponse({
+        message: '대본이 성공적으로 복원되었습니다.',
+        slideId,
+        charCount: targetVersion.charCount,
+        scriptText: targetVersion.scriptText,
+        estimatedDurationSeconds: Math.ceil(targetVersion.charCount / 5),
+        createdAt: targetVersion.createdAt,
+        updatedAt: new Date().toISOString(),
+      }),
+    );
   }),
 ];
