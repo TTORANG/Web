@@ -12,6 +12,7 @@ const SKELETON_LIST_COUNT = 6;
 
 type Props = {
   isLoading: boolean;
+  totalCount: number;
   query: string;
   onChangeQuery: (value: string) => void;
   sort: SortMode;
@@ -25,6 +26,7 @@ type Props = {
 
 export default function ProjectsSection({
   isLoading,
+  totalCount,
   query,
   onChangeQuery,
   sort,
@@ -35,9 +37,13 @@ export default function ProjectsSection({
   onChangeViewMode,
   projects,
 }: Props) {
-  const hasProjects = projects.length > 0;
+  // 전체 데이터 존재 여부
+  const hasAnyProjects = totalCount > 0;
+  // 검색/필터 결과 존재 여부
+  const hasResults = projects.length > 0;
 
-  if (!isLoading && !hasProjects) return null;
+  // 전체 프로젝트가 아예 없을 때에만 ProjectSection을 숨김
+  if (!isLoading && !hasAnyProjects) return null;
 
   return (
     <section className="mt-14">
@@ -58,34 +64,37 @@ export default function ProjectsSection({
         onChangeViewMode={onChangeViewMode}
       />
 
-      {viewMode === 'card' ? (
-        // 카드로 보기
-        isLoading ? (
+      {isLoading ? (
+        viewMode === 'card' ? (
           <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
             {Array.from({ length: SKELETON_CARD_COUNT }).map((_, index) => (
               <ProjectCardSkeleton key={index} />
             ))}
           </div>
         ) : (
-          <CardView
-            items={projects}
-            getKey={(item) => item.id}
-            className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3"
-            renderCard={(item) => <ProjectCard {...item} />}
-          />
+          <div className="mt-6 flex flex-col gap-3">
+            {Array.from({ length: SKELETON_LIST_COUNT }).map((_, index) => (
+              // TODO
+              // ㄴ ProjectListSkeleton도 따로?
+              <div
+                key={index}
+                className="h-20 rounded-2xl border border-gray-200 bg-white p-4 animate-pulse"
+              />
+            ))}
+          </div>
         )
-      ) : // 리스트로 보기
-      isLoading ? (
-        <div className="mt-6 flex flex-col gap-3">
-          {Array.from({ length: SKELETON_LIST_COUNT }).map((_, index) => (
-            // TODO
-            // ㄴ ProjectListSkeleton도 따로?
-            <div
-              key={index}
-              className="h-20 rounded-2xl border border-gray-200 bg-white p-4 animate-pulse"
-            />
-          ))}
+      ) : !hasResults ? (
+        // 검색/필터 결과가 0개일 때 '결과 없음'
+        <div className=" flex items-center justify-center mt-10">
+          <p className="text-body-m text-gray-500">검색/필터 결과가 없습니다.</p>
         </div>
+      ) : viewMode === 'card' ? (
+        <CardView
+          items={projects}
+          getKey={(item) => item.id}
+          className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3"
+          renderCard={(item) => <ProjectCard {...item} />}
+        />
       ) : (
         <ListView
           items={projects}
