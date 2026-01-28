@@ -95,6 +95,7 @@ export default function FeedbackVideoPage() {
           slides={projectSlides}
           slideChangeTimes={slideChangeTimes}
           currentTime={currentTime}
+          onSeek={requestSeek}
         />
       </div>
 
