@@ -70,7 +70,7 @@ export default function SlideWebcamStage({
             'absolute overflow-hidden bg-[#000000]/20',
             isSlideMain
               ? 'inset-0 z-10 rounded-none' // 슬라이드가 메인일 때: 크게
-              : 'right-4 bottom-20 w-60 h-36 z-20 rounded-xl', // 웹캠이 메인일 때: 슬라이드가 작은 박스
+              : 'right-4 bottom-25 w-48 h-27 z-20 rounded-xl', // 웹캠이 메인일 때: 슬라이드가 작은 박스 (16:9)
           )}
         >
           <img
@@ -84,11 +84,11 @@ export default function SlideWebcamStage({
           />
 
           {/* 개발단계 확인용: 슬라이드 제목 배지는 슬라이드가 메인일 때만 보여주기 */}
-          {isSlideMain && (
+          {/* {isSlideMain && (
             <div className="absolute left-4 top-4 rounded-md bg-[#000000]/55 px-3 py-1 text-[#ffffff] text-sm">
               {activeIndex + 1}. {activeSlide.title}
             </div>
-          )}
+          )} */}
 
           {/* "슬라이드가 PiP일 때"만 hover 디밍 + 클릭 토글이 가능해야 함 */}
           {!isSlideMain && (
@@ -111,7 +111,7 @@ export default function SlideWebcamStage({
           className={clsx(
             'absolute overflow-hidden bg-[#000000]/40',
             isSlideMain
-              ? 'right-4 bottom-20 w-60 h-36 z-20 rounded-xl' // 슬라이드 메인일 때: 웹캠이 작은 박스
+              ? 'right-4 bottom-25 w-48 h-27 z-20 rounded-xl' // 슬라이드 메인일 때: 웹캠이 작은 박스 (16:9)
               : 'inset-0 z-10 rounded-none', // 웹캠 메인일 때: 웹캠이 크게
           )}
         >
