@@ -21,7 +21,7 @@ export default function DonutChart({ percent }: DonutChartProps) {
           cx="32"
           cy="32"
           r={radius}
-          stroke="#EF4444"
+          stroke="currentColor"
           strokeWidth="4"
           fill="transparent"
           strokeDasharray={circumference}
