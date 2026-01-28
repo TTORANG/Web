@@ -1,70 +1,127 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-
 import { Layout, Logo, SlideImage } from '@/components/common';
-
 import { useRecorder } from '../../hooks/useRecorder';
 
-interface SlideLog {
+interface SlideData {
   page: number;
-  timestamp: string;
+  duration: number;
+  visited: boolean;
 }
 
 interface RecordingSectionProps {
+  videoId: string;
+  projectId: number;
   title: string;
   initialStream: MediaStream;
-  onFinish: (blob: Blob, logs: SlideLog[]) => void;
+  slideUrls: string[];
+  onFinish: (durations: { [key: number]: number }) => void;
 }
 
-export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSectionProps) => {
-  const { canvasRef, isRecording, startRecording, stopRecording, recordedChunks } = useRecorder();
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [logs, setLogs] = useState<SlideLog[]>([]);
-  const [totalSeconds, setTotalSeconds] = useState<number>(0);
-  const totalPages = 10;
+export const RecordingSection = ({ 
+  videoId, 
+  projectId, 
+  title, 
+  initialStream, 
+  onFinish, 
+  slideUrls = [] 
+}: RecordingSectionProps) => {
   const slideImgRef = useRef<HTMLImageElement | null>(null);
+  const logContainerRef = useRef<HTMLDivElement>(null);
+  const chunkIndexRef = useRef(0);
+  const { canvasRef, isRecording, startRecording, stopRecording } = useRecorder();
+  
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalSeconds, setTotalSeconds] = useState<number>(0);
+  const [slides, setSlides] = useState<{ [key: number]: SlideData }>({
+    1: { page: 1, duration: 0, visited: true }
+  });
 
-  const getSlideImgUrl = (p: number) => `/thumbnails/p1/${p - 1}.webp`;
+  const totalPages = slideUrls.length;
 
-  const formatTime = (s: number) =>
-    `${Math.floor(s / 60)
-      .toString()
-      .padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
+  const handleChunkUpload = useCallback(async (blob: Blob) => {
+    try {
+      const currentIndex = chunkIndexRef.current;
+      chunkIndexRef.current++;
 
-  // 슬라이드 이미지 프리로드
-  useEffect(() => {
-    const img = new Image();
-    img.src = getSlideImgUrl(currentPage);
-    img.onload = () => {
-      slideImgRef.current = img;
-    };
-  }, [currentPage]);
-
-  // 녹화 자동 시작
-  useEffect(() => {
-    if (initialStream && !isRecording) {
-      startRecording(initialStream, slideImgRef);
-    }
-  }, [initialStream, startRecording, isRecording]);
-
-  // 타이머
-  useEffect(() => {
-    let id: ReturnType<typeof setInterval>;
-    if (isRecording) id = setInterval(() => setTotalSeconds((v) => v + 1), 1000);
-    return () => clearInterval(id);
-  }, [isRecording]);
-
-  const handlePageChange = useCallback(
-    (dir: 'next' | 'prev') => {
-      setCurrentPage((p) => {
-        const next = dir === 'next' ? Math.min(p + 1, totalPages) : Math.max(p - 1, 1);
-        if (next !== p) {
-          setLogs((prev) => [{ page: next, timestamp: formatTime(totalSeconds) }, ...prev]);
-        }
-        return next;
+      const res = await fetch(`/videos/${videoId}/chunks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId,
+          chunkIndex: currentIndex,
+          size: blob.size,
+          contentType: 'video/webm'
+        })
       });
-    },
-    [totalSeconds],
-  );
+      const data = await res.json();
+      if (data.resultType === 'FAILURE') throw new Error(data.error.reason);
+
+      const { uploadUrl, objectKey } = data.success;
+
+      await fetch(uploadUrl, {
+        method: 'PUT',
+        body: blob,
+        headers: { 'Content-Type': 'video/webm' }
+      });
+
+      await fetch(`/videos/${videoId}/chunks/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId,
+          chunkIndex: currentIndex,
+          objectKey: objectKey
+        })
+      });
+    } catch (err) {
+      console.error("Chunk upload failed:", err);
+    }
+  }, [videoId, projectId]);
+
+  useEffect(() => {
+    if (!slideUrls.length) return;
+    const img = new Image();
+    img.src = slideUrls[currentPage - 1];
+    img.crossOrigin = "anonymous";
+    img.onload = () => { slideImgRef.current = img; };
+  }, [currentPage, slideUrls]);
+
+  useEffect(() => {
+    if (initialStream && !isRecording && totalPages > 0) {
+      startRecording(initialStream, slideImgRef, handleChunkUpload);
+    }
+  }, [initialStream, startRecording, isRecording, totalPages, handleChunkUpload]);
+
+  useEffect(() => {
+    let id: ReturnType<typeof setInterval> | undefined;
+    if (isRecording) {
+      id = setInterval(() => {
+        setTotalSeconds((v) => v + 1);
+        setSlides((prev) => ({
+          ...prev,
+          [currentPage]: {
+            ...prev[currentPage],
+            duration: (prev[currentPage]?.duration || 0) + 1,
+            visited: true
+          }
+        }));
+      }, 1000);
+    }
+    return () => clearInterval(id);
+  }, [isRecording, currentPage]);
+
+  const handlePageChange = useCallback((dir: 'next' | 'prev') => {
+    setCurrentPage((p) => {
+      const next = dir === 'next' ? Math.min(p + 1, totalPages) : Math.max(p - 1, 1);
+      if (next !== p && totalPages > 0) {
+        setSlides(prev => ({
+          ...prev,
+          [next]: prev[next] || { page: next, duration: 0, visited: true }
+        }));
+      }
+      return next;
+    });
+  }, [totalPages]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -75,133 +132,126 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
     return () => window.removeEventListener('keydown', handler);
   }, [handlePageChange]);
 
+  const handleFinish = async () => {
+    stopRecording();
+    try {
+      await fetch(`/videos/${videoId}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId })
+      });
+      
+      const durations = Object.fromEntries(
+        Object.entries(slides).map(([k, v]) => [Number(k), v.duration])
+      );
+      onFinish(durations);
+    } catch (err) {
+      console.error("Finalizing error:", err);
+    }
+  };
+
+  const formatTime = (s: number) => 
+    `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+
+  if (totalPages === 0) return null;
+
   return (
-    <Layout
-      theme="dark"
-      scrollable={false}
-      left={
-        <div className="flex items-center gap-4">
-          <Logo />
-          <div className="h-5 w-[1px] bg-white/20" />
-          <span className="text-lg font-bold text-white tracking-tight uppercase">{title}</span>
-          <div className="flex items-center gap-2 px-3 py-1 bg-red-500/10 rounded-full border border-red-500/20">
-            <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-red-500 text-xs font-black uppercase">Recording</span>
+    <div className="relative w-full h-full font-['Pretendard']">
+      <style>{`
+        header { background-color: #1a1c21 !important; height: 60px !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important; z-index: 1000 !important; }
+        header * { color: #ffffff !important; }
+        main { margin-top: 60px !important; height: calc(100vh - 60px) !important; background-color: #1A1A1A !important; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+      `}</style>
+
+      <Layout
+        theme="dark"
+        scrollable={false}
+        left={
+          <div className="flex items-center gap-[24px] h-[60px] relative z-[1001]">
+            <Logo />
+            <div className="h-8 w-[1px] bg-white/20" />
+            <span className="text-[16px] font-bold text-white truncate max-w-[200px]">{title}</span>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 bg-[#F24B4B] rounded-full animate-pulse" />
+              <span className="text-[16px] font-bold text-white">녹화 중</span>
+            </div>
           </div>
-        </div>
-      }
-      right={
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-xl border border-white/10 shadow-inner">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#60A5FA"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-            <span className="font-mono text-xl font-bold text-blue-400 tabular-nums">
+        }
+        right={
+          <div className="flex items-center gap-[24px] h-[60px] relative z-[1001]">
+            <div className="flex items-center gap-2 font-mono text-[16px] font-bold text-white tracking-widest uppercase">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               {formatTime(totalSeconds)}
-            </span>
+            </div>
+            <button onClick={handleFinish} className="flex items-center gap-1 bg-[#666B76] px-4 py-1.5 rounded-full text-[12px] font-bold text-white hover:bg-[#5a5f6a] transition-all">
+              종료 <span className="w-3 h-3 bg-white rounded-sm ml-1" />
+            </button>
           </div>
-          <button
-            onClick={() => {
-              stopRecording();
-              onFinish(new Blob(recordedChunks, { type: 'video/webm' }), logs);
-            }}
-            className="rounded-xl bg-white px-8 py-2.5 text-sm text-black font-black hover:bg-gray-200 transition-all active:scale-95 shadow-lg shadow-white/5"
-          >
-            연습 종료
-          </button>
+        }
+      >
+        <div className="fixed inset-0 top-[60px] flex flex-col lg:flex-row bg-[#1A1A1A] z-[1]">
+          <div className="relative flex-1 flex flex-col items-center justify-center p-4">
+             <div className="relative w-full max-w-[1024px] aspect-[1024/575] bg-[#000000] shadow-2xl overflow-hidden border border-white/5">
+                <canvas ref={canvasRef} width={1440} height={1024} className="absolute inset-0 w-full h-full object-contain" />
+                
+                <div className="absolute top-[16px] left-[16px] z-[50] bg-black/60 px-[16px] py-[8px] rounded-full flex items-center gap-1 text-[16px] font-bold text-white border border-white/10">
+                  {currentPage} <span className="opacity-60">/</span> {totalPages}
+                </div>
+
+                <div className="absolute top-[16px] right-[16px] z-[50] bg-black/60 px-[16px] py-[10px] rounded-[8px] flex flex-col items-center min-w-[96px] border border-white/10">
+                  <span className="text-[12px] text-[#A9ACB2] font-bold uppercase">현재 슬라이드</span>
+                  <span className="text-[20px] font-bold font-mono text-white leading-none mt-1 uppercase">
+                    {formatTime(slides[currentPage]?.duration || 0)}
+                  </span>
+                </div>
+             </div>
+             <p className="mt-8 text-[#A9ACB2] text-[14px] font-medium text-center">스페이스바 또는 화살표를 클릭하여 다음 슬라이드로 이동하세요</p>
+          </div>
+
+          <aside className="w-full lg:w-[384px] h-auto lg:h-full bg-[#343841] border-t lg:border-t-0 lg:border-l border-[#666B76] flex flex-col p-[24px] shrink-0 overflow-hidden">
+            <div className="flex flex-col gap-[8px] mb-[24px]">
+              <h3 className="text-[#E2E4E8] text-[14px] font-bold uppercase tracking-tight opacity-80">다음 슬라이드</h3>
+              <div className="w-full aspect-video bg-[#000000] overflow-hidden border border-white/5">
+                 {currentPage < totalPages ? (
+                   <div className="w-full h-full">
+                     <SlideImage src={slideUrls[currentPage]} alt="next" />
+                   </div>
+                 ) : (
+                   <div className="w-full h-full flex items-center justify-center text-white/10 font-bold text-2xl uppercase">End</div>
+                 )}
+              </div>
+            </div>
+
+            <div className="flex flex-col min-h-[150px] border-t border-white/10 pt-4 overflow-hidden">
+              <h3 className="text-[#E2E4E8] text-[14px] font-bold uppercase tracking-tight opacity-80 mb-3">발표 대본</h3>
+              <div className="text-white text-[16px] leading-[1.6] overflow-y-auto pr-2 custom-scrollbar flex-1">
+                지난 분기 실적을 보시면, 매출이 전년 대비 30% 증가했습니다. 이러한 성장은 주로 신규 유입 고객의 증가와 서비스 개편에 따른 사용자 리텐션 향상에 기인합니다.
+              </div>
+            </div>
+
+            <div className="flex-1 flex flex-col border-t border-white/10 mt-6 pt-4 min-h-0">
+              <h3 className="text-[#E2E4E8] text-[14px] font-bold uppercase tracking-tight opacity-80 mb-3">진행 상황</h3>
+              <div ref={logContainerRef} className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(idx => (
+                  <div key={idx} className="flex justify-between items-center text-[15px]">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full ${idx === currentPage ? 'bg-white shadow-[0_0_8px_white]' : 'bg-white/20'}`} />
+                      <span className={idx === currentPage ? 'text-white font-bold' : 'text-white/40'}>슬라이드 {idx}</span>
+                    </div>
+                    {(slides[idx]?.visited || idx === currentPage) && (
+                      <span className={`font-mono text-[14px] ${idx === currentPage ? 'text-white' : 'text-white/40'}`}>
+                        {formatTime(slides[idx]?.duration || 0)}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
         </div>
-      }
-    >
-      <div className="flex h-full w-full bg-[#0F1115] overflow-hidden">
-        {/* 메인 슬라이드 캔버스 영역 */}
-        <section className="relative flex-[3] flex flex-col items-center justify-center p-8 min-w-0">
-          <div className="relative w-full h-full max-h-[calc(100vh-220px)] flex items-center justify-center">
-            <div className="relative w-full aspect-[16/9] max-h-full rounded-3xl ring-2 ring-white/5 shadow-[0_0_60px_rgba(0,0,0,0.6)] bg-black overflow-hidden border border-white/10">
-              <canvas
-                ref={canvasRef}
-                width={1920}
-                height={1080}
-                className="w-full h-full object-contain"
-              />
-              <div className="absolute top-8 left-8 rounded-xl bg-black/70 backdrop-blur-xl px-5 py-2 text-base font-black text-white border border-white/20 shadow-2xl z-10">
-                {currentPage} <span className="text-white/30 mx-1">/</span> {totalPages}
-              </div>
-            </div>
-          </div>
-          <p className="mt-8 text-white/30 text-xs font-bold tracking-[0.2em] uppercase">
-            Spacebar / Arrows to navigate
-          </p>
-        </section>
-
-        {/* 사이드바 영역 */}
-        <aside className="w-[380px] flex flex-col border-l border-white/5 bg-[#16181D] p-8 shrink-0 overflow-hidden shadow-2xl">
-          {/* 다음 슬라이드 미리보기 */}
-          <div className="mb-10 shrink-0">
-            <h3 className="mb-4 text-[11px] font-black text-blue-500 uppercase tracking-[0.3em]">
-              Next Slide
-            </h3>
-            <div className="aspect-video rounded-2xl bg-[#22252C] overflow-hidden border border-white/5 shadow-inner relative group">
-              {currentPage < totalPages ? (
-                <div className="w-full h-full opacity-80 group-hover:opacity-100 transition-opacity">
-                  <SlideImage src={getSlideImgUrl(currentPage + 1)} alt="Next" />
-                </div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-white/10 font-black text-xs">
-                  END OF SLIDE
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* 대본 영역: 텍스트 가시성 극대화 */}
-          <div className="flex-1 flex flex-col min-h-0 mb-10">
-            <h3 className="mb-4 text-[11px] font-black text-blue-500 uppercase tracking-[0.3em]">
-              Script
-            </h3>
-            <div className="flex-1 overflow-y-auto rounded-2xl bg-black/40 p-7 border border-white/5 shadow-inner scrollbar-hide">
-              <p className="text-white text-[1.15rem] font-medium leading-[1.8] drop-shadow-md">
-                {/* 실제 데이터 연결 시 scripts[currentPage-1] 형태로 교체 */}
-                지난 분기 실적을 보시면, 매출이 전년 대비 30% 증가했습니다. 이러한 성장은 주로 신규
-                유입 고객의 증가와...
-              </p>
-            </div>
-          </div>
-
-          {/* 진행 상태 로그 */}
-          <div className="h-[160px] pt-8 border-t border-white/10 shrink-0 flex flex-col min-h-0">
-            <h3 className="mb-4 text-[11px] font-black text-blue-500 uppercase tracking-[0.3em]">
-              Progress Log
-            </h3>
-            <div className="flex-1 overflow-y-auto space-y-3 scrollbar-hide">
-              <div className="flex justify-between items-center bg-blue-500/10 p-3.5 rounded-xl border border-blue-500/20 shadow-sm">
-                <span className="text-blue-400 font-black text-sm">● 슬라이드 {currentPage}</span>
-                <span className="text-blue-400 font-mono font-bold text-sm tracking-tighter">
-                  {formatTime(totalSeconds)}
-                </span>
-              </div>
-              {logs.slice(1).map((log, i) => (
-                <div
-                  key={i}
-                  className="flex justify-between items-center px-4 py-1 text-sm text-white/30"
-                >
-                  <span className="font-bold">○ 슬라이드 {log.page}</span>
-                  <span className="font-mono">{log.timestamp}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </aside>
-      </div>
-    </Layout>
+      </Layout>
+    </div>
   );
 };

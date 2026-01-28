@@ -2,10 +2,10 @@ import { useCallback, useRef, useState } from 'react';
 
 export const useRecorder = () => {
   const [isRecording, setIsRecording] = useState<boolean>(false);
-  const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const requestRef = useRef<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const drawCanvas = useCallback(
     (camEl: HTMLVideoElement, slideImgRef: React.MutableRefObject<HTMLImageElement | null>) => {
@@ -15,45 +15,16 @@ export const useRecorder = () => {
       if (!ctx) return;
 
       const render = () => {
-        ctx.fillStyle = '#121418';
+        ctx.fillStyle = '#1A1A1A';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         if (slideImgRef.current && slideImgRef.current.complete) {
-          const img = slideImgRef.current;
-          const drawW = 1365;
-          const drawH = 766;
-          ctx.drawImage(img, (canvas.width - drawW) / 2, (canvas.height - drawH) / 2, drawW, drawH);
+          ctx.drawImage(slideImgRef.current, 16, 254, 1024, 575);
         }
 
-        if (camEl.videoWidth > 0) {
-          const camW = 370;
-          const camH = 206;
-          const margin = 50;
-
-          ctx.save();
-          ctx.shadowColor = 'rgba(0,0,0,0.5)';
-          ctx.shadowBlur = 40;
-
-          ctx.beginPath();
-          ctx.roundRect(
-            canvas.width - camW - margin,
-            canvas.height - camH - margin,
-            camW,
-            camH,
-            24,
-          );
-          ctx.clip();
-
-          ctx.drawImage(
-            camEl,
-            canvas.width - camW - margin,
-            canvas.height - camH - margin,
-            camW,
-            camH,
-          );
-          ctx.restore();
+        if (camEl && camEl.readyState >= 2) {
+          ctx.drawImage(camEl, 763, 845, 277, 155);
         }
-
         requestRef.current = requestAnimationFrame(render);
       };
       render();
@@ -61,53 +32,56 @@ export const useRecorder = () => {
     [],
   );
 
-  const startRecording = async (
-    camStream: MediaStream,
-    slideImgRef: React.MutableRefObject<HTMLImageElement | null>,
-  ) => {
-    if (!canvasRef.current) return;
+  const startRecording = useCallback(
+    async (
+      camStream: MediaStream,
+      slideImgRef: React.MutableRefObject<HTMLImageElement | null>,
+      onChunk: (blob: Blob) => void, // 청크 처리 콜백 추가
+    ) => {
+      if (!canvasRef.current || !camStream) return;
 
-    const camVideo = document.createElement('video');
-    camVideo.srcObject = camStream;
-    camVideo.muted = true;
-    camVideo.playsInline = true;
+      const camVideo = document.createElement('video');
+      camVideo.srcObject = camStream;
+      camVideo.muted = true;
+      camVideo.playsInline = true;
+      videoRef.current = camVideo;
 
-    camVideo.onloadedmetadata = async () => {
-      try {
-        await camVideo.play();
-        setIsRecording(true);
-        setRecordedChunks([]);
+      camVideo.onloadedmetadata = async () => {
+        try {
+          await camVideo.play();
+          setIsRecording(true);
+          drawCanvas(camVideo, slideImgRef);
 
-        drawCanvas(camVideo, slideImgRef);
+          const combinedStream = canvasRef.current!.captureStream(30);
+          camStream.getAudioTracks().forEach((track) => combinedStream.addTrack(track));
 
-        const combinedStream = canvasRef.current!.captureStream(30);
-        const audioTracks = camStream.getAudioTracks();
-        if (audioTracks.length > 0) combinedStream.addTrack(audioTracks[0]);
+          const recorder = new MediaRecorder(combinedStream, {
+            mimeType: 'video/webm;codecs=vp9',
+          });
 
-        const recorder = new MediaRecorder(combinedStream, {
-          mimeType: 'video/webm;codecs=vp9',
-          videoBitsPerSecond: 5000000,
-        });
+          recorder.ondataavailable = (e) => {
+            if (e.data.size > 0) onChunk(e.data); // 여기서 바로 업로드 로직 실행
+          };
 
-        recorder.ondataavailable = (e) => {
-          if (e.data.size > 0) setRecordedChunks((prev) => [...prev, e.data]);
-        };
-
-        recorder.start(1000);
-        mediaRecorderRef.current = recorder;
-      } catch (err) {
-        console.error('캔버스 내 비디오 재생 실패:', err);
-      }
-    };
-  };
+          recorder.start(5000); // 5초 단위로 청크 생성 (GCS 업로드 부하 고려)
+          mediaRecorderRef.current = recorder;
+        } catch (err) {
+          console.error('Recording Start Error:', err);
+        }
+      };
+    },
+    [drawCanvas],
+  );
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
+    if (mediaRecorderRef.current?.state !== 'inactive') mediaRecorderRef.current?.stop();
+    if (requestRef.current) cancelAnimationFrame(requestRef.current);
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.srcObject = null;
     }
-    if (requestRef.current) window.cancelAnimationFrame(requestRef.current);
     setIsRecording(false);
   };
 
-  return { canvasRef, isRecording, startRecording, stopRecording, recordedChunks };
+  return { canvasRef, isRecording, startRecording, stopRecording };
 };
