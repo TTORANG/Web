@@ -1,12 +1,12 @@
 /**
  * @file VideoRecordPage.tsx
- * @description 영상 녹화 페이지 (웹캠/마이크 테스트 및 녹화)
+ * @description 영상 녹화 페이지 (테스트 -> 녹화 전환 및 스트림 전달)
  */
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Layout, Logo, Modal } from '@/components/common';
-import { DeviceTestSection } from '@/components/video';
+import { DeviceTestSection, RecordingSection } from '@/components/video';
 
 type RecordStep = 'TEST' | 'RECORDING';
 
@@ -15,7 +15,14 @@ export default function VideoRecordPage() {
   const navigate = useNavigate();
 
   const [step, setStep] = useState<RecordStep>('TEST');
+  const [camStream, setCamStream] = useState<MediaStream | null>(null);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
+
+  // 1. 장치 테스트 완료 시 스트림을 받고 녹화 단계로 전환
+  const handleTestComplete = (streams: { cam: MediaStream }) => {
+    setCamStream(streams.cam);
+    setStep('RECORDING');
+  };
 
   const handleExitClick = () => {
     setIsExitModalOpen(true);
@@ -32,49 +39,58 @@ export default function VideoRecordPage() {
       left={
         <>
           <Logo />
-          <span className="text-body-m-bold text-black">영상 녹화</span>
+          <span className="text-body-m-bold text-white">영상 녹화</span>
         </>
       }
       right={
         <button
           onClick={handleExitClick}
-          className="flex items-center px-4 py-1.5 text-caption-bold text-black hover:text-gray-600 transition-colors"
+          className="flex items-center px-4 py-1.5 text-caption-bold text-white hover:text-gray-400 transition-colors"
         >
           {step === 'RECORDING' ? '녹화 중단' : '종료'}
         </button>
       }
     >
-      <div className="relative h-full w-full">
-        {/* 본문 */}
-        <div className="h-full w-full flex flex-col items-center justify-center p-6 overflow-hidden">
-          <div className="w-full h-full max-w-250 flex flex-col items-center justify-center">
-            {step === 'TEST' ? (
-              <DeviceTestSection onNext={() => setStep('RECORDING')} />
-            ) : (
-              <h2 className="text-2xl font-bold text-black">녹화 진행 중</h2>
-            )}
+      <div className="relative h-full w-full bg-[#1a1c21]">
+        {step === 'TEST' ? (
+          /* 2. 장치 테스트 섹션 (onComplete 전달) */
+          <div className="h-full w-full flex items-center justify-center">
+            <DeviceTestSection onComplete={handleTestComplete} />
           </div>
-        </div>
+        ) : (
+          /* 3. 녹화 진행 섹션 (실제 캔버스 합성 및 녹화 수행) */
+          camStream && (
+            <RecordingSection
+              title="Q4 마케팅 전략 발표"
+              initialStream={camStream}
+              onFinish={(blob, logs) => {
+                console.log('녹화 완료 데이터:', blob, logs);
+                // 추후 Joy(W3P0Server) 파트 API 연동 지점
+              }}
+            />
+          )
+        )}
 
-        {/* 종료 확인 모달 */}
         <Modal
           isOpen={isExitModalOpen}
           onClose={() => setIsExitModalOpen(false)}
           title="테스트 종료"
           size="sm"
         >
-          <div className="flex flex-col gap-6">
-            <p className="text-sm">중단하시겠습니까?</p>
+          <div className="flex flex-col gap-6 p-4">
+            <p className="text-sm text-gray-600">
+              녹화를 중단하시겠습니까? 저장되지 않은 데이터는 삭제됩니다.
+            </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setIsExitModalOpen(false)}
-                className="flex-1 rounded-md bg-gray-100 py-3 font-bold text-gray-600 hover:bg-gray-200 transition-colors"
+                className="flex-1 rounded-md bg-gray-100 py-3 text-sm font-bold text-gray-600 hover:bg-gray-200"
               >
                 취소
               </button>
               <button
                 onClick={handleConfirmExit}
-                className="flex-1 rounded-md bg-error py-3 font-bold text-white hover:bg-error/90 transition-colors"
+                className="flex-1 rounded-md bg-red-500 py-3 text-sm font-bold text-white hover:bg-red-600"
               >
                 종료
               </button>

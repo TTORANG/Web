@@ -38,7 +38,7 @@ export const RecordingEmptySection = ({ onStart }: RecordingEmptySectionProps) =
             <span>•</span> 웹캠으로 발표 모습을 녹화합니다.
           </li>
           <li className="flex gap-2">
-            <span>•</span> 녹화 종료 후 AI 피드백을 받을 수 있습니다.
+            <span>•</span> 녹화 종료 후 피드백을 받을 수 있습니다.
           </li>
         </ul>
       </div>
