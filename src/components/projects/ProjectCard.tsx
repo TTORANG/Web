@@ -70,26 +70,26 @@ export default function ProjectCard({
 
         <div className="p-4">
           {/* 제목 및 업데이트 날짜 */}
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-h-[4.5rem]">
+          <div className="min-h-18">
+            <div className="flex justify-between gap-2">
               <h3 className="text-body-m-bold text-gray-800 line-clamp-2">{title}</h3>
-              <p className="mt-1 text-body-s text-gray-400">{formatRelativeTime(updatedAt)}</p>
+              {/* 더보기 */}
+              <div onClick={(e) => e.stopPropagation()} className="shrink-0 mt-1">
+                <Dropdown
+                  trigger={({ isOpen }) => (
+                    <div className="p-2 -m-2">
+                      <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-400')} />
+                    </div>
+                  )}
+                  items={dropdownItems}
+                  position="bottom"
+                  align="end"
+                  ariaLabel="더보기"
+                  menuClassName="w-32"
+                />
+              </div>
             </div>
-            {/* 더보기 */}
-            <div onClick={(e) => e.stopPropagation()} className="-m-2">
-              <Dropdown
-                trigger={({ isOpen }) => (
-                  <div className="p-2">
-                    <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-400')} />
-                  </div>
-                )}
-                items={dropdownItems}
-                position="bottom"
-                align="end"
-                ariaLabel="더보기"
-                menuClassName="w-32"
-              />
-            </div>
+            <p className="mt-1 text-body-s text-gray-400">{formatRelativeTime(updatedAt)}</p>
           </div>
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-x-1 gap-y-2 text-caption text-gray-600">
