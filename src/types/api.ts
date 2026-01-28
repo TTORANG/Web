@@ -15,8 +15,8 @@ export interface ApiError {
  * API 응답 래퍼
  */
 export interface ApiResponse<T> {
-  resultType: 'SUCCESS' | 'ERROR';
-  error: ApiError | null;
+  resultType: 'SUCCESS' | 'FAILURE';
+  reason: ApiError | null;
   success: T;
 }
 
