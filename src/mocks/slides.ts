@@ -25,11 +25,20 @@ const createDefaultSlide = (projectId: string, index: number): Slide => ({
   projectId,
   title: `슬라이드 ${index + 1}`,
   thumb: `/thumbnails/${projectId}/${index}.webp`,
-  script: '',
+  script: `${projectId} 프로젝트의 슬라이드 ${index + 1}번 내용입니다.`,
   opinions: [],
   history: [],
   emojiReactions: [],
 });
+
+/**
+ * P1 프로젝트: 70개 슬라이드의 전환 시간 (초 단위)
+ * - MOCK_VIDEO duration이 596초이므로, 균등하게 분배
+ * - 약 8.5초 간격으로 슬라이드 전환
+ */
+export const MOCK_SLIDE_CHANGE_TIMES = Array.from({ length: 70 }).map((_, i) =>
+  Math.floor(i * (596 / 70)),
+);
 
 // P1 프로젝트의 상세 목 데이터 (기존 데이터 유지)
 const p1Slides: Slide[] = [
@@ -453,7 +462,7 @@ Google, Kakao, Naver 로그인을 지원합니다.
 
 // 나머지 프로젝트 및 p1의 나머지 슬라이드 생성
 const generatedSlides = Object.entries(PROJECT_SLIDE_COUNTS).flatMap(([projectId, count]) => {
-  const startIdx = projectId === 'p1' ? 10 : 0;
+  const startIdx = projectId === 'p1' ? 10 : 0; // 0~9까지는 이미 있으니까
   return Array.from({ length: count - startIdx }).map((_, i) =>
     createDefaultSlide(projectId, i + startIdx),
   );

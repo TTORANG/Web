@@ -6,7 +6,7 @@
  * - VolumeControl: 볼륨 조절 + 시간 표시
  * - 재생/일시정지, 전체화면 버튼
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import pauseIcon from '@/assets/playbackBar-icons/pause-icon.webp';
 import playIcon from '@/assets/playbackBar-icons/play-icon.webp';
@@ -15,6 +15,7 @@ import ProgressBar from '@/components/feedback/ProgressBar';
 import VolumeControl from '@/components/feedback/video/VolumeControl';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Slide } from '@/types/slide';
+import { computeSegmentHighlightsFromFeedbacks } from '@/utils/video';
 
 interface VideoPlaybackBarProps {
   videoElement: HTMLVideoElement | null;
@@ -33,9 +34,16 @@ export default function VideoPlaybackBar({
 }: VideoPlaybackBarProps) {
   const currentTime = useVideoFeedbackStore((s) => s.currentTime);
   const updateCurrentTime = useVideoFeedbackStore((s) => s.updateCurrentTime);
+  const video = useVideoFeedbackStore((s) => s.video);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
+
+  // 5초 버킷별 세그먼트 하이라이트 계산 (feedbacks 기반)
+  const segmentHighlights = useMemo(() => {
+    if (!video) return [];
+    return computeSegmentHighlightsFromFeedbacks(video.feedbacks, video.duration);
+  }, [video]);
 
   // 비디오 play/pause 이벤트 구독
   useEffect(() => {
@@ -107,6 +115,7 @@ export default function VideoPlaybackBar({
         onSeek={handleSeek}
         slides={slides}
         slideChangeTimes={slideChangeTimes}
+        segmentHighlights={segmentHighlights}
       />
 
       {/* 조작 영역 */}

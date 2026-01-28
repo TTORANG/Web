@@ -12,7 +12,7 @@ export default function LoginModal() {
 
   return (
     <Modal isOpen={isLoginModalOpen} onClose={closeLoginModal} size="sm" noPadding>
-      <div className="px-6 pb-10 pt-4">
+      <div className="px-6 pb-8 pt-13">
         {/* Header */}
         <header className="flex flex-col items-center text-center">
           <div className="mb-3 grid h-10 w-10 place-items-center rounded-2xl">

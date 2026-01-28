@@ -48,7 +48,7 @@ export default function ReactionButtons({
           <button
             key={reaction.type}
             onClick={() => onToggleReaction(reaction.type)}
-            className={`flex items-center justify-between px-3 py-2 rounded-full border transition text-body-m focus-visible:outline-2 focus-visible:outline-main ${buttonClassName ?? ''} ${
+            className={`flex items-center justify-between w-42.25 px-3 py-2 rounded-full border transition text-body-m focus-visible:outline-2 focus-visible:outline-main ${buttonClassName ?? ''} ${
               isLastOdd ? 'col-span-2 justify-self-start' : ''
             } ${
               reaction.active
@@ -61,11 +61,9 @@ export default function ReactionButtons({
               {showLabel && <span className="whitespace-nowrap">{config.label}</span>}
             </div>
 
-            {reaction.count > 0 && (
-              <span className={reaction.active ? 'font-semibold' : ''}>
-                {formatReactionCount(reaction.count)}
-              </span>
-            )}
+            <span className={reaction.active ? 'font-semibold' : ''}>
+              {reaction.count > 0 ? formatReactionCount(reaction.count) : ''}
+            </span>
           </button>
         );
       })}

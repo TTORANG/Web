@@ -1,4 +1,4 @@
-import type { SortMode, ViewMode } from '@/types/home';
+import type { FilterMode, SortMode, ViewMode } from '@/types/home';
 import type { Project } from '@/types/project';
 
 import { CardView, ListView } from '../common';
@@ -14,7 +14,10 @@ type Props = {
   isLoading: boolean;
   query: string;
   onChangeQuery: (value: string) => void;
+  sort: SortMode;
   onChangeSort: (value: SortMode) => void;
+  filter: FilterMode;
+  onChangeFilter: (value: FilterMode) => void;
   viewMode: ViewMode;
   onChangeViewMode: (value: ViewMode) => void;
   projects: Project[];
@@ -24,7 +27,10 @@ export default function ProjectsSection({
   isLoading,
   query,
   onChangeQuery,
+  sort,
   onChangeSort,
+  filter,
+  onChangeFilter,
   viewMode,
   onChangeViewMode,
   projects,
@@ -44,12 +50,16 @@ export default function ProjectsSection({
       <ProjectHeader
         value={query}
         onChange={onChangeQuery}
+        sort={sort}
         onChangeSort={onChangeSort}
+        filter={filter}
+        onChangeFilter={onChangeFilter}
         viewMode={viewMode}
         onChangeViewMode={onChangeViewMode}
       />
 
       {viewMode === 'card' ? (
+        // 카드로 보기
         isLoading ? (
           <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
             {Array.from({ length: SKELETON_CARD_COUNT }).map((_, index) => (
@@ -64,7 +74,8 @@ export default function ProjectsSection({
             renderCard={(item) => <ProjectCard {...item} />}
           />
         )
-      ) : isLoading ? (
+      ) : // 리스트로 보기
+      isLoading ? (
         <div className="mt-6 flex flex-col gap-3">
           {Array.from({ length: SKELETON_LIST_COUNT }).map((_, index) => (
             // TODO
