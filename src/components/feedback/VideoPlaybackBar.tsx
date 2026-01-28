@@ -13,12 +13,9 @@ import playIcon from '@/assets/playbackBar-icons/play-icon.webp';
 import fullscreenIcon from '@/assets/playbackBar-icons/sizeupdown-icon.webp';
 import ProgressBar from '@/components/feedback/ProgressBar';
 import VolumeControl from '@/components/feedback/VolumeControl';
-import { REACTION_TYPES } from '@/constants/reaction';
-import { FEEDBACK_WINDOW } from '@/constants/video';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
-import type { ReactionType } from '@/types/script';
 import type { Slide } from '@/types/slide';
-import { computeSegmentHighlightsFromFeedbacks, getOverlappingFeedbacks } from '@/utils/video';
+import { computeSegmentHighlightsFromFeedbacks } from '@/utils/video';
 
 interface VideoPlaybackBarProps {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -41,35 +38,6 @@ export default function VideoPlaybackBar({
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
-
-  const topReaction = useMemo(() => {
-    if (!video) return null;
-
-    // useVideoReactions와 동일한 로직: currentTime ± FEEDBACK_WINDOW 범위 내 피드백
-    const overlapping = getOverlappingFeedbacks(video.feedbacks, currentTime, FEEDBACK_WINDOW);
-
-    if (overlapping.length === 0) return null;
-
-    const totals = REACTION_TYPES.reduce<Record<ReactionType, number>>(
-      (acc, type) => {
-        acc[type] = 0;
-        return acc;
-      },
-      {} as Record<ReactionType, number>,
-    );
-
-    overlapping.forEach((feedback) => {
-      feedback.reactions.forEach((reaction) => {
-        totals[reaction.type] += reaction.count || 0;
-      });
-    });
-
-    const top = (Object.entries(totals) as [ReactionType, number][])
-      .filter(([, count]) => count > 0)
-      .sort((a, b) => b[1] - a[1])[0];
-
-    return top ? { type: top[0], count: top[1] } : null;
-  }, [video, currentTime]);
 
   // 5초 버킷별 세그먼트 하이라이트 계산 (feedbacks 기반)
   const segmentHighlights = useMemo(() => {
@@ -148,7 +116,6 @@ export default function VideoPlaybackBar({
         onSeek={handleSeek}
         slides={slides}
         slideChangeTimes={slideChangeTimes}
-        topReaction={topReaction}
         segmentHighlights={segmentHighlights}
       />
 

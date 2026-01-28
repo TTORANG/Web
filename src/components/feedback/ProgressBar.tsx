@@ -9,16 +9,10 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { REACTION_CONFIG } from '@/constants/reaction';
-import type { ReactionType } from '@/types/script';
 import type { Slide } from '@/types/slide';
 import type { SegmentHighlight } from '@/types/video';
 import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
-
-interface TopReaction {
-  type: ReactionType;
-  count: number;
-}
 
 interface ProgressBarProps {
   /** 현재 재생 시간 (초) */
@@ -31,8 +25,6 @@ interface ProgressBarProps {
   slides?: Slide[];
   /** 슬라이드 전환 시간 배열 */
   slideChangeTimes?: number[];
-  /** 현재 시간 기준 가장 많은 리액션 */
-  topReaction?: TopReaction | null;
   /** 5초 버킷별 세그먼트 하이라이트 (재생바 위 이모지 표시) */
   segmentHighlights?: SegmentHighlight[];
 }
@@ -43,7 +35,6 @@ export default function ProgressBar({
   onSeek,
   slides,
   slideChangeTimes,
-  topReaction,
   segmentHighlights,
 }: ProgressBarProps) {
   const progressBarRef = useRef<HTMLDivElement>(null);
@@ -184,16 +175,6 @@ export default function ProgressBar({
         style={{ left: `${progressPercentage}%`, marginLeft: '-6px' }}
       />
 
-      {/* 현재 구간 최다 리액션 표시 */}
-      {topReaction && topReaction.count > 0 && (
-        <div
-          className="absolute -top-7 text-[12px] leading-none text-white"
-          style={{ left: `${progressPercentage}%`, transform: 'translateX(-50%)' }}
-        >
-          <span>{REACTION_CONFIG[topReaction.type].emoji}</span>
-        </div>
-      )}
-
       {/* 호버 시 썸네일 + 시간 미리보기 */}
       {(isHoveringBar || isScrubbing) && hoverX !== null && (
         <div
@@ -207,7 +188,7 @@ export default function ProgressBar({
             <img
               src={slides[hoverSlideIndex].thumb}
               alt="slide thumbnail"
-              className="h-22.5 w-40 min-w-40 shrink-0 rounded border border-[#ffffff]/15 bg-gray-200 object-cover"
+              className="h-22.5 w-40 min-w-40 shrink-0 rounded bg-gray-200 object-cover"
             />
           )}
 

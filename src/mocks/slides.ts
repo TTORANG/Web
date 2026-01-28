@@ -452,7 +452,7 @@ Google, Kakao, Naver 로그인을 지원합니다.
 
 // 나머지 프로젝트 및 p1의 나머지 슬라이드 생성
 const generatedSlides = Object.entries(PROJECT_SLIDE_COUNTS).flatMap(([projectId, count]) => {
-  const startIdx = projectId === 'p1' ? 10 : 0;
+  const startIdx = projectId === 'p1' ? 10 : 0; // 0~9까지는 이미 있으니까
   return Array.from({ length: count - startIdx }).map((_, i) =>
     createDefaultSlide(projectId, i + startIdx),
   );
