@@ -1,8 +1,14 @@
 ﻿import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { DonutChart, RecentCommentItem, SlideThumb, TopSlideCard } from '@/components/insight';
-import { REACTION_CONFIG, createDefaultReactions } from '@/constants/reaction';
+import {
+  DropOffAnalysisSection,
+  FeedbackDistributionSection,
+  RecentCommentItem,
+  SummaryStatsSection,
+  TopSlideCard,
+} from '@/components/insight';
+import { createDefaultReactions } from '@/constants/reaction';
 import { useSlides } from '@/hooks/queries/useSlides';
 import type { Reaction } from '@/types/script';
 
@@ -124,11 +130,6 @@ export default function InsightPage() {
   const maxDropOffCount = Math.max(...dropOffTimes.map((item) => item.count), 1);
   const getThumb = (slideIndex: number) => slides?.[slideIndex]?.thumb;
 
-  const trendLabel = (trend: Exclude<SummaryStat['trend'], undefined>) =>
-    trend === 'up' ? '↑' : '↓';
-  const trendColor = (trend: Exclude<SummaryStat['trend'], undefined>) =>
-    trend === 'up' ? 'text-main-variant1' : 'text-error';
-
   return (
     <div
       role="tabpanel"
@@ -141,93 +142,18 @@ export default function InsightPage() {
         <p className="text-body-s text-gray-600 mt-1">발표 자료 분석 결과를 확인하세요.</p>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        {summaryStats.map((stat, idx) => (
-          <div key={idx} className={`${cardBase} p-5`}>
-            <h3 className="text-body-s text-gray-800 mb-2">{stat.label}</h3>
-            <div className="text-2xl font-bold text-gray-800 mb-2">{stat.value}</div>
-            <div
-              className={`text-body-s flex items-center gap-1 ${
-                stat.trend ? trendColor(stat.trend) : 'text-gray-600'
-              }`}
-            >
-              {stat.trend && <span aria-hidden="true">{trendLabel(stat.trend)}</span>}
-              <span>{stat.sub}</span>
-            </div>
-          </div>
-        ))}
-      </div>
+      <SummaryStatsSection stats={summaryStats} cardClassName={cardBase} />
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className={`${cardBase} p-6`}>
-          <h3 className="text-body-s text-gray-800 mb-4">가장 많이 이탈한 슬라이드</h3>
-          <div className="space-y-4">
-            {dropOffSlides.map((item, idx) => (
-              <div key={idx} className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <SlideThumb
-                    src={getThumb(item.slideIndex)}
-                    alt={`${item.label} 썸네일`}
-                    className="w-16 h-10 rounded object-cover"
-                    fallbackClassName={`w-16 h-10 ${thumbBase}`}
-                  />
-                  <div>
-                    <div className="text-sm font-bold text-gray-800">{item.label}</div>
-                    <div className="text-xs text-gray-500">{item.desc}</div>
-                  </div>
-                </div>
-                <DonutChart percent={item.percent} />
-              </div>
-            ))}
-          </div>
-        </div>
+      <DropOffAnalysisSection
+        cardClassName={cardBase}
+        thumbClassName={thumbBase}
+        dropOffSlides={dropOffSlides}
+        dropOffTimes={dropOffTimes}
+        getThumb={getThumb}
+        maxDropOffCount={maxDropOffCount}
+      />
 
-        <div className={`${cardBase} p-6`}>
-          <h3 className="text-body-s text-gray-800 mb-4">가장 많이 이탈한 영상 시간</h3>
-          <div className="space-y-6">
-            {dropOffTimes.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-4">
-                <SlideThumb
-                  src={getThumb(item.slideIndex)}
-                  alt={`슬라이드 ${item.slideIndex + 1} 썸네일`}
-                  className="w-16 h-10 shrink-0 rounded object-cover"
-                  fallbackClassName={`w-16 h-10 ${thumbBase} shrink-0`}
-                />
-                <div className="flex-1">
-                  <div className="flex justify-between items-end mb-1">
-                    <div>
-                      <span className="text-sm font-bold text-gray-800 mr-2">{item.time}</span>
-                      <span className="text-xs text-gray-500">{item.desc}</span>
-                    </div>
-                    <span className="text-sm font-bold text-red-500">{item.count}명</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-1.5">
-                    <div
-                      className="bg-red-500 h-1.5 rounded-full"
-                      style={{ width: `${Math.round((item.count / maxDropOffCount) * 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className={`${cardBase} p-8 mb-6`}>
-        <h3 className="text-body-s text-gray-800 mb-6">피드백 분포</h3>
-        <div className="flex justify-around items-center">
-          {reactions.map((react, idx) => (
-            <div key={idx} className="flex flex-col items-center gap-2">
-              <div className="text-3xl p-3 rounded-full w-16 h-16 flex items-center justify-center">
-                {REACTION_CONFIG[react.type].emoji}
-              </div>
-              <div className="text-body-s text-gray-600">{REACTION_CONFIG[react.type].label}</div>
-              <div className="text-2xl font-bold text-gray-800">{react.count}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <FeedbackDistributionSection cardClassName={cardBase} reactions={reactions} />
 
       <div className="mb-6">
         <h3 className="text-body-s text-gray-800 mb-3">가장 많은 피드백을 받은 슬라이드</h3>
