@@ -6,12 +6,13 @@
 import { useShallow } from 'zustand/shallow';
 
 import { useSlideStore } from '@/stores/slideStore';
+import type { ScriptVersion } from '@/types/api';
 import type { Comment } from '@/types/comment';
-import type { History, Reaction } from '@/types/script';
+import type { Reaction } from '@/types/script';
 
 // 빈 배열 상수 (참조 안정성을 위해)
 const EMPTY_OPINIONS: Comment[] = [];
-const EMPTY_HISTORY: History[] = [];
+const EMPTY_HISTORY: ScriptVersion[] = [];
 const EMPTY_EMOJIS: Reaction[] = [];
 
 /** 슬라이드 ID 구독 */
@@ -45,8 +46,6 @@ export const useSlideActions = () =>
       initSlide: state.initSlide,
       updateSlide: state.updateSlide,
       updateScript: state.updateScript,
-      saveToHistory: state.saveToHistory,
-      restoreFromHistory: state.restoreFromHistory,
       deleteOpinion: state.deleteOpinion,
       addReply: state.addReply,
       setOpinions: state.setOpinions,

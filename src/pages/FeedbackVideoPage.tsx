@@ -6,33 +6,32 @@ import CommentList from '@/components/comment/CommentList';
 import { Spinner } from '@/components/common';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
 import ScriptSection from '@/components/feedback/ScriptSection';
-import SlideWebcamStage from '@/components/feedback/SlideWebcamStage';
+import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
+import { useVideoComments } from '@/hooks/useVideoComments';
+import { useVideoReactions } from '@/hooks/useVideoReactions';
 import { MOCK_SLIDES } from '@/mocks/slides';
 import { MOCK_VIDEO } from '@/mocks/videos';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Comment } from '@/types/comment';
 import { formatVideoTimestamp } from '@/utils/format';
 
-import { useVideoComments } from '../hooks/useVideoComments';
-import { useVideoReactions } from '../hooks/useVideoReactions';
-
 export default function FeedbackVideoPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const [isLoading, setIsLoading] = useState(true);
-  const [currentTime, setCurrentTime] = useState(0);
 
   const initVideo = useVideoFeedbackStore((state) => state.initVideo);
+  const currentTime = useVideoFeedbackStore((s) => s.currentTime);
+  const updateCurrentTime = useVideoFeedbackStore((s) => s.updateCurrentTime);
+  const requestSeek = useVideoFeedbackStore((s) => s.requestSeek);
 
   const { comments, addComment, addReply, deleteComment } = useVideoComments();
   const { reactions, toggleReaction } = useVideoReactions();
-
-  const requestSeek = useVideoFeedbackStore((s) => s.requestSeek);
 
   const [commentDraft, setCommentDraft] = useState('');
 
   // URL의 projectId를 활용해 해당 프로젝트 슬라이드만 필터링
   const projectSlides = useMemo(() => {
-    const targetProjectId = `p${projectId ?? '1'}`;
+    const targetProjectId = projectId ?? 'p1';
     return MOCK_SLIDES.filter((slide) => slide.projectId === targetProjectId);
   }, [projectId]);
 
@@ -51,7 +50,7 @@ export default function FeedbackVideoPage() {
 
   const handleAddComment = () => {
     if (!commentDraft.trim()) return;
-    addComment(commentDraft);
+    addComment(commentDraft, currentTime);
     setCommentDraft('');
   };
 
@@ -88,7 +87,7 @@ export default function FeedbackVideoPage() {
           slides={projectSlides}
           slideChangeTimes={slideChangeTimes}
           webcamVideoUrl={MOCK_VIDEO.videoUrl}
-          onTimeUpdate={setCurrentTime}
+          onTimeUpdate={updateCurrentTime}
         />
 
         {/* 대본 섹션 */}
@@ -96,6 +95,7 @@ export default function FeedbackVideoPage() {
           slides={projectSlides}
           slideChangeTimes={slideChangeTimes}
           currentTime={currentTime}
+          onSeek={requestSeek}
         />
       </div>
 
@@ -118,7 +118,11 @@ export default function FeedbackVideoPage() {
             className="items-end w-86"
             initialValueOnFocus={timestampPrefix}
           />
-          <ReactionButtons reactions={reactions} onToggleReaction={toggleReaction} />
+          <ReactionButtons
+            reactions={reactions}
+            onToggleReaction={toggleReaction}
+            layout="grid-2"
+          />
         </div>
       </aside>
     </div>

@@ -6,7 +6,7 @@
  * - 호버 시 썸네일 + 시간 미리보기
  * - 전역 마우스 이벤트로 바 밖에서도 스크러빙 가능
  */
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { REACTION_CONFIG } from '@/constants/reaction';
 import type { Slide } from '@/types/slide';
@@ -40,46 +40,55 @@ export default function ProgressBar({
   const progressBarRef = useRef<HTMLDivElement>(null);
 
   const [isScrubbing, setIsScrubbing] = useState(false);
+  const [scrubPercent, setScrubPercent] = useState<number | null>(null);
   const [hoverX, setHoverX] = useState<number | null>(null);
   const [isHoveringBar, setIsHoveringBar] = useState(false);
+  const [isHoveringEmoji, setIsHoveringEmoji] = useState(false);
   const [hoverSlideIndex, setHoverSlideIndex] = useState<number | null>(null);
 
   const max = Math.max(duration, 0);
-  const progressPercentage = max > 0 ? (currentTime / max) * 100 : 0;
-  const slideMarkers = (slideChangeTimes ?? [])
-    .filter((t) => t > 0 && t < max)
-    .map((t) => ({ time: t, percent: max > 0 ? (t / max) * 100 : 0 }));
+  const basePercent = max > 0 ? (currentTime / max) * 100 : 0;
+  const progressPercentage = scrubPercent !== null ? scrubPercent * 100 : basePercent;
 
   // 마우스 X 좌표 → 비율 (0~1) 변환
-  const getPercentFromClientX = (clientX: number) => {
-    const bar = progressBarRef.current;
-    if (!bar || !max) return 0;
+  const getPercentFromClientX = useCallback(
+    (clientX: number) => {
+      const bar = progressBarRef.current;
+      if (!bar || !max) return 0;
 
-    const rect = bar.getBoundingClientRect();
-    const raw = (clientX - rect.left) / rect.width;
-    return Math.max(0, Math.min(raw, 1));
-  };
+      const rect = bar.getBoundingClientRect();
+      const raw = (clientX - rect.left) / rect.width;
+      return Math.max(0, Math.min(raw, 1));
+    },
+    [max],
+  );
 
   // 슬라이드 인덱스 계산 헬퍼
-  const computeSlideIndex = (time: number): number | null => {
-    if (!slides || !slides.length) return null;
+  const computeSlideIndex = useCallback(
+    (time: number): number | null => {
+      if (!slides || !slides.length) return null;
 
-    const times =
-      slideChangeTimes && slideChangeTimes.length > 0
-        ? slideChangeTimes
-        : slides.map((_, i) => i * 10);
+      const times =
+        slideChangeTimes && slideChangeTimes.length > 0
+          ? slideChangeTimes
+          : slides.map((_, i) => i * 10);
 
-    return getSlideIndexFromTime(time, times, slides.length - 1);
-  };
+      return getSlideIndexFromTime(time, times, slides.length - 1);
+    },
+    [slides, slideChangeTimes],
+  );
 
   // hover 상태 업데이트 헬퍼
-  const updateHoverState = (clientX: number) => {
-    const p = getPercentFromClientX(clientX);
-    setHoverX(p);
+  const updateHoverState = useCallback(
+    (clientX: number) => {
+      const p = getPercentFromClientX(clientX);
+      setHoverX(p);
 
-    const hoverTime = p * max;
-    setHoverSlideIndex(computeSlideIndex(hoverTime));
-  };
+      const hoverTime = p * max;
+      setHoverSlideIndex(computeSlideIndex(hoverTime));
+    },
+    [getPercentFromClientX, max, computeSlideIndex],
+  );
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const p = getPercentFromClientX(e.clientX);
@@ -89,14 +98,18 @@ export default function ProgressBar({
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     updateHoverState(e.clientX);
     if (isScrubbing) {
-      onSeek(getPercentFromClientX(e.clientX) * max);
+      const p = getPercentFromClientX(e.clientX);
+      setScrubPercent(p);
+      onSeek(p * max);
     }
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
+    const p = getPercentFromClientX(e.clientX);
     setIsScrubbing(true);
-    onSeek(getPercentFromClientX(e.clientX) * max);
+    setScrubPercent(p);
+    onSeek(p * max);
   };
 
   const handleMouseEnter = () => setIsHoveringBar(true);
@@ -113,10 +126,15 @@ export default function ProgressBar({
 
     const onMove = (e: MouseEvent) => {
       updateHoverState(e.clientX);
-      onSeek(getPercentFromClientX(e.clientX) * max);
+      const p = getPercentFromClientX(e.clientX);
+      setScrubPercent(p);
+      onSeek(p * max);
     };
 
-    const onUp = () => setIsScrubbing(false);
+    const onUp = () => {
+      setIsScrubbing(false);
+      setScrubPercent(null);
+    };
 
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
@@ -125,7 +143,7 @@ export default function ProgressBar({
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
     };
-  }, [isScrubbing, max, onSeek]);
+  }, [isScrubbing, max, onSeek, getPercentFromClientX, updateHoverState]);
 
   return (
     <div
@@ -135,16 +153,19 @@ export default function ProgressBar({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onMouseDown={handleMouseDown}
-      className="group relative h-1 w-full cursor-pointer rounded-full bg-[rgba(26,26,26,0.66)] transition-all duration-150 hover:h-1.5 hover:ring-2 hover:ring-[#4F5BFF]/30 select-none"
+      className="group relative h-1 w-full cursor-pointer rounded-full bg-[rgba(26,26,26,0.66)] transition-all duration-150 hover:h-1.5 hover:ring-2 hover:ring-[#4F5BFF]/30 select-none before:content-[''] before:absolute before:-inset-y-3 before:inset-x-0"
     >
-      {/* 슬라이드 전환 시점 마커 */}
-      {slideMarkers.map((marker) => (
-        <div
-          key={`slide-marker-${marker.time}`}
-          className="absolute top-1/2 h-1 w-0.5 -translate-y-1/2 bg-[#FFFFFF]"
-          style={{ left: `${marker.percent}%`, marginLeft: '-1px' }}
-        />
-      ))}
+      {/* 이모지 반응이 있는 위치의 마커 */}
+      {segmentHighlights?.map((segment) => {
+        const percent = max > 0 ? (segment.startTime / max) * 100 : 0;
+        return (
+          <div
+            key={`reaction-marker-${segment.startTime}`}
+            className="absolute top-1/2 h-1 w-0.5 -translate-y-1/2 bg-[#FFFFFF]"
+            style={{ left: `${percent}%`, marginLeft: '-1px' }}
+          />
+        );
+      })}
 
       {/* 세그먼트 하이라이트 (5초 버킷별 대표 리액션) */}
       {segmentHighlights?.map((segment) => {
@@ -152,13 +173,20 @@ export default function ProgressBar({
         return (
           <div
             key={`segment-${segment.startTime}`}
-            className="absolute -top-6 flex flex-col items-center pointer-events-none"
+            className="absolute -top-7 z-10 flex flex-col gap-1 items-center -translate-x-1/2 cursor-pointer"
             style={{ left: `${leftPercent}%` }}
             title={`${REACTION_CONFIG[segment.topReactionType].label} (${segment.count})`}
+            onMouseEnter={() => setIsHoveringEmoji(true)}
+            onMouseLeave={() => setIsHoveringEmoji(false)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSeek(segment.startTime);
+            }}
           >
-            <span className="text-sm leading-none drop-shadow-md">
+            <span className="text-xs leading-none">
               {REACTION_CONFIG[segment.topReactionType].emoji}
             </span>
+            <div className="h-1 w-px bg-white" />
           </div>
         );
       })}
@@ -171,12 +199,12 @@ export default function ProgressBar({
 
       {/* 진행 핸들 */}
       <div
-        className="absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-[#4F5BFF] shadow transition-all duration-150 group-hover:h-4 group-hover:w-4"
+        className="absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-[#4F5BFF] shadow transition-[width,height] duration-150 group-hover:h-4 group-hover:w-4"
         style={{ left: `${progressPercentage}%`, marginLeft: '-6px' }}
       />
 
       {/* 호버 시 썸네일 + 시간 미리보기 */}
-      {(isHoveringBar || isScrubbing) && hoverX !== null && (
+      {(isHoveringBar || isScrubbing) && !isHoveringEmoji && hoverX !== null && (
         <div
           className="absolute -top-33 flex flex-col items-center gap-2 pointer-events-none"
           style={{

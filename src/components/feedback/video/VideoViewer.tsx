@@ -13,7 +13,7 @@ interface VideoViewerProps {
 
 export default function VideoViewer({ videoUrl, videoTitle }: VideoViewerProps) {
   // 비디오 동기화 훅 (네이티브 controls 사용)
-  const { videoRef, handleTimeUpdate } = useVideoSync({ useNativeControls: true });
+  const { setVideoRef, handleTimeUpdate } = useVideoSync({ useNativeControls: true });
 
   return (
     <section className="flex-1 min-w-0">
@@ -25,7 +25,7 @@ export default function VideoViewer({ videoUrl, videoTitle }: VideoViewerProps) 
 
       <div className="w-full">
         <video
-          ref={videoRef}
+          ref={setVideoRef}
           src={videoUrl}
           controls
           className="w-full rounded-2xl bg-[#000000]"

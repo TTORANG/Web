@@ -1,5 +1,5 @@
 /**
- * @file FeedbackSlidePage.tsx
+ * @file FeedbackSlidePage
  * @description 피드백 슬라이드 페이지
  *
  * 슬라이드 뷰어, 댓글 목록, 리액션 버튼을 포함합니다.

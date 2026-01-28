@@ -4,7 +4,7 @@
  */
 import type { Slide } from '@/types/slide';
 
-import SlideInfoPanel from './SlideInfoPanel';
+import SlideInfoPanel from './slide/SlideInfoPanel';
 
 interface SlideViewerProps {
   slide: Slide | undefined;

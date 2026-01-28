@@ -57,11 +57,6 @@ export const getTabPath = (projectId: string, tab: Tab, slideId?: string): strin
   }
 };
 
-export const getPresentationPath = (projectId: string, slideId?: string): string => {
-  const targetSlideId = slideId ?? getLastSlideId(projectId);
-  return `/${projectId}/fslide/${targetSlideId}`;
-};
-
 /**
  * URL 경로에서 현재 활성화된 탭을 추출합니다.
  * @param pathname - 현재 URL 경로

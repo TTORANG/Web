@@ -10,7 +10,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import clsx from 'clsx';
 
-import VideoPlaybackBar from '@/components/feedback/VideoPlaybackBar';
+import VideoPlaybackBar from '@/components/feedback/video/VideoPlaybackBar';
 import { useVideoSync } from '@/hooks/useVideoSync';
 import type { Slide } from '@/types/slide';
 import { getSlideIndexFromTime } from '@/utils/video';
@@ -30,8 +30,8 @@ export default function SlideWebcamStage({
 }: SlideWebcamStageProps) {
   const stageRootRef = useRef<HTMLDivElement | null>(null);
 
-  // 비디오 동기화 훅 (videoRef, duration, currentTime, seekTo 처리)
-  const { videoRef, duration, currentTime } = useVideoSync();
+  // 비디오 동기화 훅 (콜백 ref, duration, currentTime, seekTo 처리)
+  const { setVideoRef, videoElement, duration, currentTime } = useVideoSync();
 
   const [layout, setLayout] = useState<'slide-main' | 'webcam-main'>('slide-main');
   const isSlideMain = layout === 'slide-main';
@@ -50,6 +50,15 @@ export default function SlideWebcamStage({
   }, [currentTime, slideChangeTimes, slides]);
 
   const activeSlide = slides[activeIndex];
+
+  // slides가 비어있으면 렌더링하지 않음
+  if (!activeSlide) {
+    return (
+      <div className="flex-1 min-w-0 flex items-center justify-center bg-gray-900 rounded-xl aspect-video">
+        <span className="text-gray-400">슬라이드가 없습니다</span>
+      </div>
+    );
+  }
 
   // 토글 함수 (PiP 클릭 / 버튼 클릭 공통 사용)
   const toggleLayout = () => {
@@ -116,7 +125,7 @@ export default function SlideWebcamStage({
           )}
         >
           <video
-            ref={videoRef}
+            ref={setVideoRef}
             src={webcamVideoUrl}
             className="h-full w-full object-cover"
             playsInline
@@ -141,7 +150,7 @@ export default function SlideWebcamStage({
         {/* 재생바/조작 오버레이 - overflow-visible로 썸네일 미리보기 표시 */}
         <div className="absolute bottom-0 left-0 right-0 z-40 overflow-visible bg-linear-to-t from-[#000000]/60 to-transparent pt-8 pb-4 px-4">
           <VideoPlaybackBar
-            videoRef={videoRef as React.RefObject<HTMLVideoElement>}
+            videoElement={videoElement}
             duration={duration}
             fullscreenTargetRef={stageRootRef as React.RefObject<HTMLElement>}
             slides={slides}

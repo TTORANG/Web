@@ -15,6 +15,7 @@ interface ScriptSectionProps {
   slides: Slide[];
   slideChangeTimes: number[];
   currentTime: number;
+  onSeek?: (time: number) => void;
   onScroll?: () => void;
 }
 
@@ -22,6 +23,7 @@ export default function ScriptSection({
   slides,
   slideChangeTimes,
   currentTime,
+  onSeek,
   onScroll,
 }: ScriptSectionProps) {
   const scriptSectionRef = useRef<HTMLDivElement>(null);
@@ -103,7 +105,8 @@ export default function ScriptSection({
               backgroundColor: isCurrentSlide ? '#FFFFFF' : '#343841',
               scrollMarginTop: '0px', // scrollIntoView 시 상단에 딱 붙도록
             }}
-            className="flex gap-3 px-4 py-3 rounded-lg transition-colors text-body-s"
+            onClick={() => onSeek?.(slideStartTime)}
+            className="flex gap-3 px-4 py-3 rounded-lg transition-colors text-body-s cursor-pointer"
           >
             <div
               style={{

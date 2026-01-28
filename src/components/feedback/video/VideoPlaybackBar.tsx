@@ -6,19 +6,19 @@
  * - VolumeControl: 볼륨 조절 + 시간 표시
  * - 재생/일시정지, 전체화면 버튼
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import pauseIcon from '@/assets/playbackBar-icons/pause-icon.webp';
 import playIcon from '@/assets/playbackBar-icons/play-icon.webp';
 import fullscreenIcon from '@/assets/playbackBar-icons/sizeupdown-icon.webp';
 import ProgressBar from '@/components/feedback/ProgressBar';
-import VolumeControl from '@/components/feedback/VolumeControl';
+import VolumeControl from '@/components/feedback/video/VolumeControl';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Slide } from '@/types/slide';
-import { computeSegmentHighlightsFromFeedbacks } from '@/utils/video';
+import { computeUserActiveHighlights } from '@/utils/video';
 
 interface VideoPlaybackBarProps {
-  videoRef: React.RefObject<HTMLVideoElement>;
+  videoElement: HTMLVideoElement | null;
   duration: number;
   fullscreenTargetRef?: React.RefObject<HTMLElement>;
   slides?: Slide[];
@@ -26,7 +26,7 @@ interface VideoPlaybackBarProps {
 }
 
 export default function VideoPlaybackBar({
-  videoRef,
+  videoElement,
   duration,
   fullscreenTargetRef,
   slides,
@@ -42,61 +42,75 @@ export default function VideoPlaybackBar({
   // 5초 버킷별 세그먼트 하이라이트 계산 (feedbacks 기반)
   const segmentHighlights = useMemo(() => {
     if (!video) return [];
-    return computeSegmentHighlightsFromFeedbacks(video.feedbacks, video.duration);
+    return computeUserActiveHighlights(video.feedbacks, video.duration);
   }, [video]);
 
   // 비디오 play/pause 이벤트 구독
   useEffect(() => {
-    const el = videoRef.current;
-    if (!el) return;
+    if (!videoElement) return;
 
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
 
-    el.addEventListener('play', onPlay);
-    el.addEventListener('pause', onPause);
+    videoElement.addEventListener('play', onPlay);
+    videoElement.addEventListener('pause', onPause);
 
-    setIsPlaying(!el.paused);
-    setVolume(el.volume ?? 1);
+    setIsPlaying(!videoElement.paused);
+    setVolume(videoElement.volume ?? 1);
 
     return () => {
-      el.removeEventListener('play', onPlay);
-      el.removeEventListener('pause', onPause);
+      videoElement.removeEventListener('play', onPlay);
+      videoElement.removeEventListener('pause', onPause);
     };
-  }, [videoRef]);
+  }, [videoElement]);
 
   const handleSeek = (time: number) => {
-    const el = videoRef.current;
-    if (!el) return;
+    if (!videoElement) return;
 
-    el.currentTime = time;
+    // eslint-disable-next-line react-hooks/immutability -- DOM API
+    videoElement.currentTime = time;
     updateCurrentTime(time);
   };
 
-  const togglePlay = async () => {
-    const el = videoRef.current;
-    if (!el) return;
+  const togglePlay = useCallback(async () => {
+    if (!videoElement) return;
 
-    if (el.paused) {
+    if (videoElement.paused) {
       try {
-        await el.play();
+        await videoElement.play();
       } catch {
         // autoplay 정책 등
       }
     } else {
-      el.pause();
+      videoElement.pause();
     }
-  };
+  }, [videoElement]);
+
+  // Spacebar로 재생/일시정지 토글
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code !== 'Space') return;
+
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+      e.preventDefault();
+      void togglePlay();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [togglePlay]);
 
   const handleVolumeChange = (v: number) => {
-    const el = videoRef.current;
     setVolume(v);
-    if (el) el.volume = v;
+    // eslint-disable-next-line react-hooks/immutability -- DOM API
+    if (videoElement) videoElement.volume = v;
   };
 
   const toggleFullscreen = async () => {
     const target = fullscreenTargetRef?.current;
-    const root = target ?? (videoRef.current?.closest('[data-stage-root]') as HTMLElement | null);
+    const root = target ?? (videoElement?.closest('[data-stage-root]') as HTMLElement | null);
 
     if (!root) return;
 

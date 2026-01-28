@@ -1,15 +1,16 @@
 /**
- * @file Opinion.tsx
+ * @file CommentPopover.tsx
  * @description 의견 목록 팝오버
  *
  * 대본에 대한 팀원들의 의견을 보여주고, 답글을 달 수 있습니다.
  * useComments 훅을 통해 API와 동기화합니다.
  */
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import clsx from 'clsx';
 
 import Comment from '@/components/comment/Comment';
+import { CommentProvider } from '@/components/comment/CommentContext';
 import { Popover, Skeleton } from '@/components/common';
 import { useSlideOpinions } from '@/hooks';
 import { useComments } from '@/hooks/useComments';
@@ -22,29 +23,43 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
   const opinions = useSlideOpinions();
   const { comments: treeOpinions, addReply, deleteComment } = useComments();
 
-  const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
-  const [replyText, setReplyText] = useState('');
+  const [replyingToId, setReplyingToId] = useState<string | null>(null);
+  const [replyDraft, setReplyDraft] = useState('');
 
-  /**
-   * 답글을 등록합니다.
-   * @param parentId - 답글을 달 의견의 ID
-   */
-  const handleReplySubmit = (parentId: string) => {
-    if (!replyText.trim()) return;
-    addReply(parentId, replyText);
-    setActiveReplyId(null);
-    setReplyText('');
-  };
+  const submitReply = useCallback(
+    (targetId: string) => {
+      if (replyDraft.trim()) {
+        addReply(targetId, replyDraft);
+      }
+      setReplyingToId(null);
+      setReplyDraft('');
+    },
+    [replyDraft, addReply],
+  );
 
-  const handleToggleReply = (id: string) => {
-    setActiveReplyId(activeReplyId === id ? null : id);
-    setReplyText('');
-  };
+  const toggleReply = useCallback((targetId: string) => {
+    setReplyingToId((prev) => (prev === targetId ? null : targetId));
+    setReplyDraft('');
+  }, []);
 
-  const handleCancelReply = () => {
-    setActiveReplyId(null);
-    setReplyText('');
-  };
+  const cancelReply = useCallback(() => {
+    setReplyingToId(null);
+    setReplyDraft('');
+  }, []);
+
+  const contextValue = useMemo(
+    () => ({
+      replyingToId,
+      replyDraft,
+      setReplyDraft,
+      toggleReply,
+      submitReply,
+      cancelReply,
+      deleteComment,
+      goToRef: () => {}, // 슬라이드 페이지에서는 ref 이동 불필요
+    }),
+    [replyingToId, replyDraft, toggleReply, submitReply, cancelReply, deleteComment],
+  );
 
   return (
     <Popover
@@ -93,26 +108,13 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
       </div>
 
       {/* 의견 목록 */}
-      <div className="h-80 overflow-y-auto">
-        {treeOpinions.map((opinion) => (
-          <Comment
-            key={opinion.id}
-            comment={opinion}
-            isActive={activeReplyId === opinion.id}
-            replyText={replyText}
-            onReplyTextChange={setReplyText}
-            onToggleReply={() => handleToggleReply(opinion.id)}
-            onSubmitReply={() => handleReplySubmit(opinion.id)}
-            onCancelReply={handleCancelReply}
-            onDelete={() => deleteComment(opinion.id)}
-            onDeleteComment={deleteComment}
-            replyingToId={activeReplyId}
-            setReplyingToId={setActiveReplyId}
-            onReplySubmit={handleReplySubmit}
-            onToggleReplyById={handleToggleReply}
-          />
-        ))}
-      </div>
+      <CommentProvider value={contextValue}>
+        <div className="h-80 overflow-y-auto">
+          {treeOpinions.map((opinion) => (
+            <Comment key={opinion.id} comment={opinion} />
+          ))}
+        </div>
+      </CommentProvider>
     </Popover>
   );
 }
