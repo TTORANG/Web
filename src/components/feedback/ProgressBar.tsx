@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from 'react';
 import { REACTION_CONFIG } from '@/constants/reaction';
 import type { ReactionType } from '@/types/script';
 import type { Slide } from '@/types/slide';
+import type { SegmentHighlight } from '@/types/video';
 import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
 
@@ -32,6 +33,8 @@ interface ProgressBarProps {
   slideChangeTimes?: number[];
   /** 현재 시간 기준 가장 많은 리액션 */
   topReaction?: TopReaction | null;
+  /** 5초 버킷별 세그먼트 하이라이트 (재생바 위 이모지 표시) */
+  segmentHighlights?: SegmentHighlight[];
 }
 
 export default function ProgressBar({
@@ -41,6 +44,7 @@ export default function ProgressBar({
   slides,
   slideChangeTimes,
   topReaction,
+  segmentHighlights,
 }: ProgressBarProps) {
   const progressBarRef = useRef<HTMLDivElement>(null);
 
@@ -150,6 +154,24 @@ export default function ProgressBar({
           style={{ left: `${marker.percent}%`, marginLeft: '-1px' }}
         />
       ))}
+
+      {/* 세그먼트 하이라이트 (5초 버킷별 대표 리액션) */}
+      {segmentHighlights?.map((segment) => {
+        const leftPercent = max > 0 ? (segment.startTime / max) * 100 : 0;
+        return (
+          <div
+            key={`segment-${segment.startTime}`}
+            className="absolute -top-6 flex flex-col items-center pointer-events-none"
+            style={{ left: `${leftPercent}%` }}
+            title={`${REACTION_CONFIG[segment.topReactionType].label} (${segment.count})`}
+          >
+            <span className="text-sm leading-none drop-shadow-md">
+              {REACTION_CONFIG[segment.topReactionType].emoji}
+            </span>
+          </div>
+        );
+      })}
+
       {/* 진행 바 */}
       <div
         className="absolute h-full rounded-full bg-[#4F5BFF]"

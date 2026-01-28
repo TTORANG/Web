@@ -18,7 +18,7 @@ import { FEEDBACK_WINDOW } from '@/constants/video';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { ReactionType } from '@/types/script';
 import type { Slide } from '@/types/slide';
-import { getOverlappingFeedbacks } from '@/utils/video';
+import { computeSegmentHighlightsFromFeedbacks, getOverlappingFeedbacks } from '@/utils/video';
 
 interface VideoPlaybackBarProps {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -70,6 +70,12 @@ export default function VideoPlaybackBar({
 
     return top ? { type: top[0], count: top[1] } : null;
   }, [video, currentTime]);
+
+  // 5초 버킷별 세그먼트 하이라이트 계산 (feedbacks 기반)
+  const segmentHighlights = useMemo(() => {
+    if (!video) return [];
+    return computeSegmentHighlightsFromFeedbacks(video.feedbacks, video.duration);
+  }, [video]);
 
   // 비디오 play/pause 이벤트 구독
   useEffect(() => {
@@ -143,6 +149,7 @@ export default function VideoPlaybackBar({
         slides={slides}
         slideChangeTimes={slideChangeTimes}
         topReaction={topReaction}
+        segmentHighlights={segmentHighlights}
       />
 
       {/* 조작 영역 */}
