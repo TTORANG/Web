@@ -65,6 +65,7 @@ export default function ProjectsSection({
       />
 
       {isLoading ? (
+        // 스켈레톤
         viewMode === 'card' ? (
           <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
             {Array.from({ length: SKELETON_CARD_COUNT }).map((_, index) => (
@@ -86,22 +87,34 @@ export default function ProjectsSection({
       ) : !hasResults ? (
         // 검색/필터 결과가 0개일 때 '결과 없음'
         <div className=" flex items-center justify-center mt-10">
-          <p className="text-body-m text-gray-500">검색/필터 결과가 없습니다.</p>
+          <p className="text-body-m text-gray-500">
+            &apos;{query}&apos;(으)로 검색한 결과가 존재하지 않습니다.
+          </p>
         </div>
       ) : viewMode === 'card' ? (
-        <CardView
-          items={projects}
-          getKey={(item) => item.id}
-          className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3"
-          renderCard={(item) => <ProjectCard {...item} highlightQuery={query} />}
-        />
+        <div>
+          <p className="ml-3 mt-3 text-body-s text-gray-700">
+            &apos;{query}&apos;(으)로 검색한 결과를 {query.length}개 찾았습니다.
+          </p>
+          <CardView
+            items={projects}
+            getKey={(item) => item.id}
+            className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3"
+            renderCard={(item) => <ProjectCard {...item} highlightQuery={query} />}
+          />
+        </div>
       ) : (
-        <ListView
-          items={projects}
-          getKey={(item) => item.id}
-          className="mt-6 flex flex-col gap-3"
-          renderInfo={(item) => <ProjectList {...item} highlightQuery={query} />}
-        />
+        <div>
+          <p className="ml-3 mt-3 text-body-s text-gray-700">
+            &apos;{query}&apos;(으)로 검색한 결과를 {query.length}개 찾았습니다.
+          </p>
+          <ListView
+            items={projects}
+            getKey={(item) => item.id}
+            className="mt-6 flex flex-col gap-3"
+            renderInfo={(item) => <ProjectList {...item} highlightQuery={query} />}
+          />
+        </div>
       )}
     </section>
   );
