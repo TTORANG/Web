@@ -26,7 +26,7 @@ export default function TopSlideCard({
       {thumbUrl ? (
         <img src={thumbUrl} alt={`${title} 썸네일`} className="h-60 w-full object-cover" />
       ) : (
-        <div className={`h-32 w-full ${thumbFallbackClassName}`} aria-hidden="true" />
+        <div className={`h-60 w-full ${thumbFallbackClassName}`} aria-hidden="true" />
       )}
       <div className="p-4">
         <div className="text-body-m-bold text-gray-800 mb-2">{title}</div>
