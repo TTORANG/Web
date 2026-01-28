@@ -8,7 +8,9 @@
  */
 import { useEffect, useRef, useState } from 'react';
 
+import { REACTION_CONFIG } from '@/constants/reaction';
 import type { Slide } from '@/types/slide';
+import type { SegmentHighlight } from '@/types/video';
 import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
 
@@ -23,6 +25,8 @@ interface ProgressBarProps {
   slides?: Slide[];
   /** 슬라이드 전환 시간 배열 */
   slideChangeTimes?: number[];
+  /** 5초 버킷별 세그먼트 하이라이트 (재생바 위 이모지 표시) */
+  segmentHighlights?: SegmentHighlight[];
 }
 
 export default function ProgressBar({
@@ -31,6 +35,7 @@ export default function ProgressBar({
   onSeek,
   slides,
   slideChangeTimes,
+  segmentHighlights,
 }: ProgressBarProps) {
   const progressBarRef = useRef<HTMLDivElement>(null);
 
@@ -41,6 +46,9 @@ export default function ProgressBar({
 
   const max = Math.max(duration, 0);
   const progressPercentage = max > 0 ? (currentTime / max) * 100 : 0;
+  const slideMarkers = (slideChangeTimes ?? [])
+    .filter((t) => t > 0 && t < max)
+    .map((t) => ({ time: t, percent: max > 0 ? (t / max) * 100 : 0 }));
 
   // 마우스 X 좌표 → 비율 (0~1) 변환
   const getPercentFromClientX = (clientX: number) => {
@@ -127,17 +135,43 @@ export default function ProgressBar({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onMouseDown={handleMouseDown}
-      className="group relative h-1 w-full cursor-pointer rounded-full bg-gray-700/70 transition-all duration-150 hover:h-1.5 hover:ring-2 hover:ring-blue-500/30 select-none"
+      className="group relative h-1 w-full cursor-pointer rounded-full bg-[rgba(26,26,26,0.66)] transition-all duration-150 hover:h-1.5 hover:ring-2 hover:ring-[#4F5BFF]/30 select-none"
     >
+      {/* 슬라이드 전환 시점 마커 */}
+      {slideMarkers.map((marker) => (
+        <div
+          key={`slide-marker-${marker.time}`}
+          className="absolute top-1/2 h-1 w-0.5 -translate-y-1/2 bg-[#FFFFFF]"
+          style={{ left: `${marker.percent}%`, marginLeft: '-1px' }}
+        />
+      ))}
+
+      {/* 세그먼트 하이라이트 (5초 버킷별 대표 리액션) */}
+      {segmentHighlights?.map((segment) => {
+        const leftPercent = max > 0 ? (segment.startTime / max) * 100 : 0;
+        return (
+          <div
+            key={`segment-${segment.startTime}`}
+            className="absolute -top-6 flex flex-col items-center pointer-events-none"
+            style={{ left: `${leftPercent}%` }}
+            title={`${REACTION_CONFIG[segment.topReactionType].label} (${segment.count})`}
+          >
+            <span className="text-sm leading-none drop-shadow-md">
+              {REACTION_CONFIG[segment.topReactionType].emoji}
+            </span>
+          </div>
+        );
+      })}
+
       {/* 진행 바 */}
       <div
-        className="absolute h-full rounded-full bg-blue-600"
+        className="absolute h-full rounded-full bg-[#4F5BFF]"
         style={{ width: `${progressPercentage}%` }}
       />
 
       {/* 진행 핸들 */}
       <div
-        className="absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-blue-600 shadow transition-all duration-150 group-hover:h-4 group-hover:w-4"
+        className="absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-[#4F5BFF] shadow transition-all duration-150 group-hover:h-4 group-hover:w-4"
         style={{ left: `${progressPercentage}%`, marginLeft: '-6px' }}
       />
 
@@ -154,7 +188,7 @@ export default function ProgressBar({
             <img
               src={slides[hoverSlideIndex].thumb}
               alt="slide thumbnail"
-              className="h-22.5 w-40 min-w-40 shrink-0 rounded border border-[#ffffff]/15 bg-gray-200 object-cover"
+              className="h-22.5 w-40 min-w-40 shrink-0 rounded bg-gray-200 object-cover"
             />
           )}
 

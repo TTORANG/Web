@@ -4,7 +4,6 @@
  *
  * - 목데이터는 feedbacks(timestamp + count) 구조 유지
  * - 내부에서 "가짜 이벤트 배열"로 풀어서
- *   currentTime 기준 ±2.5초 window 집계
  */
 import { useMemo } from 'react';
 
@@ -12,6 +11,7 @@ import { REACTION_TYPES } from '@/constants/reaction';
 import { FEEDBACK_WINDOW } from '@/constants/video';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Reaction, ReactionType } from '@/types/script';
+import { getOverlappingFeedbacks } from '@/utils/video';
 
 export function useVideoReactions() {
   const video = useVideoFeedbackStore((s) => s.video);
@@ -23,8 +23,10 @@ export function useVideoReactions() {
     }
 
     // 현재 시간과 겹치는 모든 feedbacks 찾기 (±FEEDBACK_WINDOW 범위)
-    const overlappingFeedbacks = video.feedbacks.filter(
-      (f) => Math.abs(f.timestamp - currentTime) <= FEEDBACK_WINDOW,
+    const overlappingFeedbacks = getOverlappingFeedbacks(
+      video.feedbacks,
+      currentTime,
+      FEEDBACK_WINDOW,
     );
 
     // 겹치는 feedbacks이 없으면 기본값
