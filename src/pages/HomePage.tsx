@@ -45,8 +45,11 @@ export default function HomePage() {
   const debouncedQuery = useDebounce(query, 300);
 
   // TODO :  나중에 mock_projects 말고 서버데이터로 바꿔주기..
-  const projects = useProjectList(MOCK_PROJECTS, { query: debouncedQuery, sort, filterFn });
-  const isEmpty = !isLoading && MOCK_PROJECTS.length === 0;
+  const allProjects = MOCK_PROJECTS;
+  const projects = useProjectList(allProjects, { query: debouncedQuery, sort, filterFn });
+
+  const totalCount = allProjects.length;
+  const isEmpty = !isLoading && totalCount === 0;
 
   // TODO : 실제 데이터 패칭 훅의 isLoading으로 교체
   useEffect(() => {
@@ -70,6 +73,7 @@ export default function HomePage() {
       {/* 내발표 */}
       <ProjectsSection
         isLoading={isLoading}
+        totalCount={totalCount}
         query={query}
         onChangeQuery={setQuery}
         sort={sort}

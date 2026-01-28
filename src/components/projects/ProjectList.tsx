@@ -14,11 +14,17 @@ import type { Project } from '@/types/project';
 import { formatRelativeTime } from '@/utils/format';
 
 import { Dropdown, type DropdownItem } from '../common/Dropdown';
+import { HighlightText } from '../common/HighlightText';
 import DeleteProjectModal from './DeleteProjectModal';
+
+type Props = Project & {
+  highlightQuery?: string;
+};
 
 export default function ProjectList({
   id,
   title,
+  highlightQuery = '',
   updatedAt,
   durationMinutes,
   pageCount,
@@ -26,7 +32,7 @@ export default function ProjectList({
   reactionCount,
   viewCount = 0,
   thumbnailUrl,
-}: Project) {
+}: Props) {
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
     useProjectDeletion(id);
@@ -67,7 +73,13 @@ export default function ProjectList({
         {/* 본문 */}
         <div className="min-w-0 flex-1">
           {/* 제목 */}
-          <div className="truncate text-body-m-bold text-gray-900">{title}</div>
+          <div className="truncate text-body-m-bold text-gray-900">
+            <HighlightText
+              text={title}
+              query={highlightQuery}
+              markClassName="rounded bg-main/10 text-main"
+            />
+          </div>
 
           <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-2 text-caption text-gray-500">
             <div className="flex items-center gap-4">
