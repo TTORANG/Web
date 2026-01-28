@@ -15,6 +15,7 @@ export function useCreateOpinion() {
       createOpinion(slideId, data),
 
     onSuccess: (_, { slideId }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.lists() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
     },
   });
@@ -28,6 +29,7 @@ export function useDeleteOpinion() {
     mutationFn: ({ opinionId }: { opinionId: string; slideId: string }) => deleteOpinion(opinionId),
 
     onSuccess: (_, { slideId }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.lists() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
     },
   });

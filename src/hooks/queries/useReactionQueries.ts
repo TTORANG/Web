@@ -15,6 +15,7 @@ export function useToggleReaction() {
       toggleReaction(slideId, data),
 
     onSuccess: (_, { slideId }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.lists() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
     },
   });
