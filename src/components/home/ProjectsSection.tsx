@@ -93,14 +93,14 @@ export default function ProjectsSection({
           items={projects}
           getKey={(item) => item.id}
           className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3"
-          renderCard={(item) => <ProjectCard {...item} />}
+          renderCard={(item) => <ProjectCard {...item} highlightQuery={query} />}
         />
       ) : (
         <ListView
           items={projects}
           getKey={(item) => item.id}
           className="mt-6 flex flex-col gap-3"
-          renderInfo={(item) => <ProjectList {...item} />}
+          renderInfo={(item) => <ProjectList {...item} highlightQuery={query} />}
         />
       )}
     </section>

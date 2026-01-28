@@ -15,11 +15,16 @@ import { formatRelativeTime } from '@/utils/format';
 
 import { Dropdown } from '../common';
 import type { DropdownItem } from '../common/Dropdown';
+import { HighlightText } from '../common/HighlightText';
 import DeleteProjectModal from './DeleteProjectModal';
 
+type Props = Project & {
+  highlightQuery?: string;
+};
 export default function ProjectCard({
   id,
   title,
+  highlightQuery = '',
   updatedAt,
   durationMinutes,
   pageCount,
@@ -27,7 +32,7 @@ export default function ProjectCard({
   reactionCount,
   viewCount = 0,
   thumbnailUrl,
-}: Project) {
+}: Props) {
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
     useProjectDeletion(id);
@@ -71,7 +76,13 @@ export default function ProjectCard({
         <div className="p-4">
           {/* 제목 및 업데이트 날짜 */}
           <div className="flex items-center justify-between">
-            <h3 className="text-body-m-bold text-gray-800">{title}</h3>
+            <h3 className="text-body-m-bold text-gray-800">
+              <HighlightText
+                text={title}
+                query={highlightQuery}
+                markClassName="rounded bg-main/10 px-0.5 text-main"
+              />
+            </h3>
             {/* 더보기 */}
             <div onClick={(e) => e.stopPropagation()}>
               <Dropdown
