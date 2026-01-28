@@ -17,7 +17,7 @@ export type { TabItem, TabKey } from './navigation';
 export type { Project } from './project';
 
 // Script
-export type { History, Reaction, ReactionType } from './script';
+export type { Reaction, ReactionType } from './script';
 
 // Slide
 export type { Slide } from './slide';
