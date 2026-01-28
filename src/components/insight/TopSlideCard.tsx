@@ -22,7 +22,7 @@ export default function TopSlideCard({
   thumbFallbackClassName,
 }: TopSlideCardProps) {
   return (
-    <div key={id} className={`${cardClassName} overflow-hidden`}>
+    <div className={`${cardClassName} overflow-hidden`}>
       {thumbUrl ? (
         <img src={thumbUrl} alt={`${title} 썸네일`} className="h-60 w-full object-cover" />
       ) : (
