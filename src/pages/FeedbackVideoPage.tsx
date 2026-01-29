@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
-import { Spinner } from '@/components/common';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
 import ScriptSection from '@/components/feedback/ScriptSection';
 import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
@@ -71,14 +70,6 @@ export default function FeedbackVideoPage() {
     return () => window.clearTimeout(timer);
   }, [projectId, initVideo]);
 
-  if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center bg-white">
-        <Spinner size={40} />
-      </div>
-    );
-  }
-
   return (
     <div className="flex h-full w-full px-35">
       <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-4">
@@ -96,6 +87,7 @@ export default function FeedbackVideoPage() {
           slideChangeTimes={slideChangeTimes}
           currentTime={currentTime}
           onSeek={requestSeek}
+          isLoading={isLoading}
         />
       </div>
 
@@ -106,6 +98,7 @@ export default function FeedbackVideoPage() {
             onAddReply={addReply}
             onGoToRef={handleGoToTimeRef}
             onDeleteComment={deleteComment}
+            isLoading={isLoading}
           />
         </div>
 

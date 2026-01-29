@@ -7,6 +7,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { Skeleton } from '@/components/common';
 import type { Slide } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
@@ -17,6 +18,7 @@ interface ScriptSectionProps {
   currentTime: number;
   onSeek?: (time: number) => void;
   onScroll?: () => void;
+  isLoading?: boolean;
 }
 
 export default function ScriptSection({
@@ -25,6 +27,7 @@ export default function ScriptSection({
   currentTime,
   onSeek,
   onScroll,
+  isLoading = false,
 }: ScriptSectionProps) {
   const scriptSectionRef = useRef<HTMLDivElement>(null);
   const scriptItemsRef = useRef<(HTMLDivElement | null)[]>([]);
@@ -83,12 +86,30 @@ export default function ScriptSection({
     return () => clearTimeout(timer);
   }, [autoScroll]);
 
+  // 스켈레톤 아이템별 대본 너비
+  const skeletonWidths = ['85%', '70%', '90%', '75%', '80%'];
+
+  // 스켈레톤 렌더링
+  if (isLoading) {
+    return (
+      <div className="flex-1 min-w-0 rounded-lg p-4 overflow-y-auto flex flex-col gap-2 bg-gray-100">
+        {skeletonWidths.map((width, index) => (
+          <div key={index} className="flex items-center gap-3 px-4 py-3 rounded-lg bg-gray-200">
+            {/* 타임스탬프 자리 */}
+            <Skeleton width={26} height={22} rounded={4} className="shrink-0 bg-gray-400!" />
+            {/* 대본 텍스트 자리 */}
+            <Skeleton width={width} height={16} rounded={4} className="ml-4 bg-gray-400!" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div
       ref={scriptSectionRef}
       onScroll={handleScriptScroll}
-      className="flex-1 min-w-0 rounded-lg p-4 overflow-y-auto flex flex-col gap-2"
-      style={{ backgroundColor: '#202227' }}
+      className="flex-1 min-w-0 rounded-lg p-4 overflow-y-auto flex flex-col gap-2 bg-gray-100"
     >
       {slides.map((slide, index) => {
         const slideStartTime = slideChangeTimes[index] || 0;
@@ -106,13 +127,13 @@ export default function ScriptSection({
               scrollMarginTop: '0px', // scrollIntoView 시 상단에 딱 붙도록
             }}
             onClick={() => onSeek?.(slideStartTime)}
-            className="flex gap-3 px-4 py-3 rounded-lg transition-colors text-body-s cursor-pointer"
+            className="flex gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out text-body-s cursor-pointer"
           >
             <div
               style={{
                 color: isCurrentSlide ? '#343841' : '#A9ACB2',
               }}
-              className="shrink-0 font-medium text-sm min-w-10"
+              className="shrink-0 font-medium text-sm min-w-10 transition-colors duration-300"
             >
               {timeStr}
             </div>
@@ -121,7 +142,7 @@ export default function ScriptSection({
               style={{
                 color: isCurrentSlide ? '#1A1B1F' : '#E2E4E8',
               }}
-              className="flex-1 text-sm leading-relaxed"
+              className="flex-1 text-sm leading-relaxed transition-colors duration-300"
             >
               {slide.script || '(대본 없음)'}
             </div>
