@@ -191,7 +191,7 @@ export default function SlideWebcamStage({
 
         {/* 클릭 핸들러 오버레이 (한번 클릭: 재생/일시정지, 더블클릭: 전체화면) */}
         <div
-          className="absolute inset-0 z-[15] cursor-pointer"
+          className="absolute inset-0 z-15 cursor-pointer"
           onClick={handleStageClick}
           onDoubleClick={handleStageDoubleClick}
         />
