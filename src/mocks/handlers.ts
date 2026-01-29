@@ -3,9 +3,11 @@ import { HttpResponse, delay, http } from 'msw';
 
 import { createDefaultReactions } from '@/constants/reaction';
 import { FEEDBACK_WINDOW } from '@/constants/video';
+import type { Project } from '@/types/project';
 import type { Slide } from '@/types/slide';
 import type { VideoFeedback, VideoTimestampFeedback } from '@/types/video';
 
+import { MOCK_PROJECTS } from './projects';
 import { MOCK_SLIDES } from './slides';
 import { MOCK_USERS } from './users';
 import { MOCK_VIDEO } from './videos';
@@ -14,6 +16,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 // 메모리 내 데이터 저장소 (상태 유지)
 let slides: Slide[] = [...MOCK_SLIDES];
+let projects: Project[] = [...MOCK_PROJECTS];
 
 // 영상 피드백 데이터 저장소
 const videoFeedbacks: Map<string, VideoFeedback> = new Map([
@@ -47,6 +50,120 @@ const wrapResponse = <T>(data: T) => ({
  * 개발 환경에서 실제 서버 없이 API 테스트가 가능합니다.
  */
 export const handlers = [
+  // =====================
+  // 프로젝트 관련 핸들러
+  // =====================
+
+  /**
+   * 프로젝트 목록 조회
+   * GET /projects
+   */
+  http.get(`${BASE_URL}/projects`, async () => {
+    await delay(200);
+    console.log('[MSW] GET /projects');
+    return HttpResponse.json(projects);
+  }),
+
+  /**
+   * 프로젝트 상세 조회
+   * GET /projects/:projectId
+   */
+  http.get(`${BASE_URL}/projects/:projectId`, async ({ params }) => {
+    await delay(150);
+    const { projectId } = params;
+    console.log(`[MSW] GET /projects/${projectId}`);
+
+    const project = projects.find((p) => p.id === projectId);
+
+    if (!project) {
+      return new HttpResponse(null, {
+        status: 404,
+        statusText: 'Project not found',
+      });
+    }
+
+    return HttpResponse.json(project);
+  }),
+
+  /**
+   * 프로젝트 생성
+   * POST /projects
+   */
+  http.post(`${BASE_URL}/projects`, async ({ request }) => {
+    await delay(300);
+    const data = (await request.json()) as { title: string };
+    console.log('[MSW] POST /projects', data);
+
+    const newProject: Project = {
+      id: `p${Date.now()}`,
+      title: data.title,
+      updatedAt: new Date().toISOString(),
+      durationMinutes: 0,
+      pageCount: 0,
+      commentCount: 0,
+      reactionCount: 0,
+      viewCount: 0,
+      thumbnailUrl: '/thumbnails/p1/0.webp',
+    };
+
+    projects = [newProject, ...projects];
+    return HttpResponse.json(newProject, { status: 201 });
+  }),
+
+  /**
+   * 프로젝트 수정
+   * PATCH /projects/:projectId
+   */
+  http.patch(`${BASE_URL}/projects/:projectId`, async ({ params, request }) => {
+    await delay(200);
+    const { projectId } = params;
+    const data = (await request.json()) as { title?: string };
+    console.log(`[MSW] PATCH /projects/${projectId}`, data);
+
+    const projectIndex = projects.findIndex((p) => p.id === projectId);
+
+    if (projectIndex === -1) {
+      return new HttpResponse(null, {
+        status: 404,
+        statusText: 'Project not found',
+      });
+    }
+
+    projects[projectIndex] = {
+      ...projects[projectIndex],
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+
+    return HttpResponse.json(projects[projectIndex]);
+  }),
+
+  /**
+   * 프로젝트 삭제
+   * DELETE /projects/:projectId
+   */
+  http.delete(`${BASE_URL}/projects/:projectId`, async ({ params }) => {
+    await delay(200);
+    const { projectId } = params;
+    console.log(`[MSW] DELETE /projects/${projectId}`);
+
+    const projectIndex = projects.findIndex((p) => p.id === projectId);
+
+    if (projectIndex === -1) {
+      return new HttpResponse(null, {
+        status: 404,
+        statusText: 'Project not found',
+      });
+    }
+
+    projects = projects.filter((p) => p.id !== projectId);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // =====================
+  // 슬라이드 관련 핸들러
+  // =====================
+
   /**
    * 프로젝트의 슬라이드 목록 조회
    * GET /projects/:projectId/slides
