@@ -42,7 +42,6 @@ export function useVideoSync(options: UseVideoSyncOptions = {}): UseVideoSyncRet
 
   // 콜백 ref - 비디오 요소가 마운트/언마운트될 때 호출
   const setVideoRef = useCallback((el: HTMLVideoElement | null) => {
-    console.log('[useVideoSync] setVideoRef called with:', el);
     setVideoElement(el);
   }, []);
 
