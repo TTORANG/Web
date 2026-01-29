@@ -39,7 +39,7 @@ MOCK_SLIDES.forEach((slide) => {
 // API 응답 래퍼 헬퍼
 const wrapResponse = <T>(data: T) => ({
   resultType: 'SUCCESS' as const,
-  error: null,
+  reason: null,
   success: data,
 });
 
@@ -483,7 +483,7 @@ export const handlers = [
     return new HttpResponse(
       JSON.stringify({
         message: `[MSW] 테스트용 ${status} 에러 메시지입니다.`,
-        code: 'TEST_ERROR',
+        code: 'TEST_FAILURE',
       }),
       {
         status,
@@ -532,7 +532,7 @@ export const handlers = [
     if (!slide) {
       return new HttpResponse(
         JSON.stringify({
-          resultType: 'ERROR',
+          resultType: 'FAILURE',
           error: { code: 'NOT_FOUND', message: 'Slide not found' },
           success: null,
         }),
@@ -569,7 +569,7 @@ export const handlers = [
     if (slideIndex === -1) {
       return new HttpResponse(
         JSON.stringify({
-          resultType: 'ERROR',
+          resultType: 'FAILURE',
           error: { code: 'NOT_FOUND', message: 'Slide not found' },
           success: null,
         }),
@@ -622,7 +622,7 @@ export const handlers = [
     if (!slide) {
       return new HttpResponse(
         JSON.stringify({
-          resultType: 'ERROR',
+          resultType: 'FAILURE',
           error: { code: 'NOT_FOUND', message: 'Slide not found' },
           success: null,
         }),
@@ -650,7 +650,7 @@ export const handlers = [
     if (slideIndex === -1) {
       return new HttpResponse(
         JSON.stringify({
-          resultType: 'ERROR',
+          resultType: 'FAILURE',
           error: { code: 'NOT_FOUND', message: 'Slide not found' },
           success: null,
         }),
@@ -664,7 +664,7 @@ export const handlers = [
     if (!targetVersion) {
       return new HttpResponse(
         JSON.stringify({
-          resultType: 'ERROR',
+          resultType: 'FAILURE',
           error: { code: 'NOT_FOUND', message: 'Version not found' },
           success: null,
         }),
