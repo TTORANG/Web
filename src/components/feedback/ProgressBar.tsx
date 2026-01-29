@@ -182,6 +182,8 @@ export default function ProgressBar({
             onMouseEnter={() => setIsHoveringEmoji(true)}
             onMouseLeave={() => setIsHoveringEmoji(false)}
             onClick={(e) => {
+              // 부모 ProgressBar의 onClick도 같은 시점으로 seek하므로,
+              // 이벤트 버블링을 막아 중복 호출 방지
               e.stopPropagation();
               onSeek(segment.startTime);
             }}
