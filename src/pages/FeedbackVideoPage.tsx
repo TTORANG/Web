@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 
 import clsx from 'clsx';
 
-import RefreshIcon from '@/assets/icons/icon-refresh.svg?react';
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
 import { Spinner } from '@/components/common';
