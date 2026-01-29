@@ -75,6 +75,7 @@ export default function HomePage() {
         isLoading={isLoading}
         totalCount={totalCount}
         query={query}
+        appliedQuery={debouncedQuery}
         onChangeQuery={setQuery}
         sort={sort}
         onChangeSort={setSort}
