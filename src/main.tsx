@@ -69,20 +69,9 @@ const router = createBrowserRouter([
     path: '/:projectId/video/record',
     element: <VideoRecordPage />,
   },
-
   {
     path: '/feedback/video/:projectId',
-    element: (
-      <Layout
-        theme="dark"
-        left={
-          <>
-            <Logo />
-            <span className="text-body-m-bold text-black">{'프로젝트 제목'}</span>
-          </>
-        }
-      />
-    ),
+    element: <Layout theme="dark" left={<FeedbackHeaderLeft />} />,
     children: [{ index: true, element: <FdVideoPage /> }],
   },
 ]);
