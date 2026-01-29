@@ -585,7 +585,8 @@ const p1Slides: Slide[] = [
 
 // 나머지 프로젝트 및 p1의 나머지 슬라이드 생성
 const generatedSlides = Object.entries(PROJECT_SLIDE_COUNTS).flatMap(([projectId, count]) => {
-  const startIdx = projectId === 'p1' ? 10 : 0; // 0~9까지는 이미 있으니까
+  // p1Slides에 p1-0 ~ p1-15 (16개)가 이미 정의되어 있음
+  const startIdx = projectId === 'p1' ? p1Slides.length : 0;
   return Array.from({ length: count - startIdx }).map((_, i) =>
     createDefaultSlide(projectId, i + startIdx),
   );
