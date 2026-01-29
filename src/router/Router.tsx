@@ -1,6 +1,7 @@
 import { Navigate, createBrowserRouter } from 'react-router-dom';
 
 import { Gnb, Layout, LoginButton, Logo, ShareButton } from '@/components/common';
+import FeedbackHeaderLeft from '@/components/feedback/FeedbackHeaderLeft.tsx';
 import {
   DevTestPage,
   FdSlidePage,
@@ -69,17 +70,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/feedback/video/:projectId',
-    element: (
-      <Layout
-        theme="dark"
-        left={
-          <>
-            <Logo />
-            <span className="text-body-m-bold text-black">{'프로젝트 제목'}</span>
-          </>
-        }
-      />
-    ),
+    element: <Layout theme="dark" left={<FeedbackHeaderLeft />} />,
     children: [{ index: true, element: <FdVideoPage /> }],
   },
 ]);
