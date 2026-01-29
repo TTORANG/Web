@@ -2,7 +2,7 @@
  * @file ScriptSection.tsx
  * @description 비디오 피드백 대본 섹션
  * - 현재 재생 시간에 맞는 슬라이드 대본을 표시
- * - 자동 스크롤로 현재 대본이 최상단에 위치
+ * - 자동 스크롤로 현재 대본이 중앙에 위치
  * - 수동 스크롤 시 자동 스크롤 일시 정지 후 2초 후 복구
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -54,10 +54,10 @@ export default function ScriptSection({
     // 프로그래매틱 스크롤 플래그 설정
     isScrollingRef.current = true;
 
-    // scrollIntoView로 해당 요소를 컨테이너 상단으로 스크롤
+    // scrollIntoView로 해당 요소를 컨테이너 중앙으로 스크롤
     currentScriptItem.scrollIntoView({
       behavior: 'smooth',
-      block: 'start',
+      block: 'center',
     });
 
     // 스크롤 완료 후 플래그 해제 (300ms 후)
@@ -122,9 +122,22 @@ export default function ScriptSection({
             }}
             style={{
               backgroundColor: isCurrentSlide ? '#FFFFFF' : '#343841',
-              scrollMarginTop: '0px', // scrollIntoView 시 상단에 딱 붙도록
             }}
-            onClick={() => onSeek?.(slideStartTime)}
+            onClick={(e) => {
+              onSeek?.(slideStartTime);
+              const targetElement = e.currentTarget;
+              if (targetElement) {
+                isScrollingRef.current = true;
+                targetElement.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'center',
+                });
+                setTimeout(() => {
+                  isScrollingRef.current = false;
+                }, 300);
+                setAutoScroll(true);
+              }
+            }}
             className="flex gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out text-body-s cursor-pointer"
           >
             <div
