@@ -34,15 +34,17 @@ export default function FeedbackVideoPage() {
     return MOCK_SLIDES.filter((slide) => slide.projectId === targetProjectId);
   }, [projectId]);
 
-  // 해당 프로젝트 슬라이드의 전환 시간 계산 (영상 길이 기준, 개발 단계에서)
+  // 슬라이드 전환 시간 (slide.startTime 사용, 없으면 자동 계산)
   const slideChangeTimes = useMemo(() => {
+    if (projectSlides.length === 0) return [];
+
     const videoDuration = MOCK_VIDEO.duration;
     const slideCount = projectSlides.length;
-    if (slideCount === 0) return [];
-    return Array.from({ length: slideCount }).map((_, i) =>
-      Math.floor(i * (videoDuration / slideCount)),
+
+    return projectSlides.map(
+      (slide, i) => slide.startTime ?? Math.floor(i * (videoDuration / slideCount)),
     );
-  }, [projectSlides.length]);
+  }, [projectSlides]);
 
   // 현재 재생 시간을 타임스탬프 문자열로 변환 (포커스 시 자동 삽입용)
   const timestampPrefix = useMemo(() => `${formatVideoTimestamp(currentTime)} `, [currentTime]);

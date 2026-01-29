@@ -17,4 +17,6 @@ export interface Slide {
   opinions: Comment[];
   history: ScriptVersion[];
   emojiReactions: Reaction[];
+  /** 영상 피드백에서 슬라이드 시작 시간 (초) */
+  startTime?: number;
 }
