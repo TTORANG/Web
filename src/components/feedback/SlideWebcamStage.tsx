@@ -6,7 +6,7 @@
  * - 웹캠 녹화본은 webcamVideoUrl(MOCK_VIDEO.videoUrl)을 사용
  * - "작은 박스(PiP)"를 hover하면 디밍+텍스트, 클릭하면 슬라이드/웹캠 위치가 토글됨
  */
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import clsx from 'clsx';
 
@@ -19,12 +19,14 @@ type SlideWebcamStageProps = {
   slides: Slide[];
   slideChangeTimes: number[];
   webcamVideoUrl: string;
+  onTimeUpdate?: (time: number) => void;
 };
 
 export default function SlideWebcamStage({
   slides,
   slideChangeTimes,
   webcamVideoUrl,
+  onTimeUpdate,
 }: SlideWebcamStageProps) {
   const stageRootRef = useRef<HTMLDivElement | null>(null);
 
@@ -33,6 +35,11 @@ export default function SlideWebcamStage({
 
   const [layout, setLayout] = useState<'slide-main' | 'webcam-main'>('slide-main');
   const isSlideMain = layout === 'slide-main';
+
+  // onTimeUpdate 콜백 호출
+  useEffect(() => {
+    onTimeUpdate?.(currentTime);
+  }, [currentTime, onTimeUpdate]);
 
   // currentTime -> slideIndex 계산
   const activeIndex = useMemo(() => {
@@ -63,7 +70,7 @@ export default function SlideWebcamStage({
             'absolute overflow-hidden bg-[#000000]/20',
             isSlideMain
               ? 'inset-0 z-10 rounded-none' // 슬라이드가 메인일 때: 크게
-              : 'right-4 bottom-20 w-60 h-36 z-20 rounded-xl', // 웹캠이 메인일 때: 슬라이드가 작은 박스
+              : 'right-4 bottom-25 w-48 h-27 z-20 rounded-xl', // 웹캠이 메인일 때: 슬라이드가 작은 박스 (16:9)
           )}
         >
           <img
@@ -77,18 +84,18 @@ export default function SlideWebcamStage({
           />
 
           {/* 개발단계 확인용: 슬라이드 제목 배지는 슬라이드가 메인일 때만 보여주기 */}
-          {isSlideMain && (
+          {/* {isSlideMain && (
             <div className="absolute left-4 top-4 rounded-md bg-[#000000]/55 px-3 py-1 text-[#ffffff] text-sm">
               {activeIndex + 1}. {activeSlide.title}
             </div>
-          )}
+          )} */}
 
           {/* "슬라이드가 PiP일 때"만 hover 디밍 + 클릭 토글이 가능해야 함 */}
           {!isSlideMain && (
             <button
               type="button"
               onClick={toggleLayout}
-              className="group absolute inset-0 font-semi-bold flex items-center justify-center bg-transparent"
+              className="group absolute inset-0 font-semi-bold flex items-center justify-center bg-transparent  text-body-s"
               aria-label="슬라이드 확장"
             >
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition bg-[#000000]/35" />
@@ -104,7 +111,7 @@ export default function SlideWebcamStage({
           className={clsx(
             'absolute overflow-hidden bg-[#000000]/40',
             isSlideMain
-              ? 'right-4 bottom-20 w-60 h-36 z-20 rounded-xl' // 슬라이드 메인일 때: 웹캠이 작은 박스
+              ? 'right-4 bottom-25 w-48 h-27 z-20 rounded-xl' // 슬라이드 메인일 때: 웹캠이 작은 박스 (16:9)
               : 'inset-0 z-10 rounded-none', // 웹캠 메인일 때: 웹캠이 크게
           )}
         >
@@ -120,7 +127,7 @@ export default function SlideWebcamStage({
             <button
               type="button"
               onClick={toggleLayout}
-              className="group absolute inset-0 flex items-center justify-center bg-transparent"
+              className="group absolute inset-0 flex items-center justify-center bg-transparent text-body-s"
               aria-label="웹캠 확장"
             >
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition bg-[#000000]/35" />

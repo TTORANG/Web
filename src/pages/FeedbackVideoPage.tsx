@@ -1,28 +1,25 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
 import { Spinner } from '@/components/common';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
+import ScriptSection from '@/components/feedback/ScriptSection';
 import SlideWebcamStage from '@/components/feedback/SlideWebcamStage';
 import { MOCK_SLIDES } from '@/mocks/slides';
 import { MOCK_VIDEO } from '@/mocks/videos';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Comment } from '@/types/comment';
+import { formatVideoTimestamp } from '@/utils/format';
 
 import { useVideoComments } from '../hooks/useVideoComments';
 import { useVideoReactions } from '../hooks/useVideoReactions';
 
-/**
- * "슬라이드 넘긴 시각(초)" 목데이터
- * - 값은 예시. 실제 녹화 데이터에 맞춰 조정하면 됨.
- */
-const MOCK_SLIDE_CHANGE_TIMES = [0, 12, 24, 38, 52, 75, 96, 130, 160, 210];
-
 export default function FeedbackVideoPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const [isLoading, setIsLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(0);
 
   const initVideo = useVideoFeedbackStore((state) => state.initVideo);
 
@@ -32,6 +29,25 @@ export default function FeedbackVideoPage() {
   const requestSeek = useVideoFeedbackStore((s) => s.requestSeek);
 
   const [commentDraft, setCommentDraft] = useState('');
+
+  // URL의 projectId를 활용해 해당 프로젝트 슬라이드만 필터링
+  const projectSlides = useMemo(() => {
+    const targetProjectId = `p${projectId ?? '1'}`;
+    return MOCK_SLIDES.filter((slide) => slide.projectId === targetProjectId);
+  }, [projectId]);
+
+  // 해당 프로젝트 슬라이드의 전환 시간 계산 (영상 길이 기준, 개발 단계에서)
+  const slideChangeTimes = useMemo(() => {
+    const videoDuration = MOCK_VIDEO.duration;
+    const slideCount = projectSlides.length;
+    if (slideCount === 0) return [];
+    return Array.from({ length: slideCount }).map((_, i) =>
+      Math.floor(i * (videoDuration / slideCount)),
+    );
+  }, [projectSlides.length]);
+
+  // 현재 재생 시간을 타임스탬프 문자열로 변환 (포커스 시 자동 삽입용)
+  const timestampPrefix = useMemo(() => `${formatVideoTimestamp(currentTime)} `, [currentTime]);
 
   const handleAddComment = () => {
     if (!commentDraft.trim()) return;
@@ -46,6 +62,7 @@ export default function FeedbackVideoPage() {
     [requestSeek],
   );
 
+  // 비디오 초기화
   useEffect(() => {
     const timer = window.setTimeout(() => {
       initVideo(MOCK_VIDEO);
@@ -64,19 +81,22 @@ export default function FeedbackVideoPage() {
   }
 
   return (
-    <div className="flex h-full w-full px-35 gap-6">
-      <div className="flex-1 min-w-0 flex flex-col gap-4">
+    <div className="flex h-full w-full px-35">
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-4">
         {/* 슬라이드 + 웹캠 + 재생바 (오버레이) */}
         <SlideWebcamStage
-          slides={MOCK_SLIDES}
-          slideChangeTimes={MOCK_SLIDE_CHANGE_TIMES}
+          slides={projectSlides}
+          slideChangeTimes={slideChangeTimes}
           webcamVideoUrl={MOCK_VIDEO.videoUrl}
+          onTimeUpdate={setCurrentTime}
         />
 
-        {/* 6. 대본 섹션 (현재 시간 기반) */}
-        <div className="flex-1 min-w-0 bg-gray-100 rounded-lg p-4 overflow-y-auto">
-          {/* TODO: 대본 표시 로직 */}
-        </div>
+        {/* 대본 섹션 */}
+        <ScriptSection
+          slides={projectSlides}
+          slideChangeTimes={slideChangeTimes}
+          currentTime={currentTime}
+        />
       </div>
 
       <aside className="w-96 shrink-0 bg-gray-100 flex flex-col border-l border-gray-200">
@@ -96,6 +116,7 @@ export default function FeedbackVideoPage() {
             onSubmit={handleAddComment}
             onCancel={() => setCommentDraft('')}
             className="items-end w-86"
+            initialValueOnFocus={timestampPrefix}
           />
           <ReactionButtons reactions={reactions} onToggleReaction={toggleReaction} />
         </div>
