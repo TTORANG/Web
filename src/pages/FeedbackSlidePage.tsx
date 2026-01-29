@@ -138,7 +138,7 @@ export default function FeedbackSlidePage() {
               className="items-end w-86"
             />
             <ReactionButtons
-              reactions={reactions}
+              reactions={reactions.length > 0 ? reactions : createDefaultReactions()}
               onToggleReaction={toggleReaction}
               layout="grid-2"
               buttonClassName="w-42.25"
@@ -178,7 +178,7 @@ export default function FeedbackSlidePage() {
             />
           </div>
           <ReactionButtons
-            reactions={reactions}
+            reactions={reactions.length > 0 ? reactions : createDefaultReactions()}
             onToggleReaction={toggleReaction}
             showLabel={false}
             className="w-full flex-nowrap justify-between"
