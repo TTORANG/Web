@@ -139,6 +139,7 @@ export default function ScriptSection({
             <div
               style={{
                 color: isCurrentSlide ? '#1A1B1F' : '#E2E4E8',
+                whiteSpace: 'pre-line',
               }}
               className="flex-1 text-sm leading-relaxed transition-colors duration-300"
             >
