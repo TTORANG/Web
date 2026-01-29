@@ -7,9 +7,9 @@ export const FILTER_OPTIONS: { value: Exclude<FilterMode, null>; label: string }
 ];
 
 export const SORT_OPTIONS: { value: Exclude<SortMode, null>; label: string }[] = [
-  { value: 'recent', label: '최신순' },
+  { value: 'recent', label: '최신 순' },
   { value: 'commentCount', label: '피드백 많은 순' },
-  { value: 'name', label: '가나다순' },
+  { value: 'name', label: '가나다 순' },
 ];
 
 export const VIEW_OPTIONS: { value: ViewMode; label: string }[] = [
