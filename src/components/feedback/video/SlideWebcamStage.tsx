@@ -35,7 +35,7 @@ function MediaBox({ isMain, showPip, onToggle, label, className, children }: Med
       // 메인/작은 박스 위치 토글 로직
       return isMain
         ? 'inset-0 z-10 rounded-none' // 메인이면 전체 화면
-        : 'right-4 bottom-25 w-48 h-27 z-20 rounded-xl'; // 서브면 우측 하단 작은 박스
+        : 'right-4 bottom-25 w-48 h-27 z-35 rounded-xl'; // 서브면 우측 하단 작은 박스
     }
     // 2. PiP 모드가 아닐 때 (모바일 등)
     // 메인이면 보이고, 서브면 완전히 숨김 (hidden으로 DOM에서 제거)
@@ -60,10 +60,10 @@ function MediaBox({ isMain, showPip, onToggle, label, className, children }: Med
           className="group absolute inset-0 font-semi-bold flex items-center justify-center bg-transparent text-body-s"
           aria-label={label}
         >
-          {/* 평소엔 투명, 호버 시 어두운 배경 + 텍스트 표시 */}
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition bg-[#000000]/35" />
+          {/* 평소엔 투명, 호버 시 어두운 배경 + 텍스트 표시 (transition 제거로 클릭 시 즉시 사라짐) */}
+          <div className="absolute inset-0 opacity-0 hover:opacity-100 bg-[#000000]/35" />
           {/** 지금 "작은 박스(PiP)"에 무엇이 들어있는지에 따라 hover 문구 결정 */}
-          <div className="relative opacity-0 group-hover:opacity-100 transition text-[#ffffff] text-sm">
+          <div className="relative opacity-0 group-hover:opacity-100 text-[#ffffff] text-sm">
             {label}
           </div>
         </button>
@@ -221,19 +221,19 @@ export default function SlideWebcamStage({
           <video
             ref={setVideoRef}
             src={webcamVideoUrl}
-            className="h-full w-full object-cover" // 웹캠은 항상 꽉 차게
+            className="h-full w-full object-cover"
             playsInline
           />
         </MediaBox>
 
-        {/* 클릭 핸들러 오버레이 (한번 클릭: 재생/일시정지, 더블클릭: 전체화면) */}
+        {/* 클릭 핸들러 오버레이 */}
         <div
           className="absolute inset-0 z-30 cursor-pointer"
           onClick={handleStageClick}
           onDoubleClick={handleStageDoubleClick}
         />
 
-        {/* 재생바/조작 오버레이 - overflow-visible로 썸네일 미리보기 표시 */}
+        {/* 재생바/조작 오버레이 */}
         <div className="absolute bottom-0 left-0 right-0 z-40 overflow-visible bg-linear-to-t from-[#000000]/60 to-transparent pt-8 pb-2 px-3">
           <VideoPlaybackBar
             videoElement={videoElement}
