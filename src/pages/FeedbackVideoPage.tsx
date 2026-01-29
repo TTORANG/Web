@@ -8,6 +8,7 @@ import CommentList from '@/components/comment/CommentList';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
 import ScriptSection from '@/components/feedback/ScriptSection';
 import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
+import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { useVideoComments } from '@/hooks/useVideoComments';
 import { useVideoReactions } from '@/hooks/useVideoReactions';
 import { MOCK_SLIDES } from '@/mocks/slides';
@@ -19,6 +20,7 @@ import { formatVideoTimestamp } from '@/utils/format';
 export default function FeedbackVideoPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const [isLoading, setIsLoading] = useState(true);
+  const isDesktop = useIsDesktop();
 
   const initVideo = useVideoFeedbackStore((state) => state.initVideo);
   const currentTime = useVideoFeedbackStore((s) => s.currentTime);
@@ -100,149 +102,154 @@ export default function FeedbackVideoPage() {
 
   return (
     <div className="flex h-full w-full">
-      <div className="hidden md:flex flex-1 px-35">
-        <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-4">
-          {/* 슬라이드 + 웹캠 + 재생바 (오버레이) */}
-          <SlideWebcamStage
-            slides={projectSlides}
-            slideChangeTimes={slideChangeTimes}
-            webcamVideoUrl={MOCK_VIDEO.videoUrl}
-            onTimeUpdate={updateCurrentTime}
-          />
+      {isDesktop && (
+        <div className="flex flex-1 px-35">
+          <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-4">
+            {/* 슬라이드 + 웹캠 + 재생바 (오버레이) */}
+            <SlideWebcamStage
+              slides={projectSlides}
+              slideChangeTimes={slideChangeTimes}
+              webcamVideoUrl={MOCK_VIDEO.videoUrl}
+              onTimeUpdate={updateCurrentTime}
+            />
 
-          {/* 대본 섹션 */}
-          <ScriptSection
-            slides={projectSlides}
-            slideChangeTimes={slideChangeTimes}
-            currentTime={currentTime}
-            onSeek={requestSeek}
-            isLoading={isLoading}
-          />
-        </div>
-
-        <aside className="w-96 shrink-0 bg-gray-100 flex flex-col border-l border-gray-200">
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <CommentList
-              comments={comments}
-              onAddReply={addReply}
-              onGoToRef={handleGoToTimeRef}
-              onDeleteComment={deleteComment}
+            {/* 대본 섹션 */}
+            <ScriptSection
+              slides={projectSlides}
+              slideChangeTimes={slideChangeTimes}
+              currentTime={currentTime}
+              onSeek={requestSeek}
               isLoading={isLoading}
             />
           </div>
 
-          <div className="shrink-0 border-t border-black/5 flex flex-col gap-6 px-4 pb-6 pt-2">
-            <CommentInput
-              value={commentDraft}
-              onChange={setCommentDraft}
-              onSubmit={handleAddComment}
-              onCancel={() => setCommentDraft('')}
-              className="items-end w-86"
-              initialValueOnFocus={timestampPrefix}
+          <aside className="w-96 shrink-0 bg-gray-100 flex flex-col border-l border-gray-200">
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <CommentList
+                comments={comments}
+                onAddReply={addReply}
+                onGoToRef={handleGoToTimeRef}
+                onDeleteComment={deleteComment}
+                isLoading={isLoading}
+              />
+            </div>
+
+            <div className="shrink-0 border-t border-black/5 flex flex-col gap-6 px-4 pb-6 pt-2">
+              <CommentInput
+                value={commentDraft}
+                onChange={setCommentDraft}
+                onSubmit={handleAddComment}
+                onCancel={() => setCommentDraft('')}
+                className="items-end w-86"
+                initialValueOnFocus={timestampPrefix}
+              />
+              <ReactionButtons
+                reactions={reactions}
+                onToggleReaction={toggleReaction}
+                layout="grid-2"
+              />
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/** 모바일 */}
+      {!isDesktop && (
+        <div className="flex flex-1 flex-col bg-gray-100 min-w-0">
+          <div className="pt-4 max-[350px]:pb-3">
+            <SlideWebcamStage
+              slides={projectSlides}
+              slideChangeTimes={slideChangeTimes}
+              webcamVideoUrl={MOCK_VIDEO.videoUrl}
+              onTimeUpdate={updateCurrentTime}
+              disablePip
+              showLayoutToggle // 웹캠·슬라이드 전환 버튼 생성(모바일에만)
             />
+          </div>
+
+          <div className="shrink-0 px-4 pb-3 pt-5 flex flex-col gap-2 max-[350px]:px-3 max-[350px]:pb-2 max-[350px]:pt-1">
             <ReactionButtons
               reactions={reactions}
               onToggleReaction={toggleReaction}
-              layout="grid-2"
+              showLabel={false}
+              className="w-full flex-nowrap justify-between"
+              buttonClassName="flex-1 min-w-0 max-[350px]:text-xs max-[350px]:py-1"
             />
           </div>
-        </aside>
-      </div>
 
-      {/** 모바일 */}
-      <div className="flex md:hidden flex-1 flex-col bg-gray-100 min-w-0">
-        <div className="pt-4 max-[350px]:pb-3">
-          <SlideWebcamStage
-            slides={projectSlides}
-            slideChangeTimes={slideChangeTimes}
-            webcamVideoUrl={MOCK_VIDEO.videoUrl}
-            onTimeUpdate={updateCurrentTime}
-            disablePip
-            showLayoutToggle // 웹캠·슬라이드 전환 버튼 생성(모바일에만)
-          />
-        </div>
-
-        <div className="shrink-0 px-4 pb-3 pt-5 flex flex-col gap-2 max-[350px]:px-3 max-[350px]:pb-2 max-[350px]:pt-1">
-          <ReactionButtons
-            reactions={reactions}
-            onToggleReaction={toggleReaction}
-            showLabel={false}
-            className="w-full flex-nowrap justify-between"
-            buttonClassName="flex-1 min-w-0 max-[350px]:text-xs max-[350px]:py-1"
-          />
-        </div>
-
-        <div
-          role="tablist"
-          aria-label="대본/댓글 탭"
-          className="flex border-b border-gray-200"
-          onKeyDown={handleTabKeyDown}
-        >
-          <button
-            role="tab"
-            id={tabIds.script}
-            aria-selected={mobileTab === 'script'}
-            aria-controls={panelIds.script}
-            onClick={() => setMobileTab('script')}
-            className={getTabClassName(mobileTab === 'script')}
+          <div
+            role="tablist"
+            aria-label="대본/댓글 탭"
+            className="flex border-b border-gray-200"
+            onKeyDown={handleTabKeyDown}
           >
-            대본
-          </button>
-          <button
-            role="tab"
-            id={tabIds.comment}
-            aria-selected={mobileTab === 'comment'}
-            aria-controls={panelIds.comment}
-            onClick={() => setMobileTab('comment')}
-            className={getTabClassName(mobileTab === 'comment')}
-          >
-            댓글 {comments.length > 0 && `${comments.length}`}
-          </button>
-        </div>
+            <button
+              role="tab"
+              id={tabIds.script}
+              aria-selected={mobileTab === 'script'}
+              aria-controls={panelIds.script}
+              onClick={() => setMobileTab('script')}
+              className={getTabClassName(mobileTab === 'script')}
+            >
+              대본
+            </button>
+            <button
+              role="tab"
+              id={tabIds.comment}
+              aria-selected={mobileTab === 'comment'}
+              aria-controls={panelIds.comment}
+              onClick={() => setMobileTab('comment')}
+              className={getTabClassName(mobileTab === 'comment')}
+            >
+              댓글 {comments.length > 0 && `${comments.length}`}
+            </button>
+          </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          {mobileTab === 'script' ? (
-            <div
-              id={panelIds.script}
-              role="tabpanel"
-              aria-labelledby={tabIds.script}
-              className="px-4 py-4 max-[350px]:px-3 max-[350px]:py-3"
-            >
-              <ScriptSection
-                slides={projectSlides}
-                slideChangeTimes={slideChangeTimes}
-                currentTime={currentTime}
-              />
-            </div>
-          ) : (
-            <div
-              id={panelIds.comment}
-              role="tabpanel"
-              aria-labelledby={tabIds.comment}
-              className="flex flex-col min-h-full"
-            >
-              <div className="flex-1">
-                <CommentList
-                  comments={comments}
-                  onAddReply={addReply}
-                  onGoToRef={handleGoToTimeRef}
-                  onDeleteComment={deleteComment}
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {mobileTab === 'script' ? (
+              <div
+                id={panelIds.script}
+                role="tabpanel"
+                aria-labelledby={tabIds.script}
+                className="px-4 py-4 max-[350px]:px-3 max-[350px]:py-3"
+              >
+                <ScriptSection
+                  slides={projectSlides}
+                  slideChangeTimes={slideChangeTimes}
+                  currentTime={currentTime}
+                  onSeek={requestSeek}
                 />
               </div>
-              <div className="sticky bottom-0 border-t border-gray-200 bg-gray-100 px-4 py-3 max-[350px]:px-3 max-[350px]:py-2">
-                <CommentInput
-                  value={commentDraft}
-                  onChange={setCommentDraft}
-                  onSubmit={handleAddComment}
-                  onCancel={() => setCommentDraft('')}
-                  className="w-full"
-                  initialValueOnFocus={timestampPrefix}
-                />
+            ) : (
+              <div
+                id={panelIds.comment}
+                role="tabpanel"
+                aria-labelledby={tabIds.comment}
+                className="flex flex-col min-h-full"
+              >
+                <div className="flex-1">
+                  <CommentList
+                    comments={comments}
+                    onAddReply={addReply}
+                    onGoToRef={handleGoToTimeRef}
+                    onDeleteComment={deleteComment}
+                  />
+                </div>
+                <div className="sticky bottom-0 border-t border-gray-200 bg-gray-100 px-4 py-3 max-[350px]:px-3 max-[350px]:py-2">
+                  <CommentInput
+                    value={commentDraft}
+                    onChange={setCommentDraft}
+                    onSubmit={handleAddComment}
+                    onCancel={() => setCommentDraft('')}
+                    className="w-full"
+                    initialValueOnFocus={timestampPrefix}
+                  />
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

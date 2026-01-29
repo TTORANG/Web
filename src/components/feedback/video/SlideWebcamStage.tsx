@@ -38,8 +38,8 @@ function MediaBox({ isMain, showPip, onToggle, label, className, children }: Med
         : 'right-4 bottom-25 w-48 h-27 z-20 rounded-xl'; // 서브면 우측 하단 작은 박스
     }
     // 2. PiP 모드가 아닐 때 (모바일 등)
-    // 메인이면 보이고, 서브면 뒤에 숨김(opacity-0)
-    return isMain ? 'inset-0 z-10' : 'inset-0 z-0 opacity-0 pointer-events-none';
+    // 메인이면 보이고, 서브면 완전히 숨김 (hidden으로 DOM에서 제거)
+    return isMain ? 'inset-0 z-10' : 'hidden';
   }, [showPip, isMain]);
 
   return (
@@ -228,7 +228,7 @@ export default function SlideWebcamStage({
 
         {/* 클릭 핸들러 오버레이 (한번 클릭: 재생/일시정지, 더블클릭: 전체화면) */}
         <div
-          className="absolute inset-0 z-15 cursor-pointer"
+          className="absolute inset-0 z-30 cursor-pointer"
           onClick={handleStageClick}
           onDoubleClick={handleStageDoubleClick}
         />
