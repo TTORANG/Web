@@ -6,7 +6,7 @@
  * - 웹캠 녹화본은 webcamVideoUrl(MOCK_VIDEO.videoUrl)을 사용
  * - "작은 박스(PiP)"를 hover하면 디밍+텍스트, 클릭하면 슬라이드/웹캠 위치가 토글됨
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import clsx from 'clsx';
 
@@ -29,6 +29,7 @@ export default function SlideWebcamStage({
   onTimeUpdate,
 }: SlideWebcamStageProps) {
   const stageRootRef = useRef<HTMLDivElement | null>(null);
+  const clickTimeoutRef = useRef<number | null>(null);
 
   // 비디오 동기화 훅 (콜백 ref, duration, currentTime, seekTo 처리)
   const { setVideoRef, videoElement, duration, currentTime } = useVideoSync();
@@ -50,6 +51,47 @@ export default function SlideWebcamStage({
   }, [currentTime, slideChangeTimes, slides]);
 
   const activeSlide = slides[activeIndex];
+
+  // 스테이지 한번 클릭 → 재생/일시정지
+  const handleStageClick = useCallback(() => {
+    // 더블클릭 대기 중인 타이머가 있으면 취소
+    if (clickTimeoutRef.current) {
+      window.clearTimeout(clickTimeoutRef.current);
+      clickTimeoutRef.current = null;
+    }
+
+    // 250ms 후에 싱글클릭 동작 실행 (더블클릭 여부 확인용 딜레이)
+    clickTimeoutRef.current = window.setTimeout(() => {
+      clickTimeoutRef.current = null;
+      if (!videoElement) return;
+
+      if (videoElement.paused) {
+        videoElement.play().catch(() => {
+          // autoplay 정책 등
+        });
+      } else {
+        videoElement.pause();
+      }
+    }, 250);
+  }, [videoElement]);
+
+  // 스테이지 더블클릭 → 전체화면 토글
+  const handleStageDoubleClick = useCallback(async () => {
+    // 싱글클릭 타이머 취소
+    if (clickTimeoutRef.current) {
+      window.clearTimeout(clickTimeoutRef.current);
+      clickTimeoutRef.current = null;
+    }
+
+    const root = stageRootRef.current;
+    if (!root) return;
+
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    } else {
+      await root.requestFullscreen();
+    }
+  }, []);
 
   // slides가 비어있으면 렌더링하지 않음
   if (!activeSlide) {
@@ -146,6 +188,13 @@ export default function SlideWebcamStage({
             </button>
           )}
         </div>
+
+        {/* 클릭 핸들러 오버레이 (한번 클릭: 재생/일시정지, 더블클릭: 전체화면) */}
+        <div
+          className="absolute inset-0 z-[15] cursor-pointer"
+          onClick={handleStageClick}
+          onDoubleClick={handleStageDoubleClick}
+        />
 
         {/* 재생바/조작 오버레이 - overflow-visible로 썸네일 미리보기 표시 */}
         <div className="absolute bottom-0 left-0 right-0 z-40 overflow-visible bg-linear-to-t from-[#000000]/60 to-transparent pt-8 pb-4 px-4">
