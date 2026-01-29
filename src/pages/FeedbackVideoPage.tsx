@@ -74,6 +74,11 @@ export default function FeedbackVideoPage() {
     });
   }, []);
 
+  const getTabClassName = (isActive: boolean) =>
+    `flex-1 py-3 max-[350px]:py-2 text-body-m-bold max-[350px]:text-body-s transition-colors ${
+      isActive ? 'text-main border-b-2 border-main-variant1' : 'text-gray-600'
+    }`;
+
   const handleGoToTimeRef = useCallback(
     (ref: NonNullable<Comment['ref']>) => {
       if (ref.kind === 'video') requestSeek(ref.seconds);
@@ -184,9 +189,7 @@ export default function FeedbackVideoPage() {
             aria-selected={mobileTab === 'script'}
             aria-controls={panelIds.script}
             onClick={() => setMobileTab('script')}
-            className={`flex-1 py-3 max-[350px]:py-2 text-body-m-bold max-[350px]:text-body-s transition-colors ${
-              mobileTab === 'script' ? 'text-main border-b-2 border-main-variant1' : 'text-gray-600'
-            }`}
+            className={getTabClassName(mobileTab === 'script')}
           >
             대본
           </button>
@@ -196,11 +199,7 @@ export default function FeedbackVideoPage() {
             aria-selected={mobileTab === 'comment'}
             aria-controls={panelIds.comment}
             onClick={() => setMobileTab('comment')}
-            className={`flex-1 py-3 max-[350px]:py-2 text-body-m-bold max-[350px]:text-body-s transition-colors ${
-              mobileTab === 'comment'
-                ? 'text-main border-b-2 border-main-variant1'
-                : 'text-gray-600'
-            }`}
+            className={getTabClassName(mobileTab === 'comment')}
           >
             댓글 {comments.length > 0 && `${comments.length}`}
           </button>
