@@ -174,7 +174,10 @@ export default function ProgressBar({
           <div
             key={`segment-${segment.startTime}`}
             className="absolute -top-7 z-10 flex flex-col gap-1 items-center -translate-x-1/2 cursor-pointer"
-            style={{ left: `${leftPercent}%` }}
+            style={{
+              left: `clamp(8px, ${leftPercent}%, calc(100% - 8px))`,
+              transform: 'translateX(-50%)',
+            }}
             title={`${REACTION_CONFIG[segment.topReactionType].label} (${segment.count})`}
             onMouseEnter={() => setIsHoveringEmoji(true)}
             onMouseLeave={() => setIsHoveringEmoji(false)}
