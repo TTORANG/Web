@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { type KeyboardEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import RefreshIcon from '@/assets/icons/icon-refresh.svg?react';
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
 import { Spinner } from '@/components/common';
@@ -29,6 +30,15 @@ export default function FeedbackVideoPage() {
   const requestSeek = useVideoFeedbackStore((s) => s.requestSeek);
 
   const [commentDraft, setCommentDraft] = useState('');
+  const [mobileTab, setMobileTab] = useState<'script' | 'comment'>('script');
+  const tabIds = {
+    script: 'feedback-video-tab-script',
+    comment: 'feedback-video-tab-comment',
+  } as const;
+  const panelIds = {
+    script: 'feedback-video-panel-script',
+    comment: 'feedback-video-panel-comment',
+  } as const;
 
   // URL의 projectId를 활용해 해당 프로젝트 슬라이드만 필터링
   const projectSlides = useMemo(() => {
@@ -54,6 +64,15 @@ export default function FeedbackVideoPage() {
     addComment(commentDraft);
     setCommentDraft('');
   };
+
+  const handleTabKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    setMobileTab((prev) => {
+      if (prev === 'script') return event.key === 'ArrowRight' ? 'comment' : 'script';
+      return event.key === 'ArrowLeft' ? 'script' : 'comment';
+    });
+  }, []);
 
   const handleGoToTimeRef = useCallback(
     (ref: NonNullable<Comment['ref']>) => {
@@ -81,46 +100,155 @@ export default function FeedbackVideoPage() {
   }
 
   return (
-    <div className="flex h-full w-full px-35">
-      <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-4">
-        {/* 슬라이드 + 웹캠 + 재생바 (오버레이) */}
-        <SlideWebcamStage
-          slides={projectSlides}
-          slideChangeTimes={slideChangeTimes}
-          webcamVideoUrl={MOCK_VIDEO.videoUrl}
-          onTimeUpdate={setCurrentTime}
-        />
+    <div className="flex h-full w-full">
+      <div className="hidden md:flex flex-1 px-35">
+        <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-4">
+          {/* 슬라이드 + 웹캠 + 재생바 (오버레이) */}
+          <SlideWebcamStage
+            slides={projectSlides}
+            slideChangeTimes={slideChangeTimes}
+            webcamVideoUrl={MOCK_VIDEO.videoUrl}
+            onTimeUpdate={setCurrentTime}
+          />
 
-        {/* 대본 섹션 */}
-        <ScriptSection
-          slides={projectSlides}
-          slideChangeTimes={slideChangeTimes}
-          currentTime={currentTime}
-        />
+          {/* 대본 섹션 */}
+          <ScriptSection
+            slides={projectSlides}
+            slideChangeTimes={slideChangeTimes}
+            currentTime={currentTime}
+          />
+        </div>
+
+        <aside className="w-96 shrink-0 bg-gray-100 flex flex-col border-l border-gray-200">
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <CommentList
+              comments={comments}
+              onAddReply={addReply}
+              onGoToRef={handleGoToTimeRef}
+              onDeleteComment={deleteComment}
+            />
+          </div>
+
+          <div className="shrink-0 border-t border-black/5 flex flex-col gap-6 px-4 pb-6 pt-2">
+            <CommentInput
+              value={commentDraft}
+              onChange={setCommentDraft}
+              onSubmit={handleAddComment}
+              onCancel={() => setCommentDraft('')}
+              className="items-end w-86"
+              initialValueOnFocus={timestampPrefix}
+            />
+            <ReactionButtons reactions={reactions} onToggleReaction={toggleReaction} />
+          </div>
+        </aside>
       </div>
 
-      <aside className="w-96 shrink-0 bg-gray-100 flex flex-col border-l border-gray-200">
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          <CommentList
-            comments={comments}
-            onAddReply={addReply}
-            onGoToRef={handleGoToTimeRef}
-            onDeleteComment={deleteComment}
+      {/** 모바일 */}
+      <div className="flex md:hidden flex-1 flex-col bg-gray-100 min-w-0">
+        <div className="px-4 pt-4 max-[350px]:px-3 max-[350px]:pt-3">
+          <SlideWebcamStage
+            slides={projectSlides}
+            slideChangeTimes={slideChangeTimes}
+            webcamVideoUrl={MOCK_VIDEO.videoUrl}
+            onTimeUpdate={setCurrentTime}
+            disablePip
+            showLayoutToggle
+            layoutToggleLabel={
+              <div className="text-caption flex items-center justify-center gap-1.5">
+                <span>웹캠·슬라이드</span>
+                <RefreshIcon className="w-3.5 h-3.5" />
+              </div>
+            }
           />
         </div>
 
-        <div className="shrink-0 border-t border-black/5 flex flex-col gap-6 px-4 pb-6 pt-2">
-          <CommentInput
-            value={commentDraft}
-            onChange={setCommentDraft}
-            onSubmit={handleAddComment}
-            onCancel={() => setCommentDraft('')}
-            className="items-end w-86"
-            initialValueOnFocus={timestampPrefix}
+        <div className="shrink-0 px-4 pb-3 pt-5 flex flex-col gap-2 max-[350px]:px-3 max-[350px]:pb-2 max-[350px]:pt-1">
+          <ReactionButtons
+            reactions={reactions}
+            onToggleReaction={toggleReaction}
+            showLabel={false}
+            className="w-full flex-nowrap justify-between"
+            buttonClassName="flex-1 min-w-0 max-[350px]:text-xs max-[350px]:py-1"
           />
-          <ReactionButtons reactions={reactions} onToggleReaction={toggleReaction} />
         </div>
-      </aside>
+
+        <div
+          role="tablist"
+          aria-label="대본/댓글 탭"
+          className="flex border-b border-gray-200"
+          onKeyDown={handleTabKeyDown}
+        >
+          <button
+            role="tab"
+            id={tabIds.script}
+            aria-selected={mobileTab === 'script'}
+            aria-controls={panelIds.script}
+            onClick={() => setMobileTab('script')}
+            className={`flex-1 py-3 max-[350px]:py-2 text-body-m-bold max-[350px]:text-body-s transition-colors ${
+              mobileTab === 'script' ? 'text-main border-b-2 border-main-variant1' : 'text-gray-600'
+            }`}
+          >
+            대본
+          </button>
+          <button
+            role="tab"
+            id={tabIds.comment}
+            aria-selected={mobileTab === 'comment'}
+            aria-controls={panelIds.comment}
+            onClick={() => setMobileTab('comment')}
+            className={`flex-1 py-3 max-[350px]:py-2 text-body-m-bold max-[350px]:text-body-s transition-colors ${
+              mobileTab === 'comment'
+                ? 'text-main border-b-2 border-main-variant1'
+                : 'text-gray-600'
+            }`}
+          >
+            댓글 {comments.length > 0 && `${comments.length}`}
+          </button>
+        </div>
+
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          {mobileTab === 'script' ? (
+            <div
+              id={panelIds.script}
+              role="tabpanel"
+              aria-labelledby={tabIds.script}
+              className="px-4 py-4 max-[350px]:px-3 max-[350px]:py-3"
+            >
+              <ScriptSection
+                slides={projectSlides}
+                slideChangeTimes={slideChangeTimes}
+                currentTime={currentTime}
+              />
+            </div>
+          ) : (
+            <div
+              id={panelIds.comment}
+              role="tabpanel"
+              aria-labelledby={tabIds.comment}
+              className="flex flex-col min-h-full"
+            >
+              <div className="flex-1">
+                <CommentList
+                  comments={comments}
+                  onAddReply={addReply}
+                  onGoToRef={handleGoToTimeRef}
+                  onDeleteComment={deleteComment}
+                />
+              </div>
+              <div className="sticky bottom-0 border-t border-gray-200 bg-gray-100 px-4 py-3 max-[350px]:px-3 max-[350px]:py-2">
+                <CommentInput
+                  value={commentDraft}
+                  onChange={setCommentDraft}
+                  onSubmit={handleAddComment}
+                  onCancel={() => setCommentDraft('')}
+                  className="w-full"
+                  initialValueOnFocus={timestampPrefix}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

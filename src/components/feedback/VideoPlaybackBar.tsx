@@ -6,7 +6,7 @@
  * - VolumeControl: 볼륨 조절 + 시간 표시
  * - 재생/일시정지, 전체화면 버튼
  */
-import { useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import pauseIcon from '@/assets/playbackBar-icons/pause-icon.webp';
 import playIcon from '@/assets/playbackBar-icons/play-icon.webp';
@@ -23,6 +23,10 @@ interface VideoPlaybackBarProps {
   fullscreenTargetRef?: React.RefObject<HTMLElement>;
   slides?: Slide[];
   slideChangeTimes?: number[];
+  layoutToggle?: {
+    label: ReactNode;
+    onToggle: () => void;
+  };
 }
 
 export default function VideoPlaybackBar({
@@ -31,6 +35,7 @@ export default function VideoPlaybackBar({
   fullscreenTargetRef,
   slides,
   slideChangeTimes,
+  layoutToggle,
 }: VideoPlaybackBarProps) {
   const currentTime = useVideoFeedbackStore((s) => s.currentTime);
   const updateCurrentTime = useVideoFeedbackStore((s) => s.updateCurrentTime);
@@ -121,7 +126,7 @@ export default function VideoPlaybackBar({
 
       {/* 조작 영역 */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {/* 재생/일시정지 버튼 */}
           <button
             type="button"
@@ -145,15 +150,27 @@ export default function VideoPlaybackBar({
           />
         </div>
 
-        {/* 전체화면 버튼 */}
-        <button
-          type="button"
-          onClick={toggleFullscreen}
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.66)]"
-          aria-label="전체화면"
-        >
-          <img src={fullscreenIcon} alt="전체화면" className="h-7 w-7" />
-        </button>
+        <div className="flex items-center gap-1">
+          {layoutToggle && (
+            <button
+              type="button"
+              onClick={layoutToggle.onToggle}
+              className="h-9 px-3 rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.66)] text-xs text-[#ffffff] whitespace-nowrap"
+            >
+              {layoutToggle.label}
+            </button>
+          )}
+
+          {/* 전체화면 버튼 */}
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.66)]"
+            aria-label="전체화면"
+          >
+            <img src={fullscreenIcon} alt="전체화면" className="h-7 w-7" />
+          </button>
+        </div>
       </div>
     </div>
   );
