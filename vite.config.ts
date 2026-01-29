@@ -1,12 +1,36 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react-swc';
 import path from 'path';
+import type { Connect } from 'vite';
 import { defineConfig } from 'vite';
 import svgr from 'vite-plugin-svgr';
 
+// .mp4 파일 요청에 Accept-Ranges 헤더를 추가하는 미들웨어
+// Chrome에서 비디오 탐색(seeking)이 가능하도록 함
+const addAcceptRangesMiddleware: Connect.NextHandleFunction = (req, res, next) => {
+  if (req.url?.endsWith('.mp4')) {
+    res.setHeader('Accept-Ranges', 'bytes');
+  }
+  next();
+};
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(), svgr()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    svgr(),
+    // TODO: Vite에서 mp4 파일에 대해 Accept-Ranges 헤더를 추가하는 임시 플러그인
+    {
+      name: 'add-accept-ranges',
+      configureServer(server) {
+        server.middlewares.use(addAcceptRangesMiddleware);
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(addAcceptRangesMiddleware);
+      },
+    },
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
