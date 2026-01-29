@@ -5,7 +5,28 @@
  * 영상의 특정 타임스탬프에 대한 댓글과 리액션을 관리합니다.
  */
 import type { Comment } from './comment';
-import type { Reaction, ReactionEvent } from './script';
+import type { Reaction, ReactionEvent, ReactionType } from './script';
+
+/**
+ * 재생바 세그먼트 하이라이트 (5초 버킷)
+ *
+ * 영상을 5초 단위로 나눠 각 구간의 대표 리액션을 표시합니다.
+ * - 전체 세그먼트 중 리액션 총합이 많은 상위 10개만 표시
+ * - 동점일 경우 REACTION_TYPES 순서(fire > sleepy > good > bad > confused)로 우선
+ * - 세그먼트 시작 지점에 이모지 표시
+ */
+export interface SegmentHighlight {
+  /** 세그먼트 시작 시간 (초) */
+  startTime: number;
+  /** 세그먼트 종료 시간 (초) */
+  endTime: number;
+  /** 대표 리액션 타입 */
+  topReactionType: ReactionType;
+  /** 대표 리액션 카운트 */
+  count: number;
+  /** 세그먼트 내 전체 리액션 총합 (순위 결정용) */
+  totalCount: number;
+}
 
 /**
  * 타임스탬프별 피드백 데이터
