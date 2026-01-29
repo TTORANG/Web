@@ -1,7 +1,8 @@
 import { Navigate, createBrowserRouter } from 'react-router-dom';
 
 import { Gnb, Layout, LoginButton, Logo, ShareButton } from '@/components/common';
-import FeedbackHeaderLeft from '@/components/feedback/FeedbackHeaderLeft.tsx';
+// TODO: 컴포넌트 교체
+import FeedbackHeaderLeft from '@/components/feedback/FeedbackHeaderLeft';
 import {
   DevTestPage,
   FdSlidePage,
