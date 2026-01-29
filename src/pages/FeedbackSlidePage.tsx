@@ -10,7 +10,6 @@ import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
-import { Spinner } from '@/components/common';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
 import SlideNavigation from '@/components/feedback/SlideNavigation';
 import SlideViewer from '@/components/feedback/SlideViewer';
@@ -106,14 +105,6 @@ export default function FeedbackSlidePage() {
     });
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center bg-white">
-        <Spinner size={40} />
-      </div>
-    );
-  }
-
   return (
     <div className="flex h-full w-full">
       <div className="hidden md:flex flex-1 px-35">
@@ -134,6 +125,7 @@ export default function FeedbackSlidePage() {
               onAddReply={addReply}
               onGoToRef={handleGoToRef}
               onDeleteComment={deleteComment}
+              isLoading={isLoading}
             />
           </div>
 
@@ -257,6 +249,7 @@ export default function FeedbackSlidePage() {
                   onAddReply={addReply}
                   onGoToRef={handleGoToRef}
                   onDeleteComment={deleteComment}
+                  isLoading={isLoading}
                 />
               </div>
               <div className="sticky bottom-0 border-t border-gray-200 bg-gray-100 px-4 py-3">
