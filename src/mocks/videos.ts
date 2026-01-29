@@ -17,7 +17,7 @@ import { timeAgo } from './utils';
  */
 export const MOCK_VIDEO: VideoFeedback = {
   videoId: 'vid-1',
-  videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+  videoUrl: '/p1.webm',
   title: '테스트 영상',
   duration: 596,
   comments: [],
