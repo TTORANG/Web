@@ -5,7 +5,7 @@
  * - 자동 스크롤로 현재 대본이 중앙에 위치
  * - 수동 스크롤 시 자동 스크롤 일시 정지 후 2초 후 복구
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Skeleton } from '@/components/common';
 import type { Slide } from '@/types/slide';
@@ -86,6 +86,22 @@ export default function ScriptSection({
     return () => clearTimeout(timer);
   }, [autoScroll]);
 
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prevIndex = Math.max(0, currentSlideIndex - 1);
+      if (prevIndex !== currentSlideIndex) {
+        onSeek?.(slideChangeTimes[prevIndex]);
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const nextIndex = Math.min(slides.length - 1, currentSlideIndex + 1);
+      if (nextIndex !== currentSlideIndex) {
+        onSeek?.(slideChangeTimes[nextIndex]);
+      }
+    }
+  };
+
   const skeletonWidths = ['85%', '70%', '90%', '75%', '80%'];
 
   if (isLoading) {
@@ -107,7 +123,9 @@ export default function ScriptSection({
     <div
       ref={scriptSectionRef}
       onScroll={handleScriptScroll}
-      className="flex-1 min-w-0 rounded-lg p-4 overflow-y-auto flex flex-col gap-2 bg-gray-100"
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      className="flex-1 min-w-0 rounded-lg p-4 overflow-y-auto flex flex-col gap-2 bg-gray-100 focus:outline-none"
     >
       {slides.map((slide, index) => {
         const slideStartTime = slideChangeTimes[index] || 0;
