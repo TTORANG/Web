@@ -11,7 +11,7 @@ function escapeRegExp(str: string) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-export function HighlightText({ text, query, markClassName = 'rounded bg-yellow-200' }: Props) {
+export function HighlightText({ text, query, markClassName = 'bg-transparent text-main' }: Props) {
   const trimmed = query.trim();
 
   const parts = useMemo(() => {
@@ -33,9 +33,9 @@ export function HighlightText({ text, query, markClassName = 'rounded bg-yellow-
     <>
       {parts.map((p, index) =>
         p.isMatch ? (
-          <mark key={index} className={markClassName}>
+          <span key={index} className={markClassName}>
             {p.value}
-          </mark>
+          </span>
         ) : (
           // query 공백이면 그냥 원문 출력
           <span key={index}>{p.value}</span>

@@ -99,9 +99,9 @@ export default function ProjectsSection({
         )
       ) : hasQuery && !hasResults ? (
         // 2. 검색어는 있지만 결과가 없는 경우 -> '검색 결과 없음'
-        <div className=" flex items-center justify-center mt-10">
+        <div className="flex items-center justify-center p-40">
           <p className="text-body-m text-gray-500">
-            &apos;{query}&apos;(으)로 검색한 결과가 존재하지 않습니다.
+            &apos;{query}&apos;에 대한 검색 결과를 찾지 못했어요.
           </p>
         </div>
       ) : (
@@ -111,13 +111,6 @@ export default function ProjectsSection({
          *  - 검색어 있음 + 결과 있음 -> 결과 리스트
          */
         <div>
-          {/* 검색어가 있을 때에만 검색 결과 안내 문구 표시 */}
-          {hasQuery && (
-            <p className="ml-3 mt-3 text-body-s text-gray-700">
-              &apos;{query}&apos;(으)로 검색한 결과를 {projects.length}개 찾았습니다.
-            </p>
-          )}
-
           {viewMode === 'card' ? (
             <CardView
               items={projects}
