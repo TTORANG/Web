@@ -184,8 +184,8 @@ export function computeUserActiveHighlights(
   const bucketMap = new Map<number, Set<ReactionType>>();
 
   feedbacks.forEach((feedback) => {
-    const activeTypes = feedback.reactions.filter((r) => r.active);
-    if (!activeTypes.length) return;
+    const activeReactions = feedback.reactions.filter((r) => r.active);
+    if (!activeReactions.length) return;
 
     const bucketIndex = Math.floor(feedback.timestamp / SEGMENT_BUCKET_SIZE);
 
@@ -194,7 +194,7 @@ export function computeUserActiveHighlights(
     }
 
     const typeSet = bucketMap.get(bucketIndex)!;
-    activeTypes.forEach((r) => typeSet.add(r.type));
+    activeReactions.forEach((r) => typeSet.add(r.type));
   });
 
   // 각 버킷에서 REACTION_TYPES 순서 기준 대표 이모지 선택
