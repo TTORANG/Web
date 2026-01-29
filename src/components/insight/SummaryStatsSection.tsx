@@ -1,9 +1,4 @@
-type SummaryStat = {
-  label: string;
-  value: string;
-  sub: string;
-  trend?: 'up' | 'down';
-};
+import type { SummaryStat } from '@/types/insight';
 
 interface SummaryStatsSectionProps {
   stats: SummaryStat[];

@@ -1,19 +1,6 @@
-import DonutChart from './DonutChart';
+import type { DropOffSlide, DropOffTime } from '@/types/insight';
+
 import SlideThumb from './SlideThumb';
-
-type DropOffSlide = {
-  label: string;
-  desc: string;
-  percent: number;
-  slideIndex: number;
-};
-
-type DropOffTime = {
-  time: string;
-  desc: string;
-  count: number;
-  slideIndex: number;
-};
 
 interface DropOffAnalysisSectionProps {
   cardClassName: string;
@@ -32,6 +19,11 @@ export default function DropOffAnalysisSection({
   getThumb,
   maxDropOffCount,
 }: DropOffAnalysisSectionProps) {
+  const getProgressWidth = (count: number) => {
+    if (maxDropOffCount === 0) return 0; // 0으로 나누기 방지
+    return Math.round((count / maxDropOffCount) * 100);
+  };
+
   return (
     <div className="grid grid-cols-2 gap-4 mb-6">
       <div className={`${cardClassName} p-6`}>
@@ -51,7 +43,7 @@ export default function DropOffAnalysisSection({
                   <div className="text-xs text-gray-500">{item.desc}</div>
                 </div>
               </div>
-              <DonutChart percent={item.percent} />
+              <span className="text-2xl font-bold text-red-500">{item.percent}%</span>
             </div>
           ))}
         </div>
@@ -79,7 +71,7 @@ export default function DropOffAnalysisSection({
                 <div className="w-full bg-gray-100 rounded-full h-1.5">
                   <div
                     className="bg-red-500 h-1.5 rounded-full"
-                    style={{ width: `${Math.round((item.count / maxDropOffCount) * 100)}%` }}
+                    style={{ width: `${getProgressWidth(item.count)}%` }}
                   ></div>
                 </div>
               </div>

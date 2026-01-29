@@ -10,28 +10,8 @@ import {
 } from '@/components/insight';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useSlides } from '@/hooks/queries/useSlides';
+import type { DropOffSlide, DropOffTime, SummaryStat } from '@/types/insight';
 import type { Reaction } from '@/types/script';
-
-type SummaryStat = {
-  label: string;
-  value: string;
-  sub: string;
-  trend?: 'up' | 'down';
-};
-
-type DropOffSlide = {
-  label: string;
-  desc: string;
-  percent: number;
-  slideIndex: number;
-};
-
-type DropOffTime = {
-  time: string;
-  desc: string;
-  count: number;
-  slideIndex: number;
-};
 
 type RecentComment = {
   user: string;

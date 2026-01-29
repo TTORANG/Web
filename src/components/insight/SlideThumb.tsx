@@ -12,7 +12,7 @@ export default function SlideThumb({
   fallbackClassName = 'w-16 h-10 bg-gray-200 rounded',
 }: SlideThumbProps) {
   if (!src) {
-    return <div className={fallbackClassName} aria-hidden="true" />;
+    return <div className={fallbackClassName} role="img" />;
   }
 
   return <img src={src} alt={alt} className={className} />;
