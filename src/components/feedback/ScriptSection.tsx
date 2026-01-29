@@ -86,18 +86,16 @@ export default function ScriptSection({
     return () => clearTimeout(timer);
   }, [autoScroll]);
 
-  // 스켈레톤 아이템별 대본 너비
   const skeletonWidths = ['85%', '70%', '90%', '75%', '80%'];
 
-  // 스켈레톤 렌더링
   if (isLoading) {
     return (
       <div className="flex-1 min-w-0 rounded-lg p-4 overflow-y-auto flex flex-col gap-2 bg-gray-100">
         {skeletonWidths.map((width, index) => (
           <div key={index} className="flex items-center gap-3 px-4 py-3 rounded-lg bg-gray-200">
-            {/* 타임스탬프 자리 */}
+            {/* 타임스탬프 */}
             <Skeleton width={26} height={22} rounded={4} className="shrink-0 bg-gray-400!" />
-            {/* 대본 텍스트 자리 */}
+            {/* 대본 */}
             <Skeleton width={width} height={16} rounded={4} className="ml-4 bg-gray-400!" />
           </div>
         ))}
