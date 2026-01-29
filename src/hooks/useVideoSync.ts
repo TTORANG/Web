@@ -60,6 +60,13 @@ export function useVideoSync(options: UseVideoSyncOptions = {}): UseVideoSyncRet
     const onLoadedMetadata = () => {
       const d = Number.isFinite(videoElement.duration) ? videoElement.duration : 0;
       setDuration(d);
+
+      // 비디오가 로드되면 store의 currentTime으로 복원 (뷰포트 전환 시)
+      const storedTime = useVideoFeedbackStore.getState().currentTime;
+      if (storedTime > 0 && Math.abs(videoElement.currentTime - storedTime) > 0.5) {
+        // eslint-disable-next-line react-hooks/immutability -- DOM API
+        videoElement.currentTime = storedTime;
+      }
     };
 
     const onTimeUpdate = () => {
@@ -69,9 +76,16 @@ export function useVideoSync(options: UseVideoSyncOptions = {}): UseVideoSyncRet
     videoElement.addEventListener('loadedmetadata', onLoadedMetadata);
     videoElement.addEventListener('timeupdate', onTimeUpdate);
 
-    // 이미 로드된 경우 duration 설정
+    // 이미 로드된 경우 duration 설정 및 시간 복원
     if (videoElement.readyState >= 1 && Number.isFinite(videoElement.duration)) {
       setDuration(videoElement.duration);
+
+      // 이미 로드된 경우에도 store의 currentTime으로 복원
+      const storedTime = useVideoFeedbackStore.getState().currentTime;
+      if (storedTime > 0 && Math.abs(videoElement.currentTime - storedTime) > 0.5) {
+        // eslint-disable-next-line react-hooks/immutability -- DOM API
+        videoElement.currentTime = storedTime;
+      }
     }
 
     return () => {
