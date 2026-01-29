@@ -81,7 +81,7 @@ export default function VolumeControl({
       </div>
 
       {/* 시간 표시 - hover 시 오른쪽으로 슬라이드 */}
-      <div className="whitespace-nowrap rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.66)] px-3 py-2 text-xs font-medium tabular-nums text-[#ffffff] transition-all duration-150 group-hover/vol:translate-x-19">
+      <div className="whitespace-nowrap rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.66)] px-3 py-2 text-caption tabular-nums text-[#ffffff] transition-all duration-150 group-hover/vol:translate-x-19">
         <span>{formatVideoTimestamp(currentTime)}</span>
         <span className="mx-1">/</span>
         <span>{formatVideoTimestamp(duration)}</span>

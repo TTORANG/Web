@@ -153,7 +153,10 @@ export default function ProgressBar({
           <div
             key={`segment-${segment.startTime}`}
             className="absolute -top-6 flex flex-col items-center pointer-events-none"
-            style={{ left: `${leftPercent}%` }}
+            style={{
+              left: `clamp(8px, ${leftPercent}%, calc(100% - 8px))`,
+              transform: 'translateX(-50%)',
+            }}
             title={`${REACTION_CONFIG[segment.topReactionType].label} (${segment.count})`}
           >
             <span className="text-sm leading-none drop-shadow-md">

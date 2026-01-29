@@ -6,20 +6,81 @@
  * - 웹캠 녹화본은 webcamVideoUrl(MOCK_VIDEO.videoUrl)을 사용
  * - "작은 박스(PiP)"를 hover하면 디밍+텍스트, 클릭하면 슬라이드/웹캠 위치가 토글됨
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 
 import clsx from 'clsx';
 
+import RefreshIcon from '@/assets/icons/icon-refresh.svg?react';
 import VideoPlaybackBar from '@/components/feedback/VideoPlaybackBar';
 import { useVideoSync } from '@/hooks/useVideoSync';
 import type { Slide } from '@/types/slide';
 import { getSlideIndexFromTime } from '@/utils/video';
 
+// 공통 미디어 컨테이너 (Slide & Webcam)
+interface MediaBoxProps {
+  isMain: boolean; // 현재 이 미디어가 메인 화면인가?
+  showPip: boolean; // PiP 모드가 활성화되었는가?
+  onToggle: () => void; // 위치 토글 핸들러
+  label: string; // 호버 시 보여줄 라벨 (예: "슬라이드 확장")
+  className?: string; // 배경색 등 추가 스타일
+  children: ReactNode; // 내부 컨텐츠 (img 또는 video)
+}
+
+function MediaBox({ isMain, showPip, onToggle, label, className, children }: MediaBoxProps) {
+  // 컨테이너의 위치 및 크기 결정 로직
+  const containerStyle = useMemo(() => {
+    // 1. PiP 모드일 때 (데스크톱 등)
+    if (showPip) {
+      // 메인/작은 박스 위치 토글 로직
+      return isMain
+        ? 'inset-0 z-10 rounded-none' // 메인이면 전체 화면
+        : 'right-4 bottom-25 w-48 h-27 z-20 rounded-xl'; // 서브면 우측 하단 작은 박스
+    }
+    // 2. PiP 모드가 아닐 때 (모바일 등)
+    // 메인이면 보이고, 서브면 뒤에 숨김(opacity-0)
+    return isMain ? 'inset-0 z-10' : 'inset-0 z-0 opacity-0 pointer-events-none';
+  }, [showPip, isMain]);
+
+  return (
+    <div
+      className={clsx(
+        'absolute overflow-hidden bg-[#000000]/20', // 부드러운 전환 효과 유지
+        containerStyle,
+        className,
+      )}
+    >
+      {children}
+
+      {/* 서브 화면(PiP)일 때만 호버/클릭 가능한 오버레이 버튼 노출 */}
+      {showPip && !isMain && (
+        <button
+          type="button"
+          onClick={onToggle}
+          className="group absolute inset-0 font-semi-bold flex items-center justify-center bg-transparent text-body-s"
+          aria-label={label}
+        >
+          {/* 평소엔 투명, 호버 시 어두운 배경 + 텍스트 표시 */}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition bg-[#000000]/35" />
+          {/** 지금 "작은 박스(PiP)"에 무엇이 들어있는지에 따라 hover 문구 결정 */}
+          <div className="relative opacity-0 group-hover:opacity-100 transition text-[#ffffff] text-sm">
+            {label}
+          </div>
+        </button>
+      )}
+    </div>
+  );
+}
+
+// 메인 컴포넌트
 type SlideWebcamStageProps = {
   slides: Slide[];
   slideChangeTimes: number[];
   webcamVideoUrl: string;
   onTimeUpdate?: (time: number) => void;
+  disablePip?: boolean;
+  showLayoutToggle?: boolean;
+  layoutToggleLabel?: ReactNode;
 };
 
 export default function SlideWebcamStage({
@@ -27,14 +88,23 @@ export default function SlideWebcamStage({
   slideChangeTimes,
   webcamVideoUrl,
   onTimeUpdate,
+  disablePip = false,
+  showLayoutToggle = false,
+  layoutToggleLabel = (
+    <div className="text-caption flex items-center justify-center gap-1.5">
+      <span>웹캠·슬라이드</span>
+      <RefreshIcon className="w-3.5 h-3.5" />
+    </div>
+  ),
 }: SlideWebcamStageProps) {
   const stageRootRef = useRef<HTMLDivElement | null>(null);
 
-  // 비디오 동기화 훅 (videoRef, duration, currentTime, seekTo 처리)
+  // video sync (videoRef, duration, currentTime, seekTo)
   const { videoRef, duration, currentTime } = useVideoSync();
 
   const [layout, setLayout] = useState<'slide-main' | 'webcam-main'>('slide-main');
   const isSlideMain = layout === 'slide-main';
+  const showPip = !disablePip;
 
   // onTimeUpdate 콜백 호출
   useEffect(() => {
@@ -56,96 +126,66 @@ export default function SlideWebcamStage({
     setLayout((prev) => (prev === 'slide-main' ? 'webcam-main' : 'slide-main'));
   };
 
-  // 지금 "작은 박스(PiP)"에 무엇이 들어있는지에 따라 hover 문구 결정
-  // - slide-main이면 PiP는 웹캠 => "웹캠 확장"
-  // - webcam-main이면 PiP는 슬라이드 => "슬라이드 확장"
-  const pipLabel = isSlideMain ? '웹캠 확장' : '슬라이드 확장';
-
   return (
-    <div ref={stageRootRef} className="flex-1 min-w-0 flex flex-col" data-stage-root>
+    <div ref={stageRootRef} className="flex-1 min-w-0 flex flex-col justify-center" data-stage-root>
       <div className="relative w-full aspect-video bg-gray-900 rounded-xl">
         {/* 슬라이드도 "메인/작은 박스" 위치가 토글되도록 class를 바꿈 */}
-        <div
-          className={clsx(
-            'absolute overflow-hidden bg-[#000000]/20',
-            isSlideMain
-              ? 'inset-0 z-10 rounded-none' // 슬라이드가 메인일 때: 크게
-              : 'right-4 bottom-25 w-48 h-27 z-20 rounded-xl', // 웹캠이 메인일 때: 슬라이드가 작은 박스 (16:9)
-          )}
+        {/* 슬라이드 + 웹캠 영역 (PiP 또는 단일) */}
+        {/* 1. 슬라이드 영역 */}
+        <MediaBox
+          isMain={isSlideMain}
+          showPip={showPip}
+          onToggle={toggleLayout}
+          label="슬라이드 확장"
+          className="bg-[#000000]/20"
         >
           <img
             src={activeSlide.thumb}
             alt={`슬라이드 ${activeIndex + 1} - ${activeSlide.title}`}
             className={clsx(
               'h-full w-full',
-              isSlideMain ? 'object-contain' : 'object-cover', // 작은 박스일 땐 꽉 차게(보기 좋게)
+              // 슬라이드는 메인일 때 전체 보기(contain), 작은 박스일 땐 꽉 차게(cover)
+              isSlideMain ? 'object-contain' : 'object-cover',
             )}
             draggable={false}
           />
+        </MediaBox>
 
-          {/* 개발단계 확인용: 슬라이드 제목 배지는 슬라이드가 메인일 때만 보여주기 */}
-          {/* {isSlideMain && (
+        {/* 개발단계 확인용: 슬라이드 제목 배지는 슬라이드가 메인일 때만 보여주기 */}
+        {/* {isSlideMain && (
             <div className="absolute left-4 top-4 rounded-md bg-[#000000]/55 px-3 py-1 text-[#ffffff] text-sm">
               {activeIndex + 1}. {activeSlide.title}
             </div>
           )} */}
 
-          {/* "슬라이드가 PiP일 때"만 hover 디밍 + 클릭 토글이 가능해야 함 */}
-          {!isSlideMain && (
-            <button
-              type="button"
-              onClick={toggleLayout}
-              className="group absolute inset-0 font-semi-bold flex items-center justify-center bg-transparent  text-body-s"
-              aria-label="슬라이드 확장"
-            >
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition bg-[#000000]/35" />
-              <div className="relative opacity-0 group-hover:opacity-100 transition text-[#ffffff] text-sm">
-                {pipLabel}
-              </div>
-            </button>
-          )}
-        </div>
-
-        {/* 웹캠도 "메인/작은 박스" 위치가 토글되도록 class를 바꿈 */}
-        <div
-          className={clsx(
-            'absolute overflow-hidden bg-[#000000]/40',
-            isSlideMain
-              ? 'right-4 bottom-25 w-48 h-27 z-20 rounded-xl' // 슬라이드 메인일 때: 웹캠이 작은 박스 (16:9)
-              : 'inset-0 z-10 rounded-none', // 웹캠 메인일 때: 웹캠이 크게
-          )}
+        {/* "슬라이드가 PiP일 때"만 hover 디밍 + 클릭 토글이 가능해야 함 */}
+        {/* 2. 웹캠 영역 */}
+        <MediaBox
+          isMain={!isSlideMain} // 슬라이드가 메인이 아니면 웹캠이 메인
+          showPip={showPip}
+          onToggle={toggleLayout}
+          label="웹캠 확장"
+          className="bg-[#000000]/40"
         >
           <video
             ref={videoRef}
             src={webcamVideoUrl}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover" // 웹캠은 항상 꽉 차게
             playsInline
           />
-
-          {/* "웹캠이 PiP일 때"만 hover 디밍 + 클릭 토글 */}
-          {isSlideMain && (
-            <button
-              type="button"
-              onClick={toggleLayout}
-              className="group absolute inset-0 flex items-center justify-center bg-transparent text-body-s"
-              aria-label="웹캠 확장"
-            >
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition bg-[#000000]/35" />
-              <div className="relative opacity-0 group-hover:opacity-100 transition text-[#ffffff] text-sm">
-                {pipLabel}
-              </div>
-            </button>
-          )}
-        </div>
+        </MediaBox>
 
         {/* 재생바/조작 오버레이 - overflow-visible로 썸네일 미리보기 표시 */}
-        <div className="absolute bottom-0 left-0 right-0 z-40 overflow-visible bg-linear-to-t from-[#000000]/60 to-transparent pt-8 pb-4 px-4">
+        <div className="absolute bottom-0 left-0 right-0 z-40 overflow-visible bg-linear-to-t from-[#000000]/60 to-transparent pt-8 pb-2 px-3">
           <VideoPlaybackBar
             videoRef={videoRef as React.RefObject<HTMLVideoElement>}
             duration={duration}
             fullscreenTargetRef={stageRootRef as React.RefObject<HTMLElement>}
             slides={slides}
             slideChangeTimes={slideChangeTimes}
+            layoutToggle={
+              showLayoutToggle ? { label: layoutToggleLabel, onToggle: toggleLayout } : undefined
+            }
           />
         </div>
       </div>
