@@ -1,6 +1,8 @@
 import { type KeyboardEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import clsx from 'clsx';
+
 import RefreshIcon from '@/assets/icons/icon-refresh.svg?react';
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
@@ -75,9 +77,10 @@ export default function FeedbackVideoPage() {
   }, []);
 
   const getTabClassName = (isActive: boolean) =>
-    `flex-1 py-3 max-[350px]:py-2 text-body-m-bold max-[350px]:text-body-s transition-colors ${
-      isActive ? 'text-main border-b-2 border-main-variant1' : 'text-gray-600'
-    }`;
+    clsx(
+      'flex-1 py-3 max-[350px]:py-2 text-body-m-bold max-[350px]:text-body-s transition-colors',
+      isActive ? 'text-main border-b-2 border-main-variant1' : 'text-gray-600',
+    );
 
   const handleGoToTimeRef = useCallback(
     (ref: NonNullable<Comment['ref']>) => {
@@ -150,20 +153,14 @@ export default function FeedbackVideoPage() {
 
       {/** 모바일 */}
       <div className="flex md:hidden flex-1 flex-col bg-gray-100 min-w-0">
-        <div className="px-4 pt-4 max-[350px]:px-3 max-[350px]:pt-3">
+        <div className="pt-4 max-[350px]:pb-3">
           <SlideWebcamStage
             slides={projectSlides}
             slideChangeTimes={slideChangeTimes}
             webcamVideoUrl={MOCK_VIDEO.videoUrl}
             onTimeUpdate={setCurrentTime}
             disablePip
-            showLayoutToggle
-            layoutToggleLabel={
-              <div className="text-caption flex items-center justify-center gap-1.5">
-                <span>웹캠·슬라이드</span>
-                <RefreshIcon className="w-3.5 h-3.5" />
-              </div>
-            }
+            showLayoutToggle // 웹캠·슬라이드 전환 버튼 생성(모바일에만)
           />
         </div>
 
