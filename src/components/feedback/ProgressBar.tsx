@@ -155,35 +155,30 @@ export default function ProgressBar({
       onMouseDown={handleMouseDown}
       className="group relative h-1 w-full cursor-pointer rounded-full bg-[rgba(26,26,26,0.66)] transition-all duration-150 hover:h-1.5 hover:ring-2 hover:ring-[#4F5BFF]/30 select-none before:content-[''] before:absolute before:-inset-y-3 before:inset-x-0"
     >
-      {/* 이모지 반응이 있는 위치의 마커 */}
+      {/* 프로그레스바 위 흰색 마커 */}
       {segmentHighlights?.map((segment) => {
         const percent = max > 0 ? (segment.startTime / max) * 100 : 0;
         return (
           <div
-            key={`reaction-marker-${segment.startTime}`}
-            className="absolute top-1/2 h-1 w-0.5 -translate-y-1/2 bg-[#FFFFFF]"
-            style={{ left: `${percent}%`, marginLeft: '-1px' }}
+            key={`marker-${segment.startTime}`}
+            className="absolute top-1/2 -translate-y-1/2 z-10 h-1.5 w-0.5 rounded-full bg-[#FFFFFF]/70"
+            style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
           />
         );
       })}
 
       {/* 세그먼트 하이라이트 (5초 버킷별 대표 리액션) */}
       {segmentHighlights?.map((segment) => {
-        const leftPercent = max > 0 ? (segment.startTime / max) * 100 : 0;
+        const percent = max > 0 ? (segment.startTime / max) * 100 : 0;
         return (
           <div
             key={`segment-${segment.startTime}`}
-            className="absolute -top-7 z-10 flex flex-col gap-1 items-center -translate-x-1/2 cursor-pointer"
-            style={{
-              left: `clamp(8px, ${leftPercent}%, calc(100% - 8px))`,
-              transform: 'translateX(-50%)',
-            }}
+            className="absolute -top-7 z-10 flex flex-col gap-1 items-center cursor-pointer"
+            style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
             title={`${REACTION_CONFIG[segment.topReactionType].label} (${segment.count})`}
             onMouseEnter={() => setIsHoveringEmoji(true)}
             onMouseLeave={() => setIsHoveringEmoji(false)}
             onClick={(e) => {
-              // 부모 ProgressBar의 onClick도 같은 시점으로 seek하므로,
-              // 이벤트 버블링을 막아 중복 호출 방지
               e.stopPropagation();
               onSeek(segment.startTime);
             }}
