@@ -77,7 +77,7 @@ export default function ProjectList({
             <HighlightText
               text={title}
               query={highlightQuery}
-              markClassName="bg-transparent text-main"
+              highlightClassName="bg-transparent text-main"
             />
           </div>
 

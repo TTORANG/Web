@@ -80,7 +80,7 @@ export default function ProjectCard({
               <HighlightText
                 text={title}
                 query={highlightQuery}
-                markClassName="bg-transparent text-main"
+                highlightClassName="bg-transparent text-main"
               />
             </h3>
             {/* 더보기 */}
