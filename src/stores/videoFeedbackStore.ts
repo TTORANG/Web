@@ -84,7 +84,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
 
     updateCurrentTime: (time) => set({ currentTime: time }, false, 'video/updateTime'),
 
-    requestSeek: (time) => set({ seekTo: time }, false, 'video/requestSeek'),
+    requestSeek: (time) => set({ seekTo: time, currentTime: time }, false, 'video/requestSeek'),
 
     clearSeek: () => set({ seekTo: null }, false, 'video/clearSeek'),
 
