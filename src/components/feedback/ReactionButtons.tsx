@@ -36,7 +36,7 @@ export default function ReactionButtons({
   const total = reactions.length;
   const containerClass = isGrid
     ? `grid grid-cols-2 gap-2 justify-items-center ${className ?? ''}`
-    : `flex gap-1 ${showLabel ? 'flex-wrap' : 'flex-nowrap'} ${className ?? ''}`;
+    : `flex gap-1.5 ${showLabel ? 'flex-wrap' : 'flex-nowrap'} ${className ?? ''}`;
 
   return (
     <div className={containerClass}>
@@ -65,9 +65,7 @@ export default function ReactionButtons({
               {showLabel && <span className="whitespace-nowrap">{config.label}</span>}
             </div>
 
-            <span
-              className={`tabular-nums text-right min-w-0 ${reaction.active ? 'font-semibold' : ''}`}
-            >
+            <span className={`tabular-nums text-right min-w-0`}>
               {reaction.count > 0 ? formatReactionCount(reaction.count) : ''}
             </span>
           </button>

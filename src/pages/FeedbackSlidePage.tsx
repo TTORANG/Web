@@ -179,7 +179,7 @@ export default function FeedbackSlidePage() {
           )}
         </div>
 
-        <div className="shrink-0 px-4 pb-3 pt-2 flex flex-col gap-3">
+        <div className="shrink-0 px-2 pb-3 pt-2 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <SlideNavigation
               slideIndex={slideIndex}
