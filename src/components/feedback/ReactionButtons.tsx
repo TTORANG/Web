@@ -52,7 +52,7 @@ export default function ReactionButtons({
           <button
             key={reaction.type}
             onClick={() => onToggleReaction(reaction.type)}
-            className={`${baseBtn} ${widthClass} rounded-full border transition text-body-m focus-visible:outline-2 focus-visible:outline-main ${buttonClassName ?? ''} ${
+            className={`${baseBtn} ${widthClass} ${buttonClassName ?? ''} ${
               isLastOdd ? 'col-span-2 justify-self-start' : ''
             } ${
               reaction.active
@@ -66,7 +66,7 @@ export default function ReactionButtons({
             </div>
 
             <span
-              className={`tabular-nums text-right min-w-0 ${reaction.active ? 'font-body-m' : ''}`}
+              className={`tabular-nums text-right min-w-0 ${reaction.active ? 'font-semibold' : ''}`}
             >
               {reaction.count > 0 ? formatReactionCount(reaction.count) : ''}
             </span>

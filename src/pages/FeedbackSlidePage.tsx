@@ -106,6 +106,11 @@ export default function FeedbackSlidePage() {
     });
   }, []);
 
+  const getTabClassName = (isActive: boolean) =>
+    `flex-1 py-3 text-body-m-bold transition-colors ${
+      isActive ? 'text-main border-b-2 border-main-variant1' : 'text-gray-600'
+    }`;
+
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center bg-white">
@@ -207,9 +212,7 @@ export default function FeedbackSlidePage() {
             aria-selected={mobileTab === 'script'}
             aria-controls={panelIds.script}
             onClick={() => setMobileTab('script')}
-            className={`flex-1 py-3 text-body-m-bold transition-colors ${
-              mobileTab === 'script' ? 'text-main border-b-2 border-main-variant1' : 'text-gray-600'
-            }`}
+            className={getTabClassName(mobileTab === 'script')}
           >
             대본
           </button>
@@ -219,11 +222,7 @@ export default function FeedbackSlidePage() {
             aria-selected={mobileTab === 'comment'}
             aria-controls={panelIds.comment}
             onClick={() => setMobileTab('comment')}
-            className={`flex-1 py-3 text-body-m-bold transition-colors ${
-              mobileTab === 'comment'
-                ? 'text-main border-b-2 border-main-variant1'
-                : 'text-gray-600'
-            }`}
+            className={getTabClassName(mobileTab === 'comment')}
           >
             댓글 {comments.length > 0 && `${comments.length}`}
           </button>
