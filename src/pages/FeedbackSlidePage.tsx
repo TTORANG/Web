@@ -1,5 +1,5 @@
 /**
- * @file FeedbackSlidePage.tsx
+ * @file FeedbackSlidePage
  * @description 피드백 슬라이드 페이지
  *
  * 슬라이드 뷰어, 댓글 목록, 리액션 버튼을 포함합니다.
@@ -139,6 +139,7 @@ export default function FeedbackSlidePage() {
               onAddReply={addReply}
               onGoToRef={handleGoToRef}
               onDeleteComment={deleteComment}
+              isLoading={isLoading}
             />
           </div>
 
@@ -151,7 +152,7 @@ export default function FeedbackSlidePage() {
               className="items-end w-86"
             />
             <ReactionButtons
-              reactions={reactions}
+              reactions={reactions.length > 0 ? reactions : createDefaultReactions()}
               onToggleReaction={toggleReaction}
               layout="grid-2"
               buttonClassName="w-42.25"
@@ -192,7 +193,7 @@ export default function FeedbackSlidePage() {
             />
           </div>
           <ReactionButtons
-            reactions={reactions}
+            reactions={reactions.length > 0 ? reactions : createDefaultReactions()}
             onToggleReaction={toggleReaction}
             showLabel={false}
             className="w-full flex-wrap justify-between"
@@ -259,6 +260,7 @@ export default function FeedbackSlidePage() {
                   onAddReply={addReply}
                   onGoToRef={handleGoToRef}
                   onDeleteComment={deleteComment}
+                  isLoading={isLoading}
                 />
               </div>
               <div className="shrink-0 border-t border-gray-200 bg-gray-100 px-4 py-3">
