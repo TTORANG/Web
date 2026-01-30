@@ -40,7 +40,7 @@ export default function ProjectHeader({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       {/* 검색 부분 */}
-      <div className="flex w-full sm:flex-1 sm:min-w-0 sm:max-w-none items-center gap-2 px-4 py-3 border border-gray-200 rounded-lg bg-white">
+      <div className="flex w-full sm:flex-1 sm:min-w-0 sm:max-w-none items-center gap-2 px-4 py-3 border border-gray-200 rounded-2xl bg-white focus-within:outline focus-within:outline-2 focus-within:outline-main">
         <input
           className="w-full bg-transparent text-body-m text-gray-900 placeholder:text-gray-400 focus:outline-none"
           placeholder="검색어를 입력하세요"
@@ -59,7 +59,7 @@ export default function ProjectHeader({
               type="button"
               className={clsx(
                 'flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold',
-                isOpen ? 'text-main' : 'text-gray-700',
+                isOpen ? 'text-main' : 'text-gray-800',
               )}
             >
               <span>{filterLabel}</span>
@@ -85,7 +85,7 @@ export default function ProjectHeader({
             <button
               className={clsx(
                 'flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold',
-                isOpen ? 'text-main' : 'text-gray-700',
+                isOpen ? 'text-main' : 'text-gray-800',
               )}
               type="button"
             >

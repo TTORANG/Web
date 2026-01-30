@@ -2,7 +2,7 @@
  * @file snsShare.ts
  * @description SNS 공유 유틸리티 (카카오톡, X, 페이스북, 인스타그램)
  */
-import { showToast } from '@/utils/toast.ts';
+import { showToast } from '@/utils/toast';
 
 /* ─────────────────────────────────────────────────────────────
  * Kakao SDK 타입 정의

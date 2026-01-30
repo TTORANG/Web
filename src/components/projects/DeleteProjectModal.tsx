@@ -30,7 +30,7 @@ export default function DeleteProjectModal({
       </div>
       <div className="mt-7 flex items-center justify-center gap-3 text-body-s">
         <button
-          className="flex-1 rounded-lg py-3 bg-gray-200 text-main cursor-pointer"
+          className="flex-1 rounded-lg py-3 bg-gray-200 text-error cursor-pointer"
           type="button"
           onClick={onClose}
           disabled={isPending}
@@ -38,7 +38,7 @@ export default function DeleteProjectModal({
           취소
         </button>
         <button
-          className="border border-none rounded-lg flex-1 py-3 bg-main text-gray-100 cursor-pointer "
+          className="border border-none rounded-lg flex-1 py-3 bg-error text-white cursor-pointer"
           type="button"
           onClick={onConfirm}
           disabled={isPending}
