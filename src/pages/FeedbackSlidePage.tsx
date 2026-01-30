@@ -107,8 +107,8 @@ export default function FeedbackSlidePage() {
   }, []);
 
   const getTabClassName = (isActive: boolean) =>
-    `flex-1 py-3 text-body-m-bold transition-colors ${
-      isActive ? 'text-main border-b-2 border-main-variant1' : 'text-gray-600'
+    `flex-1 py-3 text-body-m-bold transition-colors border-b-2 ${
+      isActive ? 'text-main-variant1 border-main-variant1' : 'text-black border-gray-200'
     }`;
 
   if (isLoading) {
