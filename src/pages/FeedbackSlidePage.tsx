@@ -237,7 +237,7 @@ export default function FeedbackSlidePage() {
               aria-labelledby={tabIds.script}
               className="px-4 py-4 overflow-y-auto"
             >
-              <SlideTitle fallbackTitle={`슬라이드 ${slideIndex + 1}`} />
+              <SlideTitle fallbackTitle={`슬라이드 ${slideIndex + 1}`} readOnly />
               <div className="mt-3 bg-gray-200 rounded-lg px-4 py-3 h-48 overflow-y-auto">
                 <p
                   className={`text-body-s ${currentSlide?.script ? 'text-black' : 'text-gray-600'}`}
