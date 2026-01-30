@@ -155,8 +155,9 @@ export default function FeedbackSlidePage() {
         </aside>
       </div>
 
+      {/** 모바일 뷰 */}
       <div className="flex md:hidden flex-1 flex-col bg-gray-100">
-        <div className="py-2 px-4 pt-4">
+        <div className="py-2 pt-4">
           {currentSlide ? (
             <div className="flex items-center justify-center">
               <img
@@ -189,8 +190,8 @@ export default function FeedbackSlidePage() {
             reactions={reactions}
             onToggleReaction={toggleReaction}
             showLabel={false}
-            className="w-full flex-nowrap justify-between"
-            buttonClassName="flex-1 min-w-0"
+            className="w-full flex-wrap justify-between"
+            buttonClassName="min-w-[3.5rem]"
           />
         </div>
 
@@ -207,10 +208,10 @@ export default function FeedbackSlidePage() {
             aria-controls={panelIds.script}
             onClick={() => setMobileTab('script')}
             className={`flex-1 py-3 text-body-m-bold transition-colors ${
-              mobileTab === 'script' ? 'text-main border-b border-main-variant1' : 'text-gray-600'
+              mobileTab === 'script' ? 'text-main border-b-2 border-main-variant1' : 'text-gray-600'
             }`}
           >
-            스크립트
+            대본
           </button>
           <button
             role="tab"
@@ -219,20 +220,22 @@ export default function FeedbackSlidePage() {
             aria-controls={panelIds.comment}
             onClick={() => setMobileTab('comment')}
             className={`flex-1 py-3 text-body-m-bold transition-colors ${
-              mobileTab === 'comment' ? 'text-main border-b border-main-variant1' : 'text-gray-600'
+              mobileTab === 'comment'
+                ? 'text-main border-b-2 border-main-variant1'
+                : 'text-gray-600'
             }`}
           >
             댓글 {comments.length > 0 && `${comments.length}`}
           </button>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="flex-1 min-h-0 flex flex-col">
           {mobileTab === 'script' ? (
             <div
               id={panelIds.script}
               role="tabpanel"
               aria-labelledby={tabIds.script}
-              className="px-4 py-4"
+              className="px-4 py-4 overflow-y-auto"
             >
               <SlideTitle fallbackTitle={`슬라이드 ${slideIndex + 1}`} />
               <div className="mt-3 bg-gray-200 rounded-lg px-4 py-3 h-48 overflow-y-auto">
@@ -249,9 +252,9 @@ export default function FeedbackSlidePage() {
               id={panelIds.comment}
               role="tabpanel"
               aria-labelledby={tabIds.comment}
-              className="flex flex-col min-h-full"
+              className="flex flex-col min-h-0 h-full"
             >
-              <div className="flex-1">
+              <div className="flex-1 min-h-0 overflow-y-auto">
                 <CommentList
                   comments={comments}
                   onAddReply={addReply}
@@ -259,7 +262,7 @@ export default function FeedbackSlidePage() {
                   onDeleteComment={deleteComment}
                 />
               </div>
-              <div className="sticky bottom-0 border-t border-gray-200 bg-gray-100 px-4 py-3">
+              <div className="shrink-0 border-t border-gray-200 bg-gray-100 px-4 py-3">
                 <CommentInput
                   value={commentDraft}
                   onChange={setCommentDraft}

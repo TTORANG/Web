@@ -36,19 +36,23 @@ export default function ReactionButtons({
   const total = reactions.length;
   const containerClass = isGrid
     ? `grid grid-cols-2 gap-2 justify-items-center ${className ?? ''}`
-    : `flex gap-2 ${showLabel ? 'flex-wrap' : 'flex-nowrap'} ${className ?? ''}`;
+    : `flex gap-1 ${showLabel ? 'flex-wrap' : 'flex-nowrap'} ${className ?? ''}`;
 
   return (
     <div className={containerClass}>
       {reactions.map((reaction, index) => {
         const config = REACTION_CONFIG[reaction.type];
         const isLastOdd = isGrid && total % 2 === 1 && index === total - 1;
+        const baseBtn =
+          'flex items-center justify-between px-2 py-2 rounded-full border transition text-body-m focus-visible:outline-2 focus-visible:outline-main';
+
+        const widthClass = showLabel ? 'w-42.25' : 'w-auto flex-1';
 
         return (
           <button
             key={reaction.type}
             onClick={() => onToggleReaction(reaction.type)}
-            className={`flex items-center justify-between w-42.25 px-3 py-2 rounded-full border transition text-body-m focus-visible:outline-2 focus-visible:outline-main ${buttonClassName ?? ''} ${
+            className={`${baseBtn} ${widthClass} rounded-full border transition text-body-m focus-visible:outline-2 focus-visible:outline-main ${buttonClassName ?? ''} ${
               isLastOdd ? 'col-span-2 justify-self-start' : ''
             } ${
               reaction.active
@@ -56,12 +60,14 @@ export default function ReactionButtons({
                 : 'bg-gray-200 border-gray-400 text-black hover:border-gray-600'
             }`}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <span>{config.emoji}</span>
               {showLabel && <span className="whitespace-nowrap">{config.label}</span>}
             </div>
 
-            <span className={reaction.active ? 'font-semibold' : ''}>
+            <span
+              className={`tabular-nums text-right min-w-0 ${reaction.active ? 'font-body-m' : ''}`}
+            >
               {reaction.count > 0 ? formatReactionCount(reaction.count) : ''}
             </span>
           </button>
