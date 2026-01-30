@@ -14,7 +14,7 @@ import { Modal } from '@/components/common/Modal';
 import { type ShareType, useShareStore } from '@/stores/shareStore';
 // sns공유테스트
 import { shareToFacebook, shareToInstagram, shareToKakao, shareToX } from '@/utils/snsShare';
-import { showToast } from '@/utils/toast.ts';
+import { showToast } from '@/utils/toast';
 
 const KAKAO_JS_KEY = import.meta.env?.VITE_KAKAO_JS_KEY ?? '';
 const SHARE_TEXT = '내 발표를 확인하고 피드백을 남겨주세요!';

@@ -1,5 +1,5 @@
 /**
- * @file FeedbackSlidePage.tsx
+ * @file FeedbackSlidePage
  * @description 피드백 슬라이드 페이지
  *
  * 슬라이드 뷰어, 댓글 목록, 리액션 버튼을 포함합니다.
@@ -10,7 +10,6 @@ import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
-import { Spinner } from '@/components/common';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
 import SlideNavigation from '@/components/feedback/SlideNavigation';
 import SlideViewer from '@/components/feedback/SlideViewer';
@@ -106,14 +105,6 @@ export default function FeedbackSlidePage() {
     });
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center bg-white">
-        <Spinner size={40} />
-      </div>
-    );
-  }
-
   return (
     <div className="flex h-full w-full">
       <div className="hidden md:flex flex-1 px-35">
@@ -134,6 +125,7 @@ export default function FeedbackSlidePage() {
               onAddReply={addReply}
               onGoToRef={handleGoToRef}
               onDeleteComment={deleteComment}
+              isLoading={isLoading}
             />
           </div>
 
@@ -146,7 +138,7 @@ export default function FeedbackSlidePage() {
               className="items-end w-86"
             />
             <ReactionButtons
-              reactions={reactions}
+              reactions={reactions.length > 0 ? reactions : createDefaultReactions()}
               onToggleReaction={toggleReaction}
               layout="grid-2"
               buttonClassName="w-42.25"
@@ -187,7 +179,7 @@ export default function FeedbackSlidePage() {
             />
           </div>
           <ReactionButtons
-            reactions={reactions}
+            reactions={reactions.length > 0 ? reactions : createDefaultReactions()}
             onToggleReaction={toggleReaction}
             showLabel={false}
             className="w-full flex-wrap justify-between"
@@ -260,6 +252,7 @@ export default function FeedbackSlidePage() {
                   onAddReply={addReply}
                   onGoToRef={handleGoToRef}
                   onDeleteComment={deleteComment}
+                  isLoading={isLoading}
                 />
               </div>
               <div className="shrink-0 border-t border-gray-200 bg-gray-100 px-4 py-3">

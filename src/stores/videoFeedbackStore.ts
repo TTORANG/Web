@@ -61,7 +61,7 @@ interface VideoFeedbackState {
   toggleReaction: (type: ReactionType) => void;
 
   /** 댓글 관련 메서드들 - feedbacks의 comments 업데이트 */
-  addComment: (content: string) => void;
+  addComment: (content: string, seconds: number) => void;
   addReply: (parentId: string, content: string) => void;
   deleteComment: (commentId: string) => void;
 }
@@ -121,7 +121,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
         'video/toggleReaction',
       ),
 
-    addComment: (content) =>
+    addComment: (content, seconds) =>
       set(
         (state) => {
           if (!state.video) return state;
@@ -132,15 +132,14 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
           // 댓글 텍스트에서 타임스탬프 파싱
           const parsed = extractTimestampFromComment(trimmed);
 
-          // 타임스탬프가 있으면 해당 시간 사용, 없으면 ref 없음
-          const ref = parsed ? { kind: 'video' as const, seconds: parsed.seconds } : undefined;
+          // 타임스탬프가 있으면 해당 시간 사용, 없으면 전달받은 seconds 사용
+          const refSeconds = parsed ? parsed.seconds : seconds;
+          const ref = { kind: 'video' as const, seconds: refSeconds };
           const finalContent = parsed ? parsed.content : trimmed;
 
-          // ref가 있을 때만 피드백 그룹에 추가
-          const targetTime = ref ? ref.seconds : state.currentTime;
           const { target: targetFeedback, feedbacks } = getOrCreateFeedback(
             state.video.feedbacks,
-            targetTime,
+            refSeconds,
           );
 
           const newComment: Comment = createComment({
