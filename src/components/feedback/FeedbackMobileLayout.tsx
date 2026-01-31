@@ -59,7 +59,7 @@ export default function FeedbackMobileLayout({
   return (
     <div className="flex md:hidden flex-1 flex-col overflow-hidden">
       {/* 미디어 영역 */}
-      <div className="shrink-0 bg-gray-400 flex items-center justify-center">{mediaSlot}</div>
+      <div className="shrink-0 w-full bg-gray-400">{mediaSlot}</div>
 
       {/* 콘텐츠 영역 */}
       <div className="flex-1 min-h-0 flex flex-col bg-gray-100 overflow-hidden">
