@@ -30,7 +30,7 @@ export default function SlideInfoPanel({
     <div className="shrink-0 flex flex-col gap-4 px-5 py-4">
       <div className="flex justify-between items-center gap-4">
         <div className="min-w-0">
-          <SlideTitle fallbackTitle={`슬라이드 ${slideIndex + 1}`} />
+          <SlideTitle fallbackTitle={`슬라이드 ${slideIndex + 1}`} readOnly />
         </div>
 
         <SlideNavigation
