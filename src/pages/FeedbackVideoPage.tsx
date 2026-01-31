@@ -84,60 +84,56 @@ export default function FeedbackVideoPage() {
       </div>
 
       {/* 모바일 뷰 */}
-      <div className="md:hidden w-full">
-        <FeedbackMobileLayout
-          mediaSlot={
-            <SlideWebcamStage
-              slides={projectSlides}
-              slideChangeTimes={slideChangeTimes}
-              webcamVideoUrl={webcamVideoUrl}
-              onTimeUpdate={updateCurrentTime}
-              disablePip
-              showLayoutToggle
-            />
-          }
-          reactionSlot={
-            <ReactionButtons
-              reactions={reactions}
-              onToggleReaction={toggleReaction}
-              showLabel={false}
-            />
-          }
-          scriptTabContent={
-            <div className="px-4 py-4">
-              <ScriptSection
-                slides={projectSlides}
-                slideChangeTimes={slideChangeTimes}
-                currentTime={currentTime}
-                onSeek={requestSeek}
+      <FeedbackMobileLayout
+        mediaSlot={
+          <SlideWebcamStage
+            slides={projectSlides}
+            slideChangeTimes={slideChangeTimes}
+            webcamVideoUrl={webcamVideoUrl}
+            onTimeUpdate={updateCurrentTime}
+            disablePip
+            showLayoutToggle
+          />
+        }
+        reactionSlot={
+          <ReactionButtons
+            reactions={reactions}
+            onToggleReaction={toggleReaction}
+            showLabel={false}
+          />
+        }
+        scriptTabContent={
+          <ScriptSection
+            slides={projectSlides}
+            slideChangeTimes={slideChangeTimes}
+            currentTime={currentTime}
+            onSeek={requestSeek}
+          />
+        }
+        commentTabContent={
+          <>
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <CommentList
+                comments={comments}
+                onAddReply={addReply}
+                onGoToRef={handleGoToTimeRef}
+                onDeleteComment={deleteComment}
               />
             </div>
-          }
-          commentTabContent={
-            <>
-              <div className="flex-1 min-h-0 overflow-y-auto">
-                <CommentList
-                  comments={comments}
-                  onAddReply={addReply}
-                  onGoToRef={handleGoToTimeRef}
-                  onDeleteComment={deleteComment}
-                />
-              </div>
-              <div className="shrink-0 px-4 py-3">
-                <CommentInput
-                  value={commentDraft}
-                  onChange={setCommentDraft}
-                  onSubmit={handleAddComment}
-                  onCancel={() => setCommentDraft('')}
-                  className="w-full"
-                  initialValueOnFocus={timestampPrefix}
-                />
-              </div>
-            </>
-          }
-          commentCount={comments.length}
-        />
-      </div>
+            <div className="shrink-0 px-4 py-3">
+              <CommentInput
+                value={commentDraft}
+                onChange={setCommentDraft}
+                onSubmit={handleAddComment}
+                onCancel={() => setCommentDraft('')}
+                className="w-full"
+                initialValueOnFocus={timestampPrefix}
+              />
+            </div>
+          </>
+        }
+        commentCount={comments.length}
+      />
     </div>
   );
 }

@@ -99,7 +99,7 @@ export default function FeedbackMobileLayout({
               id={PANEL_IDS.script}
               role="tabpanel"
               aria-labelledby={TAB_IDS.script}
-              className="h-full overflow-y-auto"
+              className="h-full flex flex-col"
             >
               {scriptTabContent}
             </div>

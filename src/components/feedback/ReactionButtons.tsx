@@ -56,28 +56,16 @@ export default function ReactionButtons({
               isLastOdd ? 'col-span-2 justify-self-start' : ''
             } ${
               reaction.active
-                ? 'bg-gray-900 border-main-variant1 text-black'
+                ? 'bg-gray-900 border-main-variant1 text-main-variant2 text-body-m-bold'
                 : 'bg-gray-200 border-gray-400 text-black hover:border-gray-600'
             }`}
           >
             <div className="flex items-center gap-2">
               <span>{config.emoji}</span>
-              {showLabel && (
-                <span
-                  className={`whitespace-nowrap ${
-                    reaction.active ? 'text-main-variant2 text-body-m-bold' : ''
-                  }`}
-                >
-                  {config.label}
-                </span>
-              )}
+              {showLabel && <span className="whitespace-nowrap">{config.label}</span>}
             </div>
 
-            <span
-              className={`tabular-nums text-right min-w-0 ${
-                reaction.active ? 'text-main-variant2 text-body-m-bold' : ''
-              }`}
-            >
+            <span className="tabular-nums text-right min-w-0">
               {reaction.count > 0 ? formatReactionCount(reaction.count) : ''}
             </span>
           </button>
