@@ -44,6 +44,13 @@ export default function TopSlideCard({
           {reactionMetrics.length === 0 && (
             <div className="text-body-s text-gray-400">아직 반응이 없어요.</div>
           )}
+          <div className="flex items-center justify-between rounded-lg bg-gray-100 px-3 py-2 text-caption text-gray-800">
+            <span className="flex items-center gap-2">
+              <CommentIcon aria-hidden="true" />
+              <span>댓글</span>
+            </span>
+            <span className="text-caption text-gray-800">{commentCount}</span>
+          </div>
         </div>
       </div>
     </div>
