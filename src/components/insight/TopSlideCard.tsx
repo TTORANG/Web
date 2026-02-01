@@ -22,21 +22,28 @@ export default function TopSlideCard({
   return (
     <div className={`${cardClassName} overflow-hidden`}>
       {thumbUrl ? (
-        <img src={thumbUrl} alt={`${title} 썸네일`} className="h-60 w-full object-cover" />
+        <img src={thumbUrl} alt={`${title} 썸네일`} className="block w-full" />
       ) : (
-        <div className={`h-60 w-full ${thumbFallbackClassName}`} aria-hidden="true" />
+        <div className={`h-44 w-full ${thumbFallbackClassName}`} aria-hidden="true" />
       )}
-      <div className="p-4">
-        <div className="text-body-m-bold text-gray-800 mb-2">{title}</div>
-        <div className="flex flex-wrap items-center gap-3 text-caption text-gray-800">
+      <div className="p-3">
+        <div className="text-body-m-bold text-gray-800 mb-3">{title}</div>
+        <div className="space-y-2">
           {reactionMetrics.map((reaction) => (
-            <span key={reaction.type} className="flex items-center gap-1">
-              {REACTION_CONFIG[reaction.type].emoji} {reaction.count}
-            </span>
+            <div
+              key={reaction.type}
+              className="flex items-center justify-between rounded-lg bg-gray-100 px-3 py-2 text-caption text-gray-800"
+            >
+              <span className="flex items-center gap-2">
+                <span className="text-base">{REACTION_CONFIG[reaction.type].emoji}</span>
+                {REACTION_CONFIG[reaction.type].label}
+              </span>
+              <span className="text-caption text-gray-800">{reaction.count}</span>
+            </div>
           ))}
-        </div>
-        <div className="mt-3 flex justify-end gap-1 text-caption text-gray-600">
-          <CommentIcon /> {commentCount}
+          {reactionMetrics.length === 0 && (
+            <div className="text-body-s text-gray-400">아직 반응이 없어요.</div>
+          )}
         </div>
       </div>
     </div>

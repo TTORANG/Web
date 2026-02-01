@@ -33,7 +33,7 @@ export default function RecentCommentItem({
         </div>
         <div className="mb-1">
           <span className="text-body-m text-main-variant1 mr-2">{time}</span>
-          <span className="text-body-m text-blue-800">{text}</span>
+          <span className="text-body-m text-gray-800">{text}</span>
         </div>
       </div>
     </div>
