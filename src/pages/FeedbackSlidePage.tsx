@@ -24,11 +24,19 @@ import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
 
 import { useComments } from '../hooks/useComments';
+import { useFeedbackWebSocket } from '../hooks/useFeedbackWebSocket';
 import { useReactions } from '../hooks/useReactions';
 
 export default function FeedbackSlidePage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { data: slides, isLoading } = useSlides(projectId ?? '');
+
+  // 웹소켓 연결
+  useFeedbackWebSocket({
+    projectId: projectId ?? '',
+    enabled: !!projectId,
+    feedbackType: 'slide',
+  });
 
   const totalSlides = slides?.length ?? 0;
   const navigation = useSlideNavigation(totalSlides);

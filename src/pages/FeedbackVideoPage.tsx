@@ -6,6 +6,7 @@
  * CSS-only 방식으로 단일 비디오 요소의 위치를 조정하여 심리스한 전환을 지원합니다.
  */
 import { useEffect, useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
@@ -13,10 +14,14 @@ import FeedbackMobileLayout from '@/components/feedback/FeedbackMobileLayout';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
 import ScriptSection from '@/components/feedback/ScriptSection';
 import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
+// import FeedbackVideoDesktop from '@/components/feedback/video/FeedbackVideoDesktop';
+// import FeedbackVideoMobile from '@/components/feedback/video/FeedbackVideoMobile';
 import { useFeedbackVideo } from '@/hooks/useFeedbackVideo';
+import { useFeedbackWebSocket } from '@/hooks/useFeedbackWebSocket';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 
 export default function FeedbackVideoPage() {
+  const { projectId } = useParams<{ projectId: string }>();
   const isDesktop = useIsDesktop();
   const ctx = useFeedbackVideo();
   const {
@@ -91,6 +96,13 @@ export default function FeedbackVideoPage() {
       window.removeEventListener('scroll', updateVideoPosition, true);
     };
   }, [isDesktop]);
+
+  // 웹소켓 연결
+  useFeedbackWebSocket({
+    projectId: projectId ?? '',
+    enabled: !!projectId,
+    feedbackType: 'video',
+  });
 
   return (
     <div className="flex h-full w-full">

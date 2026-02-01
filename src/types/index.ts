@@ -27,3 +27,19 @@ export type { ThemeMode } from './theme';
 
 // Upload
 export type { UploadState } from './uploadFile';
+
+// WebSocket
+export type {
+  CommentDeletedPayload,
+  ErrorPayload,
+  JoinedProjectResponse,
+  JoinProjectPayload,
+  LeftProjectResponse,
+  NewCommentPayload,
+  NewReactionPayload,
+  ReactionCountUpdatedPayload,
+  ReactionRemovedPayload,
+  RoomsListResponse,
+  SocketAuthConfig,
+} from './websocket';
+export { ClientEvents, ServerEvents } from './websocket';
