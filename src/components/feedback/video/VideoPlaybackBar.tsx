@@ -15,7 +15,7 @@ import ProgressBar from '@/components/feedback/ProgressBar';
 import VolumeControl from '@/components/feedback/video/VolumeControl';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Slide } from '@/types/slide';
-import { computeUserActiveHighlights } from '@/utils/video';
+import { computeSegmentHighlightsFromFeedbacks } from '@/utils/video';
 
 interface VideoPlaybackBarProps {
   videoElement: HTMLVideoElement | null;
@@ -44,10 +44,10 @@ export default function VideoPlaybackBar({
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
 
-  // 5초 버킷별 세그먼트 하이라이트 계산 (feedbacks 기반)
+  // 5초 버킷별 세그먼트 하이라이트 계산 (최다 리액션 기반)
   const segmentHighlights = useMemo(() => {
     if (!video) return [];
-    return computeUserActiveHighlights(video.feedbacks, video.duration);
+    return computeSegmentHighlightsFromFeedbacks(video.feedbacks, video.duration);
   }, [video]);
 
   // 비디오 play/pause 이벤트 구독

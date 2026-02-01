@@ -52,17 +52,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/feedback/slide/:projectId',
-    element: (
-      <Layout
-        theme="dark"
-        left={
-          <>
-            <Logo />
-            <span className="text-body-m-bold text-black">발표 피드백</span>
-          </>
-        }
-      />
-    ),
+    element: <Layout theme="dark" left={<FeedbackHeaderLeft />} />,
     children: [{ index: true, element: <FdSlidePage /> }],
   },
   {

@@ -60,10 +60,10 @@ export default function ScriptSection({
       block: 'center',
     });
 
-    // 스크롤 완료 후 플래그 해제 (300ms 후)
+    // 스크롤 완료 후 플래그 해제 (smooth scroll은 거리에 따라 500-1000ms 소요)
     const timer = setTimeout(() => {
       isScrollingRef.current = false;
-    }, 300);
+    }, 800);
 
     return () => clearTimeout(timer);
   }, [currentSlideIndex, autoScroll]);
@@ -152,7 +152,7 @@ export default function ScriptSection({
                 });
                 setTimeout(() => {
                   isScrollingRef.current = false;
-                }, 300);
+                }, 800);
                 setAutoScroll(true);
               }
             }}

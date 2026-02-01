@@ -17,6 +17,8 @@ import { useVideoSync } from '@/hooks/useVideoSync';
 import type { Slide } from '@/types/slide';
 import { getSlideIndexFromTime } from '@/utils/video';
 
+const LAYOUT_STORAGE_KEY = 'feedback-video-layout';
+
 // 공통 미디어 컨테이너 (Slide & Webcam)
 interface MediaBoxProps {
   isMain: boolean; // 현재 이 미디어가 메인 화면인가?
@@ -103,9 +105,18 @@ export default function SlideWebcamStage({
   // 비디오 동기화 훅 (콜백 ref, duration, currentTime, seekTo 처리)
   const { setVideoRef, videoElement, duration, currentTime } = useVideoSync();
 
-  const [layout, setLayout] = useState<'slide-main' | 'webcam-main'>('slide-main');
+  // 레이아웃 상태 (localStorage에 저장)
+  const [layout, setLayout] = useState<'slide-main' | 'webcam-main'>(() => {
+    const saved = localStorage.getItem(LAYOUT_STORAGE_KEY);
+    return saved === 'webcam-main' ? 'webcam-main' : 'slide-main';
+  });
   const isSlideMain = layout === 'slide-main';
   const showPip = !disablePip;
+
+  // 레이아웃 변경 시 localStorage에 저장
+  useEffect(() => {
+    localStorage.setItem(LAYOUT_STORAGE_KEY, layout);
+  }, [layout]);
 
   // onTimeUpdate 콜백 호출
   useEffect(() => {
