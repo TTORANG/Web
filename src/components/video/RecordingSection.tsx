@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Logo, SlideImage } from '@/components/common';
 
@@ -55,7 +55,7 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
   useEffect(() => {
     if (initialStream && !isRecording && slideImageLoaded && !recordingStartAttempted) {
       setRecordingStartAttempted(true);
-      startRecording(initialStream, slideImgRef, (blob) => {});
+      startRecording(initialStream, slideImgRef, () => {});
     }
   }, [initialStream, isRecording, slideImageLoaded, recordingStartAttempted, startRecording]);
 
@@ -130,16 +130,7 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
       alert(error instanceof Error ? error.message : '녹화 종료 중 오류가 발생했습니다.');
       setIsFinishing(false); // 에러 발생 시에만 다시 활성화
     }
-  }, [
-    isFinishing,
-    isRecording,
-    stopRecording,
-    recordedChunks,
-    slides,
-    totalSeconds,
-    formatTime,
-    onFinish,
-  ]);
+  }, [isFinishing, isRecording, stopRecording, recordedChunks, slides, onFinish]);
   return (
     <div
       style={{
