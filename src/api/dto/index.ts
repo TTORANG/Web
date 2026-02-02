@@ -3,6 +3,7 @@
  * @description DTO 배럴 export
  */
 
+export type { SocialLoginSuccessDto, SocialLoginTokensDto, SocialLoginUserDto } from './auth.dto';
 export type { CreateProjectDto, UpdateProjectDto } from './projects.dto';
 export type { CreateSlideDto, UpdateSlideDto } from './slides.dto';
 export type { UpdateScriptDto, RestoreScriptDto } from './scripts.dto';

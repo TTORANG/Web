@@ -12,9 +12,10 @@ import type { User } from '@/types/auth';
 interface AuthState {
   user: User | null;
   accessToken: string | null;
+  refreshToken: string | null;
   isLoginModalOpen: boolean;
 
-  login: (user: User, accessToken: string) => void;
+  login: (user: User, accessToken: string, refreshToken: string) => void;
   logout: () => void;
   updateUser: (user: Partial<User>) => void;
   openLoginModal: () => void;
@@ -27,13 +28,15 @@ export const useAuthStore = create<AuthState>()(
       (set) => ({
         user: null,
         accessToken: null,
+        refreshToken: null,
         isLoginModalOpen: false,
 
-        login: (user, accessToken) => {
+        login: (user, accessToken, refreshToken) => {
           set(
             {
               user,
               accessToken,
+              refreshToken,
             },
             false,
             'auth/login',
@@ -45,6 +48,7 @@ export const useAuthStore = create<AuthState>()(
             {
               user: null,
               accessToken: null,
+              refreshToken: null,
             },
             false,
             'auth/logout',
