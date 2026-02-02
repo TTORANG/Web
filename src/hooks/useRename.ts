@@ -1,6 +1,6 @@
 import { type FormEvent, useRef, useState } from 'react';
 
-import { useUpdateProject } from '@/hooks/queries/useProjects';
+import { useUpdatePresentation } from '@/hooks/queries/usePresentations';
 import { showToast } from '@/utils/toast';
 
 interface UseRenameOptions {
@@ -36,7 +36,7 @@ interface UseRenameReturn {
  * @returns 이름 변경에 필요한 상태와 핸들러
  */
 export function useRename({ projectId, initialTitle }: UseRenameOptions): UseRenameReturn {
-  const { mutate: updateProject, isPending: isUpdating } = useUpdateProject();
+  const { mutate: updatePresentation, isPending: isUpdating } = useUpdatePresentation();
 
   const [isRenaming, setIsRenaming] = useState(false);
   const [newTitle, setNewTitle] = useState(initialTitle);
@@ -64,7 +64,7 @@ export function useRename({ projectId, initialTitle }: UseRenameOptions): UseRen
       return;
     }
 
-    updateProject(
+    updatePresentation(
       { projectId, data: { title: trimmedTitle } },
       {
         onSuccess: () => {

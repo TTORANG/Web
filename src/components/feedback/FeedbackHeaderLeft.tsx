@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom';
 
 import InfoIcon from '@/assets/icons/icon-info.svg?react';
 import { Logo, Popover } from '@/components/common';
-import { useProject } from '@/hooks/queries/useProjects';
+import { usePresentation } from '@/hooks/queries/usePresentations';
 import dayjs from '@/utils/dayjs';
 
 const DEFAULT_PUBLISHER = '익명의 바다거북이';
@@ -10,9 +10,9 @@ const DEFAULT_PUBLISHER = '익명의 바다거북이';
 export default function FeedbackHeaderLeft() {
   const { projectId } = useParams<{ projectId: string }>();
 
-  const { data: project } = useProject(projectId ?? '');
-  const postedAt = project?.updatedAt
-    ? dayjs(project.updatedAt).format('YYYY.MM.DD HH:mm:ss')
+  const { data: presentation } = usePresentation(projectId ?? '');
+  const postedAt = presentation?.updatedAt
+    ? dayjs(presentation.updatedAt).format('YYYY.MM.DD HH:mm:ss')
     : '-';
 
   return (
