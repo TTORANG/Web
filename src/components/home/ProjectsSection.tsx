@@ -133,7 +133,7 @@ export default function ProjectsSection({
               items={displayProjects}
               getKey={(item) => item.id}
               className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3"
-              renderCard={(item) => <ProjectCard {...item} highlightQuery={appliedQuery} />}
+              renderCard={(item) => <ProjectCard {...item} />}
               empty={null}
             />
           ) : (
@@ -141,7 +141,7 @@ export default function ProjectsSection({
               items={displayProjects}
               getKey={(item) => item.id}
               className="mt-6 flex flex-col gap-3"
-              renderInfo={(item) => <ProjectList {...item} highlightQuery={appliedQuery} />}
+              renderInfo={(item) => <ProjectList {...item} />}
               empty={null}
             />
           )}
