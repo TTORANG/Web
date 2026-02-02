@@ -3,9 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import type { FilterMode, SortMode, ViewMode } from '@/types/home';
 
-import ProjectCard from '../projects/ProjectCard';
-import ProjectHeader from '../projects/ProjectHeader';
-import ProjectList from '../projects/ProjectList';
+import PresentationCard from '../presentation/PresentationCard';
+import PresentationHeader from '../presentation/PresentationHeader';
+import PresentationList from '../presentation/PresentationList';
 import { RecordingEmptySection } from './RecordingEmptySection';
 
 interface MockVideo {
@@ -139,7 +139,7 @@ export default function VideoListPage() {
           </div>
         ) : (
           <section>
-            <ProjectHeader
+            <PresentationHeader
               value={query}
               onChange={setQuery}
               sort={sort}
@@ -154,13 +154,13 @@ export default function VideoListPage() {
               {viewMode === 'card' ? (
                 <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
                   {projects.map((item) => (
-                    <ProjectCard key={item.id} {...item} />
+                    <PresentationCard key={item.id} {...item} />
                   ))}
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
                   {projects.map((item) => (
-                    <ProjectList key={item.id} {...item} />
+                    <PresentationList key={item.id} {...item} />
                   ))}
                 </div>
               )}
