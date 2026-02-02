@@ -131,15 +131,12 @@ export function ShareModal() {
         // 서버에서 에러 응답이 온 경우
         const errorMessage = response.reason?.message || '공유 링크 생성에 실패했습니다.';
         showToast.error(errorMessage);
-        console.error('Share link creation failed:', response.reason);
       } else {
         // 예상치 못한 응답 형식
         showToast.error('알 수 없는 응답 형식입니다.');
-        console.error('Unexpected response:', response);
       }
-    } catch (error) {
+    } catch {
       showToast.error('공유 링크 생성에 실패했습니다.');
-      console.error('Share link creation error:', error);
     }
   };
   const handleClose = () => {
