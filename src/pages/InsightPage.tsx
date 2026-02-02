@@ -106,7 +106,7 @@ const slideRetentionData = [
 // --- 컴포넌트 시작 ---
 
 export default function InsightPage() {
-  const hasVideo = false;
+  const hasVideo = true;
   const { projectId } = useParams<{ projectId: string }>();
   const { data: slides } = useSlides(projectId ?? '');
   const visibleSummaryStats = hasVideo
