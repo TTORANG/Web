@@ -1,4 +1,4 @@
-import { useDeferredValue } from 'react';
+import { useEffect, useState } from 'react';
 
 import {
   useHomeActions,
@@ -37,6 +37,7 @@ export default function ProjectsSection({
   const filter = useHomeFilter();
   const viewMode = useHomeViewMode();
   const { setQuery, setSort, setFilter, setViewMode } = useHomeActions();
+
   /**
    * 전체 프로젝트가 하나라도 존재하는지 여부
    * 아예 데이터가 없으면 ProjectSection 자체를 숨기기 위함
@@ -55,11 +56,22 @@ export default function ProjectsSection({
   // 필터 결과 유무 (검색과 무관)
   const hasFilterResults = filteredCount > 0;
 
-  // 디바운스/입력 변화 중에는 이전 목록을 React가 알아서 유지해줌
-  const displayProjects = useDeferredValue(projects);
+  // 마지막 저장된 결과(디바운스 끝난 appliedQuery 기준 결과)를 저장
+  const [lastSavedProjects, setLastSavedProjects] = useState<Project[]>(projects);
 
-  // empty 판단용 : 진짜 결과
-  const hasSearchResults = displayProjects.length > 0;
+  // 디바운싱 중이면 이전 결과 유지
+  const displayProjects = isDebouncing ? lastSavedProjects : projects;
+
+  // empty 판단용(보여주는 기준(displayProjects))
+  const hasDisplayResults = displayProjects.length > 0;
+
+  // 디바운스가 끝난 순간에만 안정된 결과를 갱신
+  useEffect(() => {
+    if (!isDebouncing) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLastSavedProjects(projects);
+    }
+  }, [isDebouncing, projects]);
 
   /**
    * 전체 프로젝트가 아예 없을 때는
@@ -106,7 +118,7 @@ export default function ProjectsSection({
         <div className="flex items-center justify-center p-40">
           <p className="text-body-m text-gray-500">선택한 필터에 맞는 발표를 찾지 못했어요.</p>
         </div>
-      ) : !isDebouncing && hasAppliedQuery && !hasSearchResults ? (
+      ) : !isDebouncing && hasAppliedQuery && !hasDisplayResults ? (
         // 3. 검색 적용된 값이 있고, 결과가 없을 때에만 empty UI 표시
         <div className="flex items-center justify-center p-40">
           <p className="text-body-m text-gray-500">
