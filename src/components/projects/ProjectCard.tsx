@@ -12,16 +12,10 @@ import { getTabPath } from '@/constants/navigation';
 import { useProjectDeletion } from '@/hooks/useProjectDeletion';
 import { useRename } from '@/hooks/useRename';
 import type { Project } from '@/types/project';
-import { formatRelativeTime } from '@/utils/format';
 
 import { Dropdown } from '../common';
 import type { DropdownItem } from '../common/Dropdown';
-import { HighlightText } from '../common/HighlightText';
 import DeleteProjectModal from './DeleteProjectModal';
-
-type Props = Project & {
-  highlightQuery?: string;
-};
 
 function ProjectCardSkeleton() {
   return (
@@ -85,15 +79,13 @@ function ProjectCardSkeleton() {
 function ProjectCard({
   id,
   title,
-  highlightQuery = '',
-  updatedAt,
   durationMinutes,
   pageCount,
   commentCount,
   reactionCount,
   viewCount = 0,
   thumbnailUrl,
-}: Props) {
+}: Project) {
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
     useProjectDeletion(id);
