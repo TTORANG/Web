@@ -766,7 +766,7 @@ export const handlers = [
         comments: video.comments.map((c) => ({
           id: c.id,
           content: c.content,
-          timestampMs: 0, // Comment 타입에 timestamp가 없으므로 0으로 설정
+          timestampMs: new Date(c.timestamp).getTime(), // Comment 타입의 timestamp를 변환
           createdAt: c.timestamp,
           user: { id: c.authorId, name: MOCK_USERS[0].name },
         })),
