@@ -11,21 +11,14 @@ import kakaoTalkIcon from '@/assets/sns-icons/kakaotalk-icon@4x.webp';
 import xIcon from '@/assets/sns-icons/x-icon@4x.webp';
 import { Dropdown, type DropdownItem } from '@/components/common/Dropdown';
 import { Modal } from '@/components/common/Modal';
+import { useCreateShareLink, useShareableVideos } from '@/hooks/queries/useShares';
 import { type ShareType, useShareStore } from '@/stores/shareStore';
-// sns공유테스트
+import { formatTimestamp } from '@/utils/format';
 import { shareToFacebook, shareToInstagram, shareToKakao, shareToX } from '@/utils/snsShare';
 import { showToast } from '@/utils/toast';
 
 const KAKAO_JS_KEY = import.meta.env?.VITE_KAKAO_JS_KEY ?? '';
 const SHARE_TEXT = '내 발표를 확인하고 피드백을 남겨주세요!';
-// 임시데이터 설정
-type VideoItem = { id: string; title: string; date: string };
-const MOCK_VIDEOS: VideoItem[] = [
-  { id: 'v1', title: '새로운 연습 1', date: '2024-11-15 14:30' },
-  { id: 'v2', title: '새로운 연습 2', date: '2024-11-15 11:20' },
-  { id: 'v3', title: '새로운 연습 3', date: '2024-11-14 16:45' },
-  { id: 'v4', title: '새로운 연습 4', date: '2024-11-14 10:15' },
-];
 // 화면에 표시할 공유 타입 보여주기
 function shareTypeLabel(type: ShareType) {
   return type === 'slide_script' ? '슬라이드 + 대본' : '슬라이드 + 대본 + 영상';
@@ -42,15 +35,28 @@ export function ShareModal() {
   const close = useShareStore((s) => s.closeShareModal);
   const setShareType = useShareStore((s) => s.setShareType);
   const setSelectedVideoId = useShareStore((s) => s.setSelectedVideoId);
-  const generateShareLink = useShareStore((s) => s.generateShareLink);
   const resetForm = useShareStore((s) => s.resetForm);
+  const setShareUrl = useShareStore((s) => s.setShareUrl);
+  const setStep = useShareStore((s) => s.setStep);
+
   // 복사완료 토스트 알림용
   const [copied, setCopied] = useState(false);
 
+  // 공유 가능 영상 목록 조회 (모달이 열려있고, 영상포함 유형일 때만 fetch)
+  const { data: videosData, isLoading: isLoadingVideos } = useShareableVideos(projectId, {
+    enabled: isOpen && shareType === 'slide_script_video',
+  });
+
+  // 공유 링크 생성 mutation
+  const createShareLinkMutation = useCreateShareLink();
+
+  // 영상 목록
+  const videos = videosData?.success?.videos ?? [];
+
   // 선택된 비디오 바뀔 때만 다시 계산
   const selectedVideo = useMemo(() => {
-    return MOCK_VIDEOS.find((v) => v.id === selectedVideoId) ?? null;
-  }, [selectedVideoId]);
+    return videos.find((v) => v.id === selectedVideoId) ?? null;
+  }, [videos, selectedVideoId]);
 
   // 사용자 클립보드에 url 복사
   const handleCopy = async () => {
@@ -63,16 +69,31 @@ export function ShareModal() {
       showToast.error('복사에 실패했습니다.');
     }
   };
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     // 프로젝트 id없으면 생성x
     if (!projectId) return;
     // 영상포함 유형일때 비디오 없으면 공유 링크 생성X
     if (shareType === 'slide_script_video' && !selectedVideoId) return;
-    generateShareLink({
-      projectId,
-      shareType,
-      selectedVideoId,
-    });
+
+    try {
+      // API scope 값 변환 (slide_script -> slides_script)
+      const scope = shareType === 'slide_script' ? 'slides_script' : 'slides_script_video';
+
+      const response = await createShareLinkMutation.mutateAsync({
+        projectId,
+        data: {
+          scope,
+          videoId: shareType === 'slide_script_video' ? (selectedVideoId ?? undefined) : undefined,
+        },
+      });
+
+      if (response.resultType === 'SUCCESS' && response.success) {
+        setShareUrl(response.success.shareUrl);
+        setStep('result');
+      }
+    } catch {
+      showToast.error('공유 링크 생성에 실패했습니다.');
+    }
   };
   const handleClose = () => {
     close();
@@ -143,36 +164,54 @@ export function ShareModal() {
     <div className="flex flex-col gap-2">
       <label className="text-body-m-bold text-gray-600">공유할 녹화 영상</label>
       <div className="max-h-80 overflow-y-auto rounded-lg border border-gray-200">
-        <div className="flex flex-col">
-          {MOCK_VIDEOS.map((v) => {
-            const active = v.id === selectedVideoId;
-            return (
-              <button
-                key={v.id}
-                type="button"
-                onClick={() => setSelectedVideoId(v.id)}
-                className={clsx(
-                  'flex w-full items-center gap-6 px-5 py-4 text-left transition-colors',
-                  active ? 'bg-main-variant1' : 'bg-white hover:bg-gray-100',
-                )}
-              >
-                <div className="h-16.75 w-30 rounded-sm bg-gray-200" />
-                <div className="flex flex-col gap-1">
-                  <span
-                    className={clsx('text-body-m-bold', active ? 'text-white' : 'text-gray-800')}
-                  >
-                    {v.title}
-                  </span>
-                  <span
-                    className={clsx('text-caption', active ? 'text-white/80' : 'text-gray-600')}
-                  >
-                    {v.date}
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+        {isLoadingVideos ? (
+          <div className="flex items-center justify-center py-8">
+            <span className="text-body-m text-gray-600">영상 목록을 불러오는 중...</span>
+          </div>
+        ) : videos.length === 0 ? (
+          <div className="flex items-center justify-center py-8">
+            <span className="text-body-m text-gray-600">공유 가능한 영상이 없습니다.</span>
+          </div>
+        ) : (
+          <div className="flex flex-col">
+            {videos.map((v) => {
+              const active = v.id === selectedVideoId;
+              return (
+                <button
+                  key={v.id}
+                  type="button"
+                  onClick={() => setSelectedVideoId(v.id)}
+                  className={clsx(
+                    'flex w-full items-center gap-6 px-5 py-4 text-left transition-colors',
+                    active ? 'bg-main-variant1' : 'bg-white hover:bg-gray-100',
+                  )}
+                >
+                  {v.thumbnailUrl ? (
+                    <img
+                      src={v.thumbnailUrl}
+                      alt={v.title}
+                      className="h-16.75 w-30 rounded-sm object-cover"
+                    />
+                  ) : (
+                    <div className="h-16.75 w-30 rounded-sm bg-gray-200" />
+                  )}
+                  <div className="flex flex-col gap-1">
+                    <span
+                      className={clsx('text-body-m-bold', active ? 'text-white' : 'text-gray-800')}
+                    >
+                      {v.title}
+                    </span>
+                    <span
+                      className={clsx('text-caption', active ? 'text-white/80' : 'text-gray-600')}
+                    >
+                      {formatTimestamp(v.createdAt)}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -185,17 +224,21 @@ export function ShareModal() {
         <button
           type="button"
           onClick={handleGenerate}
-          disabled={shareType === 'slide_script_video' && !selectedVideoId}
+          disabled={
+            (shareType === 'slide_script_video' && !selectedVideoId) ||
+            createShareLinkMutation.isPending
+          }
           className={clsx(
             'mt-4 h-14 w-full rounded-lg text-body-m-bold text-white transition flex items-center justify-center gap-2',
-            shareType === 'slide_script_video' && !selectedVideoId
+            (shareType === 'slide_script_video' && !selectedVideoId) ||
+              createShareLinkMutation.isPending
               ? 'bg-gray-400 cursor-not-allowed'
               : 'bg-main hover:opacity-90',
           )}
         >
           <span className="flex items-center gap-2">
-            공유 링크 생성
-            <IconLink />
+            {createShareLinkMutation.isPending ? '생성 중...' : '공유 링크 생성'}
+            {!createShareLinkMutation.isPending && <IconLink />}
           </span>
         </button>
       </div>
@@ -312,7 +355,9 @@ export function ShareModal() {
                 <span className="w-30 shrink-0 text-body-m-bold text-gray-600">선택된 영상</span>
                 <div className="flex items-end gap-2">
                   <span className="text-body-m-bold text-gray-800">{selectedVideo.title}</span>
-                  <span className="text-caption text-gray-600">{selectedVideo.date}</span>
+                  <span className="text-caption text-gray-600">
+                    {formatTimestamp(selectedVideo.createdAt)}
+                  </span>
                 </div>
               </div>
             )}
