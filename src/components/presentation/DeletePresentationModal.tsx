@@ -2,15 +2,15 @@ import { Modal } from '../common';
 
 type Props = {
   isOpen: boolean;
-  projectTitle: string;
+  presentationTitle: string;
   isPending?: boolean;
   onClose: () => void;
   onConfirm: () => void;
 };
 
-export default function DeleteProjectModal({
+export default function DeletePresentationModal({
   isOpen,
-  projectTitle,
+  presentationTitle,
   isPending = false,
   onClose,
   onConfirm,
@@ -25,12 +25,12 @@ export default function DeleteProjectModal({
       closeOnEscape={!isPending}
     >
       <div className="flex flex-col gap-1">
-        <p className="text-body-m-bold">{projectTitle}</p>
+        <p className="text-body-m-bold">{presentationTitle}</p>
         <p className="text-body-m">발표를 정말 삭제하시겠습니까?</p>
       </div>
-      <div className="mt-7 flex items-center justify-center gap-3 text-body-s">
+      <div className="mt-7 flex gap-3">
         <button
-          className="flex-1 rounded-lg py-3 bg-gray-200 text-error cursor-pointer"
+          className="flex-1 rounded-md bg-gray-100 py-3 font-bold text-gray-600 hover:bg-gray-200 transition-colors disabled:opacity-50"
           type="button"
           onClick={onClose}
           disabled={isPending}
@@ -38,7 +38,7 @@ export default function DeleteProjectModal({
           취소
         </button>
         <button
-          className="border border-none rounded-lg flex-1 py-3 bg-error text-white cursor-pointer"
+          className="flex-1 rounded-md bg-error py-3 font-bold text-white hover:bg-error/90 transition-colors disabled:opacity-50"
           type="button"
           onClick={onConfirm}
           disabled={isPending}

@@ -2,7 +2,6 @@
  * @file api.ts
  * @description API 응답 공통 타입
  */
-
 /**
  * API 에러 정보
  */

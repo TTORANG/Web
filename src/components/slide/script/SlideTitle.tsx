@@ -16,9 +16,15 @@ import { useSlideActions, useSlideId, useSlideTitle, useUpdateSlide } from '@/ho
 interface SlideTitleProps {
   isCollapsed?: boolean;
   fallbackTitle?: string;
+  /** 읽기 전용 모드 (편집 불가) */
+  readOnly?: boolean;
 }
 
-export default function SlideTitle({ isCollapsed = false, fallbackTitle }: SlideTitleProps) {
+export default function SlideTitle({
+  isCollapsed = false,
+  fallbackTitle,
+  readOnly = false,
+}: SlideTitleProps) {
   const slideId = useSlideId();
   const title = useSlideTitle();
   const { updateSlide } = useSlideActions();
@@ -45,6 +51,14 @@ export default function SlideTitle({ isCollapsed = false, fallbackTitle }: Slide
       updateSlideApi({ slideId, data: { title: nextTitle } });
     }
   };
+
+  if (readOnly) {
+    return (
+      <span className="inline-flex h-7 items-center px-2 text-sm font-semibold text-gray-800">
+        <span className="whitespace-normal break-words">{resolvedTitle}</span>
+      </span>
+    );
+  }
 
   return (
     <Popover
