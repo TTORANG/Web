@@ -84,11 +84,9 @@ function PresentationList({
   projectId,
   title,
   updatedAt,
-  durationMinutes,
-  pageCount,
-  commentCount,
-  reactionCount,
-  viewCount = 0,
+  durationSeconds,
+  slideCount,
+  feedbackCount,
   thumbnailUrl,
 }: Props) {
   const navigate = useNavigate();
@@ -198,30 +196,22 @@ function PresentationList({
                 <span>{formatRelativeTime(updatedAt)}</span>
                 <span className="flex items-center gap-1.5">
                   <RecentIcon className="w-4 h-4" />
-                  {durationMinutes}
+                  {Math.ceil(durationSeconds / 60)}분
                 </span>
               </div>
 
               {/* 구분선 */}
               <span className="h-3.5 w-px bg-gray-200" />
 
-              {/* 페이지 수 & 반응 모음 */}
+              {/* 슬라이드 수 & 피드백 수 */}
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1">
                   <PageCountIcon className="w-4 h-4" />
-                  {pageCount} 페이지
+                  {slideCount} 슬라이드
                 </span>
                 <span className="flex items-center gap-1">
                   <CommentCountIcon className="w-4 h-4" />
-                  {commentCount}
-                </span>
-                <span className="flex items-center gap-1">
-                  <ReactionCountIcon className="w-4 h-4" />
-                  {reactionCount}
-                </span>
-                <span className="flex items-center gap-1">
-                  <ViewCountIcon className="w-4 h-4" />
-                  {viewCount}
+                  {feedbackCount}
                 </span>
               </div>
             </div>

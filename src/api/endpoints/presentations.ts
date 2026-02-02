@@ -12,20 +12,20 @@ import type {
   CreatePresentationRequest,
   CreatePresentationSuccess,
   Presentation,
+  PresentationListResponse,
   ProjectUpdateResponse,
 } from '@/types/presentation';
 
 /**
- * 프로젝트 목록 조회
+ * 프로젝트 목록 조회 (GET)
  *
- * 각 프로젝트는 projectId를 포함하며, 수정/삭제 시 이 projectId를 사용함.
- * @returns 프로젝트 배열
+ * @returns Presentation[]
  */
 export async function getPresentations(): Promise<Presentation[]> {
-  const response = await apiClient.get<ApiResponse<Presentation[]>>(`/presentations`);
+  const response = await apiClient.get<ApiResponse<PresentationListResponse>>(`/presentations`);
 
   if (response.data.resultType === 'SUCCESS') {
-    return response.data.success;
+    return response.data.success.presentations;
   }
   throw new Error(response.data.error.reason);
 }

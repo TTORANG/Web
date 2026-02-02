@@ -64,10 +64,29 @@ export const handlers = [
    * 프로젝트 목록 조회
    * GET /presentations
    */
-  http.get(`${BASE_URL}/presentations`, async () => {
+  http.get(`${BASE_URL}/presentations`, async ({ request }) => {
     await delay(200);
     console.log('[MSW] GET /presentations');
-    return HttpResponse.json(wrapResponse(presentations));
+
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const limit = parseInt(url.searchParams.get('limit') || '20', 10);
+
+    const total = presentations.length;
+    const totalPages = Math.ceil(total / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedPresentations = presentations.slice(startIndex, endIndex);
+
+    return HttpResponse.json(
+      wrapResponse({
+        presentations: paginatedPresentations,
+        total,
+        page,
+        limit,
+        totalPages,
+      }),
+    );
   }),
 
   /**
@@ -103,13 +122,12 @@ export const handlers = [
     const newPresentation: Presentation = {
       projectId: `p${Date.now()}`,
       title: data.title,
-      updatedAt: new Date().toISOString(),
-      durationMinutes: 0,
-      pageCount: 0,
-      commentCount: 0,
-      reactionCount: 0,
-      viewCount: 0,
       thumbnailUrl: '/thumbnails/p1/0.webp',
+      slideCount: 0,
+      feedbackCount: 0,
+      durationSeconds: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     presentations = [newPresentation, ...presentations];

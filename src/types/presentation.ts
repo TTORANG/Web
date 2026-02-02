@@ -20,13 +20,23 @@ export interface CreatePresentationSuccess {
 export interface Presentation {
   projectId: string;
   title: string;
-  updatedAt: string;
-  durationMinutes: number;
-  pageCount: number;
-  commentCount: number;
-  reactionCount: number;
-  viewCount: number;
   thumbnailUrl?: string;
+  slideCount: number;
+  feedbackCount: number;
+  durationSeconds: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * API 응답 타입: 프로젝트 목록 조회 (페이지네이션)
+ */
+export interface PresentationListResponse {
+  presentations: Presentation[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 /**

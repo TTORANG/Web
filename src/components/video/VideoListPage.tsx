@@ -55,12 +55,12 @@ export default function VideoListPage() {
         const formattedProjects: Presentation[] = mockVideos.map((video) => ({
           projectId: String(video.id),
           title: video.title,
+          thumbnailUrl: undefined,
+          slideCount: video.slideCount,
+          feedbackCount: 0,
+          durationSeconds: video.durationSeconds,
+          createdAt: video.createdAt,
           updatedAt: video.createdAt,
-          durationMinutes: Math.ceil(video.durationSeconds / 60),
-          pageCount: video.slideCount,
-          commentCount: 0,
-          reactionCount: 0,
-          viewCount: 0,
         }));
 
         setProjects(formattedProjects);

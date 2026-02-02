@@ -87,11 +87,9 @@ function PresentationCard({
   title,
   highlightQuery = '',
   updatedAt,
-  durationMinutes,
-  pageCount,
-  commentCount,
-  reactionCount,
-  viewCount = 0,
+  durationSeconds,
+  slideCount,
+  feedbackCount,
   thumbnailUrl,
 }: Props) {
   const navigate = useNavigate();
@@ -221,31 +219,23 @@ function PresentationCard({
           </div>
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-x-1 gap-y-2 text-caption text-gray-600">
-            {/* 왼쪽: 소요 시간, 페이지 수 */}
+            {/* 왼쪽: 소요 시간, 슬라이드 수 */}
             <div className="flex items-center gap-3 shrink-0">
               <div className="flex items-center gap-1">
                 <RecentIcon />
-                <span>{durationMinutes}</span>
+                <span>{Math.ceil(durationSeconds / 60)}분</span>
               </div>
               <div className="flex items-center gap-1">
                 <PageCountIcon />
-                <span>{pageCount} 페이지</span>
+                <span>{slideCount} 슬라이드</span>
               </div>
             </div>
 
-            {/* 오른쪽: 반응 모음 */}
+            {/* 오른쪽: 피드백 수 */}
             <div className="flex items-center gap-2 shrink-0">
               <div className="flex items-center gap-1">
                 <CommentCountIcon />
-                {commentCount}
-              </div>
-              <div className="flex items-center gap-1">
-                <ReactionCountIcon />
-                {reactionCount}
-              </div>
-              <div className="flex items-center gap-1">
-                <ViewCountIcon />
-                {viewCount}
+                {feedbackCount}
               </div>
             </div>
           </div>
