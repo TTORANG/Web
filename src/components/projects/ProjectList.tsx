@@ -15,7 +15,6 @@ import type { Project } from '@/types/project';
 import { formatRelativeTime } from '@/utils/format';
 
 import { Dropdown, type DropdownItem } from '../common/Dropdown';
-import { HighlightText } from '../common/HighlightText';
 import DeleteProjectModal from './DeleteProjectModal';
 
 type Props = Project & {
@@ -84,7 +83,6 @@ function ProjectListSkeleton() {
 function ProjectList({
   id,
   title,
-  highlightQuery = '',
   updatedAt,
   durationMinutes,
   pageCount,
@@ -204,14 +202,29 @@ function ProjectList({
                 </span>
               </div>
 
-        <div className="min-w-0 flex-1 px-3">
-          {/* 제목 */}
-          <div className=" mb-1 truncate text-body-m-bold text-gray-900">
-            <HighlightText
-              text={title}
-              query={highlightQuery}
-              highlightClassName="bg-transparent text-main"
-            />
+              {/* 구분선 */}
+              <span className="h-3.5 w-px bg-gray-200" />
+
+              {/* 페이지 수 & 반응 모음 */}
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1">
+                  <PageCountIcon className="w-4 h-4" />
+                  {pageCount} 페이지
+                </span>
+                <span className="flex items-center gap-1">
+                  <CommentCountIcon className="w-4 h-4" />
+                  {commentCount}
+                </span>
+                <span className="flex items-center gap-1">
+                  <ReactionCountIcon className="w-4 h-4" />
+                  {reactionCount}
+                </span>
+                <span className="flex items-center gap-1">
+                  <ViewCountIcon className="w-4 h-4" />
+                  {viewCount}
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* 더보기 */}
@@ -231,22 +244,6 @@ function ProjectList({
               />
             </div>
           )}
-        </div>
-
-        {/* 더보기 */}
-        <div onClick={(e) => e.stopPropagation()} className="-m-2">
-          <Dropdown
-            trigger={({ isOpen }) => (
-              <div className="p-2">
-                <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-600')} />
-              </div>
-            )}
-            items={dropdownItems}
-            position="bottom"
-            align="end"
-            ariaLabel="더보기"
-            menuClassName="w-32"
-          />
         </div>
       </article>
 
