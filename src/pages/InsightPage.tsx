@@ -45,6 +45,7 @@ type RecentComment = {
 // 디자인을 위해 스타일을 조금 더 부드럽게 조정했습니다.
 const cardBase = 'bg-white rounded-xl border border-gray-100 shadow-sm p-6';
 const thumbBase = 'bg-gray-100 rounded-lg aspect-video';
+const FALLBACK_SLIDE_DURATION_SECONDS = 10;
 
 // --- 더미 데이터 (사진 수치 반영) ---
 const summaryStatLabels = ['총 조회수', '완료율', '받은 피드백', '평균 체류 시간'] as const;
@@ -175,11 +176,11 @@ export default function InsightPage() {
 
   const slideChangeTimes = useMemo(() => {
     if (!slides?.length) return [];
-    const hasStartTime = slides.some((slide) => Number.isFinite(slide.startTime));
-    if (!hasStartTime) return [];
 
     return slides.map((slide, index) =>
-      Number.isFinite(slide.startTime) ? (slide.startTime ?? 0) : index * 10,
+      Number.isFinite(slide.startTime)
+        ? (slide.startTime ?? 0)
+        : index * FALLBACK_SLIDE_DURATION_SECONDS,
     );
   }, [slides]);
 

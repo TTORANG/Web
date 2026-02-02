@@ -14,7 +14,7 @@ import FeedbackMobileLayout from '@/components/feedback/FeedbackMobileLayout';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
 import ScriptSection from '@/components/feedback/ScriptSection';
 import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
-import { recordExitOnUnload, useRecordExit } from '@/hooks/useAnalytics';
+import { useExitTracker } from '@/hooks/useExitTracker';
 import { useFeedbackVideo } from '@/hooks/useFeedbackVideo';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
@@ -23,9 +23,7 @@ export default function FeedbackVideoPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const isDesktop = useIsDesktop();
   const ctx = useFeedbackVideo();
-  const { mutate: recordExit } = useRecordExit();
   const videoId = useVideoFeedbackStore((s) => s.video?.videoId);
-  const exitSentRef = useRef(false);
   const {
     isLoading,
     currentTime,
@@ -71,39 +69,7 @@ export default function FeedbackVideoPage() {
     return payload;
   }, [projectId, videoId, currentTime]);
 
-  const sendExit = useCallback(
-    (mode: 'unload' | 'unmount') => {
-      if (exitSentRef.current) return;
-      const payload = buildExitPayload();
-      if (!payload) return;
-
-      exitSentRef.current = true;
-      if (mode === 'unload') {
-        recordExitOnUnload(payload);
-      } else {
-        recordExit(payload);
-      }
-    },
-    [buildExitPayload, recordExit],
-  );
-
-  useEffect(() => {
-    const handlePageHide = () => sendExit('unload');
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        sendExit('unload');
-      }
-    };
-
-    window.addEventListener('pagehide', handlePageHide);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener('pagehide', handlePageHide);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      sendExit('unmount');
-    };
-  }, [sendExit]);
+  useExitTracker(buildExitPayload);
 
   // 비디오 위치 계산을 위한 refs
   const desktopPlaceholderRef = useRef<HTMLDivElement>(null);
