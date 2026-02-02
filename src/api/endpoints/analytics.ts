@@ -12,6 +12,47 @@ export interface SummaryAnalytics {
   totalFeedbackCount: number;
 }
 
+export interface SlideAnalytics {
+  slideId: string;
+  slideNum: number;
+  title: string;
+  viewCount: number;
+  exitCount: number;
+  exitRate: number;
+  reactionCount: number;
+  commentCount: number;
+  feedbackCount: number;
+}
+
+export interface SlideAnalyticsResponse {
+  slides: SlideAnalytics[];
+}
+
+export async function getSlideAnalytics(projectId: string): Promise<SlideAnalyticsResponse> {
+  const response = await apiClient.get<ApiResponse<SlideAnalyticsResponse>>(
+    `/presentations/${projectId}/analytics/slides`,
+  );
+
+  if (response.data.resultType === 'FAILURE') {
+    const reason = response.data.reason;
+    let errorMessage = '슬라이드별 분석 조회에 실패했습니다.';
+
+    if (typeof reason === 'string') {
+      errorMessage = reason;
+    } else if (reason && typeof reason === 'object') {
+      errorMessage = reason.message || errorMessage;
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  if (!response.data.success) {
+    throw new Error('데이터가 존재하지 않습니다.');
+  }
+
+  return response.data.success;
+}
+
 export async function getSummaryAnalytics(projectId: string): Promise<SummaryAnalytics> {
   const response = await apiClient.get<ApiResponse<SummaryAnalytics>>(
     `/presentations/${projectId}/analytics/summary`,

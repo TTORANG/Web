@@ -21,9 +21,10 @@ import {
 } from '@/components/insight';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useSlides } from '@/hooks/queries/useSlides';
-import { useSummaryAnalytics } from '@/hooks/useAnalytics';
+import { useSlideAnalytics, useSummaryAnalytics } from '@/hooks/useAnalytics';
 import type { DropOffSlide, DropOffTime, SummaryStat } from '@/types/insight';
 import type { Reaction } from '@/types/script';
+import type { Slide } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';
 
 // --- 타입 및 스타일 정의 ---
@@ -110,6 +111,7 @@ export default function InsightPage() {
   const hasVideo = true;
   const { projectId } = useParams<{ projectId: string }>();
   const { data: slides } = useSlides(projectId ?? '');
+  const { data: slideAnalytics } = useSlideAnalytics(projectId ?? '');
   const { data: summaryAnalytics } = useSummaryAnalytics(projectId ?? '');
   const computedSummaryStats = useMemo(() => {
     if (!summaryAnalytics) return emptySummaryStats;
@@ -144,7 +146,13 @@ export default function InsightPage() {
     if (!slides?.length) return base;
 
     const totals = new Map<Reaction['type'], number>();
-    slides.forEach((slide) => {
+    const analyticsSlideIds = new Set((slideAnalytics?.slides ?? []).map((item) => item.slideId));
+    const targetSlides =
+      analyticsSlideIds.size > 0
+        ? slides.filter((slide) => analyticsSlideIds.has(slide.id))
+        : slides;
+
+    targetSlides.forEach((slide) => {
       slide.emojiReactions?.forEach((reaction) => {
         totals.set(reaction.type, (totals.get(reaction.type) ?? 0) + reaction.count);
       });
@@ -154,25 +162,40 @@ export default function InsightPage() {
       ...reaction,
       count: totals.get(reaction.type) ?? 0,
     }));
-  }, [slides]);
+  }, [slides, slideAnalytics]);
 
   const topSlides = useMemo(() => {
-    if (!slides?.length) return [];
-    return slides
-      .map((slide, index) => ({
-        slide,
-        slideIndex: index,
-        commentCount: slide.opinions?.length ?? 0,
-        reactionCount: (slide.emojiReactions ?? []).reduce((sum, r) => sum + r.count, 0),
-        total:
-          (slide.opinions?.length ?? 0) +
-          (slide.emojiReactions ?? []).reduce((sum, r) => sum + r.count, 0),
-      }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 3);
-  }, [slides]);
+    const analyticsSlides = slideAnalytics?.slides ?? [];
+    if (!analyticsSlides.length) return [];
 
-  const getThumb = (slideIndex: number) => slides?.[slideIndex]?.thumb;
+    const slideIndexById = new Map<string, number>();
+    const slideById = new Map<string, Slide>();
+
+    (slides ?? []).forEach((slide, index) => {
+      slideIndexById.set(slide.id, index);
+      slideById.set(slide.id, slide);
+    });
+
+    return analyticsSlides
+      .slice()
+      .sort((a, b) => b.feedbackCount - a.feedbackCount)
+      .slice(0, 3)
+      .map((item) => {
+        const slide = slideById.get(item.slideId);
+        const slideIndex = slideIndexById.get(item.slideId) ?? Math.max(0, item.slideNum - 1);
+        const title = slide?.title || item.title || `슬라이드 ${slideIndex + 1}`;
+
+        return {
+          slide,
+          slideIndex,
+          title,
+          commentCount: item.commentCount,
+          feedbackCount: item.feedbackCount,
+        };
+      });
+  }, [slideAnalytics, slides]);
+
+  const getThumb = (slideIndex: number) => (slides ?? [])[slideIndex]?.thumb;
 
   return (
     <div
@@ -282,15 +305,15 @@ export default function InsightPage() {
         <div className="h-full flex flex-col">
           <h3 className="text-body-l-bold text-gray-800 mb-4">가장 많은 피드백을 받은 슬라이드</h3>
           <div className="grid grid-cols-3 gap-3 items-start">
-            {topSlides.map(({ slide, slideIndex, commentCount }) => {
-              const reactionMetrics = (slide.emojiReactions ?? []).filter(
+            {topSlides.map(({ slide, slideIndex, commentCount, title }) => {
+              const reactionMetrics = (slide?.emojiReactions ?? []).filter(
                 (reaction) => reaction.count > 0,
               );
 
               return (
                 <TopSlideCard
-                  key={slide.id}
-                  title={slide.title || `슬라이드 ${slideIndex + 1}`}
+                  key={slide?.id ?? `slide-${slideIndex}`}
+                  title={title}
                   thumbUrl={getThumb(slideIndex)}
                   reactionMetrics={reactionMetrics}
                   commentCount={commentCount}
