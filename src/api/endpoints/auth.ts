@@ -26,3 +26,43 @@ export async function getGoogleCallback(code: string): Promise<SocialLoginSucces
   }
   throw new Error(response.data.error.reason);
 }
+
+/**
+ * Kakao OAuth 콜백 처리
+ *
+ * @param code - OAuth 인증 코드
+ * @returns 로그인 성공 정보 (user, tokens)
+ *
+ * @example
+ * const result = await getKakaoCallback('authorization-code');
+ */
+export async function getKakaoCallback(code: string): Promise<SocialLoginSuccessDto> {
+  const response = await apiClient.get<ApiResponse<SocialLoginSuccessDto>>(`/auth/kakao/callback`, {
+    params: { code },
+  });
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
+}
+
+/**
+ * Naver OAuth 콜백 처리
+ *
+ * @param code - OAuth 인증 코드
+ * @returns 로그인 성공 정보 (user, tokens)
+ *
+ * @example
+ * const result = await getNaverCallback('authorization-code');
+ */
+export async function getNaverCallback(code: string): Promise<SocialLoginSuccessDto> {
+  const response = await apiClient.get<ApiResponse<SocialLoginSuccessDto>>(`/auth/naver/callback`, {
+    params: { code },
+  });
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
+}
