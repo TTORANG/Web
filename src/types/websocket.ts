@@ -34,34 +34,34 @@ export interface RoomsListResponse {
  * 댓글 관련 이벤트 페이로드
  */
 export interface NewCommentPayload {
-  commentId: number;
-  videoId: number;
-  userId: number;
+  commentId: string;
+  videoId: string;
+  userId: string;
   content: string;
   createdAt: string;
 }
 
 export interface CommentDeletedPayload {
-  commentId: number;
+  commentId: string;
 }
 
 /**
  * 리액션 관련 이벤트 페이로드
  */
 export interface NewReactionPayload {
-  reactionId: number;
-  videoId: number;
-  userId: number;
+  reactionId: string;
+  videoId: string;
+  userId: string;
   emoji: string;
-  timestamp: number; // ms
+  timestamp: number; // 비디오 타임스탬프 (초 단위)
 }
 
 export interface ReactionRemovedPayload {
-  reactionId: number;
+  reactionId: string;
 }
 
 export interface ReactionCountUpdatedPayload {
-  videoId: number;
+  videoId: string;
   counts: Record<string, number>;
 }
 

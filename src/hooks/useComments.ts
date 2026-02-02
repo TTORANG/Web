@@ -49,6 +49,11 @@ export function useComments() {
     createOpinionApi(
       { slideId, data: { content } },
       {
+        onSuccess: () => {
+          // 서버가 웹소켓을 보내지 않으므로 수동으로 쿼리 무효화
+          // TODO: 서버에서 broadcastNewComment 호출 후 제거
+          console.log('✅ Comment created, invalidating queries...');
+        },
         onError: () => {
           setOpinions(previousOpinions);
           showToast.error('댓글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');

@@ -101,7 +101,6 @@ export default function FeedbackVideoPage() {
   useFeedbackWebSocket({
     projectId: projectId ?? '',
     enabled: !!projectId,
-    feedbackType: 'video',
   });
 
   return (

@@ -35,7 +35,6 @@ export default function FeedbackSlidePage() {
   useFeedbackWebSocket({
     projectId: projectId ?? '',
     enabled: !!projectId,
-    feedbackType: 'slide',
   });
 
   const totalSlides = slides?.length ?? 0;

@@ -122,12 +122,18 @@ export function useWebSocket({
       return;
     }
 
+    // 이미 연결되어 있으면 중복 연결 방지
+    if (socketRef.current?.connected) {
+      console.log('[WebSocket] Already connected, skipping...');
+      return;
+    }
+
     // 웹소켓 서버 URL
     const wsUrl = import.meta.env.VITE_WS_URL || 'http://localhost:3000';
 
     // 인증 설정
     const auth: SocketAuthConfig = {
-      token: accessToken || null,
+      token: accessToken ? `Bearer ${accessToken}` : null,
       sessionId: accessToken ? null : getOrCreateSessionId(),
     };
 
@@ -154,23 +160,21 @@ export function useWebSocket({
 
       // 자동으로 프로젝트 Room 입장
       if (autoJoin && projectId) {
-        // projectId가 숫자면 숫자로, 문자열이면 그대로 사용
-        const numericId = Number(projectId);
         const payload: JoinProjectPayload = {
-          projectId: isNaN(numericId) ? projectId : numericId,
-        } as JoinProjectPayload;
+          projectId: String(projectId),
+        };
         socket.emit('join-project', payload);
       }
     });
 
-    socket.on('disconnect', (reason) => {
+    socket.on('disconnect', (reason: string) => {
       console.log('❌ [WebSocket] Disconnected:', reason);
       setIsConnected(false);
       setCurrentRooms([]);
       handlersRef.current.onDisconnect?.();
     });
 
-    socket.on('connect_error', (error) => {
+    socket.on('connect_error', (error: Error) => {
       console.error('🔴 [WebSocket] Connection Error:', error);
       setConnectionError(error.message);
 
@@ -202,13 +206,29 @@ export function useWebSocket({
 
     // ========== 댓글 관련 이벤트 ==========
     socket.on('new-comment', (data: NewCommentPayload) => {
-      console.log('[WebSocket] New comment:', data);
+      console.log('💬 [WebSocket] New comment:', data);
       handlersRef.current.onNewComment?.(data);
     });
 
+    // opinion 이벤트도 리스닝 (서버가 다른 이벤트명을 사용할 수 있음)
+    socket.on('new-opinion', (data: unknown) => {
+      console.log('💬 [WebSocket] New opinion:', data);
+      // new-comment 핸들러 재사용
+      if (data && typeof data === 'object') {
+        handlersRef.current.onNewComment?.(data as NewCommentPayload);
+      }
+    });
+
     socket.on('comment-deleted', (data: CommentDeletedPayload) => {
-      console.log('[WebSocket] Comment deleted:', data);
+      console.log('🗑️ [WebSocket] Comment deleted:', data);
       handlersRef.current.onCommentDeleted?.(data);
+    });
+
+    socket.on('opinion-deleted', (data: unknown) => {
+      console.log('🗑️ [WebSocket] Opinion deleted:', data);
+      if (data && typeof data === 'object') {
+        handlersRef.current.onCommentDeleted?.(data as CommentDeletedPayload);
+      }
     });
 
     // ========== 리액션 관련 이벤트 ==========
@@ -235,8 +255,12 @@ export function useWebSocket({
 
     // 모든 이벤트 로깅 (개발 환경)
     if (import.meta.env.DEV) {
-      socket.onAny((eventName, ...args) => {
-        console.log('[WebSocket Event]', eventName, args);
+      socket.onAny((eventName: string, ...args: unknown[]) => {
+        console.log('🔵 [WS Incoming]', eventName, args);
+      });
+
+      socket.onAnyOutgoing((eventName: string, ...args: unknown[]) => {
+        console.log('🟢 [WS Outgoing]', eventName, args);
       });
     }
 
@@ -246,7 +270,7 @@ export function useWebSocket({
 
       if (socket.connected) {
         // 프로젝트 Room 퇴장
-        socket.emit('leave-project', { projectId: Number(projectId) });
+        socket.emit('leave-project', { projectId: String(projectId) });
         socket.disconnect();
       }
 
@@ -262,15 +286,15 @@ export function useWebSocket({
     /** 현재 참여 중인 Room 목록 */
     currentRooms,
     /** 프로젝트 Room 입장 */
-    joinProject: (projectId: number) => {
+    joinProject: (projectId: string | number) => {
       if (socketRef.current?.connected) {
-        socketRef.current.emit('join-project', { projectId });
+        socketRef.current.emit('join-project', { projectId: String(projectId) });
       }
     },
     /** 프로젝트 Room 퇴장 */
-    leaveProject: (projectId: number) => {
+    leaveProject: (projectId: string | number) => {
       if (socketRef.current?.connected) {
-        socketRef.current.emit('leave-project', { projectId });
+        socketRef.current.emit('leave-project', { projectId: String(projectId) });
       }
     },
     /** 참여 중인 Room 목록 조회 */
