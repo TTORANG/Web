@@ -1,3 +1,4 @@
+import { type FormEvent, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import clsx from 'clsx';
@@ -9,9 +10,11 @@ import ReactionCountIcon from '@/assets/icons/icon-reaction-count.svg?react';
 import RecentIcon from '@/assets/icons/icon-recent.svg?react';
 import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
 import { getTabPath } from '@/constants/navigation';
+import { useUpdateProject } from '@/hooks/queries/useProjects';
 import { useProjectDeletion } from '@/hooks/useProjectDeletion';
 import type { Project } from '@/types/project';
 import { formatRelativeTime } from '@/utils/format';
+import { showToast } from '@/utils/toast';
 
 import { Dropdown, type DropdownItem } from '../common/Dropdown';
 import DeleteProjectModal from './DeleteProjectModal';
@@ -89,18 +92,61 @@ function ProjectList({
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
     useProjectDeletion(id);
+  const { mutate: updateProject, isPending: isUpdating } = useUpdateProject();
+
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [newTitle, setNewTitle] = useState(title);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleListClick = () => {
+    if (isRenaming) return;
     navigate(getTabPath(id, 'slide'));
+  };
+
+  const handleRenameClick = () => {
+    setIsRenaming(true);
+    setNewTitle(title);
+    setTimeout(() => inputRef.current?.select(), 50);
+  };
+
+  const handleRenameSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    const trimmedTitle = newTitle.trim();
+
+    if (!trimmedTitle) {
+      showToast.error('제목을 입력해주세요');
+      return;
+    }
+
+    if (trimmedTitle === title) {
+      setIsRenaming(false);
+      return;
+    }
+
+    updateProject(
+      { projectId: id, data: { title: trimmedTitle } },
+      {
+        onSuccess: () => {
+          showToast.success('제목이 변경되었습니다');
+          setIsRenaming(false);
+        },
+        onError: () => {
+          showToast.error('제목 변경에 실패했습니다');
+        },
+      },
+    );
+  };
+
+  const handleRenameCancel = () => {
+    setIsRenaming(false);
+    setNewTitle(title);
   };
 
   const dropdownItems: DropdownItem[] = [
     {
       id: 'rename',
       label: '이름 변경',
-      onClick: () => {
-        // TODO: 이름 변경 로직 구현
-      },
+      onClick: handleRenameClick,
     },
     {
       id: 'delete',
@@ -114,7 +160,10 @@ function ProjectList({
     <>
       <article
         onClick={handleListClick}
-        className="flex w-full items-center justify-between cursor-pointer bg-white px-5 py-4 rounded-2xl border border-gray-200 transition-shadow hover:shadow-lg"
+        className={clsx(
+          'flex w-full items-center justify-between bg-white px-5 py-4 rounded-2xl border border-gray-200 transition-shadow',
+          !isRenaming && 'cursor-pointer hover:shadow-lg',
+        )}
       >
         {/* 썸네일 */}
         <div className="w-35 h-19.5 shrink-0 overflow-hidden rounded-lg bg-gray-200">
@@ -127,7 +176,46 @@ function ProjectList({
         <div className="flex flex-1 items-center justify-between pl-6">
           <div className="flex flex-col gap-0.5">
             {/* 제목 */}
-            <div className="truncate text-body-m-bold text-gray-800">{title}</div>
+            {isRenaming ? (
+              <form
+                onSubmit={handleRenameSubmit}
+                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm max-w-md"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      handleRenameCancel();
+                    }
+                  }}
+                  disabled={isUpdating}
+                  className={clsx(
+                    'flex-1 text-body-m-bold text-gray-800',
+                    'focus:outline-none',
+                    'disabled:opacity-50 disabled:cursor-not-allowed',
+                    'placeholder:text-gray-400',
+                  )}
+                  placeholder="발표 제목을 입력하세요"
+                />
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className={clsx(
+                    'px-2 py-1 text-caption-bold text-white bg-main rounded-full shrink-0',
+                    'hover:bg-blue-600 transition-colors',
+                    'disabled:opacity-50 disabled:cursor-not-allowed',
+                  )}
+                >
+                  {isUpdating ? '저장 중...' : '저장'}
+                </button>
+              </form>
+            ) : (
+              <div className="truncate text-body-m-bold text-gray-800">{title}</div>
+            )}
 
             {/* 메타 정보 */}
             <div className="flex items-center gap-4 text-caption text-gray-600">
@@ -166,20 +254,22 @@ function ProjectList({
           </div>
 
           {/* 더보기 */}
-          <div onClick={(e) => e.stopPropagation()} className="-m-2">
-            <Dropdown
-              trigger={({ isOpen }) => (
-                <div className="p-2">
-                  <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-600')} />
-                </div>
-              )}
-              items={dropdownItems}
-              position="bottom"
-              align="end"
-              ariaLabel="더보기"
-              menuClassName="w-32"
-            />
-          </div>
+          {!isRenaming && (
+            <div onClick={(e) => e.stopPropagation()} className="-m-2">
+              <Dropdown
+                trigger={({ isOpen }) => (
+                  <div className="p-2">
+                    <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-600')} />
+                  </div>
+                )}
+                items={dropdownItems}
+                position="bottom"
+                align="end"
+                ariaLabel="더보기"
+                menuClassName="w-32"
+              />
+            </div>
+          )}
         </div>
       </article>
 

@@ -1,3 +1,4 @@
+import { type FormEvent, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import clsx from 'clsx';
@@ -9,9 +10,11 @@ import ReactionCountIcon from '@/assets/icons/icon-reaction-count.svg?react';
 import RecentIcon from '@/assets/icons/icon-recent.svg?react';
 import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
 import { getTabPath } from '@/constants/navigation';
+import { useUpdateProject } from '@/hooks/queries/useProjects';
 import { useProjectDeletion } from '@/hooks/useProjectDeletion';
 import type { Project } from '@/types/project';
 import { formatRelativeTime } from '@/utils/format';
+import { showToast } from '@/utils/toast';
 
 import { Dropdown } from '../common';
 import type { DropdownItem } from '../common/Dropdown';
@@ -90,18 +93,61 @@ function ProjectCard({
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
     useProjectDeletion(id);
+  const { mutate: updateProject, isPending: isUpdating } = useUpdateProject();
+
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [newTitle, setNewTitle] = useState(title);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleCardClick = () => {
+    if (isRenaming) return;
     navigate(getTabPath(id, 'slide'));
+  };
+
+  const handleRenameClick = () => {
+    setIsRenaming(true);
+    setNewTitle(title);
+    setTimeout(() => inputRef.current?.select(), 50);
+  };
+
+  const handleRenameSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    const trimmedTitle = newTitle.trim();
+
+    if (!trimmedTitle) {
+      showToast.error('제목을 입력해주세요');
+      return;
+    }
+
+    if (trimmedTitle === title) {
+      setIsRenaming(false);
+      return;
+    }
+
+    updateProject(
+      { projectId: id, data: { title: trimmedTitle } },
+      {
+        onSuccess: () => {
+          showToast.success('제목이 변경되었습니다');
+          setIsRenaming(false);
+        },
+        onError: () => {
+          showToast.error('제목 변경에 실패했습니다');
+        },
+      },
+    );
+  };
+
+  const handleRenameCancel = () => {
+    setIsRenaming(false);
+    setNewTitle(title);
   };
 
   const dropdownItems: DropdownItem[] = [
     {
       id: 'rename',
       label: '이름 변경',
-      onClick: () => {
-        // TODO: 이름 변경 로직 구현
-      },
+      onClick: handleRenameClick,
     },
     {
       id: 'delete',
@@ -115,7 +161,10 @@ function ProjectCard({
     <>
       <article
         onClick={handleCardClick}
-        className="cursor-pointer rounded-2xl border-none bg-white transition-shadow hover:shadow-lg"
+        className={clsx(
+          'rounded-2xl border-none bg-white transition-shadow',
+          !isRenaming && 'cursor-pointer hover:shadow-lg',
+        )}
       >
         <div className="aspect-video w-full overflow-hidden rounded-t-2xl bg-gray-200">
           {thumbnailUrl && (
@@ -131,22 +180,63 @@ function ProjectCard({
           {/* 제목 및 업데이트 날짜 */}
           <div className="min-h-18">
             <div className="flex justify-between gap-2">
-              <h3 className="text-body-m-bold text-gray-800 line-clamp-2">{title}</h3>
+              {isRenaming ? (
+                <form
+                  onSubmit={handleRenameSubmit}
+                  className="flex-1 flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        handleRenameCancel();
+                      }
+                    }}
+                    disabled={isUpdating}
+                    className={clsx(
+                      'flex-1 text-body-m-bold text-gray-800',
+                      'focus:outline-none',
+                      'disabled:opacity-50 disabled:cursor-not-allowed',
+                      'placeholder:text-gray-400',
+                    )}
+                    placeholder="발표 제목을 입력하세요"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isUpdating}
+                    className={clsx(
+                      'px-2 py-1 text-caption-bold text-white bg-main rounded-full shrink-0',
+                      'hover:bg-blue-600 transition-colors',
+                      'disabled:opacity-50 disabled:cursor-not-allowed',
+                    )}
+                  >
+                    {isUpdating ? '저장 중...' : '저장'}
+                  </button>
+                </form>
+              ) : (
+                <h3 className="text-body-m-bold text-gray-800 line-clamp-2">{title}</h3>
+              )}
               {/* 더보기 */}
-              <div onClick={(e) => e.stopPropagation()} className="shrink-0 mt-1">
-                <Dropdown
-                  trigger={({ isOpen }) => (
-                    <div className="p-2 -m-2">
-                      <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-400')} />
-                    </div>
-                  )}
-                  items={dropdownItems}
-                  position="bottom"
-                  align="end"
-                  ariaLabel="더보기"
-                  menuClassName="w-32"
-                />
-              </div>
+              {!isRenaming && (
+                <div onClick={(e) => e.stopPropagation()} className="shrink-0 mt-1">
+                  <Dropdown
+                    trigger={({ isOpen }) => (
+                      <div className="p-2 -m-2">
+                        <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-400')} />
+                      </div>
+                    )}
+                    items={dropdownItems}
+                    position="bottom"
+                    align="end"
+                    ariaLabel="더보기"
+                    menuClassName="w-32"
+                  />
+                </div>
+              )}
             </div>
             <p className="mt-1 text-body-s text-gray-400">{formatRelativeTime(updatedAt)}</p>
           </div>
