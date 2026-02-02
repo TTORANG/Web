@@ -2,29 +2,21 @@
  * @file api.ts
  * @description API 응답 공통 타입
  */
+/**
+ * API 에러 정보
+ */
+export interface ApiError {
+  code: string;
+  message: string;
+}
 
 /**
  * API 응답 래퍼
  */
-export type ApiResponse<T, D = unknown> =
-  | {
-      resultType: 'SUCCESS';
-      error: null;
-      success: T;
-    }
-  | {
-      resultType: 'FAILURE';
-      error: ApiError<D>;
-      success: null;
-    };
-
-/**
- * API 에러 정보
- */
-export interface ApiError<D = unknown> {
-  errorCode: string;
-  reason: string;
-  data?: D;
+export interface ApiResponse<T> {
+  resultType: 'SUCCESS' | 'FAILURE';
+  reason: ApiError | null;
+  success: T;
 }
 
 /**

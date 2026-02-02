@@ -17,7 +17,7 @@ import { formatRelativeTime } from '@/utils/format';
 import { Dropdown } from '../common';
 import type { DropdownItem } from '../common/Dropdown';
 import { HighlightText } from '../common/HighlightText';
-import DeleteProjectModal from './DeletePresentationModal';
+import DeletePresentationModal from './DeletePresentationModal';
 
 type Props = Presentation & {
   highlightQuery?: string;
@@ -254,9 +254,9 @@ function PresentationCard({
 
       {/* 삭제 확인 모달 */}
       <div onClick={(e) => e.stopPropagation()}>
-        <DeleteProjectModal
+        <DeletePresentationModal
           isOpen={isDeleteModalOpen}
-          projectTitle={title}
+          presentationTitle={title}
           isPending={isPending}
           onClose={closeDeleteModal}
           onConfirm={confirmDelete}

@@ -1,8 +1,8 @@
-import type { Project } from '@/types/presentation';
+import type { Presentation } from '@/types/presentation';
 
 import { daysAgo } from './utils';
 
-export const MOCK_PROJECTS: Project[] = [
+export const MOCK_PROJECTS: Presentation[] = [
   {
     id: 'p1',
     title: '네이버 지도 리브랜딩, 새로운 여정의 시작',
