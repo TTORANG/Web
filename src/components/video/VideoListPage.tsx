@@ -139,6 +139,7 @@ export default function VideoListPage() {
             <RecordingEmptySection onStart={handleStartRecording} />
           </div>
         ) : (
+          // 데이터가 있을 때
           <section>
             <ProjectHeader
               value={query}

@@ -1,4 +1,3 @@
-// src/pages/VideoPage.tsx
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -12,12 +11,46 @@ interface Video {
   durationSeconds: number;
   slideCount: number;
   size: number;
-  videoData?: string; // Base64 인코딩된 영상
-  videoUrl?: string; // HLS URL
+  videoData?: string;
+  videoUrl?: string;
   thumbnailUrl?: string;
   status: 'processing' | 'ready' | 'failed';
   durations?: { [key: number]: number };
 }
+
+const isSafeVideoUrl = (url: string | undefined): boolean => {
+  if (!url) return false;
+
+  try {
+    if (url.startsWith('data:')) {
+      return url.startsWith('data:video/');
+    }
+
+    if (url.startsWith('blob:')) {
+      return true;
+    }
+
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
+const getSafeThumbnailUrl = (url?: string | null): string | undefined => {
+  if (!url) return undefined;
+
+  try {
+    const parsed = new URL(url, window.location.origin);
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return parsed.toString();
+    }
+  } catch {
+    return undefined;
+  }
+
+  return undefined;
+};
 
 const VideoPage = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -29,7 +62,6 @@ const VideoPage = () => {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 업로드 성공 토스트
   useEffect(() => {
     if (location.state?.uploadSuccess) {
       setShowSuccessToast(true);
@@ -39,28 +71,30 @@ const VideoPage = () => {
     }
   }, [location, navigate]);
 
-  // 영상 목록 로드
   useEffect(() => {
     const loadVideos = async () => {
       setIsLoading(true);
       try {
         console.log('📂 영상 목록 로드 시작 - projectId:', projectId);
 
-        // localStorage에서 로드
         const storedData = localStorage.getItem('mockVideos');
         if (!storedData) {
-          console.log('📂 저장된 영상 없음');
           setVideos([]);
           return;
         }
 
         const mockVideos: Video[] = JSON.parse(storedData);
-        console.log('📂 전체 영상 수:', mockVideos.length);
 
         const projectVideos = mockVideos.filter((v) => v.projectId === projectId);
-        console.log('📂 현재 프로젝트 영상 수:', projectVideos.length);
 
-        setVideos(projectVideos);
+        const sanitizedVideos = projectVideos.map((v) => ({
+          ...v,
+          videoData: isSafeVideoUrl(v.videoData) ? v.videoData : undefined,
+          videoUrl: isSafeVideoUrl(v.videoUrl) ? v.videoUrl : undefined,
+          thumbnailUrl: getSafeThumbnailUrl(v.thumbnailUrl),
+        }));
+
+        setVideos(sanitizedVideos);
       } catch (error) {
         console.error('영상 목록 로드 실패:', error);
         setVideos([]);
@@ -90,11 +124,20 @@ const VideoPage = () => {
     setSelectedVideo(null);
   };
 
+  const getSafeVideoSrc = (video: Video): string | undefined => {
+    if (video.videoData && isSafeVideoUrl(video.videoData)) {
+      return video.videoData;
+    }
+    if (video.videoUrl && isSafeVideoUrl(video.videoUrl)) {
+      return video.videoUrl;
+    }
+    return undefined;
+  };
+
   const hasVideos = videos.length > 0;
 
   return (
     <div className="relative h-full w-full bg-gray-100">
-      {/* 성공 토스트 */}
       {showSuccessToast && (
         <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-slide-in">
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -108,95 +151,90 @@ const VideoPage = () => {
         </div>
       )}
 
-      {/* 영상 플레이어 모달 */}
-      {selectedVideo && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-5xl w-full max-h-[90vh] overflow-auto">
-            <div className="flex items-center justify-between p-4 border-b">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">{selectedVideo.title}</h2>
-                <p className="text-sm text-gray-500">
-                  {new Date(selectedVideo.createdAt).toLocaleString('ko-KR')}
-                </p>
-              </div>
-              <button
-                onClick={handleClosePlayer}
-                className="p-2 hover:bg-gray-100 rounded-lg transition"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
+      {selectedVideo &&
+        (() => {
+          const safeVideoSrc = getSafeVideoSrc(selectedVideo);
 
-            <div className="p-4">
-              {selectedVideo.videoData ? (
-                <video
-                  src={selectedVideo.videoData}
-                  controls
-                  autoPlay
-                  className="w-full aspect-video bg-black rounded-lg"
-                >
-                  Your browser does not support the video tag.
-                </video>
-              ) : selectedVideo.videoUrl ? (
-                <video
-                  src={selectedVideo.videoUrl}
-                  controls
-                  autoPlay
-                  className="w-full aspect-video bg-black rounded-lg"
-                >
-                  Your browser does not support the video tag.
-                </video>
-              ) : (
-                <div className="w-full aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
-                  <p className="text-gray-500">영상 데이터를 찾을 수 없습니다</p>
-                </div>
-              )}
-
-              {/* 영상 정보 */}
-              <div className="mt-4 grid grid-cols-3 gap-4">
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-xs text-gray-500 mb-1">재생 시간</p>
-                  <p className="text-lg font-bold text-gray-900">
-                    {selectedVideo.durationSeconds}초
-                  </p>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-xs text-gray-500 mb-1">슬라이드 수</p>
-                  <p className="text-lg font-bold text-gray-900">{selectedVideo.slideCount}개</p>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-xs text-gray-500 mb-1">파일 크기</p>
-                  <p className="text-lg font-bold text-gray-900">
-                    {(selectedVideo.size / 1024 / 1024).toFixed(2)} MB
-                  </p>
-                </div>
-              </div>
-
-              {/* 슬라이드별 시간 정보 */}
-              {selectedVideo.durations && (
-                <div className="mt-4 bg-gray-50 p-4 rounded-lg">
-                  <h3 className="text-sm font-bold text-gray-900 mb-2">슬라이드별 소요 시간</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {Object.entries(selectedVideo.durations).map(([slideId, duration]) => (
-                      <div key={slideId} className="bg-white p-2 rounded text-center">
-                        <p className="text-xs text-gray-500">슬라이드 {slideId}</p>
-                        <p className="text-sm font-bold text-gray-900">{duration}초</p>
-                      </div>
-                    ))}
+          return (
+            <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-xl max-w-5xl w-full max-h-[90vh] overflow-auto">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">{selectedVideo.title}</h2>
+                    <p className="text-sm text-gray-500">
+                      {new Date(selectedVideo.createdAt).toLocaleString('ko-KR')}
+                    </p>
                   </div>
+                  <button
+                    onClick={handleClosePlayer}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
                 </div>
-              )}
+
+                <div className="p-4">
+                  {safeVideoSrc ? (
+                    <video
+                      src={safeVideoSrc}
+                      controls
+                      autoPlay
+                      className="w-full aspect-video bg-black rounded-lg"
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : (
+                    <div className="w-full aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
+                      <p className="text-gray-500">영상 데이터를 찾을 수 없습니다</p>
+                    </div>
+                  )}
+
+                  <div className="mt-4 grid grid-cols-3 gap-4">
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <p className="text-xs text-gray-500 mb-1">재생 시간</p>
+                      <p className="text-lg font-bold text-gray-900">
+                        {selectedVideo.durationSeconds}초
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <p className="text-xs text-gray-500 mb-1">슬라이드 수</p>
+                      <p className="text-lg font-bold text-gray-900">
+                        {selectedVideo.slideCount}개
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <p className="text-xs text-gray-500 mb-1">파일 크기</p>
+                      <p className="text-lg font-bold text-gray-900">
+                        {(selectedVideo.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  </div>
+
+                  {selectedVideo.durations && (
+                    <div className="mt-4 bg-gray-50 p-4 rounded-lg">
+                      <h3 className="text-sm font-bold text-gray-900 mb-2">슬라이드별 소요 시간</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {Object.entries(selectedVideo.durations).map(([slideId, duration]) => (
+                          <div key={slideId} className="bg-white p-2 rounded text-center">
+                            <p className="text-xs text-gray-500">슬라이드 {slideId}</p>
+                            <p className="text-sm font-bold text-gray-900">{duration}초</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          );
+        })()}
 
       <div className="flex h-full flex-col p-8">
         <div className="mb-8">
@@ -225,64 +263,68 @@ const VideoPage = () => {
             </div>
 
             <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-              {videos.map((video) => (
-                <div
-                  key={video.id}
-                  onClick={() => handleVideoClick(video)}
-                  className="bg-white rounded-lg p-4 shadow hover:shadow-md transition cursor-pointer group relative"
-                >
-                  {/* 처리 중 배지 */}
-                  {video.status === 'processing' && (
-                    <div className="absolute top-2 right-2 z-10 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full font-bold">
-                      처리 중
-                    </div>
-                  )}
+              {videos.map((video) => {
+                const safeVideoSrc = getSafeVideoSrc(video);
+                const safeThumbnail = getSafeThumbnailUrl(video.thumbnailUrl);
 
-                  <div className="aspect-video bg-gray-200 rounded mb-3 flex items-center justify-center relative overflow-hidden">
-                    {video.videoData ? (
-                      <>
-                        <video src={video.videoData} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                          <svg
-                            className="w-16 h-16 text-white"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                          </svg>
-                        </div>
-                      </>
-                    ) : video.thumbnailUrl ? (
-                      <img
-                        src={video.thumbnailUrl}
-                        alt={video.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <svg
-                        className="w-12 h-12 text-gray-400"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                      </svg>
+                return (
+                  <div
+                    key={video.id}
+                    onClick={() => handleVideoClick(video)}
+                    className="bg-white rounded-lg p-4 shadow hover:shadow-md transition cursor-pointer group relative"
+                  >
+                    {video.status === 'processing' && (
+                      <div className="absolute top-2 right-2 z-10 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                        처리 중
+                      </div>
                     )}
+
+                    <div className="aspect-video bg-gray-200 rounded mb-3 flex items-center justify-center relative overflow-hidden">
+                      {safeVideoSrc ? (
+                        <>
+                          <video src={safeVideoSrc} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                            <svg
+                              className="w-16 h-16 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                            </svg>
+                          </div>
+                        </>
+                      ) : safeThumbnail ? (
+                        <img
+                          src={safeThumbnail}
+                          alt={video.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <svg
+                          className="w-12 h-12 text-gray-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                        </svg>
+                      )}
+                    </div>
+                    <h3 className="font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition">
+                      {video.title}
+                    </h3>
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <span>{video.slideCount}개 슬라이드</span>
+                      <span>•</span>
+                      <span>{video.durationSeconds}초</span>
+                      <span>•</span>
+                      <span>{(video.size / 1024 / 1024).toFixed(2)} MB</span>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2">
+                      {new Date(video.createdAt).toLocaleString('ko-KR')}
+                    </p>
                   </div>
-                  <h3 className="font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition">
-                    {video.title}
-                  </h3>
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <span>{video.slideCount}개 슬라이드</span>
-                    <span>•</span>
-                    <span>{video.durationSeconds}초</span>
-                    <span>•</span>
-                    <span>{(video.size / 1024 / 1024).toFixed(2)} MB</span>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-2">
-                    {new Date(video.createdAt).toLocaleString('ko-KR')}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

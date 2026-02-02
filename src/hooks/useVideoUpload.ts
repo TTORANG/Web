@@ -68,8 +68,6 @@ export const useVideoUpload = () => {
       });
 
       for (let i = 0; i < chunks.length; i++) {
-        const chunkSize = (chunks[i].size / 1024).toFixed(2);
-
         const uploadResponse = await videosApi.uploadChunk(videoId, i, chunks[i]);
 
         if (uploadResponse.data.resultType === 'FAILURE') {
