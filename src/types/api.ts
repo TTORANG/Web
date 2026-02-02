@@ -69,12 +69,13 @@ export interface Video {
 
 export interface VideoComment {
   id: string;
-  timestampMs: number;
   content: string;
-  user: CommentUser;
+  timestampMs: number;
+  createdAt?: string;
+  user?: User;
 }
 
-export interface CommentUser {
+export interface User {
   id: string;
   name: string;
 }
