@@ -2,11 +2,12 @@
  * @file ScriptSection.tsx
  * @description 비디오 피드백 대본 섹션
  * - 현재 재생 시간에 맞는 슬라이드 대본을 표시
- * - 자동 스크롤로 현재 대본이 최상단에 위치
+ * - 자동 스크롤로 현재 대본이 중앙에 위치
  * - 수동 스크롤 시 자동 스크롤 일시 정지 후 2초 후 복구
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 
+import { Skeleton } from '@/components/common';
 import type { Slide } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
@@ -15,14 +16,18 @@ interface ScriptSectionProps {
   slides: Slide[];
   slideChangeTimes: number[];
   currentTime: number;
+  onSeek?: (time: number) => void;
   onScroll?: () => void;
+  isLoading?: boolean;
 }
 
 export default function ScriptSection({
   slides,
   slideChangeTimes,
   currentTime,
+  onSeek,
   onScroll,
+  isLoading = false,
 }: ScriptSectionProps) {
   const scriptSectionRef = useRef<HTMLDivElement>(null);
   const scriptItemsRef = useRef<(HTMLDivElement | null)[]>([]);
@@ -49,16 +54,16 @@ export default function ScriptSection({
     // 프로그래매틱 스크롤 플래그 설정
     isScrollingRef.current = true;
 
-    // scrollIntoView로 해당 요소를 컨테이너 상단으로 스크롤
+    // scrollIntoView로 해당 요소를 컨테이너 중앙으로 스크롤
     currentScriptItem.scrollIntoView({
       behavior: 'smooth',
-      block: 'start',
+      block: 'center',
     });
 
-    // 스크롤 완료 후 플래그 해제 (300ms 후)
+    // 스크롤 완료 후 플래그 해제 (smooth scroll은 거리에 따라 500-1000ms 소요)
     const timer = setTimeout(() => {
       isScrollingRef.current = false;
-    }, 300);
+    }, 800);
 
     return () => clearTimeout(timer);
   }, [currentSlideIndex, autoScroll]);
@@ -81,12 +86,46 @@ export default function ScriptSection({
     return () => clearTimeout(timer);
   }, [autoScroll]);
 
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prevIndex = Math.max(0, currentSlideIndex - 1);
+      if (prevIndex !== currentSlideIndex) {
+        onSeek?.(slideChangeTimes[prevIndex]);
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const nextIndex = Math.min(slides.length - 1, currentSlideIndex + 1);
+      if (nextIndex !== currentSlideIndex) {
+        onSeek?.(slideChangeTimes[nextIndex]);
+      }
+    }
+  };
+
+  const skeletonWidths = ['85%', '70%', '90%', '75%', '80%'];
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 min-w-0 rounded-lg p-4 overflow-y-auto flex flex-col gap-2 bg-gray-100">
+        {skeletonWidths.map((width, index) => (
+          <div key={index} className="flex items-center gap-3 px-4 py-3 rounded-lg bg-gray-200">
+            {/* 타임스탬프 */}
+            <Skeleton width={26} height={22} rounded={4} className="shrink-0 bg-gray-400!" />
+            {/* 대본 */}
+            <Skeleton width={width} height={16} rounded={4} className="ml-4 bg-gray-400!" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div
       ref={scriptSectionRef}
       onScroll={handleScriptScroll}
-      className="flex-1 min-w-0 rounded-lg p-4 overflow-y-auto flex flex-col gap-2"
-      style={{ backgroundColor: '#202227' }}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      className="flex-1 min-w-0 rounded-lg p-4 overflow-y-auto flex flex-col gap-2 bg-gray-100 focus:outline-none"
     >
       {slides.map((slide, index) => {
         const slideStartTime = slideChangeTimes[index] || 0;
@@ -101,15 +140,29 @@ export default function ScriptSection({
             }}
             style={{
               backgroundColor: isCurrentSlide ? '#FFFFFF' : '#343841',
-              scrollMarginTop: '0px', // scrollIntoView 시 상단에 딱 붙도록
             }}
-            className="flex gap-3 px-4 py-3 rounded-lg transition-colors text-body-s"
+            onClick={(e) => {
+              onSeek?.(slideStartTime);
+              const targetElement = e.currentTarget;
+              if (targetElement) {
+                isScrollingRef.current = true;
+                targetElement.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'center',
+                });
+                setTimeout(() => {
+                  isScrollingRef.current = false;
+                }, 800);
+                setAutoScroll(true);
+              }
+            }}
+            className="flex gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out text-body-s cursor-pointer"
           >
             <div
               style={{
                 color: isCurrentSlide ? '#343841' : '#A9ACB2',
               }}
-              className="shrink-0 font-medium text-sm min-w-10"
+              className="shrink-0 font-medium text-sm min-w-10 transition-colors duration-300"
             >
               {timeStr}
             </div>
@@ -117,8 +170,9 @@ export default function ScriptSection({
             <div
               style={{
                 color: isCurrentSlide ? '#1A1B1F' : '#E2E4E8',
+                whiteSpace: 'pre-line',
               }}
-              className="flex-1 text-sm leading-relaxed"
+              className="flex-1 text-sm leading-relaxed transition-colors duration-300"
             >
               {slide.script || '(대본 없음)'}
             </div>

@@ -1,3 +1,6 @@
+// API
+export type { ApiError, ApiResponse, PaginatedData, ScriptResponse, ScriptVersion } from './api';
+
 // Auth
 export type { AuthProvider, User } from './auth';
 
@@ -14,7 +17,7 @@ export type { TabItem, TabKey } from './navigation';
 export type { Project } from './project';
 
 // Script
-export type { History, Reaction, ReactionType } from './script';
+export type { Reaction, ReactionType } from './script';
 
 // Slide
 export type { Slide } from './slide';

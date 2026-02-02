@@ -44,12 +44,11 @@ export function useVideoComments() {
   /**
    * 새 댓글 추가
    *
-   * NOTE:
-   * - "어디 타임스탬프에 추가되냐"는 store.currentTimestamp 기준(기존 로직 유지)
-   * - 즉 댓글창은 전체 노출이지만, 새 댓글은 "현재 영상 위치"에 기록됨
+   * @param content - 댓글 내용
+   * @param seconds - 댓글이 달릴 영상 타임스탬프 (초)
    */
-  const addComment = (content: string) => {
-    addCommentStore(content);
+  const addComment = (content: string, seconds: number) => {
+    addCommentStore(content, seconds);
   };
 
   /**

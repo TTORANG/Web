@@ -2,8 +2,10 @@
  * @file useVideoReactions.ts
  * @description 영상 리액션 관리 훅 (이벤트 window 방식)
  *
- * - 목데이터는 feedbacks(timestamp + count) 구조 유지
- * - 내부에서 "가짜 이벤트 배열"로 풀어서
+ * Optimistic UI 패턴으로 리액션 토글을 처리합니다.
+ * 1. Store 즉시 업데이트 (optimistic)
+ * 2. API 비동기 호출
+ * 3. 실패 시 rollback (toggleReaction 재호출)
  */
 import { useMemo } from 'react';
 
@@ -11,12 +13,18 @@ import { REACTION_TYPES } from '@/constants/reaction';
 import { FEEDBACK_WINDOW } from '@/constants/video';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Reaction, ReactionType } from '@/types/script';
+import { showToast } from '@/utils/toast';
 import { getOverlappingFeedbacks } from '@/utils/video';
+
+import { useToggleVideoReaction } from './queries/useVideoReactionQueries';
 
 export function useVideoReactions() {
   const video = useVideoFeedbackStore((s) => s.video);
   const currentTime = useVideoFeedbackStore((s) => s.currentTime);
-  const toggleReaction = useVideoFeedbackStore((s) => s.toggleReaction);
+  const toggleReactionStore = useVideoFeedbackStore((s) => s.toggleReaction);
+
+  const { mutate: toggleReactionApi } = useToggleVideoReaction();
+
   const reactions: Reaction[] = useMemo(() => {
     if (!video) {
       return REACTION_TYPES.map((type) => ({ type, count: 0, active: false }));
@@ -59,8 +67,25 @@ export function useVideoReactions() {
       };
     });
   }, [video, currentTime]);
-  const handleToggleReaction = (type: ReactionType) => {
-    toggleReaction(type);
+
+  const toggleReaction = (type: ReactionType) => {
+    if (!video) return;
+
+    // 1. Store 즉시 업데이트 (optimistic)
+    toggleReactionStore(type);
+
+    // 2. API 비동기 호출
+    toggleReactionApi(
+      { videoId: video.videoId, data: { type, timestamp: Math.round(currentTime) } },
+      {
+        onError: () => {
+          // 3. 실패 시 rollback
+          showToast.error('반응을 반영하지 못했습니다.');
+          toggleReactionStore(type);
+        },
+      },
+    );
   };
-  return { reactions, toggleReaction: handleToggleReaction };
+
+  return { reactions, toggleReaction };
 }

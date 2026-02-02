@@ -4,6 +4,8 @@
 @import "./toast.css";
 
 @theme {
+  --breakpoint-md: 1024px;
+
   --color-white: var(--color-white);
   --color-black: var(--color-black);
   --color-gray-100: var(--color-gray-100);

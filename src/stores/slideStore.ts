@@ -11,7 +11,7 @@ import { devtools } from 'zustand/middleware';
 
 import { MOCK_CURRENT_USER } from '@/mocks/users';
 import type { Comment } from '@/types/comment';
-import type { History, ReactionType } from '@/types/script';
+import type { ReactionType } from '@/types/script';
 import type { Slide } from '@/types/slide';
 import { addReplyToFlat, createComment, deleteFromFlat } from '@/utils/comment';
 
@@ -21,8 +21,6 @@ interface SlideState {
   initSlide: (slide: Slide) => void;
   updateSlide: (updates: Partial<Slide>) => void;
   updateScript: (script: string) => void;
-  saveToHistory: () => void;
-  restoreFromHistory: (item: History) => void;
   deleteOpinion: (id: string) => void;
   addReply: (parentId: string, content: string) => void;
   toggleReaction: (type: ReactionType) => void;
@@ -56,39 +54,6 @@ export const useSlideStore = create<SlideState>()(
           }),
           false,
           'slide/updateScript',
-        );
-      },
-
-      saveToHistory: () => {
-        set(
-          (state) => {
-            if (!state.slide || !state.slide.script.trim()) return state;
-
-            const historyItem: History = {
-              id: crypto.randomUUID(),
-              timestamp: new Date().toISOString(),
-              content: state.slide.script,
-            };
-
-            return {
-              slide: {
-                ...state.slide,
-                history: [historyItem, ...state.slide.history],
-              },
-            };
-          },
-          false,
-          'slide/saveToHistory',
-        );
-      },
-
-      restoreFromHistory: (item) => {
-        set(
-          (state) => ({
-            slide: state.slide ? { ...state.slide, script: item.content } : null,
-          }),
-          false,
-          'slide/restoreFromHistory',
         );
       },
 
