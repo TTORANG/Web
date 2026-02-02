@@ -59,7 +59,7 @@ export default function OAuthCallbackPage() {
 
   return (
     <div className="flex h-screen items-center justify-center">
-      <Spinner size="lg" />
+      <Spinner size={48} />
     </div>
   );
 }

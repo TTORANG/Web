@@ -18,18 +18,7 @@ export async function getSummaryAnalytics(projectId: string): Promise<SummaryAna
   );
 
   if (response.data.resultType === 'FAILURE') {
-    // 1. reason이 객체인지 문자열인지 확인해서 처리
-    const reason = response.data.reason;
-    let errorMessage = '분석 요약 조회에 실패했습니다.';
-
-    if (typeof reason === 'string') {
-      errorMessage = reason; // 문자열이면 그대로 사용
-    } else if (reason && typeof reason === 'object') {
-      errorMessage = reason.message || errorMessage; // 객체면 .message 추출
-    }
-
-    // 2. 이제 errorMessage는 무조건 string이므로 에러가 사라집니다.
-    throw new Error(errorMessage);
+    throw new Error(response.data.error.reason);
   }
 
   // success가 없으면 에러 처리 (옵셔널 체이닝 문제 방지)
