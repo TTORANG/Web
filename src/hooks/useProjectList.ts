@@ -20,6 +20,11 @@ type Options = {
   filterFn?: (project: Project) => boolean;
 };
 
+// 공백(스페이스/탭/줄바꿈 등)을 모두 제거 + 소문자화
+function normalizeForSearch(value: string) {
+  return value.replace(/\s+/g, '').toLowerCase();
+}
+
 export function useProjectList(projects: Project[], options?: Options) {
   return useMemo(() => {
     const query = options?.query ?? '';
@@ -28,9 +33,10 @@ export function useProjectList(projects: Project[], options?: Options) {
 
     let result = filterFn ? projects.filter(filterFn) : projects;
 
-    const q = query.trim().toLowerCase();
+    // 검색어/제목 모두 공백 제거 후 비교
+    const q = normalizeForSearch(query);
     if (q) {
-      result = result.filter((p) => p.title.toLowerCase().includes(q));
+      result = result.filter((p) => normalizeForSearch(p.title).includes(q));
     }
 
     if (sort === 'recent') return result;

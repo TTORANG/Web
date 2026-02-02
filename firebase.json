@@ -32,7 +32,7 @@
         "headers": [
           {
             "key": "Content-Security-Policy",
-            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://dev-api.ttorang.com https://api.ttorang.com https://developers.kakao.com; frame-ancestors 'none'"
+            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' data: https://cdn.jsdelivr.net; connect-src 'self' https://ttorang-server-407623424780.asia-northeast3.run.app https://cdn.ttorang.com https://developers.kakao.com; media-src 'self' https://cdn.ttorang.com; frame-ancestors 'none'"
           },
           {
             "key": "X-Frame-Options",
