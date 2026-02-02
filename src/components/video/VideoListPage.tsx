@@ -33,7 +33,6 @@ export default function VideoListPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [isLoading, setIsLoading] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [query, setQuery] = useState('');
@@ -120,26 +119,25 @@ export default function VideoListPage() {
           )}
         </div>
 
-        {isLoading ? (
-          <div
-            className={
-              viewMode === 'card' ? 'grid grid-cols-2 gap-4 lg:grid-cols-3' : 'flex flex-col gap-3'
-            }
-          >
-            {Array.from({ length: 6 }).map((_, i) =>
-              viewMode === 'card' ? (
-                <ProjectCard.Skeleton key={i} />
-              ) : (
-                <ProjectList.Skeleton key={i} />
-              ),
-            )}
-          </div>
-        ) : !hasProjects ? (
+        {!hasProjects ? (
+          //   <div
+          //     className={
+          //       viewMode === 'card' ? 'grid grid-cols-2 gap-4 lg:grid-cols-3' : 'flex flex-col gap-3'
+          //     }
+          //   >
+          //     {Array.from({ length: 6 }).map((_, i) =>
+          //       viewMode === 'card' ? (
+          //         <ProjectCard.Skeleton key={i} />
+          //       ) : (
+          //         <ProjectList.Skeleton key={i} />
+          //       ),
+          //     )}
+          //   </div>
+          // ) : (
           <div className="flex justify-center py-20">
             <RecordingEmptySection onStart={handleStartRecording} />
           </div>
         ) : (
-          // 데이터가 있을 때
           <section>
             <ProjectHeader
               value={query}
