@@ -21,7 +21,12 @@ import {
 } from '@/components/insight';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useSlides } from '@/hooks/queries/useSlides';
-import { useProjectVideos, useSlideAnalytics, useVideoExitAnalytics } from '@/hooks/useAnalytics';
+import {
+  useProjectVideos,
+  useSlideAnalytics,
+  useSummaryAnalytics,
+  useVideoExitAnalytics,
+} from '@/hooks/useAnalytics';
 import type { DropOffSlide, DropOffTime, SummaryStat } from '@/types/insight';
 import type { Reaction } from '@/types/script';
 import { formatVideoTimestamp } from '@/utils/format';
@@ -42,13 +47,12 @@ const cardBase = 'bg-white rounded-xl border border-gray-100 shadow-sm p-6';
 const thumbBase = 'bg-gray-100 rounded-lg aspect-video';
 
 // --- 더미 데이터 (사진 수치 반영) ---
-
-const summaryStats: SummaryStat[] = [
-  { label: '총 조회수', value: '247', sub: '' },
-  { label: '완독률', value: '68%', sub: '' },
-  { label: '받은 피드백', value: '42', sub: '댓글 12, 이모지 30' },
-  { label: '평균 체류 시간', value: '4:23', sub: '총 5개 슬라이드' },
-];
+const summaryStatLabels = ['총 조회수', '완료율', '받은 피드백', '평균 체류 시간'] as const;
+const emptySummaryStats: SummaryStat[] = summaryStatLabels.map((label) => ({
+  label,
+  value: '-',
+  sub: '',
+}));
 
 const recentComments: RecentComment[] = [
   { user: '익명 사용자', slide: 1, slideIndex: 0, time: '0:15', text: '이 부분 설명이 명확해요!' },
@@ -99,14 +103,40 @@ const slideRetentionData = [
 export default function InsightPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { data: slides } = useSlides(projectId ?? '');
+
   const { data: projectVideos } = useProjectVideos(projectId ?? '');
   const videoId = projectVideos?.videos?.[0]?.id ?? '';
   const hasVideo = !!videoId;
   const { data: slideAnalytics } = useSlideAnalytics(projectId ?? '');
   const { data: videoExitAnalytics } = useVideoExitAnalytics(videoId);
+  const { data: summaryAnalytics } = useSummaryAnalytics(projectId ?? '');
+  const computedSummaryStats = useMemo(() => {
+    if (!summaryAnalytics) return emptySummaryStats;
+
+    const completionRate =
+      summaryAnalytics.completionRate <= 1
+        ? summaryAnalytics.completionRate * 100
+        : summaryAnalytics.completionRate;
+
+    return [
+      { label: summaryStatLabels[0], value: String(summaryAnalytics.totalViews), sub: '' },
+      { label: summaryStatLabels[1], value: `${Math.round(completionRate)}%`, sub: '' },
+      {
+        label: summaryStatLabels[2],
+        value: String(summaryAnalytics.totalFeedbackCount),
+        sub: '',
+      },
+      {
+        label: summaryStatLabels[3],
+        value: formatVideoTimestamp(summaryAnalytics.avgDurationSeconds),
+        sub: '',
+      },
+    ];
+  }, [summaryAnalytics]);
+
   const visibleSummaryStats = hasVideo
-    ? summaryStats
-    : summaryStats.filter((stat) => stat.label !== '평균 체류 시간');
+    ? computedSummaryStats
+    : computedSummaryStats.filter((stat) => stat.label !== summaryStatLabels[3]);
 
   const reactions = useMemo(() => {
     const base = createDefaultReactions();

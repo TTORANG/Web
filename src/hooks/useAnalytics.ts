@@ -5,6 +5,7 @@ import {
   type RecordExitRequest,
   getProjectVideos,
   getSlideAnalytics,
+  getSummaryAnalytics,
   getVideoExitAnalytics,
   recordExit,
 } from '@/api/endpoints/analytics';
@@ -64,4 +65,12 @@ export function recordExitOnUnload(data: RecordExitRequest) {
   } catch {
     return undefined;
   }
+}
+
+export function useSummaryAnalytics(projectId: string) {
+  return useQuery({
+    queryKey: queryKeys.analytics.summary(projectId),
+    queryFn: () => getSummaryAnalytics(projectId),
+    enabled: !!projectId,
+  });
 }
