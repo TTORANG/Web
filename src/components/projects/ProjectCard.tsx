@@ -1,4 +1,3 @@
-import { type FormEvent, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import clsx from 'clsx';
@@ -10,11 +9,10 @@ import ReactionCountIcon from '@/assets/icons/icon-reaction-count.svg?react';
 import RecentIcon from '@/assets/icons/icon-recent.svg?react';
 import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
 import { getTabPath } from '@/constants/navigation';
-import { useUpdateProject } from '@/hooks/queries/useProjects';
 import { useProjectDeletion } from '@/hooks/useProjectDeletion';
+import { useRename } from '@/hooks/useRename';
 import type { Project } from '@/types/project';
 import { formatRelativeTime } from '@/utils/format';
-import { showToast } from '@/utils/toast';
 
 import { Dropdown } from '../common';
 import type { DropdownItem } from '../common/Dropdown';
@@ -93,61 +91,29 @@ function ProjectCard({
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
     useProjectDeletion(id);
-  const { mutate: updateProject, isPending: isUpdating } = useUpdateProject();
 
-  const [isRenaming, setIsRenaming] = useState(false);
-  const [newTitle, setNewTitle] = useState(title);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const {
+    isRenaming,
+    isUpdating,
+    displayTitle,
+    newTitle,
+    setNewTitle,
+    inputRef,
+    startRenaming,
+    handleSubmit,
+    cancelRenaming,
+  } = useRename({ projectId: id, initialTitle: title });
 
   const handleCardClick = () => {
     if (isRenaming) return;
     navigate(getTabPath(id, 'slide'));
   };
 
-  const handleRenameClick = () => {
-    setIsRenaming(true);
-    setNewTitle(title);
-    setTimeout(() => inputRef.current?.select(), 50);
-  };
-
-  const handleRenameSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    const trimmedTitle = newTitle.trim();
-
-    if (!trimmedTitle) {
-      showToast.error('제목을 입력해주세요');
-      return;
-    }
-
-    if (trimmedTitle === title) {
-      setIsRenaming(false);
-      return;
-    }
-
-    updateProject(
-      { projectId: id, data: { title: trimmedTitle } },
-      {
-        onSuccess: () => {
-          showToast.success('제목이 변경되었습니다');
-          setIsRenaming(false);
-        },
-        onError: () => {
-          showToast.error('제목 변경에 실패했습니다');
-        },
-      },
-    );
-  };
-
-  const handleRenameCancel = () => {
-    setIsRenaming(false);
-    setNewTitle(title);
-  };
-
   const dropdownItems: DropdownItem[] = [
     {
       id: 'rename',
       label: '이름 변경',
-      onClick: handleRenameClick,
+      onClick: startRenaming,
     },
     {
       id: 'delete',
@@ -171,7 +137,7 @@ function ProjectCard({
             <img
               className="h-full w-full object-contain outline-none"
               src={thumbnailUrl}
-              alt={`${title}`}
+              alt={`${displayTitle}`}
             />
           )}
         </div>
@@ -182,8 +148,8 @@ function ProjectCard({
             <div className="flex justify-between gap-2">
               {isRenaming ? (
                 <form
-                  onSubmit={handleRenameSubmit}
-                  className="flex-1 flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm"
+                  onSubmit={handleSubmit}
+                  className="flex-1 flex items-center gap-1 px-3 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm w-full max-w-full overflow-hidden"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <input
@@ -193,12 +159,12 @@ function ProjectCard({
                     onChange={(e) => setNewTitle(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Escape') {
-                        handleRenameCancel();
+                        cancelRenaming();
                       }
                     }}
                     disabled={isUpdating}
                     className={clsx(
-                      'flex-1 text-body-m-bold text-gray-800',
+                      'flex-1 min-w-0 text-body-m-bold text-gray-800',
                       'focus:outline-none',
                       'disabled:opacity-50 disabled:cursor-not-allowed',
                       'placeholder:text-gray-400',
@@ -218,7 +184,7 @@ function ProjectCard({
                   </button>
                 </form>
               ) : (
-                <h3 className="text-body-m-bold text-gray-800 line-clamp-2">{title}</h3>
+                <h3 className="text-body-m-bold text-gray-800 line-clamp-2">{displayTitle}</h3>
               )}
               {/* 더보기 */}
               {!isRenaming && (
@@ -277,7 +243,7 @@ function ProjectCard({
       <div onClick={(e) => e.stopPropagation()}>
         <DeleteProjectModal
           isOpen={isDeleteModalOpen}
-          projectTitle={title}
+          projectTitle={displayTitle}
           isPending={isPending}
           onClose={closeDeleteModal}
           onConfirm={confirmDelete}
