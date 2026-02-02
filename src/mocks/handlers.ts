@@ -39,8 +39,14 @@ MOCK_SLIDES.forEach((slide) => {
 // API 응답 래퍼 헬퍼
 const wrapResponse = <T>(data: T) => ({
   resultType: 'SUCCESS' as const,
-  reason: null,
+  error: null,
   success: data,
+});
+
+const wrapError = (errorCode: string, reason: string) => ({
+  resultType: 'FAILURE' as const,
+  error: { errorCode, reason },
+  success: null,
 });
 
 /**
@@ -61,7 +67,7 @@ export const handlers = [
   http.get(`${BASE_URL}/presentations`, async () => {
     await delay(200);
     console.log('[MSW] GET /presentations');
-    return HttpResponse.json(presentations);
+    return HttpResponse.json(wrapResponse(presentations));
   }),
 
   /**
@@ -69,11 +75,11 @@ export const handlers = [
    * GET /presentations/:projectId
    */
   http.get(`${BASE_URL}/presentations/:projectId`, async ({ params }) => {
-    await delay(150);
+    await delay(200);
     const { projectId } = params;
     console.log(`[MSW] GET /presentations/${projectId}`);
 
-    const presentation = presentations.find((p) => p.id === projectId);
+    const presentation = presentations.find((p) => p.projectId === projectId);
 
     if (!presentation) {
       return new HttpResponse(null, {
@@ -95,7 +101,7 @@ export const handlers = [
     console.log('[MSW] POST /presentations', data);
 
     const newPresentation: Presentation = {
-      id: `p${Date.now()}`,
+      projectId: `p${Date.now()}`,
       title: data.title,
       updatedAt: new Date().toISOString(),
       durationMinutes: 0,
@@ -120,7 +126,7 @@ export const handlers = [
     const data = (await request.json()) as { title?: string };
     console.log(`[MSW] PATCH /presentations/${projectId}`, data);
 
-    const presentationIndex = presentations.findIndex((p) => p.id === projectId);
+    const presentationIndex = presentations.findIndex((p) => p.projectId === projectId);
 
     if (presentationIndex === -1) {
       return new HttpResponse(null, {
@@ -147,7 +153,7 @@ export const handlers = [
     const { projectId } = params;
     console.log(`[MSW] DELETE /presentations/${projectId}`);
 
-    const presentationIndex = presentations.findIndex((p) => p.id === projectId);
+    const presentationIndex = presentations.findIndex((p) => p.projectId === projectId);
 
     if (presentationIndex === -1) {
       return new HttpResponse(null, {
@@ -156,7 +162,7 @@ export const handlers = [
       });
     }
 
-    presentations = presentations.filter((p) => p.id !== projectId);
+    presentations = presentations.filter((p) => p.projectId !== projectId);
     return new HttpResponse(null, { status: 204 });
   }),
 
@@ -166,16 +172,52 @@ export const handlers = [
 
   /**
    * 프로젝트의 슬라이드 목록 조회
+   * GET /projects/:projectId/slides
+   */
+  http.get(`${BASE_URL}/projects/:projectId/slides`, async ({ params }) => {
+    await delay(200);
+
+    const { projectId } = params;
+    console.log(`[MSW] GET /projects/${projectId}/slides`);
+
+    const presentationSlides = slides
+      .filter((s) => s.projectId === projectId)
+      .map((s, index) => ({
+        slideId: s.id,
+        projectId: s.projectId,
+        title: s.title,
+        slideNum: index + 1,
+        imageUrl: s.thumb,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }));
+
+    return HttpResponse.json(wrapResponse(presentationSlides));
+  }),
+
+  /**
+   * 프로젝트의 슬라이드 목록 조회 (Legacy)
    * GET /presentations/:projectId/slides
    */
   http.get(`${BASE_URL}/presentations/:projectId/slides`, async ({ params }) => {
-    await delay(200); // 네트워크 지연 시뮬레이션
+    await delay(200);
 
     const { projectId } = params;
-    console.log(`[MSW] GET /presentations/${projectId}/slides`);
+    console.log(`[MSW] GET /presentations/${projectId}/slides (legacy)`);
 
-    const presentationSlides = slides.filter((s) => s.projectId === projectId);
-    return HttpResponse.json(presentationSlides);
+    const presentationSlides = slides
+      .filter((s) => s.projectId === projectId)
+      .map((s, index) => ({
+        slideId: s.id,
+        projectId: s.projectId,
+        title: s.title,
+        slideNum: index + 1,
+        imageUrl: s.thumb,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }));
+
+    return HttpResponse.json(wrapResponse(presentationSlides));
   }),
 
   /**
@@ -530,14 +572,7 @@ export const handlers = [
     const slide = slides.find((s) => s.id === slideId);
 
     if (!slide) {
-      return new HttpResponse(
-        JSON.stringify({
-          resultType: 'FAILURE',
-          error: { code: 'NOT_FOUND', message: 'Slide not found' },
-          success: null,
-        }),
-        { status: 404 },
-      );
+      return HttpResponse.json(wrapError('NOT_FOUND', 'Slide not found'), { status: 404 });
     }
 
     return HttpResponse.json(
@@ -561,26 +596,30 @@ export const handlers = [
     await delay(200);
 
     const { slideId } = params as { slideId: string };
-    const { script } = (await request.json()) as { script: string };
-    console.log(`[MSW] PATCH /presentations/slides/${slideId}/script`);
+    const body = (await request.json()) as { script: string };
+    console.log(`[MSW] PATCH /presentations/slides/${slideId}/script`, {
+      slideId,
+      scriptLength: body.script?.length,
+      body,
+    });
+
+    if (!body || body.script === undefined) {
+      console.error('[MSW] 대본 저장 요청 body가 올바르지 않습니다:', body);
+      return HttpResponse.json(wrapError('INVALID_REQUEST', 'script field is required'), {
+        status: 400,
+      });
+    }
 
     const slideIndex = slides.findIndex((s) => s.id === slideId);
 
     if (slideIndex === -1) {
-      return new HttpResponse(
-        JSON.stringify({
-          resultType: 'FAILURE',
-          error: { code: 'NOT_FOUND', message: 'Slide not found' },
-          success: null,
-        }),
-        { status: 404 },
-      );
+      return HttpResponse.json(wrapError('NOT_FOUND', 'Slide not found'), { status: 404 });
     }
 
     const currentSlide = slides[slideIndex];
 
     // 기존 스크립트가 있으면 버전 저장
-    if (currentSlide.script.trim() && currentSlide.script !== script) {
+    if (currentSlide.script.trim() && currentSlide.script !== body.script) {
       const versions = scriptVersions.get(slideId) || [];
       versions.unshift({
         versionNumber: versions.length + 1,
@@ -592,15 +631,15 @@ export const handlers = [
     }
 
     // 스크립트 업데이트
-    slides[slideIndex] = { ...currentSlide, script };
+    slides[slideIndex] = { ...currentSlide, script: body.script };
 
     return HttpResponse.json(
       wrapResponse({
         message: '대본이 성공적으로 저장되었습니다.',
         slideId,
-        charCount: script.length,
-        scriptText: script,
-        estimatedDurationSeconds: Math.ceil(script.length / 5),
+        charCount: body.script.length,
+        scriptText: body.script,
+        estimatedDurationSeconds: Math.ceil(body.script.length / 5),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }),
@@ -620,14 +659,7 @@ export const handlers = [
     const slide = slides.find((s) => s.id === slideId);
 
     if (!slide) {
-      return new HttpResponse(
-        JSON.stringify({
-          resultType: 'FAILURE',
-          error: { code: 'NOT_FOUND', message: 'Slide not found' },
-          success: null,
-        }),
-        { status: 404 },
-      );
+      return HttpResponse.json(wrapError('NOT_FOUND', 'Slide not found'), { status: 404 });
     }
 
     const versions = scriptVersions.get(slideId) || [];
@@ -648,28 +680,14 @@ export const handlers = [
     const slideIndex = slides.findIndex((s) => s.id === slideId);
 
     if (slideIndex === -1) {
-      return new HttpResponse(
-        JSON.stringify({
-          resultType: 'FAILURE',
-          error: { code: 'NOT_FOUND', message: 'Slide not found' },
-          success: null,
-        }),
-        { status: 404 },
-      );
+      return HttpResponse.json(wrapError('NOT_FOUND', 'Slide not found'), { status: 404 });
     }
 
     const versions = scriptVersions.get(slideId) || [];
     const targetVersion = versions.find((v) => v.versionNumber === version);
 
     if (!targetVersion) {
-      return new HttpResponse(
-        JSON.stringify({
-          resultType: 'FAILURE',
-          error: { code: 'NOT_FOUND', message: 'Version not found' },
-          success: null,
-        }),
-        { status: 404 },
-      );
+      return HttpResponse.json(wrapError('NOT_FOUND', 'Version not found'), { status: 404 });
     }
 
     // 현재 스크립트를 버전으로 저장

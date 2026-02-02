@@ -81,7 +81,7 @@ function PresentationListSkeleton() {
 }
 
 function PresentationList({
-  id,
+  projectId,
   title,
   updatedAt,
   durationMinutes,
@@ -93,7 +93,7 @@ function PresentationList({
 }: Props) {
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
-    usePresentationDeletion(id);
+    usePresentationDeletion(projectId);
 
   const {
     isRenaming,
@@ -105,11 +105,11 @@ function PresentationList({
     startRenaming,
     handleSubmit,
     cancelRenaming,
-  } = useRename({ projectId: id, initialTitle: title });
+  } = useRename({ projectId, initialTitle: title });
 
   const handleListClick = () => {
     if (isRenaming) return;
-    navigate(getTabPath(id, 'slide'));
+    navigate(getTabPath(projectId, 'slide'));
   };
 
   const dropdownItems: DropdownItem[] = [

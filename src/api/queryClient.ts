@@ -9,7 +9,7 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 
-import { type ApiError } from '@/api/client';
+import { type ApiFailureResponse } from '@/api/client';
 import { handleApiError } from '@/api/errorHandler';
 
 /**
@@ -25,16 +25,16 @@ export const MAX_RETRIES = 1; // 실패 시 재시도 횟수
  */
 const handleGlobalError = (error: unknown) => {
   // 1. Axios 에러인 경우
-  if (isAxiosError<ApiError>(error)) {
+  if (isAxiosError<ApiFailureResponse>(error)) {
     // 이미 Axios 인터셉터에서 처리된 에러라면 무시 (중복 토스트 방지)
     if (error.isHandled) {
       return;
     }
 
     const status = error.response?.status;
-    const message = error.response?.data?.message || error.message;
+    const reason = error.response?.data?.error?.reason || error.message;
 
-    handleApiError(status, message);
+    handleApiError(status, reason);
     return;
   }
 

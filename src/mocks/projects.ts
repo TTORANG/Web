@@ -4,7 +4,7 @@ import { daysAgo } from './utils';
 
 export const MOCK_PROJECTS: Presentation[] = [
   {
-    id: 'p1',
+    projectId: 'p1',
     title: '네이버 지도 리브랜딩, 새로운 여정의 시작',
     updatedAt: daysAgo(1),
     durationMinutes: 2,
@@ -15,7 +15,7 @@ export const MOCK_PROJECTS: Presentation[] = [
     thumbnailUrl: '/thumbnails/p1/0.webp',
   },
   {
-    id: 'p2',
+    projectId: 'p2',
     title: '당근페이 송금의 플랫폼화: 중고거래 채팅 벗어나기',
     updatedAt: daysAgo(2),
     durationMinutes: 3,
@@ -26,7 +26,7 @@ export const MOCK_PROJECTS: Presentation[] = [
     thumbnailUrl: '/thumbnails/p2/0.webp',
   },
   {
-    id: 'p3',
+    projectId: 'p3',
     title: '강남언니 회사소개서',
     updatedAt: daysAgo(6),
     durationMinutes: 5,
@@ -37,7 +37,7 @@ export const MOCK_PROJECTS: Presentation[] = [
     thumbnailUrl: '/thumbnails/p3/0.webp',
   },
   {
-    id: 'p4',
+    projectId: 'p4',
     title: '모빌리티 혁신 플랫폼, 소카',
     updatedAt: daysAgo(8),
     pageCount: 28,

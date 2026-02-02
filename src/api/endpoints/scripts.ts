@@ -15,7 +15,11 @@ export async function getScript(slideId: string): Promise<ScriptResponse> {
   const response = await apiClient.get<ApiResponse<ScriptResponse>>(
     `/presentations/slides/${slideId}/script`,
   );
-  return response.data.success;
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
 }
 
 /**
@@ -40,7 +44,11 @@ export async function updateScript(
     `/presentations/slides/${slideId}/script`,
     data,
   );
-  return response.data.success;
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
 }
 
 /**
@@ -53,7 +61,11 @@ export async function getScriptVersions(slideId: string): Promise<ScriptVersion[
   const response = await apiClient.get<ApiResponse<ScriptVersion[]>>(
     `/presentations/slides/${slideId}/versions`,
   );
-  return response.data.success;
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
 }
 
 /**
@@ -78,5 +90,9 @@ export async function restoreScript(
     `/presentations/slides/${slideId}/restore`,
     data,
   );
-  return response.data.success;
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
 }

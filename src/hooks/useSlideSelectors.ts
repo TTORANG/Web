@@ -16,13 +16,13 @@ const EMPTY_HISTORY: ScriptVersion[] = [];
 const EMPTY_EMOJIS: Reaction[] = [];
 
 /** 슬라이드 ID 구독 */
-export const useSlideId = () => useSlideStore((state) => state.slide?.id ?? '');
+export const useSlideId = () => useSlideStore((state) => state.slide?.slideId ?? '');
 
 /** 슬라이드 제목 구독 */
 export const useSlideTitle = () => useSlideStore((state) => state.slide?.title ?? '');
 
 /** 슬라이드 썸네일 구독 */
-export const useSlideThumb = () => useSlideStore((state) => state.slide?.thumb ?? '');
+export const useSlideThumb = () => useSlideStore((state) => state.slide?.imageUrl ?? '');
 
 /** 슬라이드 대본 구독 */
 export const useSlideScript = () => useSlideStore((state) => state.slide?.script ?? '');

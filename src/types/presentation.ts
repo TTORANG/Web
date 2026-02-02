@@ -18,7 +18,7 @@ export interface CreatePresentationSuccess {
 }
 
 export interface Presentation {
-  id: string;
+  projectId: string;
   title: string;
   updatedAt: string;
   durationMinutes: number;
@@ -27,4 +27,13 @@ export interface Presentation {
   reactionCount: number;
   viewCount: number;
   thumbnailUrl?: string;
+}
+
+/**
+ * API 응답 타입: 프로젝트 수정 응답
+ */
+export interface ProjectUpdateResponse {
+  projectId: string;
+  title: string;
+  updatedAt: string;
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import type { Presentation } from '@/types';
 import type { FilterMode, SortMode, ViewMode } from '@/types/home';
 
 import PresentationCard from '../presentation/PresentationCard';
@@ -17,24 +18,12 @@ interface MockVideo {
   size: number;
 }
 
-interface Project {
-  id: string;
-  title: string;
-  updatedAt: string;
-  durationMinutes: number;
-  pageCount: number;
-  commentCount: number;
-  reactionCount: number;
-  viewCount: number;
-  [key: string]: unknown;
-}
-
 export default function VideoListPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
   const [showSuccessToast, setShowSuccessToast] = useState(false);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<Presentation[]>([]);
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortMode>('recent');
   const [filter, setFilter] = useState<FilterMode>('all');
@@ -63,8 +52,8 @@ export default function VideoListPage() {
 
         const mockVideos: MockVideo[] = JSON.parse(storedData);
 
-        const formattedProjects: Project[] = mockVideos.map((video) => ({
-          id: String(video.id),
+        const formattedProjects: Presentation[] = mockVideos.map((video) => ({
+          projectId: String(video.id),
           title: video.title,
           updatedAt: video.createdAt,
           durationMinutes: Math.ceil(video.durationSeconds / 60),
@@ -154,13 +143,13 @@ export default function VideoListPage() {
               {viewMode === 'card' ? (
                 <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
                   {projects.map((item) => (
-                    <PresentationCard key={item.id} {...item} />
+                    <PresentationCard key={item.projectId} {...item} />
                   ))}
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
                   {projects.map((item) => (
-                    <PresentationList key={item.id} {...item} />
+                    <PresentationList key={item.projectId} {...item} />
                   ))}
                 </div>
               )}

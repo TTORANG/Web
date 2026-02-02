@@ -13,7 +13,7 @@ export default function SlidePage() {
   const { data: slides, isLoading, isError } = useSlides(projectId ?? '');
 
   const slideIdParam = searchParams.get('slideId');
-  const currentSlide = slides?.find((s) => s.id === slideIdParam) ?? slides?.[0];
+  const currentSlide = slides?.find((s) => s.slideId === slideIdParam) ?? slides?.[0];
 
   /**
    * 슬라이드 로드 에러 처리
@@ -31,10 +31,10 @@ export default function SlidePage() {
     if (!isLoading && slides && slides.length > 0) {
       if (!slideIdParam) {
         // slideId가 아예 없으면 첫 번째 슬라이드로
-        setSearchParams({ slideId: slides[0].id }, { replace: true });
-      } else if (!slides.find((s) => s.id === slideIdParam)) {
+        setSearchParams({ slideId: slides[0].slideId }, { replace: true });
+      } else if (!slides.find((s) => s.slideId === slideIdParam)) {
         // slideId가 있지만 목록에 없으면 첫 번째 슬라이드로
-        setSearchParams({ slideId: slides[0].id }, { replace: true });
+        setSearchParams({ slideId: slides[0].slideId }, { replace: true });
       }
     }
   }, [isLoading, slides, slideIdParam, setSearchParams]);
@@ -44,15 +44,15 @@ export default function SlidePage() {
    * 마지막으로 보던 슬라이드로 복원하기 위함
    */
   useEffect(() => {
-    if (projectId && currentSlide?.id) {
-      setLastSlideId(projectId, currentSlide.id);
+    if (projectId && currentSlide?.slideId) {
+      setLastSlideId(projectId, currentSlide.slideId);
     }
-  }, [projectId, currentSlide?.id]);
+  }, [projectId, currentSlide?.slideId]);
 
   return (
     <div className="h-full bg-gray-100">
       <div className="flex h-full gap-12 pl-14 pr-20 pt-6">
-        <SlideList slides={slides} currentSlideId={currentSlide?.id} isLoading={isLoading} />
+        <SlideList slides={slides} currentSlideId={currentSlide?.slideId} isLoading={isLoading} />
 
         <main className="flex-1 h-full min-w-0 overflow-hidden">
           <SlideWorkspace slide={currentSlide} isLoading={isLoading} />

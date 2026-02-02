@@ -83,7 +83,7 @@ function PresentationCardSkeleton() {
 }
 
 function PresentationCard({
-  id,
+  projectId,
   title,
   highlightQuery = '',
   updatedAt,
@@ -96,7 +96,7 @@ function PresentationCard({
 }: Props) {
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
-    usePresentationDeletion(id);
+    usePresentationDeletion(projectId);
 
   const {
     isRenaming,
@@ -108,11 +108,11 @@ function PresentationCard({
     startRenaming,
     handleSubmit,
     cancelRenaming,
-  } = useRename({ projectId: id, initialTitle: title });
+  } = useRename({ projectId, initialTitle: title });
 
   const handleCardClick = () => {
     if (isRenaming) return;
-    navigate(getTabPath(id, 'slide'));
+    navigate(getTabPath(projectId, 'slide'));
   };
 
   const dropdownItems: DropdownItem[] = [
