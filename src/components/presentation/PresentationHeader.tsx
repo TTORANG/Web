@@ -11,7 +11,7 @@ import type { FilterMode, SortMode, ViewMode } from '@/types/home';
 
 import { Dropdown } from '../common';
 
-interface ProjectHeaderProps {
+interface PresentationHeaderProps {
   value: string;
   onChange: (value: string) => void;
   sort: SortMode;
@@ -22,7 +22,7 @@ interface ProjectHeaderProps {
   onChangeViewMode: (viewMode: ViewMode) => void;
 }
 
-export default function ProjectHeader({
+export default function PresentationHeader({
   value,
   onChange,
   sort,
@@ -31,7 +31,7 @@ export default function ProjectHeader({
   onChangeFilter,
   viewMode,
   onChangeViewMode,
-}: ProjectHeaderProps) {
+}: PresentationHeaderProps) {
   const filterLabel =
     filter === null ? '필터' : (FILTER_OPTIONS.find((o) => o.value === filter)?.label ?? '필터');
   const sortLabel =

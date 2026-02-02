@@ -1,5 +1,5 @@
 /**
- * @file ProjectTitleEditor.tsx
+ * @file PresentationTitleEditor.tsx
  * @description 프로젝트 제목 편집 컴포넌트
  *
  * - 헤더에 프로젝트 제목 표시
@@ -14,13 +14,13 @@ import { useParams } from 'react-router-dom';
 import clsx from 'clsx';
 
 import { Popover } from '@/components/common/Popover';
-import { useProject, useUpdateProject } from '@/hooks/queries/useProjects';
+import { usePresentation, useUpdatePresentation } from '@/hooks/queries/usePresentations';
 import { showToast } from '@/utils/toast';
 
-export function ProjectTitleEditor() {
+export function PresentationTitleEditor() {
   const { projectId } = useParams<{ projectId: string }>();
-  const { data: project } = useProject(projectId ?? '');
-  const { mutate: updateProject, isPending } = useUpdateProject();
+  const { data: presentation } = usePresentation(projectId ?? '');
+  const { mutate: updatePresentation, isPending } = useUpdatePresentation();
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -44,7 +44,7 @@ export function ProjectTitleEditor() {
 
     // 열릴 때만 초기화 (닫힐 땐 굳이 초기화 X)
     if (nextOpen) {
-      setTitle(project?.title ?? ''); // project가 아직 없으면 빈 값
+      setTitle(presentation?.title ?? ''); // presentation이 아직 없으면 빈 값
     }
   };
 
@@ -59,7 +59,7 @@ export function ProjectTitleEditor() {
 
     if (!projectId) return;
 
-    updateProject(
+    updatePresentation(
       { projectId, data: { title: trimmedTitle } },
       {
         onSuccess: () => {
@@ -86,9 +86,9 @@ export function ProjectTitleEditor() {
           className="flex items-center gap-2 max-w-md cursor-pointer hover:opacity-80 transition-opacity"
           aria-label="발표 이름 변경"
         >
-          {/* 표시용 텍스트는 서버 데이터(project.title)를 그대로 사용 */}
+          {/* 표시용 텍스트는 서버 데이터(presentation.title)를 그대로 사용 */}
           <span className="text-body-m-bold text-gray-800 truncate">
-            {project?.title ?? '내 발표'}
+            {presentation?.title ?? '내 발표'}
           </span>
 
           <svg
