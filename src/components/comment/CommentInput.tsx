@@ -28,6 +28,8 @@ interface CommentInputProps {
   className?: string;
   /** textarea className */
   textareaClassName?: string;
+  /** 포커스 시 초기값 설정 (타임스탬프 등) */
+  initialValueOnFocus?: string;
 }
 
 /**
@@ -51,10 +53,25 @@ export default function CommentInput({
   autoFocus = false,
   className,
   textareaClassName,
+  initialValueOnFocus,
 }: CommentInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const isEmpty = !value.trim();
+
+  /** 포커스 시 초기값 설정 (값이 비어있을 때만) */
+  const handleFocus = useCallback(() => {
+    if (initialValueOnFocus && !value) {
+      onChange(initialValueOnFocus);
+      // 커서를 끝으로 이동
+      requestAnimationFrame(() => {
+        if (textareaRef.current) {
+          const len = initialValueOnFocus.length;
+          textareaRef.current.setSelectionRange(len, len);
+        }
+      });
+    }
+  }, [initialValueOnFocus, value, onChange]);
 
   /** textarea 높이를 내용에 맞게 자동 조절 */
   useEffect(() => {
@@ -103,6 +120,7 @@ export default function CommentInput({
         rows={1}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
+        onFocus={handleFocus}
         aria-label={placeholder}
         className={clsx(
           'w-full overflow-hidden resize-none bg-transparent border-b border-gray-600 pt-2 pb-2 outline-none placeholder:text-gray-600 focus:border-main transition-colors',

@@ -15,6 +15,7 @@ import type { Comment } from '@/types/comment';
 import type { Reaction, ReactionType } from '@/types/script';
 import type { VideoFeedback, VideoTimestampFeedback } from '@/types/video';
 import { addReplyToFlat, createComment, deleteFromFlat } from '@/utils/comment';
+import { extractTimestampFromComment } from '@/utils/format';
 
 // 현재 시간대에 리액션 찾기
 const getOrCreateFeedback = (
@@ -30,7 +31,7 @@ const getOrCreateFeedback = (
   }
 
   const newFeedback: VideoTimestampFeedback = {
-    timestamp: Math.round(currentTime / 5) * 5,
+    timestamp: Math.round(currentTime),
     comments: [],
     reactions: createDefaultReactions(),
   };
@@ -60,7 +61,7 @@ interface VideoFeedbackState {
   toggleReaction: (type: ReactionType) => void;
 
   /** 댓글 관련 메서드들 - feedbacks의 comments 업데이트 */
-  addComment: (content: string) => void;
+  addComment: (content: string, seconds: number) => void;
   addReply: (parentId: string, content: string) => void;
   deleteComment: (commentId: string) => void;
 }
@@ -83,7 +84,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
 
     updateCurrentTime: (time) => set({ currentTime: time }, false, 'video/updateTime'),
 
-    requestSeek: (time) => set({ seekTo: time }, false, 'video/requestSeek'),
+    requestSeek: (time) => set({ seekTo: time, currentTime: time }, false, 'video/requestSeek'),
 
     clearSeek: () => set({ seekTo: null }, false, 'video/clearSeek'),
 
@@ -120,7 +121,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
         'video/toggleReaction',
       ),
 
-    addComment: (content) =>
+    addComment: (content, seconds) =>
       set(
         (state) => {
           if (!state.video) return state;
@@ -128,15 +129,23 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
           const trimmed = content.trim();
           if (!trimmed) return state;
 
+          // 댓글 텍스트에서 타임스탬프 파싱
+          const parsed = extractTimestampFromComment(trimmed);
+
+          // 타임스탬프가 있으면 해당 시간 사용, 없으면 전달받은 seconds 사용
+          const refSeconds = parsed ? parsed.seconds : seconds;
+          const ref = { kind: 'video' as const, seconds: refSeconds };
+          const finalContent = parsed ? parsed.content : trimmed;
+
           const { target: targetFeedback, feedbacks } = getOrCreateFeedback(
             state.video.feedbacks,
-            state.currentTime,
+            refSeconds,
           );
 
           const newComment: Comment = createComment({
-            content: trimmed,
+            content: finalContent,
             authorId: MOCK_CURRENT_USER.id,
-            ref: { kind: 'video', seconds: state.currentTime },
+            ref,
           });
 
           const updatedFeedbacks = feedbacks.map((f) =>

@@ -32,7 +32,7 @@ npm run prettier:fix     # Auto-fix formatting
 
 ### State Management (Zustand)
 
-The app uses **5 domain-specific stores**, each with distinct responsibilities:
+The app uses **6 domain-specific stores**, each with distinct responsibilities:
 
 - **`authStore`** - Authentication state (user, tokens, login modal)
   - Uses `persist` middleware for session retention
@@ -49,6 +49,7 @@ The app uses **5 domain-specific stores**, each with distinct responsibilities:
 
 - **`homeStore`** - Home page UI state (search, view mode, sort)
 - **`shareStore`** - Share modal workflow state
+- **`videoFeedbackStore`** - Video feedback page state
 
 **Key Pattern**: Use selector hooks to prevent unnecessary re-renders. Instead of `useSlideStore((s) => s.field)`, use `useSlideTitle()`.
 
@@ -158,7 +159,7 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `design`, `c
 
 Format: `type/description-issue` (e.g., `feat/login-12`)
 
-Note: Use `-` (hyphen) instead of `#` for issue numbers to maintain GitHub branch name compatibility.
+Note: While `CONVENTION.md` shows `#` for issue numbers (`feat/login#12`), using `-` (hyphen) is recommended for GitHub compatibility since `#` can cause issues in some shell environments.
 
 ## Development Patterns
 

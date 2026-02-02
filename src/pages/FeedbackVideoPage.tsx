@@ -1,105 +1,198 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+/**
+ * @file FeedbackVideoPage.tsx
+ * @description 비디오 피드백 페이지
+ *
+ * 데스크톱과 모바일 뷰를 모두 포함하며, 반응형으로 UI를 렌더링합니다.
+ * CSS-only 방식으로 단일 비디오 요소의 위치를 조정하여 심리스한 전환을 지원합니다.
+ */
+import { useEffect, useRef, useState } from 'react';
 
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
-import { Spinner } from '@/components/common';
+import FeedbackMobileLayout from '@/components/feedback/FeedbackMobileLayout';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
-import SlideWebcamStage from '@/components/feedback/SlideWebcamStage';
-import { MOCK_SLIDES } from '@/mocks/slides';
-import { MOCK_VIDEO } from '@/mocks/videos';
-import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
-import type { Comment } from '@/types/comment';
-
-import { useVideoComments } from '../hooks/useVideoComments';
-import { useVideoReactions } from '../hooks/useVideoReactions';
-
-/**
- * "슬라이드 넘긴 시각(초)" 목데이터
- * - 값은 예시. 실제 녹화 데이터에 맞춰 조정하면 됨.
- */
-const MOCK_SLIDE_CHANGE_TIMES = [0, 12, 24, 38, 52, 75, 96, 130, 160, 210];
+import ScriptSection from '@/components/feedback/ScriptSection';
+import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
+import { useFeedbackVideo } from '@/hooks/useFeedbackVideo';
+import { useIsDesktop } from '@/hooks/useMediaQuery';
 
 export default function FeedbackVideoPage() {
-  const { projectId } = useParams<{ projectId: string }>();
-  const [isLoading, setIsLoading] = useState(true);
+  const isDesktop = useIsDesktop();
+  const ctx = useFeedbackVideo();
+  const {
+    isLoading,
+    currentTime,
+    projectSlides,
+    slideChangeTimes,
+    comments,
+    reactions,
+    commentDraft,
+    timestampPrefix,
+    webcamVideoUrl,
+    updateCurrentTime,
+    requestSeek,
+    setCommentDraft,
+    handleAddComment,
+    handleGoToTimeRef,
+    addReply,
+    deleteComment,
+    toggleReaction,
+  } = ctx;
 
-  const initVideo = useVideoFeedbackStore((state) => state.initVideo);
+  // 비디오 위치 계산을 위한 refs
+  const desktopPlaceholderRef = useRef<HTMLDivElement>(null);
+  const mobilePlaceholderRef = useRef<HTMLDivElement>(null);
+  const [videoStyle, setVideoStyle] = useState<React.CSSProperties>({
+    position: 'fixed',
+    opacity: 0, // 위치 계산 전까지 숨김
+  });
 
-  const { comments, addComment, addReply, deleteComment } = useVideoComments();
-  const { reactions, toggleReaction } = useVideoReactions();
-
-  const requestSeek = useVideoFeedbackStore((s) => s.requestSeek);
-
-  const [commentDraft, setCommentDraft] = useState('');
-
-  const handleAddComment = () => {
-    if (!commentDraft.trim()) return;
-    addComment(commentDraft);
-    setCommentDraft('');
-  };
-
-  const handleGoToTimeRef = useCallback(
-    (ref: NonNullable<Comment['ref']>) => {
-      if (ref.kind === 'video') requestSeek(ref.seconds);
-    },
-    [requestSeek],
-  );
-
+  // 비디오 위치 업데이트
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      initVideo(MOCK_VIDEO);
-      setIsLoading(false);
-    }, 500);
+    const updateVideoPosition = () => {
+      // 현재 viewport에 맞는 placeholder 우선 사용
+      const primaryRef = isDesktop ? desktopPlaceholderRef : mobilePlaceholderRef;
+      const fallbackRef = isDesktop ? mobilePlaceholderRef : desktopPlaceholderRef;
 
-    return () => window.clearTimeout(timer);
-  }, [projectId, initVideo]);
+      let rect = primaryRef.current?.getBoundingClientRect();
+      if (!rect || rect.width === 0 || rect.height === 0) {
+        rect = fallbackRef.current?.getBoundingClientRect();
+      }
 
-  if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center bg-white">
-        <Spinner size={40} />
-      </div>
-    );
-  }
+      if (!rect || rect.width === 0 || rect.height === 0) return;
+
+      setVideoStyle({
+        position: 'fixed',
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+        height: rect.height,
+        zIndex: 20,
+        opacity: 1,
+      });
+    };
+
+    // 레이아웃 안정화 후 위치 계산
+    const timers = [0, 50, 100, 200].map((delay) => setTimeout(updateVideoPosition, delay));
+
+    // 두 placeholder 모두 관찰
+    const observer = new ResizeObserver(updateVideoPosition);
+    if (desktopPlaceholderRef.current) observer.observe(desktopPlaceholderRef.current);
+    if (mobilePlaceholderRef.current) observer.observe(mobilePlaceholderRef.current);
+
+    // 리사이즈, 스크롤 이벤트 리스너
+    window.addEventListener('resize', updateVideoPosition);
+    window.addEventListener('scroll', updateVideoPosition, true);
+
+    return () => {
+      timers.forEach(clearTimeout);
+      observer.disconnect();
+      window.removeEventListener('resize', updateVideoPosition);
+      window.removeEventListener('scroll', updateVideoPosition, true);
+    };
+  }, [isDesktop]);
 
   return (
-    <div className="flex h-full w-full px-35 gap-6">
-      <div className="flex-1 min-w-0 flex flex-col gap-4">
-        {/* 슬라이드 + 웹캠 + 재생바 (오버레이) */}
-        <SlideWebcamStage
-          slides={MOCK_SLIDES}
-          slideChangeTimes={MOCK_SLIDE_CHANGE_TIMES}
-          webcamVideoUrl={MOCK_VIDEO.videoUrl}
-        />
-
-        {/* 6. 대본 섹션 (현재 시간 기반) */}
-        <div className="flex-1 min-w-0 bg-gray-100 rounded-lg p-4 overflow-y-auto">
-          {/* TODO: 대본 표시 로직 */}
+    <div className="flex h-full w-full">
+      {/* 데스크톱 뷰 */}
+      <div className="hidden md:flex flex-1 px-35">
+        <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-4">
+          {/* 비디오 위치 placeholder */}
+          <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <div ref={desktopPlaceholderRef} className="w-full aspect-video" />
+          </div>
+          <ScriptSection
+            slides={projectSlides}
+            slideChangeTimes={slideChangeTimes}
+            currentTime={currentTime}
+            onSeek={requestSeek}
+            isLoading={isLoading}
+          />
         </div>
+
+        <aside className="w-96 shrink-0 bg-gray-100 flex flex-col border-l border-gray-200">
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <CommentList
+              comments={comments}
+              onAddReply={addReply}
+              onGoToRef={handleGoToTimeRef}
+              onDeleteComment={deleteComment}
+              isLoading={isLoading}
+            />
+          </div>
+
+          <div className="shrink-0 border-t border-black/5 flex flex-col gap-6 px-4 pb-6 pt-2">
+            <CommentInput
+              value={commentDraft}
+              onChange={setCommentDraft}
+              onSubmit={handleAddComment}
+              onCancel={() => setCommentDraft('')}
+              className="items-end w-86"
+              initialValueOnFocus={timestampPrefix}
+            />
+            <ReactionButtons
+              reactions={reactions}
+              onToggleReaction={toggleReaction}
+              layout="grid-2"
+            />
+          </div>
+        </aside>
       </div>
 
-      <aside className="w-96 shrink-0 bg-gray-100 flex flex-col border-l border-gray-200">
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          <CommentList
-            comments={comments}
-            onAddReply={addReply}
-            onGoToRef={handleGoToTimeRef}
-            onDeleteComment={deleteComment}
+      {/* 모바일 뷰 */}
+      <FeedbackMobileLayout
+        mediaSlot={<div ref={mobilePlaceholderRef} className="w-full aspect-video" />}
+        reactionSlot={
+          <ReactionButtons
+            reactions={reactions}
+            onToggleReaction={toggleReaction}
+            showLabel={false}
           />
-        </div>
+        }
+        scriptTabContent={
+          <ScriptSection
+            slides={projectSlides}
+            slideChangeTimes={slideChangeTimes}
+            currentTime={currentTime}
+            onSeek={requestSeek}
+          />
+        }
+        commentTabContent={
+          <>
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <CommentList
+                comments={comments}
+                onAddReply={addReply}
+                onGoToRef={handleGoToTimeRef}
+                onDeleteComment={deleteComment}
+              />
+            </div>
+            <div className="shrink-0 px-4 py-3">
+              <CommentInput
+                value={commentDraft}
+                onChange={setCommentDraft}
+                onSubmit={handleAddComment}
+                onCancel={() => setCommentDraft('')}
+                className="w-full"
+                initialValueOnFocus={timestampPrefix}
+              />
+            </div>
+          </>
+        }
+        commentCount={comments.length}
+      />
 
-        <div className="shrink-0 border-t border-black/5 flex flex-col gap-6 px-4 pb-6 pt-2">
-          <CommentInput
-            value={commentDraft}
-            onChange={setCommentDraft}
-            onSubmit={handleAddComment}
-            onCancel={() => setCommentDraft('')}
-            className="items-end w-86"
-          />
-          <ReactionButtons reactions={reactions} onToggleReaction={toggleReaction} />
-        </div>
-      </aside>
+      {/* 단일 SlideWebcamStage - CSS로 위치 조정 */}
+      <div style={videoStyle}>
+        <SlideWebcamStage
+          slides={projectSlides}
+          slideChangeTimes={slideChangeTimes}
+          webcamVideoUrl={webcamVideoUrl}
+          onTimeUpdate={updateCurrentTime}
+          disablePip={!isDesktop}
+          showLayoutToggle={!isDesktop}
+        />
+      </div>
     </div>
   );
 }
