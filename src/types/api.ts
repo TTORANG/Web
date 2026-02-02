@@ -54,9 +54,6 @@ export interface ScriptVersion {
   createdAt: string;
 }
 
-/**
- * 영상 정보 응답
- */
 export interface Video {
   videoId: string;
   title: string;
@@ -68,4 +65,29 @@ export interface Video {
   hlsMasterUrl: string;
   thumbnailUrl: string;
   createdAt: string;
+}
+
+export interface VideoComment {
+  id: string;
+  timestampMs: number;
+  content: string;
+  user: CommentUser;
+}
+
+export interface CommentUser {
+  id: string;
+  name: string;
+}
+
+export type EmojiType = 'thumbs_up' | 'thumbs_down' | 'heart' | 'laugh' | 'surprised' | 'thinking';
+
+export interface VideoReaction {
+  timestampMs: number;
+  emojiType: EmojiType;
+  count: number;
+}
+
+export interface VideoTimeline {
+  reactions: VideoReaction[];
+  comments: VideoComment[];
 }
