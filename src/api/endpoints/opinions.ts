@@ -3,16 +3,9 @@
  * @description 의견(댓글) 관련 API 엔드포인트
  */
 import { apiClient } from '@/api';
+import type { CreateOpinionDto } from '@/api/dto';
+import type { ApiResponse } from '@/types/api';
 import type { Comment } from '@/types/comment';
-
-/**
- * 의견 생성 요청 타입
- */
-export interface CreateOpinionRequest {
-  content: string;
-  /** 답글인 경우 부모 의견 ID */
-  parentId?: string;
-}
 
 /**
  * 의견 추가
@@ -21,9 +14,14 @@ export interface CreateOpinionRequest {
  * @param data - 의견 데이터
  * @returns 생성된 의견
  */
-export async function createOpinion(slideId: string, data: CreateOpinionRequest): Promise<Comment> {
-  const response = await apiClient.post<Comment>(`/slides/${slideId}/opinions`, data);
-  return response.data;
+export async function createOpinion(slideId: string, data: CreateOpinionDto): Promise<Comment> {
+  const response = await apiClient.post<ApiResponse<Comment>>(`/slides/${slideId}/opinions`, data);
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+
+  throw new Error(response.data.error.reason);
 }
 
 /**
@@ -32,5 +30,11 @@ export async function createOpinion(slideId: string, data: CreateOpinionRequest)
  * @param opinionId - 삭제할 의견 ID
  */
 export async function deleteOpinion(opinionId: string): Promise<void> {
-  await apiClient.delete(`/opinions/${opinionId}`);
+  const response = await apiClient.delete<ApiResponse<void>>(`/opinions/${opinionId}`);
+
+  if (response.data.resultType === 'SUCCESS') {
+    return;
+  }
+
+  throw new Error(response.data.error.reason);
 }

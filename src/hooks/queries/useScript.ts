@@ -4,14 +4,8 @@
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import {
-  type RestoreScriptRequest,
-  type UpdateScriptRequest,
-  getScript,
-  getScriptVersions,
-  restoreScript,
-  updateScript,
-} from '@/api/endpoints/scripts';
+import type { RestoreScriptDto, UpdateScriptDto } from '@/api/dto';
+import { getScript, getScriptVersions, restoreScript, updateScript } from '@/api/endpoints/scripts';
 import { queryKeys } from '@/api/queryClient';
 
 /**
@@ -34,7 +28,7 @@ export function useUpdateScript() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ slideId, data }: { slideId: string; data: UpdateScriptRequest }) =>
+    mutationFn: ({ slideId, data }: { slideId: string; data: UpdateScriptDto }) =>
       updateScript(slideId, data),
 
     onSuccess: (_, { slideId }) => {
@@ -64,7 +58,7 @@ export function useRestoreScript() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ slideId, data }: { slideId: string; data: RestoreScriptRequest }) =>
+    mutationFn: ({ slideId, data }: { slideId: string; data: RestoreScriptDto }) =>
       restoreScript(slideId, data),
 
     onSuccess: (_, { slideId }) => {

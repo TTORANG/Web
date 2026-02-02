@@ -7,14 +7,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { queryKeys } from '@/api';
+import type { CreateProjectDto, UpdateProjectDto } from '@/api/dto';
 import { getProject } from '@/api/endpoints/projects';
-import {
-  type UpdateProjectRequest,
-  createProject,
-  deleteProject,
-  getProjects,
-  updateProject,
-} from '@/api/endpoints/projects';
+import { createProject, deleteProject, getProjects, updateProject } from '@/api/endpoints/projects';
 import type { Project } from '@/types';
 import { showToast } from '@/utils/toast';
 
@@ -39,7 +34,7 @@ export function useProject(projectId: string) {
 export function useUpdateProject() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ projectId, data }: { projectId: string; data: UpdateProjectRequest }) =>
+    mutationFn: ({ projectId, data }: { projectId: string; data: UpdateProjectDto }) =>
       updateProject(projectId, data),
 
     onSuccess: (updateProject) => {
@@ -55,7 +50,7 @@ export function useUpdateProject() {
 export function useCreateProject() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { title: string }) => createProject(data),
+    mutationFn: (data: CreateProjectDto) => createProject(data),
 
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.projects.lists() });
