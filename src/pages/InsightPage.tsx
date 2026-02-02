@@ -20,7 +20,6 @@ import {
   TopSlideCard,
 } from '@/components/insight';
 import { createDefaultReactions } from '@/constants/reaction';
-import { useProject } from '@/hooks';
 import { useSlides } from '@/hooks/queries/useSlides';
 import type { DropOffSlide, DropOffTime, SummaryStat } from '@/types/insight';
 import type { Reaction } from '@/types/script';
