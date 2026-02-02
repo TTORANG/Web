@@ -53,3 +53,19 @@ export interface ScriptVersion {
   charCount: number;
   createdAt: string;
 }
+
+/**
+ * 영상 정보 응답
+ */
+export interface Video {
+  videoId: string;
+  title: string;
+  status: 'recording' | 'uploading' | 'processing' | 'ready' | 'failed' | 'deleted';
+  durationSeconds: number;
+  width: number;
+  height: number;
+  fps: number;
+  hlsMasterUrl: string;
+  thumbnailUrl: string;
+  createdAt: string;
+}
