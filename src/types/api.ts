@@ -54,6 +54,49 @@ export interface PaginatedData<T> {
 }
 
 // ============================================================================
+// Project Types
+// ============================================================================
+
+export interface Project {
+  projectId: string;
+  title: string;
+  slideCount?: number;
+  feedbackCount?: number;
+  durationSeconds?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * 프로젝트 파일 변환 상태
+ */
+export type ConversionStatus = 'processing' | 'completed' | 'failed';
+
+/**
+ * 프로젝트 파일 변환 진행 상황
+ */
+export interface ConversionProgress {
+  slides: {
+    total: number;
+    generated: number;
+  };
+  thumbnail: 'processing' | 'completed' | 'failed';
+  metadata: 'processing' | 'completed' | 'failed';
+}
+
+// ============================================================================
+// Project API Responses
+// ============================================================================
+
+/**
+ * 프로젝트 파일 변환 상태 조회 응답 (복잡한 구조이므로 타입 분리)
+ */
+export interface GetProjectConversionStatusResponse {
+  status: ConversionStatus;
+  progress: ConversionProgress;
+}
+
+// ============================================================================
 // User Types
 // ============================================================================
 
@@ -179,13 +222,28 @@ export interface GetVideoDetailResponse {
 }
 
 // ============================================================================
-// Script Types
+// Slide & Script Types
 // ============================================================================
 
 /**
- * 대본 정보 응답
+ * 슬라이드 정보
  */
-export interface ScriptResponse {
+export interface Slide {
+  slideId: string;
+  projectId?: string;
+  title: string;
+  slideNum: number;
+  imageUrl?: string;
+  prevSlideId?: string;
+  nextSlideId?: string;
+  createdAt?: string;
+  updatedAt: string;
+}
+
+/**
+ * 대본 정보
+ */
+export interface Script {
   message?: string;
   slideId: string;
   charCount: number;
@@ -196,9 +254,9 @@ export interface ScriptResponse {
 }
 
 /**
- * 대본 버전 (히스토리) 정보
+ * 대본 버전 정보
  */
-export interface ScriptVersion {
+export interface ScriptHistory {
   versionNumber: number;
   scriptText: string;
   charCount: number;
