@@ -90,9 +90,19 @@ export function ShareModal() {
       if (response.resultType === 'SUCCESS' && response.success) {
         setShareUrl(response.success.shareUrl);
         setStep('result');
+      } else if (response.resultType === 'FAILURE') {
+        // 서버에서 에러 응답이 온 경우
+        const errorMessage = response.error?.reason || '공유 링크 생성에 실패했습니다.';
+        showToast.error(errorMessage);
+        console.error('Share link creation failed:', response.error);
+      } else {
+        // 예상치 못한 응답 형식
+        showToast.error('알 수 없는 응답 형식입니다.');
+        console.error('Unexpected response:', response);
       }
-    } catch {
+    } catch (error) {
       showToast.error('공유 링크 생성에 실패했습니다.');
+      console.error('Share link creation error:', error);
     }
   };
   const handleClose = () => {
