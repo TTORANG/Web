@@ -1,3 +1,4 @@
+
 import { useMutation, useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@/api';
@@ -7,6 +8,7 @@ import {
   getSlideAnalytics,
   getVideoExitAnalytics,
   recordExit,
+  getSummaryAnalytics,
 } from '@/api/endpoints/analytics';
 import { queryKeys } from '@/api/queryClient';
 import { useAuthStore } from '@/stores/authStore';
@@ -64,4 +66,12 @@ export function recordExitOnUnload(data: RecordExitRequest) {
   } catch {
     return undefined;
   }
+}
+
+export function useSummaryAnalytics(projectId: string) {
+  return useQuery({
+    queryKey: queryKeys.analytics.summary(projectId),
+    queryFn: () => getSummaryAnalytics(projectId),
+    enabled: !!projectId,
+  });
 }
