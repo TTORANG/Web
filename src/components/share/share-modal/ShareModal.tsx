@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import clsx from 'clsx';
@@ -43,20 +43,57 @@ export function ShareModal() {
   const [copied, setCopied] = useState(false);
 
   // 공유 가능 영상 목록 조회 (모달이 열려있고, 영상포함 유형일 때만 fetch)
-  const { data: videosData, isLoading: isLoadingVideos } = useShareableVideos(projectId, {
+  const {
+    data: videosData,
+    isLoading: isLoadingVideos,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useShareableVideos(projectId, {
     enabled: isOpen && shareType === 'slide_script_video',
   });
 
   // 공유 링크 생성 mutation
   const createShareLinkMutation = useCreateShareLink();
 
-  // 영상 목록
-  const videos = videosData?.success?.videos ?? [];
+  // 영상 목록 (모든 페이지의 videos를 flat하게 병합)
+  const videos = useMemo(() => {
+    if (!videosData?.pages) return [];
+    return videosData.pages.flatMap(
+      (page) => (page.resultType === 'SUCCESS' && page.success?.videos) || [],
+    );
+  }, [videosData]);
 
   // 선택된 비디오 바뀔 때만 다시 계산
   const selectedVideo = useMemo(() => {
     return videos.find((v) => v.id === selectedVideoId) ?? null;
   }, [videos, selectedVideoId]);
+
+  // 무한 스크롤을 위한 Intersection Observer
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [target] = entries;
+      if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    [hasNextPage, isFetchingNextPage, fetchNextPage],
+  );
+
+  useEffect(() => {
+    const element = observerTarget.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(handleObserver, {
+      threshold: 0.5,
+    });
+
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [handleObserver]);
 
   // 사용자 클립보드에 url 복사
   const handleCopy = async () => {
@@ -92,9 +129,9 @@ export function ShareModal() {
         setStep('result');
       } else if (response.resultType === 'FAILURE') {
         // 서버에서 에러 응답이 온 경우
-        const errorMessage = response.error?.reason || '공유 링크 생성에 실패했습니다.';
+        const errorMessage = response.reason?.message || '공유 링크 생성에 실패했습니다.';
         showToast.error(errorMessage);
-        console.error('Share link creation failed:', response.error);
+        console.error('Share link creation failed:', response.reason);
       } else {
         // 예상치 못한 응답 형식
         showToast.error('알 수 없는 응답 형식입니다.');
@@ -220,6 +257,14 @@ export function ShareModal() {
                 </button>
               );
             })}
+            {/* 무한 스크롤 observer target */}
+            <div ref={observerTarget} className="h-4 w-full" />
+            {/* 다음 페이지 로딩 중 */}
+            {isFetchingNextPage && (
+              <div className="flex items-center justify-center py-4">
+                <span className="text-body-s text-gray-600">추가 영상을 불러오는 중...</span>
+              </div>
+            )}
           </div>
         )}
       </div>
