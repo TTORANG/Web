@@ -7,12 +7,12 @@ import {
   useHomeSort,
   useHomeViewMode,
 } from '@/hooks/useHomeSelectors';
-import type { Project } from '@/types/project';
+import type { Presentation } from '@/types/presentation';
 
 import { CardView, ListView } from '../common';
-import ProjectCard from '../projects/ProjectCard';
-import ProjectHeader from '../projects/ProjectHeader';
-import ProjectList from '../projects/ProjectList';
+import PresentationCard from '../presentation/PresentationCard';
+import PresentationHeader from '../presentation/PresentationHeader';
+import PresentationList from '../presentation/PresentationList';
 
 const SKELETON_CARD_COUNT = 9;
 const SKELETON_LIST_COUNT = 6;
@@ -22,15 +22,15 @@ type Props = {
   totalCount: number;
   filteredCount: number;
   appliedQuery: string;
-  projects: Project[];
+  presentations: Presentation[];
 };
 
-export default function ProjectsSection({
+export default function PresentationsSection({
   isLoading,
   totalCount,
   filteredCount,
   appliedQuery,
-  projects,
+  presentations,
 }: Props) {
   const query = useHomeQuery();
   const sort = useHomeSort();
@@ -42,7 +42,7 @@ export default function ProjectsSection({
    * 전체 프로젝트가 하나라도 존재하는지 여부
    * 아예 데이터가 없으면 ProjectSection 자체를 숨기기 위함
    */
-  const hasAnyProjects = totalCount > 0;
+  const hasAnyPresentations = totalCount > 0;
 
   /**
    * 디바운싱 진행 중인지 여부 (입력값(query) != 적용값(appliedQuery))
@@ -57,27 +57,28 @@ export default function ProjectsSection({
   const hasFilterResults = filteredCount > 0;
 
   // 마지막 저장된 결과(디바운스 끝난 appliedQuery 기준 결과)를 저장
-  const [lastSavedProjects, setLastSavedProjects] = useState<Project[]>(projects);
+  const [lastSavedPresentations, setLastSavedPresentations] =
+    useState<Presentation[]>(presentations);
 
   // 디바운싱 중이면 이전 결과 유지
-  const displayProjects = isDebouncing ? lastSavedProjects : projects;
+  const displayPresentations = isDebouncing ? lastSavedPresentations : presentations;
 
-  // empty 판단용(보여주는 기준(displayProjects))
-  const hasDisplayResults = displayProjects.length > 0;
+  // empty 판단용(보여주는 기준(displayPresentations))
+  const hasDisplayResults = displayPresentations.length > 0;
 
   // 디바운스가 끝난 순간에만 안정된 결과를 갱신
   useEffect(() => {
     if (!isDebouncing) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLastSavedProjects(projects);
+      setLastSavedPresentations(presentations);
     }
-  }, [isDebouncing, projects]);
+  }, [isDebouncing, presentations]);
 
   /**
    * 전체 프로젝트가 아예 없을 때는
-   * 검색/필터 여부와 상관 없이 ProjectSection 자체를 렌더링하지 않음
+   * 검색/필터 여부와 상관 없이 PresentationsSection 자체를 렌더링하지 않음
    */
-  if (!isLoading && !hasAnyProjects) return null;
+  if (!isLoading && !hasAnyPresentations) return null;
 
   return (
     <section className="mt-14">
@@ -87,7 +88,7 @@ export default function ProjectsSection({
       </div>
 
       {/* 검색 및 필터 */}
-      <ProjectHeader
+      <PresentationHeader
         value={query}
         onChange={setQuery}
         sort={sort}
@@ -103,13 +104,13 @@ export default function ProjectsSection({
         viewMode === 'card' ? (
           <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
             {Array.from({ length: SKELETON_CARD_COUNT }).map((_, index) => (
-              <ProjectCard.Skeleton key={index} />
+              <PresentationCard.Skeleton key={index} />
             ))}
           </div>
         ) : (
           <div className="mt-6 flex flex-col gap-3">
             {Array.from({ length: SKELETON_LIST_COUNT }).map((_, index) => (
-              <ProjectList.Skeleton key={index} />
+              <PresentationList.Skeleton key={index} />
             ))}
           </div>
         )
@@ -130,18 +131,18 @@ export default function ProjectsSection({
         <div>
           {viewMode === 'card' ? (
             <CardView
-              items={displayProjects}
+              items={displayPresentations}
               getKey={(item) => item.id}
               className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3"
-              renderCard={(item) => <ProjectCard {...item} />}
+              renderCard={(item) => <PresentationCard {...item} />}
               empty={null}
             />
           ) : (
             <ListView
-              items={displayProjects}
+              items={displayPresentations}
               getKey={(item) => item.id}
               className="mt-6 flex flex-col gap-3"
-              renderInfo={(item) => <ProjectList {...item} />}
+              renderInfo={(item) => <PresentationList {...item} />}
               empty={null}
             />
           )}

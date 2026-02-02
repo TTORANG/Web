@@ -4,3 +4,4 @@
 export { apiClient } from './client';
 export type { ApiError } from './client';
 export { queryClient, queryKeys } from './queryClient';
+export * from './endpoints/videos';

@@ -65,12 +65,12 @@ export const queryKeys = {
     detail: (slideId: string) => [...queryKeys.scripts.all, 'detail', slideId] as const,
     versions: (slideId: string) => [...queryKeys.scripts.all, 'versions', slideId] as const,
   },
-  projects: {
-    all: ['projects'] as const,
-    lists: () => [...queryKeys.projects.all, 'list'] as const,
-    list: () => [...queryKeys.projects.lists()] as const,
-    details: () => [...queryKeys.projects.all, 'detail'] as const,
-    detail: (projectId: string) => [...queryKeys.projects.details(), projectId] as const,
+  presentations: {
+    all: ['presentations'] as const,
+    lists: () => [...queryKeys.presentations.all, 'list'] as const,
+    list: () => [...queryKeys.presentations.lists()] as const,
+    details: () => [...queryKeys.presentations.all, 'detail'] as const,
+    detail: (projectId: string) => [...queryKeys.presentations.details(), projectId] as const,
   },
   videos: {
     all: ['videos'] as const,
@@ -82,6 +82,11 @@ export const queryKeys = {
   shares: {
     all: ['shares'] as const,
     videos: (projectId: string) => [...queryKeys.shares.all, 'videos', projectId] as const,
+  analytics: {
+    all: ['analytics'] as const,
+    slides: (projectId: string) => [...queryKeys.analytics.all, 'slides', projectId] as const,
+    videoExits: (videoId: string) => [...queryKeys.analytics.all, 'videoExits', videoId] as const,
+    summary: (projectId: string) => [...queryKeys.analytics.all, 'summary', projectId] as const,
   },
 } as const;
 

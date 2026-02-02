@@ -3,7 +3,7 @@ import { HttpResponse, delay, http } from 'msw';
 
 import { createDefaultReactions } from '@/constants/reaction';
 import { FEEDBACK_WINDOW } from '@/constants/video';
-import type { Project } from '@/types/project';
+import type { Presentation } from '@/types/presentation';
 import type { Slide } from '@/types/slide';
 import type { VideoFeedback, VideoTimestampFeedback } from '@/types/video';
 
@@ -16,7 +16,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 // 메모리 내 데이터 저장소 (상태 유지)
 let slides: Slide[] = [...MOCK_SLIDES];
-let projects: Project[] = [...MOCK_PROJECTS];
+let presentations: Presentation[] = [...MOCK_PROJECTS];
 
 // 영상 피드백 데이터 저장소
 const videoFeedbacks: Map<string, VideoFeedback> = new Map([
@@ -56,45 +56,45 @@ export const handlers = [
 
   /**
    * 프로젝트 목록 조회
-   * GET /projects
+   * GET /presentations
    */
-  http.get(`${BASE_URL}/projects`, async () => {
+  http.get(`${BASE_URL}/presentations`, async () => {
     await delay(200);
-    console.log('[MSW] GET /projects');
-    return HttpResponse.json(projects);
+    console.log('[MSW] GET /presentations');
+    return HttpResponse.json(presentations);
   }),
 
   /**
    * 프로젝트 상세 조회
-   * GET /projects/:projectId
+   * GET /presentations/:projectId
    */
-  http.get(`${BASE_URL}/projects/:projectId`, async ({ params }) => {
+  http.get(`${BASE_URL}/presentations/:projectId`, async ({ params }) => {
     await delay(150);
     const { projectId } = params;
-    console.log(`[MSW] GET /projects/${projectId}`);
+    console.log(`[MSW] GET /presentations/${projectId}`);
 
-    const project = projects.find((p) => p.id === projectId);
+    const presentation = presentations.find((p) => p.id === projectId);
 
-    if (!project) {
+    if (!presentation) {
       return new HttpResponse(null, {
         status: 404,
-        statusText: 'Project not found',
+        statusText: 'Presentation not found',
       });
     }
 
-    return HttpResponse.json(project);
+    return HttpResponse.json(presentation);
   }),
 
   /**
    * 프로젝트 생성
-   * POST /projects
+   * POST /presentations
    */
-  http.post(`${BASE_URL}/projects`, async ({ request }) => {
+  http.post(`${BASE_URL}/presentations`, async ({ request }) => {
     await delay(300);
     const data = (await request.json()) as { title: string };
-    console.log('[MSW] POST /projects', data);
+    console.log('[MSW] POST /presentations', data);
 
-    const newProject: Project = {
+    const newPresentation: Presentation = {
       id: `p${Date.now()}`,
       title: data.title,
       updatedAt: new Date().toISOString(),
@@ -106,57 +106,57 @@ export const handlers = [
       thumbnailUrl: '/thumbnails/p1/0.webp',
     };
 
-    projects = [newProject, ...projects];
-    return HttpResponse.json(newProject, { status: 201 });
+    presentations = [newPresentation, ...presentations];
+    return HttpResponse.json(newPresentation, { status: 201 });
   }),
 
   /**
    * 프로젝트 수정
-   * PATCH /projects/:projectId
+   * PATCH /presentations/:projectId
    */
-  http.patch(`${BASE_URL}/projects/:projectId`, async ({ params, request }) => {
+  http.patch(`${BASE_URL}/presentations/:projectId`, async ({ params, request }) => {
     await delay(200);
     const { projectId } = params;
     const data = (await request.json()) as { title?: string };
-    console.log(`[MSW] PATCH /projects/${projectId}`, data);
+    console.log(`[MSW] PATCH /presentations/${projectId}`, data);
 
-    const projectIndex = projects.findIndex((p) => p.id === projectId);
+    const presentationIndex = presentations.findIndex((p) => p.id === projectId);
 
-    if (projectIndex === -1) {
+    if (presentationIndex === -1) {
       return new HttpResponse(null, {
         status: 404,
-        statusText: 'Project not found',
+        statusText: 'Presentation not found',
       });
     }
 
-    projects[projectIndex] = {
-      ...projects[projectIndex],
+    presentations[presentationIndex] = {
+      ...presentations[presentationIndex],
       ...data,
       updatedAt: new Date().toISOString(),
     };
 
-    return HttpResponse.json(projects[projectIndex]);
+    return HttpResponse.json(presentations[presentationIndex]);
   }),
 
   /**
    * 프로젝트 삭제
-   * DELETE /projects/:projectId
+   * DELETE /presentations/:projectId
    */
-  http.delete(`${BASE_URL}/projects/:projectId`, async ({ params }) => {
+  http.delete(`${BASE_URL}/presentations/:projectId`, async ({ params }) => {
     await delay(200);
     const { projectId } = params;
-    console.log(`[MSW] DELETE /projects/${projectId}`);
+    console.log(`[MSW] DELETE /presentations/${projectId}`);
 
-    const projectIndex = projects.findIndex((p) => p.id === projectId);
+    const presentationIndex = presentations.findIndex((p) => p.id === projectId);
 
-    if (projectIndex === -1) {
+    if (presentationIndex === -1) {
       return new HttpResponse(null, {
         status: 404,
-        statusText: 'Project not found',
+        statusText: 'Presentation not found',
       });
     }
 
-    projects = projects.filter((p) => p.id !== projectId);
+    presentations = presentations.filter((p) => p.id !== projectId);
     return new HttpResponse(null, { status: 204 });
   }),
 
@@ -166,16 +166,16 @@ export const handlers = [
 
   /**
    * 프로젝트의 슬라이드 목록 조회
-   * GET /projects/:projectId/slides
+   * GET /presentations/:projectId/slides
    */
-  http.get(`${BASE_URL}/projects/:projectId/slides`, async ({ params }) => {
+  http.get(`${BASE_URL}/presentations/:projectId/slides`, async ({ params }) => {
     await delay(200); // 네트워크 지연 시뮬레이션
 
     const { projectId } = params;
-    console.log(`[MSW] GET /projects/${projectId}/slides`);
+    console.log(`[MSW] GET /presentations/${projectId}/slides`);
 
-    const projectSlides = slides.filter((s) => s.projectId === projectId);
-    return HttpResponse.json(projectSlides);
+    const presentationSlides = slides.filter((s) => s.projectId === projectId);
+    return HttpResponse.json(presentationSlides);
   }),
 
   /**
@@ -247,14 +247,14 @@ export const handlers = [
 
   /**
    * 슬라이드 생성
-   * POST /projects/:projectId/slides
+   * POST /presentations/:projectId/slides
    */
-  http.post(`${BASE_URL}/projects/:projectId/slides`, async ({ params, request }) => {
+  http.post(`${BASE_URL}/presentations/:projectId/slides`, async ({ params, request }) => {
     await delay(300);
 
     const { projectId } = params as { projectId: string };
     const data = (await request.json()) as { title: string; script?: string };
-    console.log(`[MSW] POST /projects/${projectId}/slides`, data);
+    console.log(`[MSW] POST /presentations/${projectId}/slides`, data);
 
     const newSlide: Slide = {
       id: crypto.randomUUID(),
@@ -698,5 +698,111 @@ export const handlers = [
         updatedAt: new Date().toISOString(),
       }),
     );
+  }),
+  // src/mocks/handlers.ts 파일 끝부분에 추가 (마지막 ] 직전)
+
+  /**
+   * 영상 세션 생성
+   * POST /videos/start
+   */
+  http.post(`${BASE_URL}/videos/start`, async ({ request }) => {
+    await delay(200);
+    const body = (await request.json()) as { projectId: number; title: string };
+    console.log('[MSW] POST /videos/start', body);
+
+    const videoId = Math.floor(Math.random() * 100000) + 1;
+
+    return HttpResponse.json({
+      resultType: 'SUCCESS',
+      error: null,
+      success: {
+        videoId,
+      },
+    });
+  }),
+
+  /**
+   * POST /videos/:videoId/chunks/:chunkIndex
+   */
+  http.post(`${BASE_URL}/videos/:videoId/chunks/:chunkIndex`, async ({ params, request }) => {
+    await delay(50);
+    const { videoId, chunkIndex } = params;
+
+    const formData = await request.formData();
+    const file = formData.get('file');
+
+    if (file instanceof Blob) {
+      console.log(
+        `[MSW] POST /videos/${videoId}/chunks/${chunkIndex} - ${(file.size / 1024).toFixed(2)} KB`,
+      );
+    }
+
+    return HttpResponse.json({
+      resultType: 'SUCCESS',
+      error: null,
+      success: {
+        ok: true,
+      },
+    });
+  }),
+
+  /**
+   * POST /videos/:videoId/finish
+   */
+  http.post(`${BASE_URL}/videos/:videoId/finish`, async ({ params, request }) => {
+    await delay(300);
+    const { videoId } = params;
+    const body = (await request.json()) as {
+      slideLogs: Array<{ slideId: number; timestampMs: number }>;
+    };
+
+    console.log(`[MSW] POST /videos/${videoId}/finish`, body);
+
+    const slideLogs = body.slideLogs || [];
+    const slideDurations = slideLogs.map((log, index) => ({
+      slideId: String(log.slideId),
+      totalDurationMs:
+        index < slideLogs.length - 1 ? slideLogs[index + 1].timestampMs - log.timestampMs : 5000,
+    }));
+
+    return HttpResponse.json({
+      resultType: 'SUCCESS',
+      error: null,
+      success: {
+        videoId: String(videoId),
+        status: 'processing',
+        slideCount: slideLogs.length,
+        slideDurations,
+      },
+    });
+  }),
+
+  /**
+   * 영상 상세 조회
+   * GET /videos/:videoId
+   */
+  http.get(`${BASE_URL}/videos/:videoId`, async ({ params }) => {
+    await delay(150);
+    const { videoId } = params;
+    console.log(`[MSW] GET /videos/${videoId}`);
+
+    return HttpResponse.json({
+      resultType: 'SUCCESS',
+      error: null,
+      success: {
+        video: {
+          id: String(videoId),
+          title: 'Q4 마케팅 전략 발표',
+          status: 'ready',
+          durationSeconds: 300,
+          width: 1920,
+          height: 1080,
+          fps: 30,
+          hlsMasterUrl: 'https://example.com/master.m3u8',
+          thumbnailUrl: 'https://example.com/thumb.jpg',
+          createdAt: new Date().toISOString(),
+        },
+      },
+    });
   }),
 ];

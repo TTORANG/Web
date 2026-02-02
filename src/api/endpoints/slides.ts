@@ -18,7 +18,7 @@ import type { Slide } from '@/types/slide';
  * const slides = await getSlides('project-123');
  */
 export async function getSlides(projectId: string): Promise<Slide[]> {
-  const response = await apiClient.get<Slide[]>(`/projects/${projectId}/slides`);
+  const response = await apiClient.get<Slide[]>(`/presentations/${projectId}/slides`);
   return response.data;
 }
 
@@ -64,7 +64,7 @@ export async function createSlide(
   projectId: string,
   data: { title: string; script?: string },
 ): Promise<Slide> {
-  const response = await apiClient.post<Slide>(`/projects/${projectId}/slides`, data);
+  const response = await apiClient.post<Slide>(`/presentations/${projectId}/slides`, data);
   return response.data;
 }
 

@@ -5,7 +5,7 @@ import {
   Layout,
   LoginButton,
   Logo,
-  ProjectTitleEditor,
+  PresentationTitleEditor,
   ShareButton,
 } from '@/components/common';
 // TODO: 컴포넌트 교체
@@ -38,7 +38,7 @@ export const router = createBrowserRouter([
         left={
           <>
             <Logo />
-            <ProjectTitleEditor />
+            <PresentationTitleEditor />
           </>
         }
         center={<Gnb />}
