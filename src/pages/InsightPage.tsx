@@ -107,8 +107,6 @@ const slideRetentionData = [
 // --- 컴포넌트 시작 ---
 
 export default function InsightPage() {
-  console.log('API URL', import.meta.env.VITE_API_URL);
-
   const hasVideo = true;
   const { projectId } = useParams<{ projectId: string }>();
   const { data: slides } = useSlides(projectId ?? '');
@@ -136,6 +134,7 @@ export default function InsightPage() {
       },
     ];
   }, [summaryAnalytics]);
+
   const visibleSummaryStats = hasVideo
     ? computedSummaryStats
     : computedSummaryStats.filter((stat) => stat.label !== summaryStatLabels[3]);
