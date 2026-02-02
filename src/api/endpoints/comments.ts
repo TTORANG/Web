@@ -1,0 +1,123 @@
+/**
+ * @file comments.ts
+ * @description 댓글 관련 API 엔드포인트
+ */
+import { apiClient } from '@/api/client';
+import type { ApiResponse } from '@/types/api';
+import type { CommentListResponse, CommentResponse, ReplyListResponse } from '@/types/comment';
+
+/**
+ * 슬라이드 댓글 목록 조회
+ *
+ * @param slideId - 슬라이드 ID
+ * @param page - 페이지 번호 (기본값: 1)
+ * @param limit - 페이지당 개수 (기본값: 20)
+ * @returns 댓글 목록 및 페이지네이션 정보
+ */
+export async function getSlideComments(
+  slideId: string,
+  page = 1,
+  limit = 20,
+): Promise<CommentListResponse> {
+  const response = await apiClient.get<ApiResponse<CommentListResponse>>(
+    `/slides/${slideId}/comments`,
+    {
+      params: { page, limit },
+    },
+  );
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
+}
+
+/**
+ * 슬라이드에 댓글 작성
+ *
+ * @param slideId - 슬라이드 ID
+ * @param data - 댓글 내용
+ * @returns 생성된 댓글 정보
+ */
+export async function createSlideComment(
+  slideId: string,
+  data: { content: string },
+): Promise<CommentResponse> {
+  const response = await apiClient.post<ApiResponse<CommentResponse>>(
+    `/slides/${slideId}/comments`,
+    data,
+  );
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
+}
+
+/**
+ * 댓글에 답글 작성
+ *
+ * @param commentId - 부모 댓글 ID
+ * @param data - 답글 내용
+ * @returns 생성된 답글 정보
+ */
+export async function createReply(
+  commentId: string,
+  data: { content: string },
+): Promise<CommentResponse> {
+  const response = await apiClient.post<ApiResponse<CommentResponse>>(
+    `/comments/${commentId}/replies`,
+    data,
+  );
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
+}
+
+/**
+ * 댓글의 답글 목록 조회
+ *
+ * @param commentId - 댓글 ID
+ * @returns 답글 목록
+ */
+export async function getReplies(commentId: string): Promise<ReplyListResponse> {
+  const response = await apiClient.get<ReplyListResponse>(`/comments/${commentId}/replies`);
+  return response.data;
+}
+
+/**
+ * 댓글 수정
+ *
+ * @param commentId - 댓글 ID
+ * @param data - 수정할 내용
+ * @returns 수정된 댓글 정보
+ */
+export async function updateComment(
+  commentId: string,
+  data: { content: string },
+): Promise<CommentResponse> {
+  const response = await apiClient.patch<ApiResponse<CommentResponse>>(
+    `/comments/${commentId}`,
+    data,
+  );
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
+}
+
+/**
+ * 댓글 삭제
+ *
+ * @param commentId - 댓글 ID
+ */
+export async function deleteComment(commentId: string): Promise<void> {
+  const response = await apiClient.delete<ApiResponse<null>>(`/comments/${commentId}`);
+
+  if (response.data.resultType === 'FAILURE') {
+    throw new Error(response.data.error.reason);
+  }
+}

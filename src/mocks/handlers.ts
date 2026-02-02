@@ -29,6 +29,20 @@ const scriptVersions: Map<
   { versionNumber: number; scriptText: string; charCount: number; createdAt: string }[]
 > = new Map();
 
+// 댓글 저장소 (슬라이드별)
+interface StoredComment {
+  id: string;
+  content: string;
+  parentId?: string;
+  userId: string;
+  slideId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const slideComments: Map<string, StoredComment[]> = new Map();
+const commentReplies: Map<string, StoredComment[]> = new Map();
+
 // slides의 history 데이터로 scriptVersions 초기화
 MOCK_SLIDES.forEach((slide) => {
   if (slide.history.length > 0) {
@@ -840,5 +854,259 @@ export const handlers = [
         },
       },
     });
+  }),
+
+  /**
+   * 슬라이드 댓글 목록 조회
+   * GET /slides/:slideId/comments
+   */
+  http.get(`${BASE_URL}/slides/:slideId/comments`, async ({ params, request }) => {
+    await delay(150);
+    const { slideId } = params as { slideId: string };
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const limit = parseInt(url.searchParams.get('limit') || '20', 10);
+
+    console.log(`[MSW] GET /slides/${slideId}/comments`, { page, limit });
+
+    const comments = slideComments.get(slideId) || [];
+    const total = comments.length;
+    const totalPages = Math.ceil(total / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedComments = comments.slice(startIndex, endIndex);
+
+    const commentsWithUser = paginatedComments.map((comment) => ({
+      id: comment.id,
+      content: comment.content,
+      user: {
+        id: comment.userId,
+        nickName: MOCK_USERS.find((u) => u.id === comment.userId)?.name || '익명',
+      },
+      createdAt: comment.createdAt,
+      updatedAt: comment.updatedAt,
+    }));
+
+    return HttpResponse.json(
+      wrapResponse({
+        comments: commentsWithUser,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+        },
+      }),
+    );
+  }),
+
+  /**
+   * 슬라이드에 댓글 작성
+   * POST /slides/:slideId/comments
+   */
+  http.post(`${BASE_URL}/slides/:slideId/comments`, async ({ params, request }) => {
+    await delay(200);
+    const { slideId } = params as { slideId: string };
+    const { content } = (await request.json()) as { content: string };
+
+    console.log(`[MSW] POST /slides/${slideId}/comments`, { content });
+
+    const newComment: StoredComment = {
+      id: `${Date.now()}`,
+      content,
+      userId: MOCK_USERS[0].id,
+      slideId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const comments = slideComments.get(slideId) || [];
+    comments.push(newComment);
+    slideComments.set(slideId, comments);
+
+    return HttpResponse.json(
+      wrapResponse({
+        id: newComment.id,
+        content: newComment.content,
+        userId: newComment.userId,
+        createdAt: newComment.createdAt,
+      }),
+    );
+  }),
+
+  /**
+   * 댓글에 답글 작성
+   * POST /comments/:commentId/replies
+   */
+  http.post(`${BASE_URL}/comments/:commentId/replies`, async ({ params, request }) => {
+    await delay(200);
+    const { commentId } = params as { commentId: string };
+    const { content } = (await request.json()) as { content: string };
+
+    console.log(`[MSW] POST /comments/${commentId}/replies`, { content });
+
+    // 부모 댓글 존재 확인
+    let parentExists = false;
+    for (const comments of slideComments.values()) {
+      if (comments.some((c) => c.id === commentId)) {
+        parentExists = true;
+        break;
+      }
+    }
+
+    if (!parentExists) {
+      return HttpResponse.json(wrapError('C005', '댓글을 찾을 수 없습니다.'), { status: 404 });
+    }
+
+    const newReply: StoredComment = {
+      id: `${Date.now()}`,
+      content,
+      parentId: commentId,
+      userId: MOCK_USERS[0].id,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const replies = commentReplies.get(commentId) || [];
+    replies.push(newReply);
+    commentReplies.set(commentId, replies);
+
+    return HttpResponse.json({
+      id: newReply.id,
+      content: newReply.content,
+      parentId: newReply.parentId,
+      userId: newReply.userId,
+      createdAt: newReply.createdAt,
+    });
+  }),
+
+  /**
+   * 댓글의 답글 목록 조회
+   * GET /comments/:commentId/replies
+   */
+  http.get(`${BASE_URL}/comments/:commentId/replies`, async ({ params }) => {
+    await delay(150);
+    const { commentId } = params as { commentId: string };
+
+    console.log(`[MSW] GET /comments/${commentId}/replies`);
+
+    const replies = commentReplies.get(commentId) || [];
+
+    return HttpResponse.json(
+      replies.map((reply) => ({
+        id: reply.id,
+        content: reply.content,
+        parentId: reply.parentId,
+        userId: reply.userId,
+        createdAt: reply.createdAt,
+      })),
+    );
+  }),
+
+  /**
+   * 댓글 수정
+   * PATCH /comments/:commentId
+   */
+  http.patch(`${BASE_URL}/comments/:commentId`, async ({ params, request }) => {
+    await delay(200);
+    const { commentId } = params as { commentId: string };
+    const { content } = (await request.json()) as { content: string };
+
+    console.log(`[MSW] PATCH /comments/${commentId}`, { content });
+
+    // 슬라이드 댓글에서 찾기
+    let found = false;
+    for (const [slideId, comments] of slideComments.entries()) {
+      const commentIndex = comments.findIndex((c) => c.id === commentId);
+      if (commentIndex !== -1) {
+        comments[commentIndex] = {
+          ...comments[commentIndex],
+          content,
+          updatedAt: new Date().toISOString(),
+        };
+        slideComments.set(slideId, comments);
+        found = true;
+
+        return HttpResponse.json(
+          wrapResponse({
+            id: comments[commentIndex].id,
+            content: comments[commentIndex].content,
+            userId: comments[commentIndex].userId,
+            createdAt: comments[commentIndex].createdAt,
+          }),
+        );
+      }
+    }
+
+    // 답글에서 찾기
+    if (!found) {
+      for (const [parentId, replies] of commentReplies.entries()) {
+        const replyIndex = replies.findIndex((r) => r.id === commentId);
+        if (replyIndex !== -1) {
+          replies[replyIndex] = {
+            ...replies[replyIndex],
+            content,
+            updatedAt: new Date().toISOString(),
+          };
+          commentReplies.set(parentId, replies);
+          found = true;
+
+          return HttpResponse.json(
+            wrapResponse({
+              id: replies[replyIndex].id,
+              content: replies[replyIndex].content,
+              userId: replies[replyIndex].userId,
+              createdAt: replies[replyIndex].createdAt,
+            }),
+          );
+        }
+      }
+    }
+
+    if (!found) {
+      return HttpResponse.json(wrapError('C005', '댓글을 찾을 수 없습니다.'), { status: 404 });
+    }
+  }),
+
+  /**
+   * 댓글 삭제
+   * DELETE /comments/:commentId
+   */
+  http.delete(`${BASE_URL}/comments/:commentId`, async ({ params }) => {
+    await delay(200);
+    const { commentId } = params as { commentId: string };
+
+    console.log(`[MSW] DELETE /comments/${commentId}`);
+
+    // 슬라이드 댓글에서 삭제
+    let found = false;
+    for (const [slideId, comments] of slideComments.entries()) {
+      const filteredComments = comments.filter((c) => c.id !== commentId);
+      if (filteredComments.length !== comments.length) {
+        slideComments.set(slideId, filteredComments);
+        // 해당 댓글의 답글도 모두 삭제
+        commentReplies.delete(commentId);
+        found = true;
+        break;
+      }
+    }
+
+    // 답글에서 삭제
+    if (!found) {
+      for (const [parentId, replies] of commentReplies.entries()) {
+        const filteredReplies = replies.filter((r) => r.id !== commentId);
+        if (filteredReplies.length !== replies.length) {
+          commentReplies.set(parentId, filteredReplies);
+          found = true;
+          break;
+        }
+      }
+    }
+
+    if (!found) {
+      return HttpResponse.json(wrapError('C005', '댓글을 찾을 수 없습니다.'), { status: 404 });
+    }
+
+    return HttpResponse.json(wrapResponse(null));
   }),
 ];
