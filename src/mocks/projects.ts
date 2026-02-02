@@ -1,4 +1,4 @@
-import type { Project } from '@/types/project';
+import type { Project } from '@/types/presentation';
 
 import { daysAgo } from './utils';
 

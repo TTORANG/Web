@@ -4,20 +4,27 @@
  */
 
 /**
- * API 에러 정보
- */
-export interface ApiError {
-  code: string;
-  message: string;
-}
-
-/**
  * API 응답 래퍼
  */
-export interface ApiResponse<T> {
-  resultType: 'SUCCESS' | 'FAILURE';
-  reason: ApiError | null;
-  success: T;
+export type ApiResponse<T, D = unknown> =
+  | {
+      resultType: 'SUCCESS';
+      error: null;
+      success: T;
+    }
+  | {
+      resultType: 'FAILURE';
+      error: ApiError<D>;
+      success: null;
+    };
+
+/**
+ * API 에러 정보
+ */
+export interface ApiError<D = unknown> {
+  errorCode: string;
+  reason: string;
+  data?: D;
 }
 
 /**

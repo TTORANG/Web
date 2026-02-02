@@ -3,7 +3,7 @@ import { HttpResponse, delay, http } from 'msw';
 
 import { createDefaultReactions } from '@/constants/reaction';
 import { FEEDBACK_WINDOW } from '@/constants/video';
-import type { Project } from '@/types/project';
+import type { Project } from '@/types/presentation';
 import type { Slide } from '@/types/slide';
 import type { VideoFeedback, VideoTimestampFeedback } from '@/types/video';
 

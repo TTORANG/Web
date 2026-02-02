@@ -9,15 +9,21 @@ import ReactionCountIcon from '@/assets/icons/icon-reaction-count.svg?react';
 import RecentIcon from '@/assets/icons/icon-recent.svg?react';
 import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
 import { getTabPath } from '@/constants/navigation';
-import { useProjectDeletion } from '@/hooks/useProjectDeletion';
+import { usePresentationDeletion } from '@/hooks/usePresentationDeletion';
 import { useRename } from '@/hooks/useRename';
-import type { Project } from '@/types/project';
+import type { Presentation } from '@/types/presentation';
+import { formatRelativeTime } from '@/utils/format';
 
 import { Dropdown } from '../common';
 import type { DropdownItem } from '../common/Dropdown';
-import DeleteProjectModal from './DeleteProjectModal';
+import { HighlightText } from '../common/HighlightText';
+import DeleteProjectModal from './DeletePresentationModal';
 
-function ProjectCardSkeleton() {
+type Props = Presentation & {
+  highlightQuery?: string;
+};
+
+function PresentationCardSkeleton() {
   return (
     <article className="rounded-2xl border-none bg-white">
       {/* 썸네일 */}
@@ -76,19 +82,21 @@ function ProjectCardSkeleton() {
   );
 }
 
-function ProjectCard({
+function PresentationCard({
   id,
   title,
+  highlightQuery = '',
+  updatedAt,
   durationMinutes,
   pageCount,
   commentCount,
   reactionCount,
   viewCount = 0,
   thumbnailUrl,
-}: Project) {
+}: Props) {
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
-    useProjectDeletion(id);
+    usePresentationDeletion(id);
 
   const {
     isRenaming,
@@ -156,9 +164,7 @@ function ProjectCard({
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Escape') {
-                        cancelRenaming();
-                      }
+                      if (e.key === 'Escape') cancelRenaming();
                     }}
                     disabled={isUpdating}
                     className={clsx(
@@ -182,8 +188,18 @@ function ProjectCard({
                   </button>
                 </form>
               ) : (
-                <h3 className="text-body-m-bold text-gray-800 line-clamp-2">{displayTitle}</h3>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-body-m-bold text-gray-800 line-clamp-2">
+                    <HighlightText
+                      text={displayTitle}
+                      query={highlightQuery}
+                      highlightClassName="bg-transparent text-main"
+                    />
+                  </h3>
+                  <p className="mt-1 text-body-s text-gray-400">{formatRelativeTime(updatedAt)}</p>
+                </div>
               )}
+
               {/* 더보기 */}
               {!isRenaming && (
                 <div onClick={(e) => e.stopPropagation()} className="shrink-0 mt-1">
@@ -240,7 +256,7 @@ function ProjectCard({
       <div onClick={(e) => e.stopPropagation()}>
         <DeleteProjectModal
           isOpen={isDeleteModalOpen}
-          projectTitle={displayTitle}
+          projectTitle={title}
           isPending={isPending}
           onClose={closeDeleteModal}
           onConfirm={confirmDelete}
@@ -250,6 +266,6 @@ function ProjectCard({
   );
 }
 
-ProjectCard.Skeleton = ProjectCardSkeleton;
+PresentationCard.Skeleton = PresentationCardSkeleton;
 
-export default ProjectCard;
+export default PresentationCard;

@@ -1,12 +1,14 @@
-// 이 문서는 slides.ts 보고 작성했습니다..
 /**
  * @file projects.ts
  * @description 프로젝트 관련 API 엔드포인트
  *
  * 서버와 통신하는 함수들을 정의합니다.
  * 이 함수들은 직접 호출하지 않고, hooks/queries에서 사용합니다.
+ *
+ * 위에 interface로 받는 타입 정의 해주고
+ * 아래에서 endpoint 맞춰주고
  */
-import type { Project } from '@/types/project';
+import type { Presentation } from '@/types/presentation';
 
 import { apiClient } from '../client';
 
@@ -16,8 +18,8 @@ import { apiClient } from '../client';
  * 각 프로젝트는 id를 포함하며, 수정/삭제 시 이 id를 사용함.
  * @returns 프로젝트 배열
  */
-export async function getProjects(): Promise<Project[]> {
-  const response = await apiClient.get<Project[]>(`/projects`);
+export async function getPresentations(): Promise<Presentation[]> {
+  const response = await apiClient.get<Presentation[]>(`/presentations`);
   return response.data;
 }
 
@@ -26,15 +28,15 @@ export async function getProjects(): Promise<Project[]> {
  *
  * @param projectId - 프로젝트 ID
  */
-export async function getProject(projectId: string): Promise<Project> {
-  const response = await apiClient.get<Project>(`/projects/${projectId}`);
+export async function getPresentation(projectId: string): Promise<Presentation> {
+  const response = await apiClient.get<Presentation>(`/presentation/${projectId}`);
   return response.data;
 }
 
 /**
  * 프로젝트 수정 요청 타입
  */
-export interface UpdateProjectRequest {
+export interface UpdatePresentationRequest {
   title?: string;
 }
 
@@ -45,11 +47,11 @@ export interface UpdateProjectRequest {
  * @param data - 수정할 데이터
  * @returns 수정된 프로젝트
  */
-export async function updateProject(
+export async function updatePresentation(
   projectId: string,
-  data: UpdateProjectRequest,
-): Promise<Project> {
-  const response = await apiClient.patch<Project>(`/projects/${projectId}`, data);
+  data: UpdatePresentationRequest,
+): Promise<Presentation> {
+  const response = await apiClient.patch<Presentation>(`/presentations/${projectId}`, data);
   return response.data;
 }
 
@@ -59,8 +61,8 @@ export async function updateProject(
  * @param data - 생성할 프로젝트 데이터
  * @returns 생성된 프로젝트
  */
-export async function createProject(data: { title: string }): Promise<Project> {
-  const response = await apiClient.post<Project>(`/projects`, data);
+export async function createPresentation(data: { title: string }): Promise<Presentation> {
+  const response = await apiClient.post<Presentation>(`/presentations`, data);
   return response.data;
 }
 
@@ -69,6 +71,6 @@ export async function createProject(data: { title: string }): Promise<Project> {
  *
  * @param projectId - 삭제할 프로젝트 ID
  */
-export async function deleteProject(projectId: string): Promise<void> {
-  await apiClient.delete(`/projects/${projectId}`);
+export async function deletePresentation(projectId: string): Promise<void> {
+  await apiClient.delete(`/presentations/${projectId}`);
 }

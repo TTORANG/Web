@@ -2,7 +2,7 @@ export { default as Comment } from '../comment/Comment';
 
 export { Gnb } from './layout/Gnb';
 export { Layout } from './layout/Layout';
-export { ProjectTitleEditor } from './layout/ProjectTitleEditor';
+export { PresentationTitleEditor } from './layout/PresentationTitleEditor';
 export { Logo } from './layout/Logo';
 export { HeaderButton } from './layout/HeaderButton';
 export { LoginButton } from './layout/LoginButton';

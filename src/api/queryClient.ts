@@ -65,12 +65,12 @@ export const queryKeys = {
     detail: (slideId: string) => [...queryKeys.scripts.all, 'detail', slideId] as const,
     versions: (slideId: string) => [...queryKeys.scripts.all, 'versions', slideId] as const,
   },
-  projects: {
+  presentations: {
     all: ['projects'] as const,
-    lists: () => [...queryKeys.projects.all, 'list'] as const,
-    list: () => [...queryKeys.projects.lists()] as const,
-    details: () => [...queryKeys.projects.all, 'detail'] as const,
-    detail: (projectId: string) => [...queryKeys.projects.details(), projectId] as const,
+    lists: () => [...queryKeys.presentations.all, 'list'] as const,
+    list: () => [...queryKeys.presentations.lists()] as const,
+    details: () => [...queryKeys.presentations.all, 'detail'] as const,
+    detail: (projectId: string) => [...queryKeys.presentations.details(), projectId] as const,
   },
   videos: {
     all: ['videos'] as const,
