@@ -30,7 +30,7 @@ export function usePresentations() {
 export function usePresentation(projectId: string) {
   return useQuery({
     queryKey: queryKeys.presentations.detail(projectId),
-    queryFn: () => getPresentation(projectId),
+    queryFn: () => getPresentation(),
     enabled: !!projectId,
   });
 }
