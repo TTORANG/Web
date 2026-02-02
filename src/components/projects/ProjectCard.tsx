@@ -136,13 +136,17 @@ function ProjectCard({
         <div className="p-4">
           {/* 제목 및 업데이트 날짜 */}
           <div className="flex items-center justify-between">
-            <h3 className="text-body-m-bold text-gray-800">
-              <HighlightText
-                text={title}
-                query={highlightQuery}
-                highlightClassName="bg-transparent text-main"
-              />
-            </h3>
+            <div>
+              <h3 className="text-body-m-bold text-gray-800">
+                <HighlightText
+                  text={title}
+                  query={highlightQuery}
+                  highlightClassName="bg-transparent text-main"
+                />
+              </h3>
+              <p className="mt-1 text-body-s text-gray-400">{formatRelativeTime(updatedAt)}</p>
+            </div>
+
             {/* 더보기 */}
             <div onClick={(e) => e.stopPropagation()}>
               <Dropdown
@@ -156,7 +160,6 @@ function ProjectCard({
                 menuClassName="w-32"
               />
             </div>
-            <p className="mt-1 text-body-s text-gray-400">{formatRelativeTime(updatedAt)}</p>
           </div>
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-x-1 gap-y-2 text-caption text-gray-600">

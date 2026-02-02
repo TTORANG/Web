@@ -131,9 +131,9 @@ function ProjectList({
 
         {/* 본문 */}
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 px-3">
           {/* 제목 */}
-          <div className="truncate text-body-m-bold text-gray-900">
+          <div className=" mb-1 truncate text-body-m-bold text-gray-900">
             <HighlightText
               text={title}
               query={highlightQuery}
