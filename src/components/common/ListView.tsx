@@ -27,7 +27,11 @@ export function ListView<T>({
   ariaLabel,
 }: ListViewProps<T>) {
   if (items.length === 0) {
-    return <div className="listView__empty">{empty ?? 'No items'}</div>;
+    // 부모에서 empty UI를 처리함
+    if (empty === null) return null;
+
+    // empty가 undefined면 기본 문구, 그 외면 전달된 empty 사용
+    return <div className="cardView__empty">{empty === undefined ? 'No items' : empty}</div>;
   }
 
   return (

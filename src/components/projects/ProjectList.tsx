@@ -10,11 +10,16 @@ import RecentIcon from '@/assets/icons/icon-recent.svg?react';
 import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
 import { getTabPath } from '@/constants/navigation';
 import { useProjectDeletion } from '@/hooks/useProjectDeletion';
+import { useRename } from '@/hooks/useRename';
 import type { Project } from '@/types/project';
 import { formatRelativeTime } from '@/utils/format';
 
 import { Dropdown, type DropdownItem } from '../common/Dropdown';
 import DeleteProjectModal from './DeleteProjectModal';
+
+type Props = Project & {
+  highlightQuery?: string;
+};
 
 function ProjectListSkeleton() {
   return (
@@ -85,12 +90,25 @@ function ProjectList({
   reactionCount,
   viewCount = 0,
   thumbnailUrl,
-}: Project) {
+}: Props) {
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
     useProjectDeletion(id);
 
+  const {
+    isRenaming,
+    isUpdating,
+    displayTitle,
+    newTitle,
+    setNewTitle,
+    inputRef,
+    startRenaming,
+    handleSubmit,
+    cancelRenaming,
+  } = useRename({ projectId: id, initialTitle: title });
+
   const handleListClick = () => {
+    if (isRenaming) return;
     navigate(getTabPath(id, 'slide'));
   };
 
@@ -98,9 +116,7 @@ function ProjectList({
     {
       id: 'rename',
       label: '이름 변경',
-      onClick: () => {
-        // TODO: 이름 변경 로직 구현
-      },
+      onClick: startRenaming,
     },
     {
       id: 'delete',
@@ -114,12 +130,19 @@ function ProjectList({
     <>
       <article
         onClick={handleListClick}
-        className="flex w-full items-center justify-between cursor-pointer bg-white px-5 py-4 rounded-2xl border border-gray-200 transition-shadow hover:shadow-lg"
+        className={clsx(
+          'flex w-full items-center justify-between bg-white px-5 py-4 rounded-2xl border border-gray-200 transition-shadow',
+          !isRenaming && 'cursor-pointer hover:shadow-lg',
+        )}
       >
         {/* 썸네일 */}
         <div className="w-35 h-19.5 shrink-0 overflow-hidden rounded-lg bg-gray-200">
           {thumbnailUrl && (
-            <img className="h-full w-full object-cover" src={thumbnailUrl} alt={`${title}`} />
+            <img
+              className="h-full w-full object-cover"
+              src={thumbnailUrl}
+              alt={`${displayTitle}`}
+            />
           )}
         </div>
 
@@ -127,7 +150,46 @@ function ProjectList({
         <div className="flex flex-1 items-center justify-between pl-6">
           <div className="flex flex-col gap-0.5">
             {/* 제목 */}
-            <div className="truncate text-body-m-bold text-gray-800">{title}</div>
+            {isRenaming ? (
+              <form
+                onSubmit={handleSubmit}
+                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm max-w-md w-full overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      cancelRenaming();
+                    }
+                  }}
+                  disabled={isUpdating}
+                  className={clsx(
+                    'flex-1 min-w-0 text-body-m-bold text-gray-800',
+                    'focus:outline-none',
+                    'disabled:opacity-50 disabled:cursor-not-allowed',
+                    'placeholder:text-gray-400',
+                  )}
+                  placeholder="발표 제목을 입력하세요"
+                />
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className={clsx(
+                    'px-2 py-1 text-caption-bold text-white bg-main rounded-full shrink-0',
+                    'hover:bg-blue-600 transition-colors',
+                    'disabled:opacity-50 disabled:cursor-not-allowed',
+                  )}
+                >
+                  {isUpdating ? '저장 중...' : '저장'}
+                </button>
+              </form>
+            ) : (
+              <div className="truncate text-body-m-bold text-gray-800">{displayTitle}</div>
+            )}
 
             {/* 메타 정보 */}
             <div className="flex items-center gap-4 text-caption text-gray-600">
@@ -166,20 +228,22 @@ function ProjectList({
           </div>
 
           {/* 더보기 */}
-          <div onClick={(e) => e.stopPropagation()} className="-m-2">
-            <Dropdown
-              trigger={({ isOpen }) => (
-                <div className="p-2">
-                  <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-600')} />
-                </div>
-              )}
-              items={dropdownItems}
-              position="bottom"
-              align="end"
-              ariaLabel="더보기"
-              menuClassName="w-32"
-            />
-          </div>
+          {!isRenaming && (
+            <div onClick={(e) => e.stopPropagation()} className="-m-2">
+              <Dropdown
+                trigger={({ isOpen }) => (
+                  <div className="p-2">
+                    <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-600')} />
+                  </div>
+                )}
+                items={dropdownItems}
+                position="bottom"
+                align="end"
+                ariaLabel="더보기"
+                menuClassName="w-32"
+              />
+            </div>
+          )}
         </div>
       </article>
 
@@ -187,7 +251,7 @@ function ProjectList({
       <div onClick={(e) => e.stopPropagation()}>
         <DeleteProjectModal
           isOpen={isDeleteModalOpen}
-          projectTitle={title}
+          projectTitle={displayTitle}
           isPending={isPending}
           onClose={closeDeleteModal}
           onConfirm={confirmDelete}
