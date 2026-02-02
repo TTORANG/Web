@@ -15,7 +15,7 @@ import type { Presentation } from '@/types/presentation';
 import { formatRelativeTime } from '@/utils/format';
 
 import { Dropdown, type DropdownItem } from '../common/Dropdown';
-import DeleteProjectModal from './DeletePresentationModal';
+import DeletePresentationModal from './DeletePresentationModal';
 
 type Props = Presentation & {
   highlightQuery?: string;
@@ -249,9 +249,9 @@ function PresentationList({
 
       {/* 삭제 확인 모달 */}
       <div onClick={(e) => e.stopPropagation()}>
-        <DeleteProjectModal
+        <DeletePresentationModal
           isOpen={isDeleteModalOpen}
-          projectTitle={displayTitle}
+          presentationTitle={displayTitle}
           isPending={isPending}
           onClose={closeDeleteModal}
           onConfirm={confirmDelete}
