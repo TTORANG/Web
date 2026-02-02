@@ -16,7 +16,12 @@ import { formatRelativeTime } from '@/utils/format';
 
 import { Dropdown } from '../common';
 import type { DropdownItem } from '../common/Dropdown';
+import { HighlightText } from '../common/HighlightText';
 import DeleteProjectModal from './DeleteProjectModal';
+
+type Props = Project & {
+  highlightQuery?: string;
+};
 
 function ProjectCardSkeleton() {
   return (
@@ -80,6 +85,7 @@ function ProjectCardSkeleton() {
 function ProjectCard({
   id,
   title,
+  highlightQuery = '',
   updatedAt,
   durationMinutes,
   pageCount,
@@ -87,7 +93,7 @@ function ProjectCard({
   reactionCount,
   viewCount = 0,
   thumbnailUrl,
-}: Project) {
+}: Props) {
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
     useProjectDeletion(id);
@@ -204,7 +210,6 @@ function ProjectCard({
                 </div>
               )}
             </div>
-            <p className="mt-1 text-body-s text-gray-400">{formatRelativeTime(updatedAt)}</p>
           </div>
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-x-1 gap-y-2 text-caption text-gray-600">
