@@ -144,16 +144,18 @@ export default function InsightPage() {
     ? computedSummaryStats
     : computedSummaryStats.filter((stat) => stat.label !== summaryStatLabels[3]);
 
+  const slideList = useMemo(() => (Array.isArray(slides) ? slides : []), [slides]);
+
   const reactions = useMemo(() => {
     const base = createDefaultReactions();
-    if (!slides?.length) return base;
+    if (!slideList.length) return base;
 
     const totals = new Map<Reaction['type'], number>();
     const analyticsSlideIds = new Set((slideAnalytics?.slides ?? []).map((item) => item.slideId));
     const targetSlides =
       analyticsSlideIds.size > 0
-        ? slides.filter((slide) => analyticsSlideIds.has(slide.id))
-        : slides;
+        ? slideList.filter((slide) => analyticsSlideIds.has(slide.id))
+        : slideList;
 
     targetSlides.forEach((slide) => {
       slide.emojiReactions?.forEach((reaction) => {
@@ -165,19 +167,24 @@ export default function InsightPage() {
       ...reaction,
       count: totals.get(reaction.type) ?? 0,
     }));
-  }, [slides, slideAnalytics]);
+  }, [slideList, slideAnalytics]);
+
+  const slideDataMaps = useMemo(() => {
+    const slideIndexById = new Map<string, number>();
+    const slideById = new Map<string, Slide>();
+
+    slideList.forEach((slide, index) => {
+      slideIndexById.set(slide.id, index);
+      slideById.set(slide.id, slide);
+    });
+
+    return { slideIndexById, slideById };
+  }, [slideList]);
 
   const topSlides = useMemo(() => {
     const analyticsSlides = slideAnalytics?.slides ?? [];
     if (!analyticsSlides.length) return [];
-
-    const slideIndexById = new Map<string, number>();
-    const slideById = new Map<string, Slide>();
-
-    (slides ?? []).forEach((slide, index) => {
-      slideIndexById.set(slide.id, index);
-      slideById.set(slide.id, slide);
-    });
+    const { slideIndexById, slideById } = slideDataMaps;
 
     return analyticsSlides
       .slice()
@@ -197,7 +204,7 @@ export default function InsightPage() {
           feedbackCount: item.feedbackCount,
         };
       });
-  }, [slideAnalytics, slides]);
+  }, [slideAnalytics, slideDataMaps]);
 
   const topSlideIds = useMemo(() => topSlides.map((item) => item.slideId), [topSlides]);
   const { data: topSlideReactionSummaries } = useQuery({
@@ -206,7 +213,7 @@ export default function InsightPage() {
     enabled: topSlideIds.length > 0,
   });
 
-  const getThumb = (slideIndex: number) => (slides ?? [])[slideIndex]?.thumb;
+  const getThumb = (slideIndex: number) => slideList[slideIndex]?.thumb;
 
   return (
     <div
