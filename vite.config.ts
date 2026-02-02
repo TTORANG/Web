@@ -8,7 +8,7 @@ import svgr from 'vite-plugin-svgr';
 // .mp4 파일 요청에 Accept-Ranges 헤더를 추가하는 미들웨어
 // Chrome에서 비디오 탐색(seeking)이 가능하도록 함
 const addAcceptRangesMiddleware: Connect.NextHandleFunction = (req, res, next) => {
-  if (req.url?.endsWith('.mp4')) {
+  if (req.url?.endsWith('.webm')) {
     res.setHeader('Accept-Ranges', 'bytes');
   }
   next();

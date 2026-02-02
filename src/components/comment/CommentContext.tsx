@@ -32,6 +32,7 @@ interface CommentContextValue {
 
 const CommentContext = createContext<CommentContextValue | null>(null);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function CommentProvider({
   children,
   value,
@@ -42,6 +43,7 @@ export function CommentProvider({
   return <CommentContext.Provider value={value}>{children}</CommentContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useCommentContext() {
   const context = useContext(CommentContext);
   if (!context) {
