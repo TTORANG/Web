@@ -83,12 +83,14 @@ export function ProjectTitleEditor() {
       trigger={
         <button
           type="button"
-          className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
-          onClick={() => handleOpenChange(true)} // ✅ 클릭 시 열면서 초기화까지 처리
+          className="flex items-center gap-2 max-w-md cursor-pointer hover:opacity-80 transition-opacity"
+          onClick={() => handleOpenChange(true)} // 클릭 시 열면서 초기화까지 처리
           aria-label="발표 이름 변경"
         >
           {/* 표시용 텍스트는 서버 데이터(project.title)를 그대로 사용 */}
-          <span className="text-body-m-bold text-gray-800">{project?.title ?? '내 발표'}</span>
+          <span className="text-body-m-bold text-gray-800 truncate">
+            {project?.title ?? '내 발표'}
+          </span>
 
           <svg
             width="16"
