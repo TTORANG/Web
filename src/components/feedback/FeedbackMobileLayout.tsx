@@ -19,7 +19,7 @@ interface FeedbackMobileLayoutProps {
   /** 댓글 탭 콘텐츠 */
   commentTabContent: ReactNode;
   /** 탭에 표시할 댓글 수 */
-  commentCount: number;
+  feedbackCount: number;
 }
 
 const TAB_IDS = {
@@ -38,7 +38,7 @@ export default function FeedbackMobileLayout({
   reactionSlot,
   scriptTabContent,
   commentTabContent,
-  commentCount,
+  feedbackCount,
 }: FeedbackMobileLayoutProps) {
   const [activeTab, setActiveTab] = useState<'script' | 'comment'>('script');
 
@@ -88,7 +88,7 @@ export default function FeedbackMobileLayout({
             onClick={() => setActiveTab('comment')}
             className={getTabClassName(activeTab === 'comment')}
           >
-            댓글 {commentCount > 0 && commentCount}
+            댓글 {feedbackCount > 0 && feedbackCount}
           </button>
         </div>
 

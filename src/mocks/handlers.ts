@@ -80,7 +80,7 @@ export const handlers = [
     const { projectId } = params;
     console.log(`[MSW] GET /projects/${projectId}`);
 
-    const project = projects.find((p) => p.id === projectId);
+    const project = projects.find((p) => p.projectId === projectId);
 
     if (!project) {
       return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Project not found')), {
@@ -101,12 +101,12 @@ export const handlers = [
     console.log('[MSW] POST /projects', data);
 
     const newProject: Project = {
-      id: `p${Date.now()}`,
+      projectId: `p${Date.now()}`,
       title: data.title,
       updatedAt: new Date().toISOString(),
-      durationMinutes: 0,
-      pageCount: 0,
-      commentCount: 0,
+      durationSeconds: 0,
+      slideCount: 0,
+      feedbackCount: 0,
       reactionCount: 0,
       viewCount: 0,
       thumbnailUrl: '/thumbnails/p1/0.webp',
@@ -126,7 +126,7 @@ export const handlers = [
     const data = (await request.json()) as { title?: string };
     console.log(`[MSW] PATCH /projects/${projectId}`, data);
 
-    const projectIndex = projects.findIndex((p) => p.id === projectId);
+    const projectIndex = projects.findIndex((p) => p.projectId === projectId);
 
     if (projectIndex === -1) {
       return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Project not found')), {
@@ -152,7 +152,7 @@ export const handlers = [
     const { projectId } = params;
     console.log(`[MSW] DELETE /projects/${projectId}`);
 
-    const projectIndex = projects.findIndex((p) => p.id === projectId);
+    const projectIndex = projects.findIndex((p) => p.projectId === projectId);
 
     if (projectIndex === -1) {
       return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Project not found')), {
@@ -160,7 +160,7 @@ export const handlers = [
       });
     }
 
-    projects = projects.filter((p) => p.id !== projectId);
+    projects = projects.filter((p) => p.projectId !== projectId);
     return HttpResponse.json(wrapResponse(null), { status: 200 });
   }),
 

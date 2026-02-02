@@ -13,7 +13,7 @@ export const useHomeQuery = () => useHomeStore((s) => s.query);
 /** 보기 모드 구독 ('card' | 'list') */
 export const useHomeViewMode = () => useHomeStore((s) => s.viewMode);
 
-/** 정렬 모드 구독 ('recent' | 'commentCount' | 'name') */
+/** 정렬 모드 구독 ('recent' | 'feedbackCount' | 'name') */
 export const useHomeSort = () => useHomeStore((s) => s.sort);
 
 /** 필터 모드 구독 ('all' | '3m' | '5m') */

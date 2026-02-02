@@ -30,9 +30,9 @@ export default function HomePage() {
     return (p: Project) => {
       switch (filter) {
         case '3m':
-          return p.durationMinutes <= 3;
+          return p.durationSeconds <= 3 * 60;
         case '5m':
-          return p.durationMinutes <= 5;
+          return p.durationSeconds <= 5 * 60;
 
         default:
           return true;

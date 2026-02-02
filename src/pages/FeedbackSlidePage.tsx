@@ -205,7 +205,7 @@ export default function FeedbackSlidePage() {
             </div>
           </>
         }
-        commentCount={comments.length}
+        feedbackCount={comments.length}
       />
     </div>
   );

@@ -179,7 +179,7 @@ export default function FeedbackVideoPage() {
             </div>
           </>
         }
-        commentCount={comments.length}
+        feedbackCount={comments.length}
       />
 
       {/* 단일 SlideWebcamStage - CSS로 위치 조정 */}

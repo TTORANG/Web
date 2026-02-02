@@ -81,19 +81,19 @@ function ProjectListSkeleton() {
 }
 
 function ProjectList({
-  id,
+  projectId,
   title,
   updatedAt,
-  durationMinutes,
-  pageCount,
-  commentCount,
+  durationSeconds,
+  slideCount,
+  feedbackCount,
   reactionCount,
   viewCount = 0,
   thumbnailUrl,
 }: Props) {
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
-    useProjectDeletion(id);
+    useProjectDeletion(projectId);
 
   const {
     isRenaming,
@@ -105,11 +105,11 @@ function ProjectList({
     startRenaming,
     handleSubmit,
     cancelRenaming,
-  } = useRename({ projectId: id, initialTitle: title });
+  } = useRename({ projectId, initialTitle: title });
 
   const handleListClick = () => {
     if (isRenaming) return;
-    navigate(getTabPath(id, 'slide'));
+    navigate(getTabPath(projectId, 'slide'));
   };
 
   const dropdownItems: DropdownItem[] = [
@@ -198,7 +198,7 @@ function ProjectList({
                 <span>{formatRelativeTime(updatedAt)}</span>
                 <span className="flex items-center gap-1.5">
                   <RecentIcon className="w-4 h-4" />
-                  {durationMinutes}
+                  {durationSeconds}
                 </span>
               </div>
 
@@ -209,11 +209,11 @@ function ProjectList({
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1">
                   <PageCountIcon className="w-4 h-4" />
-                  {pageCount} 페이지
+                  {slideCount} 페이지
                 </span>
                 <span className="flex items-center gap-1">
                   <CommentCountIcon className="w-4 h-4" />
-                  {commentCount}
+                  {feedbackCount}
                 </span>
                 <span className="flex items-center gap-1">
                   <ReactionCountIcon className="w-4 h-4" />

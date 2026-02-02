@@ -136,7 +136,7 @@ export default function InsightPage() {
       .map((slide, index) => ({
         slide,
         slideIndex: index,
-        commentCount: slide.opinions?.length ?? 0,
+        feedbackCount: slide.opinions?.length ?? 0,
         reactionCount: (slide.emojiReactions ?? []).reduce((sum, r) => sum + r.count, 0),
         total:
           (slide.opinions?.length ?? 0) +
@@ -256,7 +256,7 @@ export default function InsightPage() {
         <div className="h-full flex flex-col">
           <h3 className="text-body-l-bold text-gray-800 mb-4">가장 많은 피드백을 받은 슬라이드</h3>
           <div className="grid grid-cols-3 gap-3 items-start">
-            {topSlides.map(({ slide, slideIndex, commentCount }) => {
+            {topSlides.map(({ slide, slideIndex, feedbackCount }) => {
               const reactionMetrics = (slide.emojiReactions ?? []).filter(
                 (reaction) => reaction.count > 0,
               );
@@ -267,7 +267,7 @@ export default function InsightPage() {
                   title={slide.title || `슬라이드 ${slideIndex + 1}`}
                   thumbUrl={getThumb(slideIndex)}
                   reactionMetrics={reactionMetrics}
-                  commentCount={commentCount}
+                  feedbackCount={feedbackCount}
                   cardClassName="bg-white rounded-xl border border-gray-100 shadow-sm"
                   thumbFallbackClassName={thumbBase}
                 />

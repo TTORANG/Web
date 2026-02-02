@@ -77,18 +77,18 @@ function ProjectCardSkeleton() {
 }
 
 function ProjectCard({
-  id,
+  projectId,
   title,
-  durationMinutes,
-  pageCount,
-  commentCount,
+  durationSeconds,
+  slideCount,
+  feedbackCount,
   reactionCount,
   viewCount = 0,
   thumbnailUrl,
 }: Project) {
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
-    useProjectDeletion(id);
+    useProjectDeletion(projectId);
 
   const {
     isRenaming,
@@ -100,11 +100,11 @@ function ProjectCard({
     startRenaming,
     handleSubmit,
     cancelRenaming,
-  } = useRename({ projectId: id, initialTitle: title });
+  } = useRename({ projectId, initialTitle: title });
 
   const handleCardClick = () => {
     if (isRenaming) return;
-    navigate(getTabPath(id, 'slide'));
+    navigate(getTabPath(projectId, 'slide'));
   };
 
   const dropdownItems: DropdownItem[] = [
@@ -209,11 +209,11 @@ function ProjectCard({
             <div className="flex items-center gap-3 shrink-0">
               <div className="flex items-center gap-1">
                 <RecentIcon />
-                <span>{durationMinutes}</span>
+                <span>{durationSeconds}</span>
               </div>
               <div className="flex items-center gap-1">
                 <PageCountIcon />
-                <span>{pageCount} 페이지</span>
+                <span>{slideCount} 페이지</span>
               </div>
             </div>
 
@@ -221,7 +221,7 @@ function ProjectCard({
             <div className="flex items-center gap-2 shrink-0">
               <div className="flex items-center gap-1">
                 <CommentCountIcon />
-                {commentCount}
+                {feedbackCount}
               </div>
               <div className="flex items-center gap-1">
                 <ReactionCountIcon />

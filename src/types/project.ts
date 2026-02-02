@@ -6,13 +6,14 @@
  */
 
 export interface Project {
-  id: string;
+  projectId: string;
   title: string;
-  updatedAt: string;
-  durationMinutes: number;
-  pageCount: number;
-  commentCount: number;
-  reactionCount: number;
-  viewCount: number;
+  createdAt?: string;
+  updatedAt?: string;
+  durationSeconds?: number;
+  slideCount?: number;
+  feedbackCount?: number;
+  reactionCount?: number;
+  viewCount: number; // TODO: 백엔드 반영
   thumbnailUrl?: string;
 }
