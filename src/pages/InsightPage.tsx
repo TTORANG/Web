@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { useQuery } from '@tanstack/react-query';
 // 1. Recharts 컴포넌트 임포트
 import {
   Area,
@@ -12,6 +13,8 @@ import {
   YAxis,
 } from 'recharts';
 
+import { getSlideReactionSummary } from '@/api/endpoints/reactions';
+import { queryKeys } from '@/api/queryClient';
 import {
   DropOffAnalysisSection,
   FeedbackDistributionSection,
@@ -186,6 +189,7 @@ export default function InsightPage() {
         const title = slide?.title || item.title || `슬라이드 ${slideIndex + 1}`;
 
         return {
+          slideId: item.slideId,
           slide,
           slideIndex,
           title,
@@ -194,6 +198,13 @@ export default function InsightPage() {
         };
       });
   }, [slideAnalytics, slides]);
+
+  const topSlideIds = useMemo(() => topSlides.map((item) => item.slideId), [topSlides]);
+  const { data: topSlideReactionSummaries } = useQuery({
+    queryKey: queryKeys.reactions.summary(topSlideIds.join('|')),
+    queryFn: () => Promise.all(topSlideIds.map((slideId) => getSlideReactionSummary(slideId))),
+    enabled: topSlideIds.length > 0,
+  });
 
   const getThumb = (slideIndex: number) => (slides ?? [])[slideIndex]?.thumb;
 
@@ -305,14 +316,20 @@ export default function InsightPage() {
         <div className="h-full flex flex-col">
           <h3 className="text-body-l-bold text-gray-800 mb-4">가장 많은 피드백을 받은 슬라이드</h3>
           <div className="grid grid-cols-3 gap-3 items-start">
-            {topSlides.map(({ slide, slideIndex, commentCount, title }) => {
-              const reactionMetrics = (slide?.emojiReactions ?? []).filter(
-                (reaction) => reaction.count > 0,
-              );
+            {topSlides.map(({ slideId, slide, slideIndex, commentCount, title }, index) => {
+              const summary = topSlideReactionSummaries?.[index];
+              const baseReactions = createDefaultReactions();
+              const summaryReactions = summary
+                ? baseReactions.map((reaction) => ({
+                    ...reaction,
+                    count: summary[reaction.type] ?? 0,
+                  }))
+                : (slide?.emojiReactions ?? baseReactions);
+              const reactionMetrics = summaryReactions.filter((reaction) => reaction.count > 0);
 
               return (
                 <TopSlideCard
-                  key={slide?.id ?? `slide-${slideIndex}`}
+                  key={slideId ?? slide?.id ?? `slide-${slideIndex}`}
                   title={title}
                   thumbUrl={getThumb(slideIndex)}
                   reactionMetrics={reactionMetrics}

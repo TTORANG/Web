@@ -85,6 +85,10 @@ export const queryKeys = {
     videoExits: (videoId: string) => [...queryKeys.analytics.all, 'videoExits', videoId] as const,
     summary: (projectId: string) => [...queryKeys.analytics.all, 'summary', projectId] as const,
   },
+  reactions: {
+    all: ['reactions'] as const,
+    summary: (slideId: string) => [...queryKeys.reactions.all, 'summary', slideId] as const,
+  },
 } as const;
 
 /**
