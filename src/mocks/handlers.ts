@@ -222,13 +222,13 @@ export const handlers = [
 
   /**
    * 특정 슬라이드 조회
-   * GET /slides/:slideId
+   * GET /presentations/slides/:slideId
    */
-  http.get(`${BASE_URL}/slides/:slideId`, async ({ params }) => {
+  http.get(`${BASE_URL}/presentations/slides/:slideId`, async ({ params }) => {
     await delay(150);
 
     const { slideId } = params;
-    console.log(`[MSW] GET /slides/${slideId}`);
+    console.log(`[MSW] GET /presentations/slides/${slideId}`);
 
     const slide = slides.find((s) => s.id === slideId);
 
@@ -244,14 +244,14 @@ export const handlers = [
 
   /**
    * 슬라이드 수정
-   * PATCH /slides/:slideId
+   * PATCH /presentations/slides/:slideId
    */
-  http.patch(`${BASE_URL}/slides/:slideId`, async ({ params, request }) => {
+  http.patch(`${BASE_URL}/presentations/slides/:slideId`, async ({ params, request }) => {
     await delay(200);
 
     const { slideId } = params;
     const updates = (await request.json()) as Partial<Slide>;
-    console.log(`[MSW] PATCH /slides/${slideId}`, updates);
+    console.log(`[MSW] PATCH /presentations/slides/${slideId}`, updates);
 
     const slideIndex = slides.findIndex((s) => s.id === slideId);
 
@@ -316,13 +316,13 @@ export const handlers = [
 
   /**
    * 슬라이드 삭제
-   * DELETE /slides/:slideId
+   * DELETE /presentations/slides/:slideId
    */
-  http.delete(`${BASE_URL}/slides/:slideId`, async ({ params }) => {
+  http.delete(`${BASE_URL}/presentations/slides/:slideId`, async ({ params }) => {
     await delay(200);
 
     const { slideId } = params;
-    console.log(`[MSW] DELETE /slides/${slideId}`);
+    console.log(`[MSW] DELETE /presentations/slides/${slideId}`);
 
     const slideIndex = slides.findIndex((s) => s.id === slideId);
 

@@ -21,7 +21,7 @@ import type { SlideDetail, SlideListItem, SlideUpdateResponse } from '@/types/sl
  */
 export async function getSlides(projectId: string): Promise<SlideListItem[]> {
   const response = await apiClient.get<ApiResponse<SlideListItem[]>>(
-    `/projects/${projectId}/slides`,
+    `/presentations/${projectId}/slides`,
   );
 
   if (response.data.resultType === 'SUCCESS') {
@@ -37,7 +37,9 @@ export async function getSlides(projectId: string): Promise<SlideListItem[]> {
  * @returns 슬라이드 정보
  */
 export async function getSlide(slideId: string): Promise<SlideDetail> {
-  const response = await apiClient.get<ApiResponse<SlideDetail>>(`/slides/${slideId}`);
+  const response = await apiClient.get<ApiResponse<SlideDetail>>(
+    `/presentations/slides/${slideId}`,
+  );
 
   if (response.data.resultType === 'SUCCESS') {
     return response.data.success;
@@ -63,7 +65,7 @@ export async function updateSlide(
   data: UpdateSlideDto,
 ): Promise<SlideUpdateResponse> {
   const response = await apiClient.patch<ApiResponse<SlideUpdateResponse>>(
-    `/slides/${slideId}`,
+    `/presentations/slides/${slideId}`,
     data,
   );
 
@@ -101,7 +103,7 @@ export async function createSlide(
  * @param slideId - 삭제할 슬라이드 ID
  */
 export async function deleteSlide(slideId: string): Promise<void> {
-  const response = await apiClient.delete<ApiResponse<null>>(`/slides/${slideId}`);
+  const response = await apiClient.delete<ApiResponse<null>>(`/presentations/slides/${slideId}`);
 
   if (response.data.resultType === 'FAILURE') {
     throw new Error(response.data.error.reason);

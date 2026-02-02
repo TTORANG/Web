@@ -18,7 +18,7 @@ import type {
 /**
  * 프로젝트 목록 조회
  *
- * 각 프로젝트는 id를 포함하며, 수정/삭제 시 이 id를 사용함.
+ * 각 프로젝트는 projectId를 포함하며, 수정/삭제 시 이 projectId를 사용함.
  * @returns 프로젝트 배열
  */
 export async function getPresentations(): Promise<Presentation[]> {
