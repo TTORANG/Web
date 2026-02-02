@@ -29,7 +29,7 @@ export async function getPresentations(): Promise<Presentation[]> {
  * @param projectId - 프로젝트 ID
  */
 export async function getPresentation(projectId: string): Promise<Presentation> {
-  const response = await apiClient.get<Presentation>(`/presentations/${projectId}`);
+  const response = await apiClient.get<Presentation>(`/presentations`);
   return response.data;
 }
 
