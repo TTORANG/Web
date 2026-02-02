@@ -1,4 +1,4 @@
-﻿import { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
 // 1. Recharts 컴포넌트 임포트
@@ -20,6 +20,7 @@ import {
   TopSlideCard,
 } from '@/components/insight';
 import { createDefaultReactions } from '@/constants/reaction';
+import { useProject } from '@/hooks';
 import { useSlides } from '@/hooks/queries/useSlides';
 import type { DropOffSlide, DropOffTime, SummaryStat } from '@/types/insight';
 import type { Reaction } from '@/types/script';
@@ -193,8 +194,8 @@ export default function InsightPage() {
               {/* 그라데이션 정의 */}
               <defs>
                 <linearGradient id="colorRate" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#6366F1" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#6366F1" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--color-main)" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="var(--color-main)" stopOpacity={0} />
                 </linearGradient>
               </defs>
 
@@ -250,10 +251,10 @@ export default function InsightPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8 items-stretch">
         <FeedbackDistributionSection reactions={reactions} />
 
-        <div>
+        <div className="h-full flex flex-col">
           <h3 className="text-body-l-bold text-gray-800 mb-4">가장 많은 피드백을 받은 슬라이드</h3>
           <div className="grid grid-cols-3 gap-3 items-start">
             {topSlides.map(({ slide, slideIndex, commentCount }) => {
@@ -277,7 +278,7 @@ export default function InsightPage() {
         </div>
       </div>
 
-      <div className="mt-5 relative">
+      <div className="mt-8 relative">
         <h3 className="text-body-l-bold text-gray-800 mb-4">최근 댓글 피드백</h3>
         <div className={`space-y-3 ${!hasVideo ? 'blur-sm' : ''}`}>
           {recentComments.map((comment, idx) => (

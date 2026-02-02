@@ -1,4 +1,4 @@
-﻿import type { DropOffSlide, DropOffTime } from '@/types/insight';
+import type { DropOffSlide, DropOffTime } from '@/types/insight';
 
 import SlideThumb from './SlideThumb';
 

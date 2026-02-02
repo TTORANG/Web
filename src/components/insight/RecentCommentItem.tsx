@@ -1,4 +1,4 @@
-﻿import SlideThumb from './SlideThumb';
+import SlideThumb from './SlideThumb';
 
 interface RecentCommentItemProps {
   user: string;
