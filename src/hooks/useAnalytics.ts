@@ -45,7 +45,7 @@ export function useVideoExitAnalytics(videoId: string) {
 export function recordExitOnUnload(data: RecordExitRequest) {
   try {
     const baseURL = apiClient.defaults.baseURL ?? '';
-    const url = baseURL ? new URL('/analytics/exit', baseURL).toString() : '/analytics/exit';
+    const url = baseURL ? new URL('analytics/exit', baseURL).toString() : '/analytics/exit';
     const { accessToken } = useAuthStore.getState();
 
     const headers: Record<string, string> = {
