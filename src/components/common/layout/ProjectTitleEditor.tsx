@@ -34,7 +34,7 @@ export function ProjectTitleEditor() {
     // 포커스/셀렉트는 DOM 조작이라 effect에서 해도 OK
     const t = window.setTimeout(() => {
       inputRef.current?.select();
-    }, 50);
+    }, 0);
 
     return () => window.clearTimeout(t);
   }, [isOpen]);
@@ -84,7 +84,6 @@ export function ProjectTitleEditor() {
         <button
           type="button"
           className="flex items-center gap-2 max-w-md cursor-pointer hover:opacity-80 transition-opacity"
-          onClick={() => handleOpenChange(true)} // 클릭 시 열면서 초기화까지 처리
           aria-label="발표 이름 변경"
         >
           {/* 표시용 텍스트는 서버 데이터(project.title)를 그대로 사용 */}
