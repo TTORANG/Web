@@ -15,7 +15,12 @@ import { formatRelativeTime } from '@/utils/format';
 
 import { Dropdown } from '../common';
 import type { DropdownItem } from '../common/Dropdown';
+import { HighlightText } from '../common/HighlightText';
 import DeleteProjectModal from './DeleteProjectModal';
+
+type Props = Project & {
+  highlightQuery?: string;
+};
 
 function ProjectCardSkeleton() {
   return (
@@ -79,6 +84,7 @@ function ProjectCardSkeleton() {
 function ProjectCard({
   id,
   title,
+  highlightQuery = '',
   updatedAt,
   durationMinutes,
   pageCount,
@@ -86,7 +92,7 @@ function ProjectCard({
   reactionCount,
   viewCount = 0,
   thumbnailUrl,
-}: Project) {
+}: Props) {
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
     useProjectDeletion(id);
@@ -129,26 +135,31 @@ function ProjectCard({
 
         <div className="p-4">
           {/* 제목 및 업데이트 날짜 */}
-          <div className="min-h-18">
-            <div className="flex justify-between gap-2">
-              <h3 className="text-body-m-bold text-gray-800 line-clamp-2">{title}</h3>
-              {/* 더보기 */}
-              <div onClick={(e) => e.stopPropagation()} className="shrink-0 mt-1">
-                <Dropdown
-                  trigger={({ isOpen }) => (
-                    <div className="p-2 -m-2">
-                      <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-400')} />
-                    </div>
-                  )}
-                  items={dropdownItems}
-                  position="bottom"
-                  align="end"
-                  ariaLabel="더보기"
-                  menuClassName="w-32"
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-body-m-bold text-gray-800">
+                <HighlightText
+                  text={title}
+                  query={highlightQuery}
+                  highlightClassName="bg-transparent text-main"
                 />
-              </div>
+              </h3>
+              <p className="mt-1 text-body-s text-gray-400">{formatRelativeTime(updatedAt)}</p>
             </div>
-            <p className="mt-1 text-body-s text-gray-400">{formatRelativeTime(updatedAt)}</p>
+
+            {/* 더보기 */}
+            <div onClick={(e) => e.stopPropagation()}>
+              <Dropdown
+                trigger={({ isOpen }) => (
+                  <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-400')} />
+                )}
+                items={dropdownItems}
+                position="bottom"
+                align="end"
+                ariaLabel="더보기"
+                menuClassName="w-32"
+              />
+            </div>
           </div>
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-x-1 gap-y-2 text-caption text-gray-600">
