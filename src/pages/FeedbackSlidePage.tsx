@@ -5,7 +5,7 @@
  * 슬라이드 뷰어, 댓글 목록, 리액션 버튼을 포함합니다.
  * 좌우 화살표 키로 슬라이드 이동이 가능합니다.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
@@ -19,6 +19,7 @@ import SlideTitle from '@/components/slide/script/SlideTitle';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useHotkey } from '@/hooks';
 import { useSlides } from '@/hooks/queries/useSlides';
+import { recordExitOnUnload, useRecordExit } from '@/hooks/useAnalytics';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
@@ -38,7 +39,9 @@ export default function FeedbackSlidePage() {
 
   const { comments, addComment, addReply, deleteComment } = useComments();
   const { reactions, toggleReaction } = useReactions();
+  const { mutate: recordExit } = useRecordExit();
   const initSlide = useSlideStore((state) => state.initSlide);
+  const exitSentRef = useRef(false);
 
   const [commentDraft, setCommentDraft] = useState('');
 
@@ -49,6 +52,59 @@ export default function FeedbackSlidePage() {
   };
 
   useHotkey({ ArrowLeft: goPrev, ArrowRight: goNext }, { enabled: !isLoading });
+
+  const buildExitPayload = useCallback(() => {
+    if (!projectId) return null;
+    const projectIdNum = Number(projectId);
+    if (!Number.isFinite(projectIdNum)) return null;
+
+    const payload: { projectId: number; lastSlideId?: number } = {
+      projectId: projectIdNum,
+    };
+
+    if (currentSlide?.id) {
+      const slideIdNum = Number(currentSlide.id);
+      if (Number.isFinite(slideIdNum)) {
+        payload.lastSlideId = slideIdNum;
+      }
+    }
+
+    return payload;
+  }, [projectId, currentSlide]);
+
+  const sendExit = useCallback(
+    (mode: 'unload' | 'unmount') => {
+      if (exitSentRef.current) return;
+      const payload = buildExitPayload();
+      if (!payload) return;
+
+      exitSentRef.current = true;
+      if (mode === 'unload') {
+        recordExitOnUnload(payload);
+      } else {
+        recordExit(payload);
+      }
+    },
+    [buildExitPayload, recordExit],
+  );
+
+  useEffect(() => {
+    const handlePageHide = () => sendExit('unload');
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        sendExit('unload');
+      }
+    };
+
+    window.addEventListener('pagehide', handlePageHide);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('pagehide', handlePageHide);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      sendExit('unmount');
+    };
+  }, [sendExit]);
 
   /** 모든 슬라이드의 의견을 플랫 배열로 합침 */
   const allFlatOpinions = useMemo(() => {

@@ -21,8 +21,11 @@ import {
 } from '@/components/insight';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useSlides } from '@/hooks/queries/useSlides';
+import { useProjectVideos, useSlideAnalytics, useVideoExitAnalytics } from '@/hooks/useAnalytics';
 import type { DropOffSlide, DropOffTime, SummaryStat } from '@/types/insight';
 import type { Reaction } from '@/types/script';
+import { formatVideoTimestamp } from '@/utils/format';
+import { getSlideIndexFromTime } from '@/utils/video';
 
 // --- 타입 및 스타일 정의 ---
 
@@ -45,18 +48,6 @@ const summaryStats: SummaryStat[] = [
   { label: '완독률', value: '68%', sub: '' },
   { label: '받은 피드백', value: '42', sub: '댓글 12, 이모지 30' },
   { label: '평균 체류 시간', value: '4:23', sub: '총 5개 슬라이드' },
-];
-
-const dropOffSlides: DropOffSlide[] = [
-  { label: '슬라이드 4', desc: '79명 이탈', percent: 32, slideIndex: 3 },
-  { label: '슬라이드 8', desc: '47명 이탈', percent: 28, slideIndex: 7 },
-  { label: '슬라이드 6', desc: '45명 이탈', percent: 24, slideIndex: 5 },
-];
-
-const dropOffTimes: DropOffTime[] = [
-  { time: '2:05', desc: '슬라이드 5', count: 45, slideIndex: 4 },
-  { time: '3:30', desc: '슬라이드 7', count: 38, slideIndex: 6 },
-  { time: '1:08', desc: '슬라이드 3', count: 45, slideIndex: 2 },
 ];
 
 const recentComments: RecentComment[] = [
@@ -106,9 +97,13 @@ const slideRetentionData = [
 // --- 컴포넌트 시작 ---
 
 export default function InsightPage() {
-  const hasVideo = true;
   const { projectId } = useParams<{ projectId: string }>();
   const { data: slides } = useSlides(projectId ?? '');
+  const { data: projectVideos } = useProjectVideos(projectId ?? '');
+  const videoId = projectVideos?.videos?.[0]?.id ?? '';
+  const hasVideo = !!videoId;
+  const { data: slideAnalytics } = useSlideAnalytics(projectId ?? '');
+  const { data: videoExitAnalytics } = useVideoExitAnalytics(videoId);
   const visibleSummaryStats = hasVideo
     ? summaryStats
     : summaryStats.filter((stat) => stat.label !== '평균 체류 시간');
@@ -147,6 +142,51 @@ export default function InsightPage() {
   }, [slides]);
 
   const getThumb = (slideIndex: number) => slides?.[slideIndex]?.thumb;
+
+  const slideChangeTimes = useMemo(() => {
+    if (!slides?.length) return [];
+    const hasStartTime = slides.some((slide) => Number.isFinite(slide.startTime));
+    if (!hasStartTime) return [];
+
+    return slides.map((slide, index) =>
+      Number.isFinite(slide.startTime) ? (slide.startTime ?? 0) : index * 10,
+    );
+  }, [slides]);
+
+  const dropOffSlides: DropOffSlide[] = useMemo(() => {
+    const items = slideAnalytics?.slides ?? [];
+    return items
+      .slice()
+      .sort((a, b) => b.exitCount - a.exitCount)
+      .slice(0, 3)
+      .map((item) => ({
+        label: `슬라이드 ${item.slideNum}`,
+        desc: `${item.exitCount}명 이탈`,
+        percent: Math.round(item.exitRate),
+        slideIndex: Math.max(0, item.slideNum - 1),
+      }));
+  }, [slideAnalytics]);
+
+  const dropOffTimes: DropOffTime[] = useMemo(() => {
+    const items = videoExitAnalytics?.exits ?? [];
+    return items
+      .slice()
+      .sort((a, b) => b.exitCount - a.exitCount)
+      .slice(0, 3)
+      .map((item) => {
+        const seconds = item.timestampMs / 1000;
+        const slideIndex =
+          slides?.length && slideChangeTimes.length
+            ? getSlideIndexFromTime(seconds, slideChangeTimes, slides.length - 1)
+            : 0;
+        return {
+          time: formatVideoTimestamp(seconds),
+          desc: slides?.length ? `슬라이드 ${slideIndex + 1}` : '슬라이드',
+          count: item.exitCount,
+          slideIndex,
+        };
+      });
+  }, [videoExitAnalytics, slideChangeTimes, slides]);
 
   return (
     <div

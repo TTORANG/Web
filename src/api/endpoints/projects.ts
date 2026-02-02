@@ -17,7 +17,7 @@ import { apiClient } from '../client';
  * @returns 프로젝트 배열
  */
 export async function getProjects(): Promise<Project[]> {
-  const response = await apiClient.get<Project[]>(`/projects`);
+  const response = await apiClient.get<Project[]>(`/presentations`);
   return response.data;
 }
 
@@ -27,7 +27,7 @@ export async function getProjects(): Promise<Project[]> {
  * @param projectId - 프로젝트 ID
  */
 export async function getProject(projectId: string): Promise<Project> {
-  const response = await apiClient.get<Project>(`/projects/${projectId}`);
+  const response = await apiClient.get<Project>(`/presentations/${projectId}`);
   return response.data;
 }
 
@@ -49,7 +49,7 @@ export async function updateProject(
   projectId: string,
   data: UpdateProjectRequest,
 ): Promise<Project> {
-  const response = await apiClient.patch<Project>(`/projects/${projectId}`, data);
+  const response = await apiClient.patch<Project>(`/presentations/${projectId}`, data);
   return response.data;
 }
 
@@ -60,7 +60,7 @@ export async function updateProject(
  * @returns 생성된 프로젝트
  */
 export async function createProject(data: { title: string }): Promise<Project> {
-  const response = await apiClient.post<Project>(`/projects`, data);
+  const response = await apiClient.post<Project>(`/presentations`, data);
   return response.data;
 }
 
@@ -70,5 +70,5 @@ export async function createProject(data: { title: string }): Promise<Project> {
  * @param projectId - 삭제할 프로젝트 ID
  */
 export async function deleteProject(projectId: string): Promise<void> {
-  await apiClient.delete(`/projects/${projectId}`);
+  await apiClient.delete(`/presentations/${projectId}`);
 }

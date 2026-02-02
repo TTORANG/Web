@@ -5,7 +5,8 @@
  * 데스크톱과 모바일 뷰를 모두 포함하며, 반응형으로 UI를 렌더링합니다.
  * CSS-only 방식으로 단일 비디오 요소의 위치를 조정하여 심리스한 전환을 지원합니다.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
@@ -13,12 +14,18 @@ import FeedbackMobileLayout from '@/components/feedback/FeedbackMobileLayout';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
 import ScriptSection from '@/components/feedback/ScriptSection';
 import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
+import { recordExitOnUnload, useRecordExit } from '@/hooks/useAnalytics';
 import { useFeedbackVideo } from '@/hooks/useFeedbackVideo';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
+import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 
 export default function FeedbackVideoPage() {
+  const { projectId } = useParams<{ projectId: string }>();
   const isDesktop = useIsDesktop();
   const ctx = useFeedbackVideo();
+  const { mutate: recordExit } = useRecordExit();
+  const videoId = useVideoFeedbackStore((s) => s.video?.videoId);
+  const exitSentRef = useRef(false);
   const {
     isLoading,
     currentTime,
@@ -38,6 +45,65 @@ export default function FeedbackVideoPage() {
     deleteComment,
     toggleReaction,
   } = ctx;
+
+  const buildExitPayload = useCallback(() => {
+    if (!projectId) return null;
+    const projectIdNum = Number(projectId);
+    if (!Number.isFinite(projectIdNum)) return null;
+
+    const payload: {
+      projectId: number;
+      lastVideoId?: number;
+      lastVideoTimeMs?: number;
+    } = {
+      projectId: projectIdNum,
+    };
+
+    if (videoId) {
+      const videoIdNum = Number(videoId);
+      if (Number.isFinite(videoIdNum)) {
+        payload.lastVideoId = videoIdNum;
+      }
+    }
+
+    payload.lastVideoTimeMs = Math.max(0, Math.round(currentTime * 1000));
+
+    return payload;
+  }, [projectId, videoId, currentTime]);
+
+  const sendExit = useCallback(
+    (mode: 'unload' | 'unmount') => {
+      if (exitSentRef.current) return;
+      const payload = buildExitPayload();
+      if (!payload) return;
+
+      exitSentRef.current = true;
+      if (mode === 'unload') {
+        recordExitOnUnload(payload);
+      } else {
+        recordExit(payload);
+      }
+    },
+    [buildExitPayload, recordExit],
+  );
+
+  useEffect(() => {
+    const handlePageHide = () => sendExit('unload');
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        sendExit('unload');
+      }
+    };
+
+    window.addEventListener('pagehide', handlePageHide);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('pagehide', handlePageHide);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      sendExit('unmount');
+    };
+  }, [sendExit]);
 
   // 비디오 위치 계산을 위한 refs
   const desktopPlaceholderRef = useRef<HTMLDivElement>(null);
