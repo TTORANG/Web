@@ -3,7 +3,8 @@
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { type ToggleReactionRequest, toggleReaction } from '@/api/endpoints/reactions';
+import type { ToggleSlideReactionDto } from '@/api/dto';
+import { toggleReaction } from '@/api/endpoints/reactions';
 import { queryKeys } from '@/api/queryClient';
 
 /** 리액션 토글 */
@@ -11,7 +12,7 @@ export function useToggleReaction() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ slideId, data }: { slideId: string; data: ToggleReactionRequest }) =>
+    mutationFn: ({ slideId, data }: { slideId: string; data: ToggleSlideReactionDto }) =>
       toggleReaction(slideId, data),
 
     onSuccess: (_, { slideId }) => {

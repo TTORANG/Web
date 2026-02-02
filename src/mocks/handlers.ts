@@ -39,8 +39,15 @@ MOCK_SLIDES.forEach((slide) => {
 // API 응답 래퍼 헬퍼
 const wrapResponse = <T>(data: T) => ({
   resultType: 'SUCCESS' as const,
-  reason: null,
+  error: null,
   success: data,
+});
+
+// API 에러 응답 헬퍼
+const wrapError = (errorCode: string, reason: string, data?: unknown) => ({
+  resultType: 'FAILURE' as const,
+  error: { errorCode, reason, data },
+  success: null,
 });
 
 /**
@@ -61,7 +68,7 @@ export const handlers = [
   http.get(`${BASE_URL}/projects`, async () => {
     await delay(200);
     console.log('[MSW] GET /projects');
-    return HttpResponse.json(projects);
+    return HttpResponse.json(wrapResponse(projects));
   }),
 
   /**
@@ -76,13 +83,12 @@ export const handlers = [
     const project = projects.find((p) => p.id === projectId);
 
     if (!project) {
-      return new HttpResponse(null, {
+      return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Project not found')), {
         status: 404,
-        statusText: 'Project not found',
       });
     }
 
-    return HttpResponse.json(project);
+    return HttpResponse.json(wrapResponse(project));
   }),
 
   /**
@@ -107,7 +113,7 @@ export const handlers = [
     };
 
     projects = [newProject, ...projects];
-    return HttpResponse.json(newProject, { status: 201 });
+    return HttpResponse.json(wrapResponse(newProject), { status: 201 });
   }),
 
   /**
@@ -123,9 +129,8 @@ export const handlers = [
     const projectIndex = projects.findIndex((p) => p.id === projectId);
 
     if (projectIndex === -1) {
-      return new HttpResponse(null, {
+      return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Project not found')), {
         status: 404,
-        statusText: 'Project not found',
       });
     }
 
@@ -135,7 +140,7 @@ export const handlers = [
       updatedAt: new Date().toISOString(),
     };
 
-    return HttpResponse.json(projects[projectIndex]);
+    return HttpResponse.json(wrapResponse(projects[projectIndex]));
   }),
 
   /**
@@ -150,14 +155,13 @@ export const handlers = [
     const projectIndex = projects.findIndex((p) => p.id === projectId);
 
     if (projectIndex === -1) {
-      return new HttpResponse(null, {
+      return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Project not found')), {
         status: 404,
-        statusText: 'Project not found',
       });
     }
 
     projects = projects.filter((p) => p.id !== projectId);
-    return new HttpResponse(null, { status: 204 });
+    return HttpResponse.json(wrapResponse(null), { status: 200 });
   }),
 
   // =====================
@@ -175,7 +179,7 @@ export const handlers = [
     console.log(`[MSW] GET /projects/${projectId}/slides`);
 
     const projectSlides = slides.filter((s) => s.projectId === projectId);
-    return HttpResponse.json(projectSlides);
+    return HttpResponse.json(wrapResponse(projectSlides));
   }),
 
   /**
@@ -191,13 +195,12 @@ export const handlers = [
     const slide = slides.find((s) => s.id === slideId);
 
     if (!slide) {
-      return new HttpResponse(null, {
+      return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Slide not found')), {
         status: 404,
-        statusText: 'Slide not found',
       });
     }
 
-    return HttpResponse.json(slide);
+    return HttpResponse.json(wrapResponse(slide));
   }),
 
   /**
@@ -214,9 +217,8 @@ export const handlers = [
     const slideIndex = slides.findIndex((s) => s.id === slideId);
 
     if (slideIndex === -1) {
-      return new HttpResponse(null, {
+      return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Slide not found')), {
         status: 404,
-        statusText: 'Slide not found',
       });
     }
 
@@ -242,7 +244,7 @@ export const handlers = [
       ...updates,
     };
 
-    return HttpResponse.json(slides[slideIndex]);
+    return HttpResponse.json(wrapResponse(slides[slideIndex]));
   }),
 
   /**
@@ -269,7 +271,7 @@ export const handlers = [
 
     slides.push(newSlide);
 
-    return HttpResponse.json(newSlide, { status: 201 });
+    return HttpResponse.json(wrapResponse(newSlide), { status: 201 });
   }),
 
   /**
@@ -285,15 +287,14 @@ export const handlers = [
     const slideIndex = slides.findIndex((s) => s.id === slideId);
 
     if (slideIndex === -1) {
-      return new HttpResponse(null, {
+      return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Slide not found')), {
         status: 404,
-        statusText: 'Slide not found',
       });
     }
 
     slides = slides.filter((s) => s.id !== slideId);
 
-    return new HttpResponse(null, { status: 204 });
+    return HttpResponse.json(wrapResponse(null), { status: 200 });
   }),
 
   /**
@@ -310,9 +311,8 @@ export const handlers = [
     const slideIndex = slides.findIndex((s) => s.id === slideId);
 
     if (slideIndex === -1) {
-      return new HttpResponse(null, {
+      return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Slide not found')), {
         status: 404,
-        statusText: 'Slide not found',
       });
     }
 
@@ -341,7 +341,7 @@ export const handlers = [
       slides[slideIndex].opinions.push(newOpinion);
     }
 
-    return HttpResponse.json(newOpinion, { status: 201 });
+    return HttpResponse.json(wrapResponse(newOpinion), { status: 201 });
   }),
 
   /**
@@ -369,13 +369,12 @@ export const handlers = [
     }
 
     if (!found) {
-      return new HttpResponse(null, {
+      return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Opinion not found')), {
         status: 404,
-        statusText: 'Opinion not found',
       });
     }
 
-    return new HttpResponse(null, { status: 204 });
+    return HttpResponse.json(wrapResponse(null), { status: 200 });
   }),
 
   /**
@@ -392,9 +391,8 @@ export const handlers = [
     const slideIndex = slides.findIndex((s) => s.id === slideId);
 
     if (slideIndex === -1) {
-      return new HttpResponse(null, {
+      return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Slide not found')), {
         status: 404,
-        statusText: 'Slide not found',
       });
     }
 
@@ -413,7 +411,7 @@ export const handlers = [
       }
     }
 
-    return HttpResponse.json(slide.emojiReactions);
+    return HttpResponse.json(wrapResponse(slide.emojiReactions));
   }),
 
   /**
@@ -530,14 +528,9 @@ export const handlers = [
     const slide = slides.find((s) => s.id === slideId);
 
     if (!slide) {
-      return new HttpResponse(
-        JSON.stringify({
-          resultType: 'FAILURE',
-          error: { code: 'NOT_FOUND', message: 'Slide not found' },
-          success: null,
-        }),
-        { status: 404 },
-      );
+      return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Slide not found')), {
+        status: 404,
+      });
     }
 
     return HttpResponse.json(
@@ -567,14 +560,9 @@ export const handlers = [
     const slideIndex = slides.findIndex((s) => s.id === slideId);
 
     if (slideIndex === -1) {
-      return new HttpResponse(
-        JSON.stringify({
-          resultType: 'FAILURE',
-          error: { code: 'NOT_FOUND', message: 'Slide not found' },
-          success: null,
-        }),
-        { status: 404 },
-      );
+      return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Slide not found')), {
+        status: 404,
+      });
     }
 
     const currentSlide = slides[slideIndex];
@@ -620,14 +608,9 @@ export const handlers = [
     const slide = slides.find((s) => s.id === slideId);
 
     if (!slide) {
-      return new HttpResponse(
-        JSON.stringify({
-          resultType: 'FAILURE',
-          error: { code: 'NOT_FOUND', message: 'Slide not found' },
-          success: null,
-        }),
-        { status: 404 },
-      );
+      return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Slide not found')), {
+        status: 404,
+      });
     }
 
     const versions = scriptVersions.get(slideId) || [];
@@ -648,28 +631,18 @@ export const handlers = [
     const slideIndex = slides.findIndex((s) => s.id === slideId);
 
     if (slideIndex === -1) {
-      return new HttpResponse(
-        JSON.stringify({
-          resultType: 'FAILURE',
-          error: { code: 'NOT_FOUND', message: 'Slide not found' },
-          success: null,
-        }),
-        { status: 404 },
-      );
+      return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Slide not found')), {
+        status: 404,
+      });
     }
 
     const versions = scriptVersions.get(slideId) || [];
     const targetVersion = versions.find((v) => v.versionNumber === version);
 
     if (!targetVersion) {
-      return new HttpResponse(
-        JSON.stringify({
-          resultType: 'FAILURE',
-          error: { code: 'NOT_FOUND', message: 'Version not found' },
-          success: null,
-        }),
-        { status: 404 },
-      );
+      return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Version not found')), {
+        status: 404,
+      });
     }
 
     // 현재 스크립트를 버전으로 저장
@@ -698,5 +671,197 @@ export const handlers = [
         updatedAt: new Date().toISOString(),
       }),
     );
+  }),
+
+  // =====================
+  // 영상 관련 핸들러
+  // =====================
+
+  /**
+   * 영상 생성
+   * POST /videos
+   */
+  http.post(`${BASE_URL}/videos`, async ({ request }) => {
+    await delay(300);
+    const data = (await request.json()) as { projectId: number; title: string };
+    console.log('[MSW] POST /videos', data);
+
+    const videoId = crypto.randomUUID();
+
+    return HttpResponse.json(wrapResponse({ videoId }), { status: 201 });
+  }),
+
+  /**
+   * 영상 파일 업로드
+   * POST /videos/:videoId/upload
+   */
+  http.post(`${BASE_URL}/videos/:videoId/upload`, async ({ params }) => {
+    await delay(1000);
+    const { videoId } = params as { videoId: string };
+    console.log(`[MSW] POST /videos/${videoId}/upload`);
+
+    return HttpResponse.json(wrapResponse({ ok: true }));
+  }),
+
+  /**
+   * 녹화 종료 및 영상 처리
+   * POST /videos/:videoId/finish
+   */
+  http.post(`${BASE_URL}/videos/:videoId/finish`, async ({ params, request }) => {
+    await delay(500);
+    const { videoId } = params as { videoId: string };
+    const data = (await request.json()) as {
+      slideLogs: Array<{ slideId: number; timestampMs: number }>;
+    };
+    console.log(`[MSW] POST /videos/${videoId}/finish`, data);
+
+    return HttpResponse.json(wrapResponse({ ok: true }));
+  }),
+
+  /**
+   * 영상 상세 조회
+   * GET /videos/:videoId
+   */
+  http.get(`${BASE_URL}/videos/:videoId`, async ({ params }) => {
+    await delay(200);
+    const { videoId } = params as { videoId: string };
+    console.log(`[MSW] GET /videos/${videoId}`);
+
+    const video = videoFeedbacks.get(videoId);
+
+    if (!video) {
+      return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Video not found')), {
+        status: 404,
+      });
+    }
+
+    // VideoFeedback을 GetVideoDetailResponse 형식으로 변환
+    const response = {
+      video: {
+        id: video.videoId,
+        title: video.title,
+        status: 'ready' as const,
+        durationSeconds: video.duration,
+        width: 1920,
+        height: 1080,
+        fps: 30,
+        hlsMasterUrl: video.videoUrl,
+        thumbnailUrl: '/mock-thumbnail.jpg',
+        createdAt: new Date().toISOString(),
+      },
+      timeline: {
+        reactions: video.feedbacks.flatMap((f) =>
+          f.reactions.map((r) => ({
+            timestampMs: f.timestamp * 1000,
+            emojiType: r.type as
+              | 'thumbs_up'
+              | 'thumbs_down'
+              | 'heart'
+              | 'laugh'
+              | 'surprised'
+              | 'thinking',
+            count: r.count,
+          })),
+        ),
+        comments: video.comments.map((c) => ({
+          id: c.id,
+          content: c.content,
+          timestampMs: 0, // Comment 타입에 timestamp가 없으므로 0으로 설정
+          createdAt: c.timestamp,
+          user: { id: c.authorId, name: MOCK_USERS[0].name },
+        })),
+      },
+    };
+
+    return HttpResponse.json(wrapResponse(response));
+  }),
+
+  /**
+   * 영상 슬라이드 타임라인 조회
+   * GET /videos/:videoId/slides
+   */
+  http.get(`${BASE_URL}/videos/:videoId/slides`, async ({ params }) => {
+    await delay(150);
+    const { videoId } = params as { videoId: string };
+    console.log(`[MSW] GET /videos/${videoId}/slides`);
+
+    const video = videoFeedbacks.get(videoId);
+
+    if (!video) {
+      return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Video not found')), {
+        status: 404,
+      });
+    }
+
+    // Mock slide timeline
+    const slides = [
+      { slideId: '1', timestampMs: 0 },
+      { slideId: '2', timestampMs: 30000 },
+      { slideId: '3', timestampMs: 60000 },
+    ];
+
+    return HttpResponse.json(wrapResponse({ slides }));
+  }),
+
+  /**
+   * 영상 리액션 토글
+   * POST /videos/:videoId/reactions
+   */
+  http.post(`${BASE_URL}/videos/:videoId/reactions`, async ({ params, request }) => {
+    await delay(100);
+    const { videoId } = params as { videoId: string };
+    const data = (await request.json()) as { emojiType: string; timestampMs: number };
+    console.log(`[MSW] POST /videos/${videoId}/reactions`, data);
+
+    const video = videoFeedbacks.get(videoId);
+
+    if (!video) {
+      return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Video not found')), {
+        status: 404,
+      });
+    }
+
+    // 리액션 토글 로직 (실제로는 video.feedbacks를 업데이트)
+    return HttpResponse.json(wrapResponse({ active: true }));
+  }),
+
+  /**
+   * 영상 댓글 생성
+   * POST /videos/:videoId/comments
+   */
+  http.post(`${BASE_URL}/videos/:videoId/comments`, async ({ params, request }) => {
+    await delay(200);
+    const { videoId } = params as { videoId: string };
+    const data = (await request.json()) as { content: string; timestampMs: number };
+    console.log(`[MSW] POST /videos/${videoId}/comments`, data);
+
+    const video = videoFeedbacks.get(videoId);
+
+    if (!video) {
+      return new HttpResponse(JSON.stringify(wrapError('NOT_FOUND', 'Video not found')), {
+        status: 404,
+      });
+    }
+
+    const newComment = {
+      id: crypto.randomUUID(),
+      authorId: MOCK_USERS[0].id,
+      content: data.content,
+      timestamp: new Date().toISOString(),
+      isMine: true,
+    };
+
+    video.comments.push(newComment);
+
+    // API response로 VideoComment 형식 반환
+    const responseComment = {
+      id: newComment.id,
+      content: newComment.content,
+      timestampMs: data.timestampMs,
+      createdAt: newComment.timestamp,
+      user: { id: MOCK_USERS[0].id, name: MOCK_USERS[0].name },
+    };
+
+    return HttpResponse.json(wrapResponse(responseComment), { status: 201 });
   }),
 ];

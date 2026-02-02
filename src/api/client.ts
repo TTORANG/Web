@@ -19,7 +19,7 @@ import { useAuthStore } from '@/stores/authStore';
 export const API_TIMEOUT_MS = 10000;
 
 /**
- * API 에러 응답 타입 (구 구조)
+ * API 에러 응답 타입
  */
 export interface ApiError {
   message: string;
@@ -28,11 +28,12 @@ export interface ApiError {
 }
 
 /**
- * 신규/구 에러 응답 호환 타입
+ * 신규 ApiResponse 에러 구조
  */
 interface ApiErrorResponse {
-  message?: string; // 기존 구조
-  reason?: string; // 신규 ApiResponse 구조
+  errorCode: string;
+  reason: string;
+  data?: unknown;
 }
 
 /**
@@ -86,13 +87,8 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error: ExtendedAxiosError) => {
     const status = error.response?.status;
-    // 호환성: 신규 구조(reason) 또는 기존 구조(message) 모두 지원
     const errorData = error.response?.data as ApiErrorResponse | undefined;
-    const message =
-      errorData?.reason || // 신규 ApiResponse 구조
-      errorData?.message || // 기존 구조
-      error.message || // Axios 에러 메시지
-      '알 수 없는 오류가 발생했습니다';
+    const message = errorData?.reason || error.message || '알 수 없는 오류가 발생했습니다';
 
     // [하이브리드 전략]
     // 시스템 에러 (401 인증, 500 서버 장애)는 Axios가 즉시 처리

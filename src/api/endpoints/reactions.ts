@@ -1,11 +1,31 @@
+/**
+ * @file reactions.ts
+ * @description 슬라이드 리액션 관련 API 엔드포인트
+ */
 import { apiClient } from '@/api';
-import type { Reaction, ReactionType } from '@/types/script';
+import type { ToggleSlideReactionDto } from '@/api/dto';
+import type { ApiResponse } from '@/types/api';
+import type { Reaction } from '@/types/script';
 
-export interface ToggleReactionRequest {
-  type: ReactionType;
-}
+/**
+ * 슬라이드 리액션 토글
+ *
+ * @param slideId - 슬라이드 ID
+ * @param data - 리액션 데이터
+ * @returns 리액션 목록
+ */
+export const toggleReaction = async (
+  slideId: string,
+  data: ToggleSlideReactionDto,
+): Promise<Reaction[]> => {
+  const response = await apiClient.post<ApiResponse<Reaction[]>>(
+    `/slides/${slideId}/reactions`,
+    data,
+  );
 
-export const toggleReaction = async (slideId: string, data: ToggleReactionRequest) => {
-  const { data: response } = await apiClient.post<Reaction[]>(`/slides/${slideId}/reactions`, data);
-  return response;
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+
+  throw new Error(response.data.error.reason);
 };

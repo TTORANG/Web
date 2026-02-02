@@ -3,7 +3,8 @@
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { type CreateOpinionRequest, createOpinion, deleteOpinion } from '@/api/endpoints/opinions';
+import type { CreateOpinionDto } from '@/api/dto';
+import { createOpinion, deleteOpinion } from '@/api/endpoints/opinions';
 import { queryKeys } from '@/api/queryClient';
 
 /** 의견 추가 */
@@ -11,7 +12,7 @@ export function useCreateOpinion() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ slideId, data }: { slideId: string; data: CreateOpinionRequest }) =>
+    mutationFn: ({ slideId, data }: { slideId: string; data: CreateOpinionDto }) =>
       createOpinion(slideId, data),
 
     onSuccess: (_, { slideId }) => {
