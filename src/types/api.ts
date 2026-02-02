@@ -106,6 +106,48 @@ export interface User {
 }
 
 // ============================================================================
+// Slide & Script Types
+// ============================================================================
+
+/**
+ * 슬라이드 정보
+ */
+export interface Slide {
+  slideId: string;
+  projectId?: string;
+  title: string;
+  slideNum: number;
+  imageUrl?: string;
+  prevSlideId?: string;
+  nextSlideId?: string;
+  createdAt?: string;
+  updatedAt: string;
+}
+
+/**
+ * 대본 정보 응답
+ */
+export interface ScriptResponse {
+  message?: string;
+  slideId: string;
+  charCount: number;
+  scriptText: string;
+  estimatedDurationSeconds: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * 대본 버전 (히스토리) 정보
+ */
+export interface ScriptVersion {
+  versionNumber: number;
+  scriptText: string;
+  charCount: number;
+  createdAt: string;
+}
+
+// ============================================================================
 // Video Types
 // ============================================================================
 
@@ -172,44 +214,6 @@ export interface VideoTimeline {
 }
 
 // ============================================================================
-// Video API Requests
-// ============================================================================
-
-/**
- * 영상 생성 요청
- */
-export interface CreateVideoRequest {
-  projectId: number;
-  title: string;
-}
-
-/**
- * 녹화 종료 및 영상 처리 요청
- */
-export interface FinishRecordingRequest {
-  slideLogs: Array<{
-    slideId: number;
-    timestampMs: number;
-  }>;
-}
-
-/**
- * 영상 타임스탬프 리액션 생성/토글 요청
- */
-export interface ToggleVideoReactionRequest {
-  emojiType: EmojiType;
-  timestampMs: number;
-}
-
-/**
- * 영상 타임스탬프 댓글 생성 요청
- */
-export interface CreateVideoCommentRequest {
-  content: string;
-  timestampMs: number;
-}
-
-// ============================================================================
 // Video API Responses
 // ============================================================================
 
@@ -219,46 +223,4 @@ export interface CreateVideoCommentRequest {
 export interface GetVideoDetailResponse {
   video: Video;
   timeline: VideoTimeline;
-}
-
-// ============================================================================
-// Slide & Script Types
-// ============================================================================
-
-/**
- * 슬라이드 정보
- */
-export interface Slide {
-  slideId: string;
-  projectId?: string;
-  title: string;
-  slideNum: number;
-  imageUrl?: string;
-  prevSlideId?: string;
-  nextSlideId?: string;
-  createdAt?: string;
-  updatedAt: string;
-}
-
-/**
- * 대본 정보
- */
-export interface Script {
-  message?: string;
-  slideId: string;
-  charCount: number;
-  scriptText: string;
-  estimatedDurationSeconds: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-/**
- * 대본 버전 정보
- */
-export interface ScriptHistory {
-  versionNumber: number;
-  scriptText: string;
-  charCount: number;
-  createdAt: string;
 }
