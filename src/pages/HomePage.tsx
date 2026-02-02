@@ -3,13 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import IntroSection from '@/components/home/IntroSection';
 import ProjectsSection from '@/components/home/ProjectsSection';
 import { useDebounce } from '@/hooks/useDebounce';
-import {
-  useHomeActions,
-  useHomeFilter,
-  useHomeQuery,
-  useHomeSort,
-  useHomeViewMode,
-} from '@/hooks/useHomeSelectors';
+import { useHomeFilter, useHomeQuery, useHomeSort } from '@/hooks/useHomeSelectors';
 import { useProjectList } from '@/hooks/useProjectList';
 import { useUpload } from '@/hooks/useUpload';
 import { MOCK_PROJECTS } from '@/mocks/projects';
@@ -20,9 +14,15 @@ const ACCEPTED_FILES_TYPES = '.pdf,.ppt,.pptx,.txt,.mp4';
 export default function HomePage() {
   const { progress, state, error, uploadFiles } = useUpload();
   const [isLoading, setIsLoading] = useState(true);
+
   const query = useHomeQuery();
   const sort = useHomeSort();
   const filter = useHomeFilter();
+
+  const debouncedQuery = useDebounce(query, 300);
+
+  // TODO :  나중에 mock_projects 말고 서버데이터로 바꿔주기..
+  const allProjects = MOCK_PROJECTS;
 
   const filterFn = useMemo<((p: Project) => boolean) | undefined>(() => {
     if (filter === null || filter === 'all') return undefined;
@@ -40,15 +40,17 @@ export default function HomePage() {
     };
   }, [filter]);
 
-  const viewMode = useHomeViewMode();
-  const { setQuery, setSort, setFilter, setViewMode } = useHomeActions();
-  const debouncedQuery = useDebounce(query, 300);
-
-  // TODO :  나중에 mock_projects 말고 서버데이터로 바꿔주기..
-  const allProjects = MOCK_PROJECTS;
-  const projects = useProjectList(allProjects, { query: debouncedQuery, sort, filterFn });
+  // 1) 필터만 적용한 목록
+  const filteredProjects = useMemo(() => {
+    return filterFn ? allProjects.filter(filterFn) : allProjects;
+  }, [allProjects, filterFn]);
 
   const totalCount = allProjects.length;
+  const filteredCount = filteredProjects.length;
+
+  // 2) 검색/정렬은 '필터된 목록' 기준으로만 적용
+  const projects = useProjectList(filteredProjects, { query: debouncedQuery, sort });
+
   const isEmpty = !isLoading && totalCount === 0;
 
   // TODO : 실제 데이터 패칭 훅의 isLoading으로 교체
@@ -74,15 +76,8 @@ export default function HomePage() {
       <ProjectsSection
         isLoading={isLoading}
         totalCount={totalCount}
-        query={query}
+        filteredCount={filteredCount}
         appliedQuery={debouncedQuery}
-        onChangeQuery={setQuery}
-        sort={sort}
-        onChangeSort={setSort}
-        filter={filter}
-        onChangeFilter={setFilter}
-        viewMode={viewMode}
-        onChangeViewMode={setViewMode}
         projects={projects}
       />
     </main>
