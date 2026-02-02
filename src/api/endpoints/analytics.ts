@@ -74,6 +74,7 @@ export async function getProjectVideos(projectId: string): Promise<ProjectVideos
   const response = await apiClient.get<ApiResponse<ProjectVideosResponse>>(
     `/presentations/${projectId}/videos`,
   );
+  return response.data.success;
 }
 
   export interface SummaryAnalytics {
