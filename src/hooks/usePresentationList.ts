@@ -3,7 +3,7 @@
  *
  * 검색, 정렬, 커스텀 필터를 적용한 프로젝트 목록을 반환합니다.
  *
- * @param projects - 원본 프로젝트 배열
+ * @param presentations - 원본 프로젝트 배열
  * @param options.query - 검색어 (제목 기준)
  * @param options.sort - 정렬 모드 (null | 'recent' | 'commentCount' | 'name')
  * @param options.filterFn - 커스텀 필터 함수
@@ -12,12 +12,12 @@
 import { useMemo } from 'react';
 
 import type { SortMode } from '@/types/home';
-import type { Project } from '@/types/project';
+import type { Presentation } from '@/types/presentation';
 
 type Options = {
   query?: string;
   sort?: SortMode;
-  filterFn?: (project: Project) => boolean;
+  filterFn?: (presentation: Presentation) => boolean;
 };
 
 // 공백(스페이스/탭/줄바꿈 등)을 모두 제거 + 소문자화
@@ -25,13 +25,13 @@ function normalizeForSearch(value: string) {
   return value.replace(/\s+/g, '').toLowerCase();
 }
 
-export function useProjectList(projects: Project[], options?: Options) {
+export function usePresentationList(presentations: Presentation[], options?: Options) {
   return useMemo(() => {
     const query = options?.query ?? '';
     const sort = options?.sort ?? 'recent';
     const filterFn = options?.filterFn;
 
-    let result = filterFn ? projects.filter(filterFn) : projects;
+    let result = filterFn ? presentations.filter(filterFn) : presentations;
 
     // 검색어/제목 모두 공백 제거 후 비교
     const q = normalizeForSearch(query);
@@ -50,5 +50,5 @@ export function useProjectList(projects: Project[], options?: Options) {
       return next.sort((a, b) => a.title.localeCompare(b.title));
     }
     return result;
-  }, [projects, options?.query, options?.sort, options?.filterFn]);
+  }, [presentations, options?.query, options?.sort, options?.filterFn]);
 }

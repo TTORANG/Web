@@ -14,7 +14,7 @@ export type { SortMode, ViewMode, FilterMode } from './home';
 export type { TabItem, TabKey } from './navigation';
 
 // Project
-export type { Project } from './project';
+export type { Presentation } from './presentation';
 
 // Script
 export type { Reaction, ReactionType } from './script';
