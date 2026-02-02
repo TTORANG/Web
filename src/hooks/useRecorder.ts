@@ -9,9 +9,6 @@ export const useRecorder = () => {
   const requestRef = useRef<number | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  /**
-   * 캔버스에 슬라이드와 웹캠을 합성하여 그리는 루프
-   */
   const drawCanvas = useCallback(
     (camEl: HTMLVideoElement, slideImgRef: React.MutableRefObject<HTMLImageElement | null>) => {
       const canvas = canvasRef.current;
@@ -19,11 +16,9 @@ export const useRecorder = () => {
       if (!canvas || !ctx) return;
 
       const render = () => {
-        // 1. 배경 초기화 (Grayscale/Black)
         ctx.fillStyle = '#1A1A1A';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // 2. 슬라이드 그리기 (82% 너비, 중앙 배치)
         if (slideImgRef.current?.complete) {
           const slideW = canvas.width * 0.82;
           const slideH = (slideImgRef.current.height / slideImgRef.current.width) * slideW;
@@ -36,7 +31,6 @@ export const useRecorder = () => {
           );
         }
 
-        // 3. 웹캠 그리기 (우측 하단, 22% 너비, 둥근 모서리)
         if (camEl.readyState >= 2 && camEl.videoWidth > 0) {
           const camW = canvas.width * 0.22;
           const camH = (camEl.videoHeight / camEl.videoWidth) * camW;
@@ -65,9 +59,6 @@ export const useRecorder = () => {
     [],
   );
 
-  /**
-   * 녹화 시작 함수
-   */
   const startRecording = useCallback(
     async (
       camStream: MediaStream,
@@ -76,14 +67,12 @@ export const useRecorder = () => {
     ) => {
       if (!canvasRef.current || !camStream.active) return;
 
-      // 1. 오프스크린 비디오 엘리먼트 생성 및 설정
       const camVideo = document.createElement('video');
       camVideo.srcObject = camStream;
       camVideo.muted = true;
       camVideo.playsInline = true;
       camVideo.autoplay = true;
 
-      // 스타일을 통해 화면에서 숨김 처리
       Object.assign(camVideo.style, {
         position: 'fixed',
         top: '-9999px',
@@ -96,7 +85,6 @@ export const useRecorder = () => {
       try {
         await camVideo.play();
 
-        // 2. 비디오 준비 대기 (최대 3초)
         const isVideoReady = await new Promise<boolean>((resolve) => {
           let attempts = 0;
           const check = () => {
@@ -112,15 +100,13 @@ export const useRecorder = () => {
 
         if (!isVideoReady) throw new Error('Video timeout');
 
-        // 3. 녹화 및 스트림 설정
         setIsRecording(true);
-        setRecordedChunks([]); // 새 녹화 시작 시 초기화
+        setRecordedChunks([]);
         drawCanvas(camVideo, slideImgRef);
 
         const canvasStream = canvasRef.current.captureStream(30);
         camStream.getAudioTracks().forEach((track) => canvasStream.addTrack(track));
 
-        // 4. MediaRecorder 설정
         const mimeType = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find(
           (type) => MediaRecorder.isTypeSupported(type),
         );
@@ -134,7 +120,7 @@ export const useRecorder = () => {
           }
         };
 
-        recorder.start(1000); // 1초 단위 청크 생성
+        recorder.start(1000);
         mediaRecorderRef.current = recorder;
       } catch (err) {
         console.error('Failed to start recording:', err);
@@ -144,9 +130,6 @@ export const useRecorder = () => {
     [drawCanvas],
   );
 
-  /**
-   * 녹화 중지 및 자원 해제
-   */
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current?.state !== 'inactive') {
       mediaRecorderRef.current?.stop();

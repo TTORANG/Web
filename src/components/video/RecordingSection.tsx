@@ -1,4 +1,3 @@
-// src/components/video/RecordingSection.tsx
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Logo, SlideImage } from '@/components/common';
@@ -36,7 +35,6 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
   const getSlideImgUrl = (p: number) => `/thumbnails/p1/${p - 1}.webp`;
 
-  // 슬라이드 이미지 로딩
   useEffect(() => {
     setSlideImageLoaded(false);
     const img = new Image();
@@ -54,17 +52,13 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
     }
   }, [currentPage, totalPages]);
 
-  // 녹화 자동 시작
   useEffect(() => {
     if (initialStream && !isRecording && slideImageLoaded && !recordingStartAttempted) {
       setRecordingStartAttempted(true);
-      startRecording(initialStream, slideImgRef, (blob) => {
-        // 실시간 청크 처리 (필요시)
-      });
+      startRecording(initialStream, slideImgRef, (blob) => {});
     }
   }, [initialStream, isRecording, slideImageLoaded, recordingStartAttempted, startRecording]);
 
-  // 시간 카운터
   useEffect(() => {
     if (!isRecording) return;
     const id = setInterval(() => {
@@ -81,7 +75,6 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
     return () => clearInterval(id);
   }, [isRecording, currentPage]);
 
-  // 페이지 전환
   const handlePageChange = useCallback(
     (dir: 'next' | 'prev') => {
       setCurrentPage((p) => {
@@ -115,55 +108,28 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
 
   const handleFinish = useCallback(async () => {
     if (isFinishing || !isRecording) {
-      console.log('⚠️ 이미 처리 중이거나 녹화 중이 아님');
       return;
     }
 
-    console.log('🎬 종료 버튼 클릭');
     setIsFinishing(true);
 
     try {
-      console.log('⏹️ 녹화 중지 중...');
       stopRecording();
-
-      console.log('⏳ 청크 수집 대기 중... (1.5초)');
       await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      console.log('📊 현재 청크 수:', recordedChunks.length);
-
       const durations = Object.fromEntries(
         Object.entries(slides).map(([k, v]) => [Number(k), v.duration]),
       );
 
       const finalVideoBlob = new Blob(recordedChunks, { type: 'video/webm' });
 
-      console.log('📦 최종 Blob 생성:', {
-        size: finalVideoBlob.size,
-        type: finalVideoBlob.type,
-        chunks: recordedChunks.length,
-      });
-
       if (finalVideoBlob.size === 0) {
         throw new Error('녹화된 영상이 없습니다.');
       }
-
-      console.log('📹 녹화 완료:', {
-        size: `${(finalVideoBlob.size / 1024 / 1024).toFixed(2)} MB`,
-        chunks: recordedChunks.length,
-        duration: formatTime(totalSeconds),
-        slides: Object.keys(durations).length,
-      });
-
-      // 4. onFinish 호출
-      console.log('📤 onFinish 호출 시작');
       onFinish(finalVideoBlob, durations);
-      console.log('✅ onFinish 호출 완료');
     } catch (error) {
-      console.error('❌ 녹화 종료 중 오류:', error);
       alert(error instanceof Error ? error.message : '녹화 종료 중 오류가 발생했습니다.');
       setIsFinishing(false); // 에러 발생 시에만 다시 활성화
     }
-    // 성공 시에는 setIsFinishing(false)를 호출하지 않음 (페이지 이동 예정)
   }, [
     isFinishing,
     isRecording,

@@ -4,8 +4,6 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { RecordingEmptySection } from '@/components/video';
 
-// import { videosApi } from '@/api/endpoints/videos'; // 실제 API 연동 시 사용
-
 interface Video {
   id: number;
   projectId: string;
@@ -14,9 +12,11 @@ interface Video {
   durationSeconds: number;
   slideCount: number;
   size: number;
+  videoData?: string; // Base64 인코딩된 영상
   videoUrl?: string; // HLS URL
   thumbnailUrl?: string;
   status: 'processing' | 'ready' | 'failed';
+  durations?: { [key: number]: number };
 }
 
 const VideoPage = () => {
@@ -44,27 +44,33 @@ const VideoPage = () => {
     const loadVideos = async () => {
       setIsLoading(true);
       try {
-        // TODO: 실제 API 호출로 교체
-        // const response = await videosApi.getProjectVideos(projectId);
-        // setVideos(response.data.videos);
+        console.log('📂 영상 목록 로드 시작 - projectId:', projectId);
 
-        // 임시: localStorage에서 로드 (개발 중)
+        // localStorage에서 로드
         const storedData = localStorage.getItem('mockVideos');
-        if (storedData) {
-          const mockVideos: Video[] = JSON.parse(storedData);
-          const projectVideos = mockVideos.filter((v) => v.projectId === projectId);
-          setVideos(projectVideos);
-          console.log('📂 로드된 영상 수:', projectVideos.length);
+        if (!storedData) {
+          console.log('📂 저장된 영상 없음');
+          setVideos([]);
+          return;
         }
+
+        const mockVideos: Video[] = JSON.parse(storedData);
+        console.log('📂 전체 영상 수:', mockVideos.length);
+
+        const projectVideos = mockVideos.filter((v) => v.projectId === projectId);
+        console.log('📂 현재 프로젝트 영상 수:', projectVideos.length);
+
+        setVideos(projectVideos);
       } catch (error) {
         console.error('영상 목록 로드 실패:', error);
+        setVideos([]);
       } finally {
         setIsLoading(false);
       }
     };
 
     loadVideos();
-  }, [projectId]);
+  }, [projectId, location.state]);
 
   const handleStart = () => {
     navigate(`/${projectId}/video/record`);
@@ -98,9 +104,7 @@ const VideoPage = () => {
               clipRule="evenodd"
             />
           </svg>
-          <span className="font-medium">
-            영상이 업로드되었습니다! 처리가 완료되면 확인할 수 있습니다.
-          </span>
+          <span className="font-medium">영상이 성공적으로 저장되었습니다!</span>
         </div>
       )}
 
@@ -131,7 +135,16 @@ const VideoPage = () => {
             </div>
 
             <div className="p-4">
-              {selectedVideo.videoUrl ? (
+              {selectedVideo.videoData ? (
+                <video
+                  src={selectedVideo.videoData}
+                  controls
+                  autoPlay
+                  className="w-full aspect-video bg-black rounded-lg"
+                >
+                  Your browser does not support the video tag.
+                </video>
+              ) : selectedVideo.videoUrl ? (
                 <video
                   src={selectedVideo.videoUrl}
                   controls
@@ -142,7 +155,7 @@ const VideoPage = () => {
                 </video>
               ) : (
                 <div className="w-full aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
-                  <p className="text-gray-500">영상 처리 중입니다</p>
+                  <p className="text-gray-500">영상 데이터를 찾을 수 없습니다</p>
                 </div>
               )}
 
@@ -159,12 +172,27 @@ const VideoPage = () => {
                   <p className="text-lg font-bold text-gray-900">{selectedVideo.slideCount}개</p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-xs text-gray-500 mb-1">상태</p>
+                  <p className="text-xs text-gray-500 mb-1">파일 크기</p>
                   <p className="text-lg font-bold text-gray-900">
-                    {selectedVideo.status === 'ready' ? '완료' : '처리 중'}
+                    {(selectedVideo.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
               </div>
+
+              {/* 슬라이드별 시간 정보 */}
+              {selectedVideo.durations && (
+                <div className="mt-4 bg-gray-50 p-4 rounded-lg">
+                  <h3 className="text-sm font-bold text-gray-900 mb-2">슬라이드별 소요 시간</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {Object.entries(selectedVideo.durations).map(([slideId, duration]) => (
+                      <div key={slideId} className="bg-white p-2 rounded text-center">
+                        <p className="text-xs text-gray-500">슬라이드 {slideId}</p>
+                        <p className="text-sm font-bold text-gray-900">{duration}초</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -211,7 +239,20 @@ const VideoPage = () => {
                   )}
 
                   <div className="aspect-video bg-gray-200 rounded mb-3 flex items-center justify-center relative overflow-hidden">
-                    {video.thumbnailUrl ? (
+                    {video.videoData ? (
+                      <>
+                        <video src={video.videoData} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                          <svg
+                            className="w-16 h-16 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                          </svg>
+                        </div>
+                      </>
+                    ) : video.thumbnailUrl ? (
                       <img
                         src={video.thumbnailUrl}
                         alt={video.title}
@@ -226,17 +267,6 @@ const VideoPage = () => {
                         <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                       </svg>
                     )}
-                    {video.status === 'ready' && (
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                        <svg
-                          className="w-16 h-16 text-white"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                        </svg>
-                      </div>
-                    )}
                   </div>
                   <h3 className="font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition">
                     {video.title}
@@ -245,6 +275,8 @@ const VideoPage = () => {
                     <span>{video.slideCount}개 슬라이드</span>
                     <span>•</span>
                     <span>{video.durationSeconds}초</span>
+                    <span>•</span>
+                    <span>{(video.size / 1024 / 1024).toFixed(2)} MB</span>
                   </div>
                   <p className="text-xs text-gray-400 mt-2">
                     {new Date(video.createdAt).toLocaleString('ko-KR')}

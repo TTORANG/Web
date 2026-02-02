@@ -1,4 +1,3 @@
-// src/pages/VideoListPage.tsx
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -9,7 +8,6 @@ import ProjectHeader from '../projects/ProjectHeader';
 import ProjectList from '../projects/ProjectList';
 import { RecordingEmptySection } from './RecordingEmptySection';
 
-// Mock 영상 데이터 타입 정의
 interface MockVideo {
   id: number;
   title: string;
@@ -45,22 +43,16 @@ export default function VideoListPage() {
 
   const hasProjects = projects.length > 0;
 
-  // 업로드 성공 토스트 표시
   useEffect(() => {
     if (location.state?.uploadSuccess) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowSuccessToast(true);
-
-      // state 정리
       navigate(location.pathname, { replace: true, state: {} });
-
-      // 3초 후 토스트 숨김
       const timer = setTimeout(() => setShowSuccessToast(false), 3000);
       return () => clearTimeout(timer);
     }
   }, [location, navigate]);
 
-  // Mock 데이터 로드
   useEffect(() => {
     const loadMockVideos = () => {
       try {
@@ -99,7 +91,6 @@ export default function VideoListPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* 성공 토스트 */}
       {showSuccessToast && (
         <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-slide-in">
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -114,7 +105,6 @@ export default function VideoListPage() {
       )}
 
       <main className="max-w-7xl mx-auto py-12 px-6">
-        {/* 헤더 */}
         <div className="flex justify-between items-end mb-10">
           <div>
             <h1 className="text-display-s-bold text-gray-900 mb-2">녹화된 영상</h1>
@@ -131,7 +121,6 @@ export default function VideoListPage() {
         </div>
 
         {isLoading ? (
-          // 로딩 중
           <div
             className={
               viewMode === 'card' ? 'grid grid-cols-2 gap-4 lg:grid-cols-3' : 'flex flex-col gap-3'
@@ -146,12 +135,10 @@ export default function VideoListPage() {
             )}
           </div>
         ) : !hasProjects ? (
-          // 비어있을 때
           <div className="flex justify-center py-20">
             <RecordingEmptySection onStart={handleStartRecording} />
           </div>
         ) : (
-          // 데이터가 있을 때
           <section>
             <ProjectHeader
               value={query}

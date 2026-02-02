@@ -699,4 +699,110 @@ export const handlers = [
       }),
     );
   }),
+  // src/mocks/handlers.ts 파일 끝부분에 추가 (마지막 ] 직전)
+
+  /**
+   * 영상 세션 생성
+   * POST /videos/start
+   */
+  http.post(`${BASE_URL}/videos/start`, async ({ request }) => {
+    await delay(200);
+    const body = (await request.json()) as { projectId: number; title: string };
+    console.log('[MSW] POST /videos/start', body);
+
+    const videoId = Math.floor(Math.random() * 100000) + 1;
+
+    return HttpResponse.json({
+      resultType: 'SUCCESS',
+      error: null,
+      success: {
+        videoId,
+      },
+    });
+  }),
+
+  /**
+   * POST /videos/:videoId/chunks/:chunkIndex
+   */
+  http.post(`${BASE_URL}/videos/:videoId/chunks/:chunkIndex`, async ({ params, request }) => {
+    await delay(50);
+    const { videoId, chunkIndex } = params;
+
+    const formData = await request.formData();
+    const file = formData.get('file');
+
+    if (file instanceof Blob) {
+      console.log(
+        `[MSW] POST /videos/${videoId}/chunks/${chunkIndex} - ${(file.size / 1024).toFixed(2)} KB`,
+      );
+    }
+
+    return HttpResponse.json({
+      resultType: 'SUCCESS',
+      error: null,
+      success: {
+        ok: true,
+      },
+    });
+  }),
+
+  /**
+   * POST /videos/:videoId/finish
+   */
+  http.post(`${BASE_URL}/videos/:videoId/finish`, async ({ params, request }) => {
+    await delay(300);
+    const { videoId } = params;
+    const body = (await request.json()) as {
+      slideLogs: Array<{ slideId: number; timestampMs: number }>;
+    };
+
+    console.log(`[MSW] POST /videos/${videoId}/finish`, body);
+
+    const slideLogs = body.slideLogs || [];
+    const slideDurations = slideLogs.map((log, index) => ({
+      slideId: String(log.slideId),
+      totalDurationMs:
+        index < slideLogs.length - 1 ? slideLogs[index + 1].timestampMs - log.timestampMs : 5000,
+    }));
+
+    return HttpResponse.json({
+      resultType: 'SUCCESS',
+      error: null,
+      success: {
+        videoId: String(videoId),
+        status: 'processing',
+        slideCount: slideLogs.length,
+        slideDurations,
+      },
+    });
+  }),
+
+  /**
+   * 영상 상세 조회
+   * GET /videos/:videoId
+   */
+  http.get(`${BASE_URL}/videos/:videoId`, async ({ params }) => {
+    await delay(150);
+    const { videoId } = params;
+    console.log(`[MSW] GET /videos/${videoId}`);
+
+    return HttpResponse.json({
+      resultType: 'SUCCESS',
+      error: null,
+      success: {
+        video: {
+          id: String(videoId),
+          title: 'Q4 마케팅 전략 발표',
+          status: 'ready',
+          durationSeconds: 300,
+          width: 1920,
+          height: 1080,
+          fps: 30,
+          hlsMasterUrl: 'https://example.com/master.m3u8',
+          thumbnailUrl: 'https://example.com/thumb.jpg',
+          createdAt: new Date().toISOString(),
+        },
+      },
+    });
+  }),
 ];
