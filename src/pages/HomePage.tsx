@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import IntroSection from '@/components/home/IntroSection';
-import ProjectsSection from '@/components/home/ProjectsSection';
+import PresentationsSection from '@/components/home/PresentationsSection';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useHomeFilter, useHomeQuery, useHomeSort } from '@/hooks/useHomeSelectors';
-import { useProjectList } from '@/hooks/useProjectList';
+import { usePresentationList } from '@/hooks/usePresentationList';
 import { useUpload } from '@/hooks/useUpload';
 import { MOCK_PROJECTS } from '@/mocks/projects';
-import type { Project } from '@/types';
+import type { Presentation } from '@/types/presentation';
 
 const ACCEPTED_FILES_TYPES = '.pdf,.ppt,.pptx,.txt,.mp4';
 
@@ -22,12 +22,12 @@ export default function HomePage() {
   const debouncedQuery = useDebounce(query, 300);
 
   // TODO :  나중에 mock_projects 말고 서버데이터로 바꿔주기..
-  const allProjects = MOCK_PROJECTS;
+  const allPresentations = MOCK_PROJECTS;
 
-  const filterFn = useMemo<((p: Project) => boolean) | undefined>(() => {
+  const filterFn = useMemo<((p: Presentation) => boolean) | undefined>(() => {
     if (filter === null || filter === 'all') return undefined;
 
-    return (p: Project) => {
+    return (p: Presentation) => {
       switch (filter) {
         case '3m':
           return p.durationMinutes <= 3;
@@ -41,15 +41,15 @@ export default function HomePage() {
   }, [filter]);
 
   // 1) 필터만 적용한 목록
-  const filteredProjects = useMemo(() => {
-    return filterFn ? allProjects.filter(filterFn) : allProjects;
-  }, [allProjects, filterFn]);
+  const filteredPresentations = useMemo(() => {
+    return filterFn ? allPresentations.filter(filterFn) : allPresentations;
+  }, [allPresentations, filterFn]);
 
-  const totalCount = allProjects.length;
-  const filteredCount = filteredProjects.length;
+  const totalCount = allPresentations.length;
+  const filteredCount = filteredPresentations.length;
 
   // 2) 검색/정렬은 '필터된 목록' 기준으로만 적용
-  const projects = useProjectList(filteredProjects, { query: debouncedQuery, sort });
+  const presentations = usePresentationList(filteredPresentations, { query: debouncedQuery, sort });
 
   const isEmpty = !isLoading && totalCount === 0;
 
@@ -73,12 +73,12 @@ export default function HomePage() {
       />
 
       {/* 내발표 */}
-      <ProjectsSection
+      <PresentationsSection
         isLoading={isLoading}
         totalCount={totalCount}
         filteredCount={filteredCount}
         appliedQuery={debouncedQuery}
-        projects={projects}
+        presentations={presentations}
       />
     </main>
   );

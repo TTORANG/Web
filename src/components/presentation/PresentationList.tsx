@@ -9,19 +9,19 @@ import ReactionCountIcon from '@/assets/icons/icon-reaction-count.svg?react';
 import RecentIcon from '@/assets/icons/icon-recent.svg?react';
 import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
 import { getTabPath } from '@/constants/navigation';
-import { useProjectDeletion } from '@/hooks/useProjectDeletion';
+import { usePresentationDeletion } from '@/hooks/usePresentationDeletion';
 import { useRename } from '@/hooks/useRename';
-import type { Project } from '@/types/project';
+import type { Presentation } from '@/types/presentation';
 import { formatRelativeTime } from '@/utils/format';
 
 import { Dropdown, type DropdownItem } from '../common/Dropdown';
-import DeleteProjectModal from './DeleteProjectModal';
+import DeletePresentationModal from './DeletePresentationModal';
 
-type Props = Project & {
+type Props = Presentation & {
   highlightQuery?: string;
 };
 
-function ProjectListSkeleton() {
+function PresentationListSkeleton() {
   return (
     <article className="flex w-full items-center justify-between bg-white px-5 py-4 rounded-2xl border border-gray-200">
       {/* 썸네일 */}
@@ -80,7 +80,7 @@ function ProjectListSkeleton() {
   );
 }
 
-function ProjectList({
+function PresentationList({
   id,
   title,
   updatedAt,
@@ -93,7 +93,7 @@ function ProjectList({
 }: Props) {
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
-    useProjectDeletion(id);
+    usePresentationDeletion(id);
 
   const {
     isRenaming,
@@ -249,9 +249,9 @@ function ProjectList({
 
       {/* 삭제 확인 모달 */}
       <div onClick={(e) => e.stopPropagation()}>
-        <DeleteProjectModal
+        <DeletePresentationModal
           isOpen={isDeleteModalOpen}
-          projectTitle={displayTitle}
+          presentationTitle={displayTitle}
           isPending={isPending}
           onClose={closeDeleteModal}
           onConfirm={confirmDelete}
@@ -261,6 +261,6 @@ function ProjectList({
   );
 }
 
-ProjectList.Skeleton = ProjectListSkeleton;
+PresentationList.Skeleton = PresentationListSkeleton;
 
-export default ProjectList;
+export default PresentationList;
