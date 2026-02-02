@@ -7,9 +7,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { queryKeys } from '@/api';
+import type { UpdateProjectDto } from '@/api/dto';
 import { getPresentations } from '@/api/endpoints/presentations';
 import {
-  type UpdatePresentationRequest,
   createPresentation,
   deletePresentation,
   getPresentation,
@@ -39,7 +39,7 @@ export function usePresentation(projectId: string) {
 export function useUpdatePresentation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ projectId, data }: { projectId: string; data: UpdatePresentationRequest }) =>
+    mutationFn: ({ projectId, data }: { projectId: string; data: UpdateProjectDto }) =>
       updatePresentation(projectId, data),
 
     onSuccess: (updatePresentation) => {

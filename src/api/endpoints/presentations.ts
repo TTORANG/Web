@@ -33,7 +33,8 @@ export async function getPresentations(): Promise<Presentation[]> {
 /**
  * 프로젝트 상세 조회
  *
- * @param projectId - 프로젝트 ID
+ * @param projectId
+ * @returns Presentation
  */
 export async function getPresentation(projectId: string): Promise<Presentation> {
   const response = await apiClient.get<ApiResponse<Presentation>>(`/presentations/${projectId}`);
@@ -45,17 +46,11 @@ export async function getPresentation(projectId: string): Promise<Presentation> 
 }
 
 /**
- * 프로젝트 수정 요청 타입 (하위 호환성)
- * @deprecated UpdateProjectDto 사용 권장
- */
-export type UpdatePresentationRequest = UpdateProjectDto;
-
-/**
- * 프로젝트 수정
+ * 프로젝트 제목 수정 (PATCH)
  *
- * @param projectId - 수정할 프로젝트 ID
- * @param data - 수정할 데이터
- * @returns 수정된 프로젝트
+ * @param projectId
+ * @param data - 수정할 프로젝트 데이터
+ * @returns ProjectUpdateResponse - 수정된 프로젝트 정보
  */
 export async function updatePresentation(
   projectId: string,
@@ -73,10 +68,10 @@ export async function updatePresentation(
 }
 
 /**
- * 프로젝트 생성
+ * 프로젝트 생성 (POST)
  *
  * @param data - 생성할 프로젝트 데이터
- * @returns 생성된 프로젝트
+ * @returns CreatePresentationSuccess - 생성된 프로젝트 정보
  */
 export async function createPresentation(
   data: CreatePresentationRequest,
@@ -93,9 +88,9 @@ export async function createPresentation(
 }
 
 /**
- * 프로젝트 삭제
+ * 프로젝트 삭제 (DELETE)
  *
- * @param projectId - 삭제할 프로젝트 ID
+ * @param projectId
  */
 export async function deletePresentation(projectId: string): Promise<void> {
   const response = await apiClient.delete<ApiResponse<null>>(`/presentations/${projectId}`);
@@ -106,10 +101,10 @@ export async function deletePresentation(projectId: string): Promise<void> {
 }
 
 /**
- * 프로젝트 파일 변환 상태 조회
+ * 프로젝트 파일 변환 상태 조회 (GET)
  *
  * @param projectId - 프로젝트 ID
- * @returns 변환 상태 정보
+ * @returns ConversionStatusResponse - 변환 상태 정보
  */
 export async function getConversionStatus(projectId: string): Promise<ConversionStatusResponse> {
   const response = await apiClient.get<ApiResponse<ConversionStatusResponse>>(
