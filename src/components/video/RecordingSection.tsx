@@ -1,5 +1,8 @@
+// src/components/video/RecordingSection.tsx
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Layout, Logo, SlideImage } from '@/components/common';
+
+import { Logo, SlideImage } from '@/components/common';
+
 import { useRecorder } from '../../hooks/useRecorder';
 
 interface SlideData {
@@ -9,249 +12,416 @@ interface SlideData {
 }
 
 interface RecordingSectionProps {
-  videoId: string;
-  projectId: number;
   title: string;
   initialStream: MediaStream;
-  slideUrls: string[];
-  onFinish: (durations: { [key: number]: number }) => void;
+  onFinish: (videoBlob: Blob, durations: { [key: number]: number }) => void;
 }
 
-export const RecordingSection = ({ 
-  videoId, 
-  projectId, 
-  title, 
-  initialStream, 
-  onFinish, 
-  slideUrls = [] 
-}: RecordingSectionProps) => {
+export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSectionProps) => {
   const slideImgRef = useRef<HTMLImageElement | null>(null);
   const logContainerRef = useRef<HTMLDivElement>(null);
-  const chunkIndexRef = useRef(0);
-  const { canvasRef, isRecording, startRecording, stopRecording } = useRecorder();
-  
+
+  const { canvasRef, isRecording, recordedChunks, startRecording, stopRecording } = useRecorder();
+
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalSeconds, setTotalSeconds] = useState<number>(0);
   const [slides, setSlides] = useState<{ [key: number]: SlideData }>({
-    1: { page: 1, duration: 0, visited: true }
+    1: { page: 1, duration: 0, visited: true },
   });
+  const [slideImageLoaded, setSlideImageLoaded] = useState<boolean>(false);
+  const [recordingStartAttempted, setRecordingStartAttempted] = useState<boolean>(false);
+  const [isFinishing, setIsFinishing] = useState<boolean>(false);
 
-  const totalPages = slideUrls.length;
+  const totalPages = 10;
+  const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+  const getSlideImgUrl = (p: number) => `/thumbnails/p1/${p - 1}.webp`;
 
-  const handleChunkUpload = useCallback(async (blob: Blob) => {
-    try {
-      const currentIndex = chunkIndexRef.current;
-      chunkIndexRef.current++;
-
-      const res = await fetch(`/videos/${videoId}/chunks`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          projectId,
-          chunkIndex: currentIndex,
-          size: blob.size,
-          contentType: 'video/webm'
-        })
-      });
-      const data = await res.json();
-      if (data.resultType === 'FAILURE') throw new Error(data.error.reason);
-
-      const { uploadUrl, objectKey } = data.success;
-
-      await fetch(uploadUrl, {
-        method: 'PUT',
-        body: blob,
-        headers: { 'Content-Type': 'video/webm' }
-      });
-
-      await fetch(`/videos/${videoId}/chunks/complete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          projectId,
-          chunkIndex: currentIndex,
-          objectKey: objectKey
-        })
-      });
-    } catch (err) {
-      console.error("Chunk upload failed:", err);
-    }
-  }, [videoId, projectId]);
-
+  // 슬라이드 이미지 로딩
   useEffect(() => {
-    if (!slideUrls.length) return;
+    setSlideImageLoaded(false);
     const img = new Image();
-    img.src = slideUrls[currentPage - 1];
-    img.crossOrigin = "anonymous";
-    img.onload = () => { slideImgRef.current = img; };
-  }, [currentPage, slideUrls]);
+    img.crossOrigin = 'anonymous';
+    img.src = getSlideImgUrl(currentPage);
 
-  useEffect(() => {
-    if (initialStream && !isRecording && totalPages > 0) {
-      startRecording(initialStream, slideImgRef, handleChunkUpload);
-    }
-  }, [initialStream, startRecording, isRecording, totalPages, handleChunkUpload]);
+    img.onload = () => {
+      slideImgRef.current = img;
+      setSlideImageLoaded(true);
+    };
 
-  useEffect(() => {
-    let id: ReturnType<typeof setInterval> | undefined;
-    if (isRecording) {
-      id = setInterval(() => {
-        setTotalSeconds((v) => v + 1);
-        setSlides((prev) => ({
-          ...prev,
-          [currentPage]: {
-            ...prev[currentPage],
-            duration: (prev[currentPage]?.duration || 0) + 1,
-            visited: true
-          }
-        }));
-      }, 1000);
+    if (currentPage < totalPages) {
+      const prefetch = new Image();
+      prefetch.src = getSlideImgUrl(currentPage + 1);
     }
+  }, [currentPage, totalPages]);
+
+  // 녹화 자동 시작
+  useEffect(() => {
+    if (initialStream && !isRecording && slideImageLoaded && !recordingStartAttempted) {
+      setRecordingStartAttempted(true);
+      startRecording(initialStream, slideImgRef, (blob) => {
+        // 실시간 청크 처리 (필요시)
+      });
+    }
+  }, [initialStream, isRecording, slideImageLoaded, recordingStartAttempted, startRecording]);
+
+  // 시간 카운터
+  useEffect(() => {
+    if (!isRecording) return;
+    const id = setInterval(() => {
+      setTotalSeconds((v) => v + 1);
+      setSlides((prev) => ({
+        ...prev,
+        [currentPage]: {
+          ...prev[currentPage],
+          duration: (prev[currentPage]?.duration || 0) + 1,
+          visited: true,
+        },
+      }));
+    }, 1000);
     return () => clearInterval(id);
   }, [isRecording, currentPage]);
 
-  const handlePageChange = useCallback((dir: 'next' | 'prev') => {
-    setCurrentPage((p) => {
-      const next = dir === 'next' ? Math.min(p + 1, totalPages) : Math.max(p - 1, 1);
-      if (next !== p && totalPages > 0) {
-        setSlides(prev => ({
-          ...prev,
-          [next]: prev[next] || { page: next, duration: 0, visited: true }
-        }));
-      }
-      return next;
-    });
-  }, [totalPages]);
+  // 페이지 전환
+  const handlePageChange = useCallback(
+    (dir: 'next' | 'prev') => {
+      setCurrentPage((p) => {
+        const next = dir === 'next' ? Math.min(p + 1, totalPages) : Math.max(p - 1, 1);
+        if (next !== p) {
+          setSlides((prev) => ({
+            ...prev,
+            [next]: prev[next] || { page: next, duration: 0, visited: true },
+          }));
+        }
+        return next;
+      });
+    },
+    [totalPages],
+  );
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.code === 'Space' || e.code === 'ArrowRight') handlePageChange('next');
-      if (e.code === 'ArrowLeft') handlePageChange('prev');
+      if (e.code === 'Space' || e.code === 'ArrowRight') {
+        e.preventDefault();
+        handlePageChange('next');
+      }
+      if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        handlePageChange('prev');
+      }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [handlePageChange]);
 
-  const handleFinish = async () => {
-    stopRecording();
-    try {
-      await fetch(`/videos/${videoId}/complete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId })
-      });
-      
-      const durations = Object.fromEntries(
-        Object.entries(slides).map(([k, v]) => [Number(k), v.duration])
-      );
-      onFinish(durations);
-    } catch (err) {
-      console.error("Finalizing error:", err);
+  const handleFinish = useCallback(async () => {
+    if (isFinishing || !isRecording) {
+      console.log('⚠️ 이미 처리 중이거나 녹화 중이 아님');
+      return;
     }
-  };
 
-  const formatTime = (s: number) => 
-    `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+    console.log('🎬 종료 버튼 클릭');
+    setIsFinishing(true);
 
-  if (totalPages === 0) return null;
+    try {
+      console.log('⏹️ 녹화 중지 중...');
+      stopRecording();
 
+      console.log('⏳ 청크 수집 대기 중... (1.5초)');
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      console.log('📊 현재 청크 수:', recordedChunks.length);
+
+      const durations = Object.fromEntries(
+        Object.entries(slides).map(([k, v]) => [Number(k), v.duration]),
+      );
+
+      const finalVideoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+
+      console.log('📦 최종 Blob 생성:', {
+        size: finalVideoBlob.size,
+        type: finalVideoBlob.type,
+        chunks: recordedChunks.length,
+      });
+
+      if (finalVideoBlob.size === 0) {
+        throw new Error('녹화된 영상이 없습니다.');
+      }
+
+      console.log('📹 녹화 완료:', {
+        size: `${(finalVideoBlob.size / 1024 / 1024).toFixed(2)} MB`,
+        chunks: recordedChunks.length,
+        duration: formatTime(totalSeconds),
+        slides: Object.keys(durations).length,
+      });
+
+      // 4. onFinish 호출
+      console.log('📤 onFinish 호출 시작');
+      onFinish(finalVideoBlob, durations);
+      console.log('✅ onFinish 호출 완료');
+    } catch (error) {
+      console.error('❌ 녹화 종료 중 오류:', error);
+      alert(error instanceof Error ? error.message : '녹화 종료 중 오류가 발생했습니다.');
+      setIsFinishing(false); // 에러 발생 시에만 다시 활성화
+    }
+    // 성공 시에는 setIsFinishing(false)를 호출하지 않음 (페이지 이동 예정)
+  }, [
+    isFinishing,
+    isRecording,
+    stopRecording,
+    recordedChunks,
+    slides,
+    totalSeconds,
+    formatTime,
+    onFinish,
+  ]);
   return (
-    <div className="relative w-full h-full font-['Pretendard']">
-      <style>{`
-        header { background-color: #1a1c21 !important; height: 60px !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important; z-index: 1000 !important; }
-        header * { color: #ffffff !important; }
-        main { margin-top: 60px !important; height: calc(100vh - 60px) !important; background-color: #1A1A1A !important; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-      `}</style>
-
-      <Layout
-        theme="dark"
-        scrollable={false}
-        left={
-          <div className="flex items-center gap-[24px] h-[60px] relative z-[1001]">
-            <Logo />
-            <div className="h-8 w-[1px] bg-white/20" />
-            <span className="text-[16px] font-bold text-white truncate max-w-[200px]">{title}</span>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-[#F24B4B] rounded-full animate-pulse" />
-              <span className="text-[16px] font-bold text-white">녹화 중</span>
-            </div>
-          </div>
-        }
-        right={
-          <div className="flex items-center gap-[24px] h-[60px] relative z-[1001]">
-            <div className="flex items-center gap-2 font-mono text-[16px] font-bold text-white tracking-widest uppercase">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              {formatTime(totalSeconds)}
-            </div>
-            <button onClick={handleFinish} className="flex items-center gap-1 bg-[#666B76] px-4 py-1.5 rounded-full text-[12px] font-bold text-white hover:bg-[#5a5f6a] transition-all">
-              종료 <span className="w-3 h-3 bg-white rounded-sm ml-1" />
-            </button>
-          </div>
-        }
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        backgroundColor: '#1A1A1A',
+        color: 'white',
+      }}
+    >
+      {/* Header */}
+      <header
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '60px',
+          backgroundColor: '#22252C',
+          borderBottom: '1px solid #666B76',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 72px',
+          zIndex: 10000,
+        }}
       >
-        <div className="fixed inset-0 top-[60px] flex flex-col lg:flex-row bg-[#1A1A1A] z-[1]">
-          <div className="relative flex-1 flex flex-col items-center justify-center p-4">
-             <div className="relative w-full max-w-[1024px] aspect-[1024/575] bg-[#000000] shadow-2xl overflow-hidden border border-white/5">
-                <canvas ref={canvasRef} width={1440} height={1024} className="absolute inset-0 w-full h-full object-contain" />
-                
-                <div className="absolute top-[16px] left-[16px] z-[50] bg-black/60 px-[16px] py-[8px] rounded-full flex items-center gap-1 text-[16px] font-bold text-white border border-white/10">
-                  {currentPage} <span className="opacity-60">/</span> {totalPages}
-                </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+          <Logo />
+          <div style={{ width: '1px', height: '20px', backgroundColor: 'rgba(255,255,255,0.2)' }} />
+          <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>
+            {title || '제목 없음'}
+          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="w-2 h-2 rounded-full bg-[#F24B4B] animate-pulse" />
+            <span style={{ color: '#F24B4B', fontSize: '14px', fontWeight: 'bold' }}>
+              {isFinishing ? '처리 중' : '녹화 중'}
+            </span>
+          </div>
+        </div>
 
-                <div className="absolute top-[16px] right-[16px] z-[50] bg-black/60 px-[16px] py-[10px] rounded-[8px] flex flex-col items-center min-w-[96px] border border-white/10">
-                  <span className="text-[12px] text-[#A9ACB2] font-bold uppercase">현재 슬라이드</span>
-                  <span className="text-[20px] font-bold font-mono text-white leading-none mt-1 uppercase">
-                    {formatTime(slides[currentPage]?.duration || 0)}
-                  </span>
+        <div className="flex items-center gap-8">
+          <div className="flex items-center gap-2">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#60A5FA"
+              strokeWidth="2.5"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 6v6l4 2" />
+            </svg>
+            <span className="text-blue-400 font-bold text-xl tabular-nums tracking-wider">
+              {formatTime(totalSeconds)}
+            </span>
+          </div>
+          <button
+            onClick={handleFinish}
+            disabled={!isRecording || isFinishing}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '4px',
+              width: '61px',
+              height: '30px',
+              backgroundColor: isFinishing ? '#444' : '#666B76',
+              borderRadius: '100px',
+              border: 'none',
+              cursor: isRecording && !isFinishing ? 'pointer' : 'not-allowed',
+              opacity: isRecording && !isFinishing ? 1 : 0.5,
+            }}
+          >
+            <span style={{ color: '#FFFFFF', fontSize: '12px', fontWeight: 600 }}>
+              {isFinishing ? '처리중' : '종료'}
+            </span>
+            {!isFinishing && (
+              <div
+                style={{
+                  width: '10px',
+                  height: '10px',
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '1px',
+                }}
+              />
+            )}
+          </button>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main style={{ marginTop: '60px', height: 'calc(100vh - 60px)', display: 'flex' }}>
+        <section className="flex-1 relative flex flex-col items-center justify-center p-[4vh] bg-[#121418]">
+          <div className="relative w-full aspect-video max-h-full rounded-2xl ring-1 ring-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] bg-black overflow-hidden">
+            <canvas
+              ref={canvasRef}
+              width={1920}
+              height={1080}
+              className="w-full h-full object-contain"
+            />
+            <div className="absolute left-8 top-8 bg-black/70 backdrop-blur-md px-6 py-2.5 rounded-xl text-white font-bold text-lg border border-white/10">
+              {currentPage} / {totalPages}
+            </div>
+            <div className="absolute right-8 top-8 flex flex-col items-center bg-black/70 backdrop-blur-md px-5 py-3 rounded-xl border border-blue-500/30">
+              <span className="text-white/40 font-bold text-[11px] uppercase mb-1">Slide Time</span>
+              <span className="text-white font-bold text-2xl font-mono">
+                {formatTime(slides[currentPage]?.duration || 0)}
+              </span>
+            </div>
+          </div>
+          {currentPage === 1 && (
+            <p className="mt-8 text-white/40 text-sm font-medium tracking-widest animate-pulse uppercase">
+              Spacebar or Arrows to navigate
+            </p>
+          )}
+        </section>
+
+        {/* Sidebar */}
+        <aside
+          style={{
+            width: '384px',
+            backgroundColor: '#343841',
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '24px 16px',
+            gap: '24px',
+            borderLeft: '1px solid #666B76',
+            flexShrink: 0,
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <h3 style={{ color: '#E2E4E8', fontSize: '14px', fontWeight: 600, margin: 0 }}>
+              다음 슬라이드
+            </h3>
+            <div
+              style={{
+                width: '352px',
+                height: '197px',
+                backgroundColor: '#666B76',
+                overflow: 'hidden',
+              }}
+            >
+              {currentPage < totalPages ? (
+                <SlideImage src={getSlideImgUrl(currentPage + 1)} alt="Next" />
+              ) : (
+                <div
+                  style={{
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#A9ACB2',
+                  }}
+                >
+                  END
                 </div>
-             </div>
-             <p className="mt-8 text-[#A9ACB2] text-[14px] font-medium text-center">스페이스바 또는 화살표를 클릭하여 다음 슬라이드로 이동하세요</p>
+              )}
+            </div>
           </div>
 
-          <aside className="w-full lg:w-[384px] h-auto lg:h-full bg-[#343841] border-t lg:border-t-0 lg:border-l border-[#666B76] flex flex-col p-[24px] shrink-0 overflow-hidden">
-            <div className="flex flex-col gap-[8px] mb-[24px]">
-              <h3 className="text-[#E2E4E8] text-[14px] font-bold uppercase tracking-tight opacity-80">다음 슬라이드</h3>
-              <div className="w-full aspect-video bg-[#000000] overflow-hidden border border-white/5">
-                 {currentPage < totalPages ? (
-                   <div className="w-full h-full">
-                     <SlideImage src={slideUrls[currentPage]} alt="next" />
-                   </div>
-                 ) : (
-                   <div className="w-full h-full flex items-center justify-center text-white/10 font-bold text-2xl uppercase">End</div>
-                 )}
-              </div>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <div style={{ padding: '12px 0', borderTop: '1px solid #666B76' }}>
+              <h3 style={{ color: '#E2E4E8', fontSize: '14px', fontWeight: 600, margin: 0 }}>
+                발표 대본
+              </h3>
             </div>
-
-            <div className="flex flex-col min-h-[150px] border-t border-white/10 pt-4 overflow-hidden">
-              <h3 className="text-[#E2E4E8] text-[14px] font-bold uppercase tracking-tight opacity-80 mb-3">발표 대본</h3>
-              <div className="text-white text-[16px] leading-[1.6] overflow-y-auto pr-2 custom-scrollbar flex-1">
-                지난 분기 실적을 보시면, 매출이 전년 대비 30% 증가했습니다. 이러한 성장은 주로 신규 유입 고객의 증가와 서비스 개편에 따른 사용자 리텐션 향상에 기인합니다.
-              </div>
+            <div
+              style={{
+                flex: 1,
+                overflowY: 'auto',
+                color: '#FFFFFF',
+                fontSize: '16px',
+                lineHeight: '150%',
+              }}
+              className="scrollbar-hide"
+            >
+              {currentPage}페이지 대본 영역입니다. 매출이 전년 대비 30% 증가했습니다.
             </div>
+          </div>
 
-            <div className="flex-1 flex flex-col border-t border-white/10 mt-6 pt-4 min-h-0">
-              <h3 className="text-[#E2E4E8] text-[14px] font-bold uppercase tracking-tight opacity-80 mb-3">진행 상황</h3>
-              <div ref={logContainerRef} className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(idx => (
-                  <div key={idx} className="flex justify-between items-center text-[15px]">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full ${idx === currentPage ? 'bg-white shadow-[0_0_8px_white]' : 'bg-white/20'}`} />
-                      <span className={idx === currentPage ? 'text-white font-bold' : 'text-white/40'}>슬라이드 {idx}</span>
+          <div style={{ height: '220px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '12px 0', borderTop: '1px solid #666B76' }}>
+              <h3 style={{ color: '#E2E4E8', fontSize: '14px', fontWeight: 600, margin: 0 }}>
+                진행 상황
+              </h3>
+            </div>
+            <div
+              ref={logContainerRef}
+              style={{
+                flex: 1,
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+              }}
+              className="scrollbar-hide"
+            >
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((idx) => {
+                const isCurrent = idx === currentPage;
+                const isVisited = slides[idx]?.visited;
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div
+                        style={{
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          backgroundColor: isCurrent || isVisited ? '#FFFFFF' : '#A9ACB2',
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: '16px',
+                          fontWeight: isCurrent ? 600 : 400,
+                          color: isCurrent || isVisited ? '#FFFFFF' : '#A9ACB2',
+                        }}
+                      >
+                        슬라이드 {idx}
+                      </span>
                     </div>
-                    {(slides[idx]?.visited || idx === currentPage) && (
-                      <span className={`font-mono text-[14px] ${idx === currentPage ? 'text-white' : 'text-white/40'}`}>
+                    {(isVisited || isCurrent) && (
+                      <span
+                        style={{
+                          color: isCurrent ? '#FFFFFF' : '#E2E4E8',
+                          fontVariantNumeric: 'tabular-nums',
+                          fontSize: '16px',
+                        }}
+                      >
                         {formatTime(slides[idx]?.duration || 0)}
                       </span>
                     )}
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          </aside>
-        </div>
-      </Layout>
+          </div>
+        </aside>
+      </main>
     </div>
   );
 };

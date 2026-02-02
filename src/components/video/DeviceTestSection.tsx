@@ -65,13 +65,7 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
 
       <div className="flex w-full flex-1 items-center justify-center py-[1.5rem] min-h-0">
         <div className="relative aspect-video h-full max-h-[45vh] overflow-hidden rounded-xl border-2 border-main bg-gray-200 shadow-xl">
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className="h-full w-full object-cover -scale-x-100"
-          />
+          <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
         </div>
       </div>
 
@@ -117,8 +111,37 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
         </div>
       </div>
 
-      <div className="mt-[2rem] w-full max-w-[27.5rem]">
-        <ActionButton text="영상 녹화하기" onClick={() => stream && onComplete({ cam: stream })} />
+      <div className="mt-[2rem] w-full max-w-[27.5rem] text-white">
+        <ActionButton
+          text="영상 녹화하기"
+          onClick={() => {
+            if (stream) {
+              console.log('📹 Original stream:', {
+                id: stream.id,
+                active: stream.active,
+                tracks: stream.getTracks().map((t) => ({
+                  kind: t.kind,
+                  enabled: t.enabled,
+                  readyState: t.readyState,
+                })),
+              });
+
+              // 스트림 복제
+              const clonedStream = stream.clone();
+              console.log('📹 Cloned stream:', {
+                id: clonedStream.id,
+                active: clonedStream.active,
+                tracks: clonedStream.getTracks().map((t) => ({
+                  kind: t.kind,
+                  enabled: t.enabled,
+                  readyState: t.readyState,
+                })),
+              });
+
+              onComplete({ cam: clonedStream });
+            }
+          }}
+        />{' '}
       </div>
     </div>
   );
