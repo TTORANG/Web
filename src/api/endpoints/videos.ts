@@ -1,62 +1,11 @@
-// src/api/endpoints/videos/index.ts
 import { apiClient } from '@/api/client';
-
-/**
- * 영상 녹화 관련 DTO 정의
- */
-export interface StartVideoRequest {
-  projectId: number;
-  title: string;
-}
-
-export interface StartVideoResponse {
-  resultType: 'SUCCESS' | 'FAILURE';
-  error: null | {
-    errorCode: string;
-    reason: string;
-    data?: unknown;
-  };
-  success: {
-    videoId: number;
-  };
-}
-
-export interface FinishVideoRequest {
-  slideLogs: Array<{
-    slideId: number;
-    timestampMs: number;
-  }>;
-}
-
-export interface FinishVideoResponse {
-  resultType: 'SUCCESS' | 'FAILURE';
-  error: null | {
-    errorCode: string;
-    reason: string;
-    data?: unknown;
-  };
-  success: {
-    videoId: string;
-    status: string;
-    slideCount: number;
-    slideDurations: Array<{
-      slideId: string;
-      totalDurationMs: number;
-    }>;
-  };
-}
-
-export interface ChunkUploadResponse {
-  resultType: 'SUCCESS' | 'FAILURE';
-  error: null | {
-    errorCode: string;
-    reason: string;
-    data?: unknown;
-  };
-  success: {
-    ok: boolean;
-  };
-}
+import type {
+  FinishVideoRequest,
+  FinishVideoResponse,
+  StartVideoRequest,
+  StartVideoResponse,
+} from '@/api/dto/video.dto';
+import type { ChunkUploadResponse } from '@/api/dto/video.dto';
 
 export const videosApi = {
   // POST /videos/start - 영상 녹화 세션 생성

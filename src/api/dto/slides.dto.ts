@@ -1,14 +1,33 @@
 /**
+ * 슬라이드 목록 조회 DTO
+ */
+export interface CreateSlideResponseDto {
+  slideId: string;
+  projectId: string;
+  title: string;
+  slideNum: number;
+  imageUrl: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
  * 슬라이드 제목 수정 요청 DTO
  */
-export interface UpdateSlideDto {
+export interface UpdateSlideTitleRequestDto {
   title?: string;
 }
 
 /**
- * 슬라이드 생성 요청 DTO
+ * 슬라이드 상세 조회 DTO
  */
-export interface CreateSlideDto {
+export interface GetSlideResponseDto {
+  slideId: string;
+  projectId: string;
   title: string;
-  script?: string;
+  slideNum: number;
+  imageUrl: string;
+  prevSlideId: string | null;
+  nextSlideId: string | null;
+  updatedAt: string;
 }
