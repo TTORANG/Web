@@ -14,7 +14,10 @@ export const toggleReaction = async (slideId: string, data: ToggleReactionReques
   return response;
 };
 
-export type ReactionSummary = Partial<Record<ReactionType, number>>;
+export type ReactionSummary = {
+  slideId: string;
+  reactions: Partial<Record<ReactionType, number>>;
+};
 
 export async function getSlideReactionSummary(slideId: string): Promise<ReactionSummary> {
   const response = await apiClient.get<ApiResponse<ReactionSummary>>(
