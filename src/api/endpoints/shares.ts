@@ -1,0 +1,68 @@
+/**
+ * @file shares.ts
+ * @description 공유 링크 관련 API 엔드포인트
+ *
+ * 서버와 통신하는 함수들을 정의합니다.
+ * 이 함수들은 직접 호출하지 않고, hooks/queries에서 사용합니다.
+ */
+import type {
+  CreateShareLinkRequest,
+  CreateShareLinkResponse,
+  ShareableVideosResponse,
+} from '@/types/share';
+
+import { apiClient } from '../client';
+
+/**
+ * projectId에서 'p' 접두사 제거 (p4 -> 4)
+ */
+function normalizeProjectId(projectId: string): string {
+  return projectId.startsWith('p') ? projectId.slice(1) : projectId;
+}
+
+/**
+ * 공유 가능 영상 목록 조회 (무한 스크롤)
+ *
+ * 공유 링크 생성 시 선택 가능한 '녹화 완료(ready)' 상태의 영상 목록을 조회합니다.
+ *
+ * @param projectId - 프로젝트 ID (p4 또는 4)
+ * @param page - 페이지 번호 (기본값: 1)
+ * @param pageSize - 페이지당 아이템 수 (기본값: 10)
+ * @returns 공유 가능한 영상 목록
+ */
+export async function getShareableVideos(
+  projectId: string,
+  page = 1,
+  pageSize = 10,
+): Promise<ShareableVideosResponse> {
+  const normalizedId = normalizeProjectId(projectId);
+  const response = await apiClient.get<ShareableVideosResponse>(
+    `/presentations/${normalizedId}/shares/videos`,
+    {
+      params: { page, pageSize },
+    },
+  );
+  return response.data;
+}
+
+/**
+ * 공유 링크 생성
+ *
+ * 특정 프로젝트에 대한 외부 공유 링크를 생성합니다.
+ * 영상 포함 여부에 따라 scope를 설정합니다.
+ *
+ * @param projectId - 프로젝트 ID (p4 또는 4)
+ * @param data - 공유 링크 생성 요청 데이터
+ * @returns 생성된 공유 링크 정보
+ */
+export async function createShareLink(
+  projectId: string,
+  data: CreateShareLinkRequest,
+): Promise<CreateShareLinkResponse> {
+  const normalizedId = normalizeProjectId(projectId);
+  const response = await apiClient.post<CreateShareLinkResponse>(
+    `/presentations/${normalizedId}/shares`,
+    data,
+  );
+  return response.data;
+}
