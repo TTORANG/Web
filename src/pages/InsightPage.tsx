@@ -324,7 +324,7 @@ export default function InsightPage() {
           <h3 className="text-body-l-bold text-gray-800 mb-4">가장 많은 피드백을 받은 슬라이드</h3>
           <div className="grid grid-cols-3 gap-3 items-start">
             {topSlides.map(({ slideId, slide, slideIndex, commentCount, title }, index) => {
-              const summary = topSlideReactionSummaries?.[index];
+              const summary = topSlideReactionSummaries?.[index]?.reactions;
               const baseReactions = createDefaultReactions();
               const summaryReactions = summary
                 ? baseReactions.map((reaction) => ({
