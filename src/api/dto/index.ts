@@ -22,9 +22,14 @@ export type {
 } from './scripts.dto';
 export type { ToggleSlideReactionDto } from './reactions.dto';
 export type { RestoreScriptRequestDto } from './analytics.dto';
-// export type { CreateProjectRequestDto, CreateProjectResponseDto, GetProjectResponseDto, UpdateProjectRequestDto } from './presentations.dto';
+export type { UpdateProjectDto } from './presentations.dto';
 // export type { UploadFileResponseDto } from './files.dto';
-export type { StartVideoRequest, FinishVideoRequest, FinishVideoResponse } from './video.dto';
+export type {
+  CreateOpinionDto,
+  FinishVideoRequest,
+  FinishVideoResponse,
+  StartVideoRequest,
+} from './video.dto';
 export type {
   CommentResponseDto,
   CommentUserDto,

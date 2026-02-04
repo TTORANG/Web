@@ -3,14 +3,8 @@
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import {
-  type UpdateSlideRequest,
-  createSlide,
-  deleteSlide,
-  getSlide,
-  getSlides,
-  updateSlide,
-} from '@/api/endpoints/slides';
+import type { UpdateSlideTitleRequestDto } from '@/api/dto';
+import { createSlide, deleteSlide, getSlide, getSlides, updateSlide } from '@/api/endpoints/slides';
 import { queryKeys } from '@/api/queryClient';
 
 /** 슬라이드 목록 조회 */
@@ -36,7 +30,7 @@ export function useUpdateSlide() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ slideId, data }: { slideId: string; data: UpdateSlideRequest }) =>
+    mutationFn: ({ slideId, data }: { slideId: string; data: UpdateSlideTitleRequestDto }) =>
       updateSlide(slideId, data),
 
     onSuccess: (_, { slideId }) => {
