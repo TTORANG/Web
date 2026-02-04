@@ -167,7 +167,7 @@ export default function InsightPage() {
       aria-labelledby="tab-insight"
       className="h-full overflow-y-auto bg-gray-100"
     >
-      <div className="flex min-w-[1296px] flex-col gap-6 px-18 py-8">
+      <div className="flex flex-col gap-6 px-18 py-8">
         {/* 헤더 */}
         <div className="flex flex-col gap-1">
           <h1 className="text-body-l-bold text-gray-800">발표 인사이트</h1>
@@ -256,12 +256,12 @@ export default function InsightPage() {
           </div>
 
           {/* 피드백 분포 + 피드백 TOP 슬라이드 */}
-          <div className="flex items-start justify-between py-4">
+          <div className="flex flex-wrap items-start justify-between gap-6 py-4">
             <FeedbackDistributionSection reactions={reactions} />
 
-            <div className="flex w-[641px] flex-col gap-6">
+            <div className="flex min-w-80 flex-1 basis-160 flex-col gap-6">
               <h3 className="text-body-l-bold text-gray-800">가장 많은 피드백을 받은 슬라이드</h3>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 {topSlides.map(({ slide, slideIndex }) => {
                   const reactionMetrics = (slide.emojiReactions ?? []).filter(
                     (reaction) => reaction.count > 0,

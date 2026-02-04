@@ -16,9 +16,9 @@ export default function DropOffAnalysisSection({
   showVideoDropOff = true,
 }: DropOffAnalysisSectionProps) {
   return (
-    <div className="flex gap-4">
+    <div className="flex flex-wrap gap-4">
       {/* 슬라이드 이탈 */}
-      <div className="flex w-160 flex-col gap-1 rounded-lg border border-gray-200 bg-white px-5 py-4">
+      <div className="flex min-w-80 flex-1 basis-160 flex-col gap-1 rounded-lg border border-gray-200 bg-white px-5 py-4">
         <h3 className="text-body-l-bold text-gray-800">가장 많이 이탈한 슬라이드</h3>
         {dropOffSlides.map((item, idx) => (
           <div
@@ -47,7 +47,7 @@ export default function DropOffAnalysisSection({
 
       {/* 영상 구간 이탈 */}
       {showVideoDropOff && (
-        <div className="flex w-160 flex-col gap-1 rounded-lg border border-gray-200 bg-white px-5 py-4">
+        <div className="flex min-w-80 flex-1 basis-160 flex-col gap-1 rounded-lg border border-gray-200 bg-white px-5 py-4">
           <h3 className="text-body-l-bold text-gray-800">가장 많이 이탈한 영상 구간</h3>
           {dropOffTimes.map((item, idx) => (
             <div

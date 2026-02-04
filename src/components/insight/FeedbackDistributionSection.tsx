@@ -12,7 +12,7 @@ export default function FeedbackDistributionSection({
   const max = reactions.reduce((current, reaction) => Math.max(current, reaction.count), 1);
 
   return (
-    <div className="flex w-136.75 flex-col gap-6">
+    <div className="flex min-w-80 flex-1 basis-136.75 flex-col gap-6">
       <div className="flex items-center justify-between">
         <h3 className="text-body-l-bold text-gray-800">슬라이드 이모지 피드백 분포</h3>
         <span className="text-body-l-bold text-main">총 {total}개</span>
@@ -28,7 +28,7 @@ export default function FeedbackDistributionSection({
                   {REACTION_CONFIG[react.type].label}
                 </span>
               </div>
-              <div className="relative h-2 w-90.5">
+              <div className="relative h-2 min-w-20 flex-1">
                 <div className="absolute inset-0 rounded-full bg-gray-200" />
                 <div
                   className="absolute left-0 top-0 h-2 rounded-full bg-main"
