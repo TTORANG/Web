@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import IconArrowLeft from '@/assets/icons/icon-arrow-left.svg?react';
+import IconArrowRight from '@/assets/icons/icon-arrow-right.svg?react';
+import IconStop from '@/assets/icons/icon-stop.svg?react';
 import { Logo, SlideImage } from '@/components/common';
 
 import { useRecorder } from '../../hooks/useRecorder';
@@ -132,242 +135,162 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
     }
   }, [isFinishing, isRecording, stopRecording, recordedChunks, slides, onFinish]);
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 9999,
-        backgroundColor: '#1A1A1A',
-        color: 'white',
-      }}
-    >
+    <div className="fixed inset-0 z-[9999] bg-white">
       {/* Header */}
-      <header
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '60px',
-          backgroundColor: '#22252C',
-          borderBottom: '1px solid #666B76',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 72px',
-          zIndex: 10000,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-          <Logo />
-          <div style={{ width: '1px', height: '20px', backgroundColor: 'rgba(255,255,255,0.2)' }} />
-          <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>
-            {title || '제목 없음'}
-          </h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div className="w-2 h-2 rounded-full bg-[#F24B4B] animate-pulse" />
-            <span style={{ color: '#F24B4B', fontSize: '14px', fontWeight: 'bold' }}>
+      <header className="fixed left-0 top-0 z-[10000] flex h-15 w-full items-center justify-between border-b border-gray-400 bg-gray-200 px-18">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6">
+            <Logo />
+            <span className="text-body-m-bold text-black">{title || '제목 없음'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 animate-pulse rounded-full bg-error" />
+            <span className="text-body-m-bold text-black">
               {isFinishing ? '처리 중' : '녹화 중'}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-2">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#60A5FA"
-              strokeWidth="2.5"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 6v6l4 2" />
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-1.5">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-black">
+              <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5" />
+              <path
+                d="M8 4V8L10.5 9.5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
             </svg>
-            <span className="text-blue-400 font-bold text-xl tabular-nums tracking-wider">
+            <span className="text-body-m-bold tabular-nums text-black">
               {formatTime(totalSeconds)}
             </span>
           </div>
           <button
             onClick={handleFinish}
             disabled={!isRecording || isFinishing}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '4px',
-              width: '61px',
-              height: '30px',
-              backgroundColor: isFinishing ? '#444' : '#666B76',
-              borderRadius: '100px',
-              border: 'none',
-              cursor: isRecording && !isFinishing ? 'pointer' : 'not-allowed',
-              opacity: isRecording && !isFinishing ? 1 : 0.5,
-            }}
+            className="flex items-center gap-1 rounded-full bg-gray-400 py-1.5 pl-3 pr-2 transition-colors hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <span style={{ color: '#FFFFFF', fontSize: '12px', fontWeight: 600 }}>
-              {isFinishing ? '처리중' : '종료'}
-            </span>
-            {!isFinishing && (
-              <div
-                style={{
-                  width: '10px',
-                  height: '10px',
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: '1px',
-                }}
-              />
-            )}
+            <span className="text-caption-bold text-black">{isFinishing ? '처리중' : '종료'}</span>
+            {!isFinishing && <IconStop className="h-4 w-4 text-black" />}
           </button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main style={{ marginTop: '60px', height: 'calc(100vh - 60px)', display: 'flex' }}>
-        <section className="flex-1 relative flex flex-col items-center justify-center p-[4vh] bg-[#121418]">
-          <div className="relative w-full aspect-video max-h-full rounded-2xl ring-1 ring-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] bg-black overflow-hidden">
-            <canvas
-              ref={canvasRef}
-              width={1920}
-              height={1080}
-              className="w-full h-full object-contain"
-            />
-            <div className="absolute left-8 top-8 bg-black/70 backdrop-blur-md px-6 py-2.5 rounded-xl text-white font-bold text-lg border border-white/10">
-              {currentPage} / {totalPages}
-            </div>
-            <div className="absolute right-8 top-8 flex flex-col items-center bg-black/70 backdrop-blur-md px-5 py-3 rounded-xl border border-blue-500/30">
-              <span className="text-white/40 font-bold text-[11px] uppercase mb-1">Slide Time</span>
-              <span className="text-white font-bold text-2xl font-mono">
-                {formatTime(slides[currentPage]?.duration || 0)}
-              </span>
+      <main className="mt-15 flex h-[calc(100vh-60px)]">
+        {/* Slide Area */}
+        <section className="relative flex flex-1 flex-col bg-white">
+          {/* Canvas Area */}
+          <div className="relative flex flex-1 items-center justify-center px-5 py-4">
+            <div className="relative h-full w-full max-w-[1024px]">
+              <canvas
+                ref={canvasRef}
+                width={1920}
+                height={1080}
+                className="h-full w-full rounded-lg object-contain"
+              />
+
+              {/* Slide Counter - Top Left */}
+              <div className="absolute left-5 top-4 flex items-center gap-2 rounded-full bg-white/65 px-4 py-2">
+                <span className="text-body-m-bold text-black">{currentPage}</span>
+                <span className="text-body-m-bold text-black">/</span>
+                <span className="text-body-m-bold text-black">{totalPages}</span>
+              </div>
+
+              {/* Current Slide Timer - Top Right */}
+              <div className="absolute right-5 top-4 flex flex-col items-start rounded-lg bg-white/65 px-4 pb-2 pt-2.5">
+                <span className="text-caption-bold text-gray-600">현재 슬라이드</span>
+                <span className="text-body-l-bold text-black">
+                  {formatTime(slides[currentPage]?.duration || 0)}
+                </span>
+              </div>
+
+              {/* Navigation Arrows */}
+              <button
+                onClick={() => handlePageChange('prev')}
+                disabled={currentPage === 1}
+                className="absolute left-5 top-1/2 -translate-y-1/2 rounded-full bg-white/65 p-2 transition-colors hover:bg-white/80 disabled:opacity-30"
+              >
+                <IconArrowLeft className="h-6 w-6 text-black" />
+              </button>
+              <button
+                onClick={() => handlePageChange('next')}
+                disabled={currentPage === totalPages}
+                className="absolute right-5 top-1/2 -translate-y-1/2 rounded-full bg-white/65 p-2 transition-colors hover:bg-white/80 disabled:opacity-30"
+              >
+                <IconArrowRight className="h-6 w-6 text-black" />
+              </button>
             </div>
           </div>
-          {currentPage === 1 && (
-            <p className="mt-8 text-white/40 text-sm font-medium tracking-widest animate-pulse uppercase">
-              Spacebar or Arrows to navigate
-            </p>
-          )}
+
+          {/* Bottom Hint Text */}
+          <p className="pb-6 text-center text-body-s text-gray-600">
+            스페이스바 또는 화살표를 클릭하여 다음 슬라이드로 이동하세요
+          </p>
         </section>
 
         {/* Sidebar */}
-        <aside
-          style={{
-            width: '384px',
-            backgroundColor: '#343841',
-            display: 'flex',
-            flexDirection: 'column',
-            padding: '24px 16px',
-            gap: '24px',
-            borderLeft: '1px solid #666B76',
-            flexShrink: 0,
-          }}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <h3 style={{ color: '#E2E4E8', fontSize: '14px', fontWeight: 600, margin: 0 }}>
-              다음 슬라이드
-            </h3>
-            <div
-              style={{
-                width: '352px',
-                height: '197px',
-                backgroundColor: '#666B76',
-                overflow: 'hidden',
-              }}
-            >
+        <aside className="flex w-96 shrink-0 flex-col gap-6 bg-gray-200 px-4 py-6">
+          {/* Next Slide Preview */}
+          <div className="flex flex-col gap-2">
+            <h3 className="text-body-s-bold text-gray-800">다음 슬라이드</h3>
+            <div className="h-[197px] w-full overflow-hidden bg-gray-400">
               {currentPage < totalPages ? (
-                <SlideImage src={getSlideImgUrl(currentPage + 1)} alt="Next" />
+                <SlideImage src={getSlideImgUrl(currentPage + 1)} alt="다음 슬라이드" />
               ) : (
-                <div
-                  style={{
-                    height: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#A9ACB2',
-                  }}
-                >
-                  END
+                <div className="flex h-full items-center justify-center text-body-m text-gray-600">
+                  마지막 슬라이드
                 </div>
               )}
             </div>
           </div>
 
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            <div style={{ padding: '12px 0', borderTop: '1px solid #666B76' }}>
-              <h3 style={{ color: '#E2E4E8', fontSize: '14px', fontWeight: 600, margin: 0 }}>
-                발표 대본
-              </h3>
+          {/* Script Section */}
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="border-t border-gray-400 py-3">
+              <h3 className="text-body-s-bold text-gray-800">발표 대본</h3>
             </div>
-            <div
-              style={{
-                flex: 1,
-                overflowY: 'auto',
-                color: '#FFFFFF',
-                fontSize: '16px',
-                lineHeight: '150%',
-              }}
-              className="scrollbar-hide"
-            >
-              {currentPage}페이지 대본 영역입니다. 매출이 전년 대비 30% 증가했습니다.
+            <div className="scrollbar-hide flex-1 overflow-y-auto text-body-m leading-normal text-black">
+              지난 분기 실적을 보시면, 매출이 전년 대비 30% 증가했습니다.
             </div>
           </div>
 
-          <div style={{ height: '220px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '12px 0', borderTop: '1px solid #666B76' }}>
-              <h3 style={{ color: '#E2E4E8', fontSize: '14px', fontWeight: 600, margin: 0 }}>
-                진행 상황
-              </h3>
+          {/* Progress Section */}
+          <div className="flex flex-col">
+            <div className="border-t border-gray-400 py-3">
+              <h3 className="text-body-s-bold text-gray-800">진행 상황</h3>
             </div>
             <div
               ref={logContainerRef}
-              style={{
-                flex: 1,
-                overflowY: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-              }}
-              className="scrollbar-hide"
+              className="scrollbar-hide flex max-h-32 flex-col gap-2 overflow-y-auto"
             >
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((idx) => {
                 const isCurrent = idx === currentPage;
                 const isVisited = slides[idx]?.visited;
                 return (
-                  <div
-                    key={idx}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div key={idx} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
                       <div
-                        style={{
-                          width: '8px',
-                          height: '8px',
-                          borderRadius: '50%',
-                          backgroundColor: isCurrent || isVisited ? '#FFFFFF' : '#A9ACB2',
-                        }}
+                        className={`h-2 w-2 rounded-full ${
+                          isCurrent ? 'bg-main-variant1' : isVisited ? 'bg-black' : 'bg-gray-600'
+                        }`}
                       />
                       <span
-                        style={{
-                          fontSize: '16px',
-                          fontWeight: isCurrent ? 600 : 400,
-                          color: isCurrent || isVisited ? '#FFFFFF' : '#A9ACB2',
-                        }}
+                        className={`text-body-m ${
+                          isCurrent
+                            ? 'font-semibold text-black'
+                            : isVisited
+                              ? 'text-black'
+                              : 'text-gray-600'
+                        }`}
                       >
                         슬라이드 {idx}
                       </span>
                     </div>
                     {(isVisited || isCurrent) && (
                       <span
-                        style={{
-                          color: isCurrent ? '#FFFFFF' : '#E2E4E8',
-                          fontVariantNumeric: 'tabular-nums',
-                          fontSize: '16px',
-                        }}
+                        className={`tabular-nums text-body-m ${isCurrent ? 'text-black' : 'text-gray-800'}`}
                       >
                         {formatTime(slides[idx]?.duration || 0)}
                       </span>
