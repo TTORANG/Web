@@ -271,7 +271,7 @@ export const handlers = [
       });
     }
 
-    return HttpResponse.json(slide);
+    return HttpResponse.json(wrapResponse(slide));
   }),
 
   /**
