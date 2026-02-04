@@ -6,9 +6,13 @@
  * 이 함수들은 직접 호출하지 않고, hooks/queries에서 사용합니다.
  */
 import { apiClient } from '@/api';
-import type { UpdateSlideDto } from '@/api/dto';
+import type {
+  GetSlideResponseDto,
+  UpdateSlideResponseDto,
+  UpdateSlideTitleRequestDto,
+} from '@/api/dto';
 import type { ApiResponse } from '@/types/api';
-import type { SlideDetail, SlideListItem, SlideUpdateResponse } from '@/types/slide';
+import type { SlideListItem } from '@/types/slide';
 
 /**
  * 프로젝트의 슬라이드 목록 조회
@@ -36,8 +40,8 @@ export async function getSlides(projectId: string): Promise<SlideListItem[]> {
  * @param slideId - 슬라이드 ID
  * @returns 슬라이드 정보
  */
-export async function getSlide(slideId: string): Promise<SlideDetail> {
-  const response = await apiClient.get<ApiResponse<SlideDetail>>(
+export async function getSlide(slideId: string): Promise<GetSlideResponseDto> {
+  const response = await apiClient.get<ApiResponse<GetSlideResponseDto>>(
     `/presentations/slides/${slideId}`,
   );
 
@@ -48,12 +52,6 @@ export async function getSlide(slideId: string): Promise<SlideDetail> {
 }
 
 /**
- * 슬라이드 수정 요청 타입 (하위 호환성)
- * @deprecated UpdateSlideDto 사용 권장
- */
-export type UpdateSlideRequest = UpdateSlideDto;
-
-/**
  * 슬라이드 수정
  *
  * @param slideId - 수정할 슬라이드 ID
@@ -62,9 +60,9 @@ export type UpdateSlideRequest = UpdateSlideDto;
  */
 export async function updateSlide(
   slideId: string,
-  data: UpdateSlideDto,
-): Promise<SlideUpdateResponse> {
-  const response = await apiClient.patch<ApiResponse<SlideUpdateResponse>>(
+  data: UpdateSlideTitleRequestDto,
+): Promise<UpdateSlideResponseDto> {
+  const response = await apiClient.patch<ApiResponse<UpdateSlideResponseDto>>(
     `/presentations/slides/${slideId}`,
     data,
   );
@@ -85,8 +83,8 @@ export async function updateSlide(
 export async function createSlide(
   projectId: string,
   data: { title: string; script?: string },
-): Promise<SlideDetail> {
-  const response = await apiClient.post<ApiResponse<SlideDetail>>(
+): Promise<GetSlideResponseDto> {
+  const response = await apiClient.post<ApiResponse<GetSlideResponseDto>>(
     `/presentations/${projectId}/slides`,
     data,
   );

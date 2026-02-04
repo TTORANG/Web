@@ -31,3 +31,14 @@ export interface GetSlideResponseDto {
   nextSlideId: string | null;
   updatedAt: string;
 }
+
+/**
+ * 슬라이드 수정 응답 DTO
+ */
+export interface UpdateSlideResponseDto {
+  slideId: string;
+  title: string;
+  slideNum: number;
+  imageUrl: string;
+  updatedAt: string;
+}

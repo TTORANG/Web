@@ -39,29 +39,6 @@ export interface PaginatedData<T> {
 }
 
 /**
- * 대본 정보 응답
- */
-export interface ScriptResponse {
-  message?: string;
-  slideId: string;
-  charCount: number;
-  scriptText: string;
-  estimatedDurationSeconds: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-/**
- * 대본 버전 (히스토리) 정보
- */
-export interface ScriptVersion {
-  versionNumber: number;
-  scriptText: string;
-  charCount: number;
-  createdAt: string;
-}
-
-/**
  * 변환 상태
  */
 export type ConversionStatus = 'processing' | 'completed' | 'failed';
