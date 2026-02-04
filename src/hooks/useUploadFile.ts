@@ -15,6 +15,8 @@ import type { AxiosProgressEvent } from 'axios';
 
 import type { UploadFileRequestDto, UploadFileResponseDto } from '@/api/dto/files.dto';
 import { filesApi } from '@/api/endpoints/files';
+import { sessionApi } from '@/api/endpoints/session';
+import { useAuthStore } from '@/stores/authStore';
 import type { ApiResponse } from '@/types';
 
 interface UploadProgress {
@@ -40,6 +42,18 @@ export function useUploadFile() {
       setProgress({ ...initialProgress, currentStep: 'preparing' });
 
       try {
+        /**
+         * 익명 세션 발급
+         * - store에 accessToken이 있으면 session 생성을 스킵함
+         */
+        const { accessToken } = useAuthStore.getState();
+        if (!accessToken) {
+          const sessionResponse = await sessionApi.createAnonymousSession();
+          if (sessionResponse.resultType === 'FAILURE') {
+            throw new Error(sessionResponse.error?.reason ?? '익명 세션 생성 실패');
+          }
+        }
+
         // 업로드 시작
         setProgress({ ...initialProgress, currentStep: 'uploading' });
 

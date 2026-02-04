@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+
+//import { useNavigate } from 'react-router-dom';
 
 import IntroSection from '@/components/home/IntroSection';
 import PresentationsSection from '@/components/home/PresentationsSection';
@@ -16,7 +17,7 @@ const ACCEPTED_FILES_TYPES = '.pptx,.ppt,.pdf,.mp4,.webm';
 // const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
 export default function HomePage() {
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
   const { uploadFiles, isUploading, progress, error } = useUploadFile();
 
   const onFilesSelected = async (files: File[]) => {
@@ -27,8 +28,8 @@ export default function HomePage() {
 
     if (response?.resultType === 'SUCCESS') {
       showToast.success('업로드 완료!');
-      const projectId = response.success.projectId;
-      navigate(`/presentations/${projectId}`);
+      //const projectId = response.success.projectId;
+      //navigate(`/presentations/${projectId}`);
     }
   };
   const [isLoading, setIsLoading] = useState(true);
