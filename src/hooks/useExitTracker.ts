@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef } from 'react';
 
-import { type RecordExitRequest } from '@/api/endpoints/analytics';
-import { recordExitOnUnload, useRecordExit } from '@/hooks/useAnalytics';
+import { type RecordExitRequest, recordExit as recordExitApi } from '@/api/endpoints/analytics';
+import { useRecordExit } from '@/hooks/useAnalytics';
 
 type ExitMode = 'unload' | 'unmount';
 
 export function useExitTracker(buildExitPayload: () => RecordExitRequest | null) {
-  const { mutate: recordExit } = useRecordExit();
+  const { mutate } = useRecordExit();
   const exitSentRef = useRef(false);
 
   const sendExit = useCallback(
@@ -17,12 +17,12 @@ export function useExitTracker(buildExitPayload: () => RecordExitRequest | null)
 
       exitSentRef.current = true;
       if (mode === 'unload') {
-        recordExitOnUnload(payload);
+        recordExitApi(payload);
       } else {
-        recordExit(payload);
+        mutate(payload);
       }
     },
-    [buildExitPayload, recordExit],
+    [buildExitPayload, mutate],
   );
 
   useEffect(() => {
