@@ -12,7 +12,9 @@
 import { useCallback, useState } from 'react';
 
 import type { AxiosProgressEvent } from 'axios';
+import axios from 'axios';
 
+import type { ApiFailureResponse } from '@/api/client';
 import type { UploadFileRequestDto, UploadFileResponseDto } from '@/api/dto/files.dto';
 import { filesApi } from '@/api/endpoints/files';
 import { sessionApi } from '@/api/endpoints/session';
@@ -90,26 +92,20 @@ export function useUploadFile() {
       } catch (err: unknown) {
         let errorMessage = '업로드 중 오류가 발생했습니다.';
 
-        if (err instanceof Error) {
+        if (axios.isAxiosError<ApiFailureResponse>(err)) {
+          const reason = err.response?.data?.error?.reason;
+
+          if (typeof reason === 'string' && reason.length > 0) {
+            errorMessage = reason;
+          } else if (typeof err.message === 'string' && err.message.length > 0) {
+            errorMessage = err.message;
+          }
+        } else if (err instanceof Error) {
           errorMessage = err.message;
         }
 
-        const axiosError = err as {
-          response?: {
-            data?: {
-              error?: {
-                reason?: string;
-                errorCode?: string;
-              };
-            };
-          };
-        };
-
-        if (axiosError?.response?.data?.error) {
-          const apiError = axiosError.response.data.error;
-          errorMessage = apiError.reason || errorMessage;
-        }
         setError(errorMessage);
+        setProgress({ ...initialProgress, currentStep: 'preparing' });
         return null;
       } finally {
         setIsUploading(false);
