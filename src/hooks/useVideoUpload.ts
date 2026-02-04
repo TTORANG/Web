@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
+import type { FinishVideoResponse, StartVideoResponse } from '@/api/dto/video.dto';
 import { videosApi } from '@/api/endpoints/videos';
-import type { FinishVideoResponse, StartVideoResponse } from '@/api/endpoints/videos';
 
 interface UploadProgress {
   uploadedChunks: number;

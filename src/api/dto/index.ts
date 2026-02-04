@@ -3,9 +3,30 @@
  * @description DTO 배럴 export
  */
 
-export type { SocialLoginSuccessDto, SocialLoginTokensDto, SocialLoginUserDto } from './auth.dto';
-export type { CreateProjectDto, UpdateProjectDto } from './projects.dto';
-export type { CreateSlideDto, UpdateSlideDto } from './slides.dto';
-export type { UpdateScriptDto, RestoreScriptDto } from './scripts.dto';
-export type { CreateOpinionDto } from './opinions.dto';
+export type {
+  SocialLoginSuccessResponseDto,
+  SocialLoginTokensResponseDto,
+  SocialLoginUserResponseDto,
+} from './auth.dto';
+export type {
+  CreateSlideResponseDto,
+  UpdateSlideTitleRequestDto,
+  GetSlideResponseDto,
+} from './slides.dto';
+export type {
+  UpdateScriptRequestDto,
+  GetScriptResponseDto,
+  GetScriptVersionHistoryResponseDto,
+  RestoreScriptResponseDto,
+} from './scripts.dto';
 export type { ToggleSlideReactionDto } from './reactions.dto';
+export type { RestoreScriptRequestDto } from './analytics.dto';
+// export type { CreateProjectRequestDto, CreateProjectResponseDto, GetProjectResponseDto, UpdateProjectRequestDto } from './presentations.dto';
+// export type { UploadFileResponseDto } from './files.dto';
+export type { StartVideoRequest, FinishVideoRequest, FinishVideoResponse } from './video.dto';
+export type {
+  CreateCommentRequestDto,
+  CreateReplyCommentRequestDto,
+  CreateReplyCommentResponseDto,
+  GetRepliesResponseDto,
+} from './comments.dto';

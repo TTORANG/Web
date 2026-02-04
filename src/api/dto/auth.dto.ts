@@ -5,7 +5,7 @@
 /**
  * 소셜 로그인 성공 응답의 사용자 정보
  */
-export interface SocialLoginUserDto {
+export interface SocialLoginUserResponseDto {
   id: string;
   email: string;
   name: string;
@@ -15,7 +15,7 @@ export interface SocialLoginUserDto {
 /**
  * 소셜 로그인 성공 응답의 토큰 정보
  */
-export interface SocialLoginTokensDto {
+export interface SocialLoginTokensResponseDto {
   accessToken: string;
   refreshToken: string;
 }
@@ -23,8 +23,10 @@ export interface SocialLoginTokensDto {
 /**
  * 소셜 로그인 성공 응답
  */
-export interface SocialLoginSuccessDto {
+export interface SocialLoginSuccessResponseDto {
   message: string;
-  user: SocialLoginUserDto;
-  tokens: SocialLoginTokensDto;
+  user: SocialLoginUserResponseDto;
+  tokens: SocialLoginTokensResponseDto;
 }
+
+//위 형식대로 response, request dto 작성 부탁드립니다.
