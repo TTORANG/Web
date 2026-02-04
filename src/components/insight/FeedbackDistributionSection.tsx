@@ -35,7 +35,7 @@ export default function FeedbackDistributionSection({
                   style={{ width: `${ratio}%` }}
                 />
               </div>
-              <div className="ml-auto w-8 text-right text-body-m-bold text-gray-800">
+              <div className="ml-4 w-12 shrink-0 text-right text-body-m-bold text-gray-800">
                 {react.count}개
               </div>
             </div>
