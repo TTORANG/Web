@@ -2,9 +2,13 @@
  * @file comments.ts
  * @description 댓글 관련 API 엔드포인트
  */
-import { apiClient } from '@/api/client';
+import { apiClient } from '@/api';
+import type {
+  CommentResponseDto,
+  GetReplyListResponseDto,
+  GetSlideCommentsResponseDto,
+} from '@/api/dto';
 import type { ApiResponse } from '@/types/api';
-import type { CommentListResponse, CommentResponse, ReplyListResponse } from '@/types/comment';
 
 /**
  * 슬라이드 댓글 목록 조회
@@ -18,8 +22,8 @@ export async function getSlideComments(
   slideId: string,
   page = 1,
   limit = 20,
-): Promise<CommentListResponse> {
-  const response = await apiClient.get<ApiResponse<CommentListResponse>>(
+): Promise<GetSlideCommentsResponseDto> {
+  const response = await apiClient.get<ApiResponse<GetSlideCommentsResponseDto>>(
     `/slides/${slideId}/comments`,
     {
       params: { page, limit },
@@ -42,8 +46,8 @@ export async function getSlideComments(
 export async function createSlideComment(
   slideId: string,
   data: { content: string },
-): Promise<CommentResponse> {
-  const response = await apiClient.post<ApiResponse<CommentResponse>>(
+): Promise<CommentResponseDto> {
+  const response = await apiClient.post<ApiResponse<CommentResponseDto>>(
     `/slides/${slideId}/comments`,
     data,
   );
@@ -64,8 +68,8 @@ export async function createSlideComment(
 export async function createReply(
   commentId: string,
   data: { content: string },
-): Promise<CommentResponse> {
-  const response = await apiClient.post<ApiResponse<CommentResponse>>(
+): Promise<CommentResponseDto> {
+  const response = await apiClient.post<ApiResponse<CommentResponseDto>>(
     `/comments/${commentId}/replies`,
     data,
   );
@@ -82,9 +86,15 @@ export async function createReply(
  * @param commentId - 댓글 ID
  * @returns 답글 목록
  */
-export async function getReplies(commentId: string): Promise<ReplyListResponse> {
-  const response = await apiClient.get<ReplyListResponse>(`/comments/${commentId}/replies`);
-  return response.data;
+export async function getReplies(commentId: string): Promise<GetReplyListResponseDto> {
+  const response = await apiClient.get<ApiResponse<GetReplyListResponseDto>>(
+    `/comments/${commentId}/replies`,
+  );
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
 }
 
 /**
@@ -97,8 +107,8 @@ export async function getReplies(commentId: string): Promise<ReplyListResponse> 
 export async function updateComment(
   commentId: string,
   data: { content: string },
-): Promise<CommentResponse> {
-  const response = await apiClient.patch<ApiResponse<CommentResponse>>(
+): Promise<CommentResponseDto> {
+  const response = await apiClient.patch<ApiResponse<CommentResponseDto>>(
     `/comments/${commentId}`,
     data,
   );

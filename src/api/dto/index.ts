@@ -26,8 +26,17 @@ export type { RestoreScriptRequestDto } from './analytics.dto';
 // export type { UploadFileResponseDto } from './files.dto';
 export type { StartVideoRequest, FinishVideoRequest, FinishVideoResponse } from './video.dto';
 export type {
+  CommentResponseDto,
+  CommentUserDto,
+  CommentWithUserDto,
   CreateCommentRequestDto,
+  CreateCommentResponseDto,
   CreateReplyCommentRequestDto,
   CreateReplyCommentResponseDto,
+  CreateVideoCommentRequestDto,
+  DeleteCommentRequestDto,
   GetRepliesResponseDto,
+  GetReplyListResponseDto,
+  GetSlideCommentsResponseDto,
+  UpdateCommentResponseDto,
 } from './comments.dto';
