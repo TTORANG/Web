@@ -10,8 +10,9 @@ export type {
 } from './auth.dto';
 export type {
   CreateSlideResponseDto,
-  UpdateSlideTitleRequestDto,
   GetSlideResponseDto,
+  UpdateSlideResponseDto,
+  UpdateSlideTitleRequestDto,
 } from './slides.dto';
 export type {
   UpdateScriptRequestDto,
