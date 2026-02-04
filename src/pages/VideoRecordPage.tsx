@@ -7,6 +7,13 @@ import { useVideoUpload } from '@/hooks/useVideoUpload';
 import type { RecordingProject, RecordingSlide } from '@/types/recording';
 
 type RecordStep = 'TEST' | 'RECORDING';
+const MOCK_SLIDES: RecordingSlide[] = Array.from({ length: 10 }, (_, index) => ({
+  id: `slide-${index + 1}`,
+  page: index + 1,
+  title: '제목없음',
+  imageUrl: `/thumbnails/p1/${index}.webp`,
+  script: `슬라이드 ${index + 1}번의 임시 대본입니다. 이것은 테스트용 대본이며 실제로는 스토어에서 가져온 데이터가 표시됩니다.`,
+}));
 
 export default function VideoRecordPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -22,14 +29,6 @@ export default function VideoRecordPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const { uploadVideo, isUploading, progress, error } = useVideoUpload();
-
-  const MOCK_SLIDES: RecordingSlide[] = Array.from({ length: 10 }, (_, index) => ({
-    id: `slide-${index + 1}`,
-    page: index + 1,
-    title: '제목없음',
-    imageUrl: `/thumbnails/p1/${index}.webp`,
-    script: `슬라이드 ${index + 1}번의 임시 대본입니다. 이것은 테스트용 대본이며 실제로는 스토어에서 가져온 데이터가 표시됩니다.`,
-  }));
 
   useEffect(() => {
     if (!projectId) {
