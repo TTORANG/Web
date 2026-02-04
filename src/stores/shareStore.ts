@@ -19,6 +19,9 @@ interface ShareStoreState {
   closeShareModal: () => void;
   setShareType: (type: ShareType) => void;
   setSelectedVideoId: (videoId: string | null) => void;
+  setShareUrl: (url: string) => void;
+  setStep: (step: 'form' | 'result') => void;
+  /** @deprecated API 연결 후 제거 예정 - useCreateShareLink 훅 사용 권장 */
   generateShareLink: (params: {
     projectId: string;
     shareType: ShareType;
@@ -56,6 +59,10 @@ export const useShareStore = create<ShareStoreState>((set, get) => ({
   },
 
   setSelectedVideoId: (videoId) => set({ selectedVideoId: videoId }),
+
+  setShareUrl: (url) => set({ shareUrl: url }),
+
+  setStep: (step) => set({ step }),
 
   generateShareLink: ({ projectId, shareType, selectedVideoId }) => {
     const token = Math.random().toString(36).slice(2, 11);
