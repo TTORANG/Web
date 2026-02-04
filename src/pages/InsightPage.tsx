@@ -172,7 +172,7 @@ export default function InsightPage() {
       .slice(0, 3);
   }, [slides]);
 
-  const getThumb = (slideIndex: number) => slides?.[slideIndex]?.thumb;
+  const getThumb = (slideIndex: number) => slides?.[slideIndex]?.imageUrl;
 
   const slideChangeTimes = useMemo(() => {
     if (!slides?.length) return [];
@@ -334,7 +334,7 @@ export default function InsightPage() {
 
               return (
                 <TopSlideCard
-                  key={slide.id}
+                  key={slide.slideId}
                   title={slide.title || `슬라이드 ${slideIndex + 1}`}
                   thumbUrl={getThumb(slideIndex)}
                   reactionMetrics={reactionMetrics}

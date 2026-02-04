@@ -129,7 +129,7 @@ export function ShareModal() {
         setStep('result');
       } else if (response.resultType === 'FAILURE') {
         // 서버에서 에러 응답이 온 경우
-        const errorMessage = response.reason?.message || '공유 링크 생성에 실패했습니다.';
+        const errorMessage = response.error.reason || '공유 링크 생성에 실패했습니다.';
         showToast.error(errorMessage);
       } else {
         // 예상치 못한 응답 형식

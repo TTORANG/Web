@@ -1,0 +1,53 @@
+import type { Slide } from './slide';
+
+/**
+ * 녹화용 슬라이드 데이터
+ *
+ * Slide 타입에서 녹화에 필요한 필드만 추출
+ */
+export interface RecordingSlide {
+  id: string;
+  page: number;
+  imageUrl: string;
+  script: string;
+  title: string;
+}
+
+/**
+ * 녹화 프로젝트 데이터
+ *
+ * 영상 녹화에 필요한 프로젝트 정보와 슬라이드 목록
+ */
+export interface RecordingProject {
+  projectId: string;
+  title: string;
+  slides: RecordingSlide[];
+}
+
+/**
+ * Slide 배열을 RecordingSlide 배열로 변환
+ */
+export function convertToRecordingSlides(slides: Slide[], projectId: string): RecordingSlide[] {
+  return slides.map((slide, index) => ({
+    id: slide.id,
+    page: index + 1,
+    imageUrl: slide.thumb || `/thumbnails/${projectId}/${index}.webp`,
+    script: slide.script || '',
+    title: slide.title,
+  }));
+}
+
+/**
+ * Slide 배열로부터 RecordingProject 생성
+ */
+export function createRecordingProject(
+  projectId: string,
+  projectTitle: string,
+  slides: Slide[],
+): RecordingProject {
+  return {
+    projectId,
+    title: projectTitle,
+    slides: convertToRecordingSlides(slides, projectId),
+  };
+}

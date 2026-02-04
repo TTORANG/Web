@@ -10,11 +10,11 @@ import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 
 import { SlideImage } from '@/components/common';
-import type { Slide } from '@/types/slide';
+import type { SlideListItem } from '@/types/slide';
 
 interface SlideThumbnailProps {
   /** 슬라이드 데이터 */
-  slide?: Slide;
+  slide?: SlideListItem;
   /** 슬라이드 순서 (0-indexed) */
   index: number;
   /** 현재 선택된 슬라이드 여부 */
@@ -46,7 +46,7 @@ export default function SlideThumbnail({
 
   return (
     <Link
-      to={{ search: `?slideId=${slide.id}` }}
+      to={{ search: `?slideId=${slide.slideId}` }}
       replace
       aria-current={isActive ? 'true' : undefined}
       className={clsx(
@@ -66,7 +66,7 @@ export default function SlideThumbnail({
 
       {/* 썸네일 */}
       <div className="relative flex-1 rounded overflow-hidden bg-gray-200">
-        <SlideImage src={slide.thumb} alt={`슬라이드 ${index + 1}: ${slide.title}`} />
+        <SlideImage src={slide.imageUrl} alt={`슬라이드 ${index + 1}: ${slide.title}`} />
       </div>
     </Link>
   );

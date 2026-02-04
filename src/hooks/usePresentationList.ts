@@ -44,7 +44,7 @@ export function usePresentationList(presentations: Presentation[], options?: Opt
     const next = [...result];
 
     if (sort === 'commentCount') {
-      return next.sort((a, b) => b.commentCount - a.commentCount);
+      return next.sort((a, b) => b.feedbackCount - a.feedbackCount);
     }
     if (sort === 'name') {
       return next.sort((a, b) => a.title.localeCompare(b.title));

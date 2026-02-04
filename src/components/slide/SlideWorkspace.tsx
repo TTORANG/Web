@@ -11,13 +11,13 @@ import { useEffect, useState } from 'react';
 
 import { SLIDE_MAX_WIDTH } from '@/constants/layout';
 import { useSlideActions } from '@/hooks';
-import type { Slide } from '@/types/slide';
+import type { SlideListItem } from '@/types/slide';
 
 import SlideViewer from './SlideViewer';
 import { ScriptBox } from './script';
 
 interface SlideWorkspaceProps {
-  slide?: Slide;
+  slide?: SlideListItem;
   isLoading?: boolean;
 }
 
