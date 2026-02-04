@@ -79,6 +79,10 @@ export const queryKeys = {
     details: () => [...queryKeys.videos.all, 'detail'] as const,
     detail: (videoId: string) => [...queryKeys.videos.details(), videoId] as const,
   },
+  shares: {
+    all: ['shares'] as const,
+    videos: (projectId: string) => [...queryKeys.shares.all, 'videos', projectId] as const,
+  },
   analytics: {
     all: ['analytics'] as const,
     slides: (projectId: string) => [...queryKeys.analytics.all, 'slides', projectId] as const,

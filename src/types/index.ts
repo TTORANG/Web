@@ -19,6 +19,19 @@ export type { Presentation } from './presentation';
 // Script
 export type { Reaction, ReactionType } from './script';
 
+// Share
+export type {
+  ShareScope,
+  ShareableVideo,
+  ShareableVideosPagination,
+  ShareableVideosData,
+  ShareableVideosResponse,
+  CreateShareLinkRequest,
+  SharedContentSummary,
+  CreateShareLinkData,
+  CreateShareLinkResponse,
+} from './share';
+
 // Slide
 export type { Slide } from './slide';
 

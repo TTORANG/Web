@@ -64,8 +64,7 @@ export default function VideoListPage() {
         }));
 
         setProjects(formattedProjects);
-      } catch (error) {
-        console.error('영상 목록 로드 실패:', error);
+      } catch {
         setProjects([]);
       }
     };
