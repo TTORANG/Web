@@ -55,7 +55,21 @@ export interface RecordExitRequest {
   lastVideoTimeMs?: number;
 }
 
-export async function recordExit(data: RecordExitRequest) {
-  const { data: response } = await apiClient.post('/analytics/exit', data);
-  return response;
+// 기존 recordExit은 지우고, 이 함수를 recordExit이라는 이름으로 쓰시는 걸 추천합니다.
+export function recordExit(data: RecordExitRequest) {
+  // try-catch 블록을 제거하세요!
+
+  const baseURL = apiClient.defaults.baseURL ?? '';
+  // baseURL 처리 (기존 로직 유지)
+  const fullUrl = baseURL ? new URL('/analytics/exit', baseURL).toString() : '/analytics/exit';
+
+  // return fetch(...)를 바로 반환하여 Promise가 끊기지 않게 합니다.
+  return fetch(fullUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+    keepalive: true,
+  });
 }

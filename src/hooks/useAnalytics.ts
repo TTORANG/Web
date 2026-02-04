@@ -1,6 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 
-import { apiClient } from '@/api';
 import {
   type RecordExitRequest,
   getProjectAnalyticsSummary,
@@ -9,10 +8,9 @@ import {
   recordExit,
 } from '@/api/endpoints/analytics';
 import { queryKeys } from '@/api/queryClient';
-import { useAuthStore } from '@/stores/authStore';
 
 /**
- * 이탈 기록 (mutation)
+ * 이탈 기록 (mutation) unload 시 이탈 기록 (fetch keepalive)
  */
 export function useRecordExit() {
   return useMutation({
@@ -53,27 +51,4 @@ export function useProjectAnalyticsSummary(projectId: string) {
     queryFn: () => getProjectAnalyticsSummary(projectId),
     enabled: !!projectId,
   });
-}
-
-/**
- * unload 시 이탈 기록 (fetch keepalive)
- */
-export function recordExitOnUnload(data: RecordExitRequest) {
-  try {
-    const baseURL = apiClient.defaults.baseURL ?? '';
-    const url = baseURL ? new URL('analytics/exit', baseURL).toString() : '/analytics/exit';
-    const { accessToken } = useAuthStore.getState();
-
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
-
-    return fetch(url, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(data),
-      keepalive: true,
-    });
-  } catch {
-    return undefined;
-  }
 }
