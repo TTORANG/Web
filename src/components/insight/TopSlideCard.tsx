@@ -5,41 +5,41 @@ interface TopSlideCardProps {
   title: string;
   thumbUrl?: string;
   reactionMetrics: Reaction[];
-  commentCount: number;
-  cardClassName: string;
-  thumbFallbackClassName: string;
 }
 
-export default function TopSlideCard({
-  title,
-  thumbUrl,
-  reactionMetrics,
-  cardClassName,
-  thumbFallbackClassName,
-}: TopSlideCardProps) {
+export default function TopSlideCard({ title, thumbUrl, reactionMetrics }: TopSlideCardProps) {
+  // 상위 2개 리액션만 표시
+  const topReactions = reactionMetrics.slice(0, 2);
+
   return (
-    <div className={`${cardClassName} overflow-hidden`}>
+    <div className="w-50.75 overflow-hidden rounded-lg border border-gray-200">
+      {/* 썸네일 */}
       {thumbUrl ? (
-        <img src={thumbUrl} alt={`${title} 썸네일`} className="block w-full" />
+        <img
+          src={thumbUrl}
+          alt={`${title} 썸네일`}
+          className="h-28.25 w-full rounded-t-lg object-cover"
+        />
       ) : (
-        <div className={`${thumbFallbackClassName}`} aria-hidden="true" />
+        <div className="h-28.25 w-full rounded-t-lg bg-gray-200" aria-hidden="true" />
       )}
-      <div className="p-3">
-        <div className="text-body-m-bold text-gray-800 mb-3">{title}</div>
-        <div className="space-y-2">
-          {reactionMetrics.map((reaction) => (
+
+      {/* 콘텐츠 */}
+      <div className="flex flex-col gap-4 bg-white px-4 pb-4 pt-3">
+        <span className="truncate text-body-m-bold text-gray-800">{title}</span>
+        <div className="flex flex-col gap-2">
+          {topReactions.map((reaction) => (
             <div
               key={reaction.type}
-              className="flex items-center justify-between rounded-lg bg-gray-100 px-2 py-1 text-caption text-gray-800"
+              className="flex items-center justify-between rounded bg-gray-100 px-2 py-1 text-caption text-gray-800"
             >
-              <span className="flex items-center gap-2">
-                <span className="text-base">{REACTION_CONFIG[reaction.type].emoji}</span>
-                {REACTION_CONFIG[reaction.type].label}
+              <span>
+                {REACTION_CONFIG[reaction.type].emoji} {REACTION_CONFIG[reaction.type].label}
               </span>
-              <span className="text-caption text-gray-800">{reaction.count}</span>
+              <span>{reaction.count}</span>
             </div>
           ))}
-          {reactionMetrics.length === 0 && (
+          {topReactions.length === 0 && (
             <div className="text-body-s text-gray-400">아직 반응이 없어요.</div>
           )}
         </div>

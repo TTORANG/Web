@@ -12,31 +12,30 @@ export default function FeedbackDistributionSection({
   const max = reactions.reduce((current, reaction) => Math.max(current, reaction.count), 1);
 
   return (
-    <div className="h-full pr-5 flex flex-col">
-      <div className="flex items-center justify-between mb-6 shrink-0">
-        <h3 className="text-body-l-bold text-gray-800">이모지 피드백 분포</h3>
+    <div className="flex w-136.75 flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-body-l-bold text-gray-800">슬라이드 이모지 피드백 분포</h3>
         <span className="text-body-l-bold text-main">총 {total}개</span>
       </div>
-      <div className="flex-1 flex flex-col justify-between">
+      <div className="flex flex-col gap-6">
         {reactions.map((react) => {
           const ratio = Math.round((react.count / max) * 100);
           return (
-            <div key={react.type} className="flex items-center gap-4">
-              <div className="flex items-center gap-2 w-28 shrink-0">
-                <span className="text-body-m">{REACTION_CONFIG[react.type].emoji}</span>
+            <div key={react.type} className="flex items-center">
+              <div className="flex w-32.5 shrink-0 items-center gap-2">
+                <span className="text-body-l">{REACTION_CONFIG[react.type].emoji}</span>
                 <span className="text-body-m text-gray-800">
                   {REACTION_CONFIG[react.type].label}
                 </span>
               </div>
-              <div className="flex-1">
-                <div className="h-2 rounded-full bg-gray-200">
-                  <div
-                    className="h-2 rounded-full bg-main-variant1"
-                    style={{ width: `${ratio}%` }}
-                  />
-                </div>
+              <div className="relative h-2 w-90.5">
+                <div className="absolute inset-0 rounded-full bg-gray-200" />
+                <div
+                  className="absolute left-0 top-0 h-2 rounded-full bg-main"
+                  style={{ width: `${ratio}%` }}
+                />
               </div>
-              <div className="w-10 whitespace-nowrap text-right text-body-m-bold text-gray-800">
+              <div className="ml-auto w-8 text-right text-body-m-bold text-gray-800">
                 {react.count}개
               </div>
             </div>
