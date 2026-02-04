@@ -1,4 +1,5 @@
-import type { ScriptVersion } from './api';
+import type { GetGetScriptVersionHistoryResponseDtoHistoryResponseDto } from '@/api/dto';
+
 import type { Comment } from './comment';
 import type { Reaction } from './script';
 
@@ -18,7 +19,7 @@ export interface SlideListItem {
   /** 프론트엔드 확장용 - 의견 목록 */
   opinions?: Comment[];
   /** 프론트엔드 확장용 - 수정 기록 */
-  history?: ScriptVersion[];
+  history?: GetScriptVersionHistoryResponseDto[];
   /** 프론트엔드 확장용 - 이모지 반응 */
   emojiReactions?: Reaction[];
   /** 영상 피드백에서 슬라이드 시작 시간 (초) */
@@ -61,7 +62,7 @@ export interface Slide {
   thumb: string;
   script: string;
   opinions: Comment[];
-  history: ScriptVersion[];
+  history: GetScriptVersionHistoryResponseDto[];
   emojiReactions: Reaction[];
   startTime?: number;
 }
