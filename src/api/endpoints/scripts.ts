@@ -2,8 +2,14 @@
  * @file scripts.ts
  * @description 대본 관련 API 엔드포인트
  */
-import { apiClient } from '@/api/client';
-import type { ApiResponse, ScriptResponse, ScriptVersion } from '@/types/api';
+import { apiClient } from '@/api';
+import type {
+  GetScriptResponseDto,
+  GetScriptVersionHistoryResponseDto,
+  RestoreScriptRequestDto,
+  UpdateScriptRequestDto,
+} from '@/api/dto';
+import type { ApiResponse } from '@/types/api';
 
 /**
  * 대본 조회
@@ -11,18 +17,15 @@ import type { ApiResponse, ScriptResponse, ScriptVersion } from '@/types/api';
  * @param slideId - 슬라이드 ID
  * @returns 대본 정보
  */
-export async function getScript(slideId: string): Promise<ScriptResponse> {
-  const response = await apiClient.get<ApiResponse<ScriptResponse>>(
+export async function getScript(slideId: string): Promise<GetScriptResponseDto> {
+  const response = await apiClient.get<ApiResponse<GetScriptResponseDto>>(
     `/presentations/slides/${slideId}/script`,
   );
-  return response.data.success;
-}
 
-/**
- * 대본 저장 요청 타입
- */
-export interface UpdateScriptRequest {
-  script: string;
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
 }
 
 /**
@@ -34,13 +37,17 @@ export interface UpdateScriptRequest {
  */
 export async function updateScript(
   slideId: string,
-  data: UpdateScriptRequest,
-): Promise<ScriptResponse> {
-  const response = await apiClient.patch<ApiResponse<ScriptResponse>>(
+  data: UpdateScriptRequestDto,
+): Promise<GetScriptResponseDto> {
+  const response = await apiClient.patch<ApiResponse<GetScriptResponseDto>>(
     `/presentations/slides/${slideId}/script`,
     data,
   );
-  return response.data.success;
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
 }
 
 /**
@@ -49,18 +56,17 @@ export async function updateScript(
  * @param slideId - 슬라이드 ID
  * @returns 버전 목록 (최신순)
  */
-export async function getScriptVersions(slideId: string): Promise<ScriptVersion[]> {
-  const response = await apiClient.get<ApiResponse<ScriptVersion[]>>(
+export async function getScriptVersions(
+  slideId: string,
+): Promise<GetScriptVersionHistoryResponseDto[]> {
+  const response = await apiClient.get<ApiResponse<GetScriptVersionHistoryResponseDto[]>>(
     `/presentations/slides/${slideId}/versions`,
   );
-  return response.data.success;
-}
 
-/**
- * 대본 복원 요청 타입
- */
-export interface RestoreScriptRequest {
-  version: number;
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
 }
 
 /**
@@ -72,11 +78,15 @@ export interface RestoreScriptRequest {
  */
 export async function restoreScript(
   slideId: string,
-  data: RestoreScriptRequest,
-): Promise<ScriptResponse> {
-  const response = await apiClient.post<ApiResponse<ScriptResponse>>(
+  data: RestoreScriptRequestDto,
+): Promise<GetScriptResponseDto> {
+  const response = await apiClient.post<ApiResponse<GetScriptResponseDto>>(
     `/presentations/slides/${slideId}/restore`,
     data,
   );
-  return response.data.success;
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
 }

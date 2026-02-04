@@ -20,7 +20,7 @@ import { useCreateOpinion, useDeleteOpinion } from './queries/useOpinions';
 const EMPTY_COMMENTS: Comment[] = [];
 
 export function useComments() {
-  const slideId = useSlideStore((state) => state.slide?.id);
+  const slideId = useSlideStore((state) => state.slide?.slideId);
   const flatComments = useSlideStore((state) => state.slide?.opinions);
   const addOpinionStore = useSlideStore((state) => state.addOpinion);
   const addReplyStore = useSlideStore((state) => state.addReply);

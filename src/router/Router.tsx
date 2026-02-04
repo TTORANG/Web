@@ -16,6 +16,7 @@ import {
   FdVideoPage,
   HomePage,
   InsightPage,
+  OAuthCallbackPage,
   SlidePage,
   VideoPage,
   VideoRecordPage,
@@ -30,6 +31,10 @@ export const router = createBrowserRouter([
   {
     path: '/dev',
     element: <DevTestPage />,
+  },
+  {
+    path: '/auth/callback',
+    element: <OAuthCallbackPage />,
   },
   {
     path: '/:projectId',
