@@ -1,5 +1,6 @@
 export { default as DevTestPage } from './dev-test/DevTestPage';
 export { default as HomePage } from './HomePage';
+export { default as OAuthCallbackPage } from './OAuthCallbackPage';
 export { default as InsightPage } from './InsightPage';
 export { default as SlidePage } from './SlidePage';
 export { default as VideoPage } from './VideoPage';

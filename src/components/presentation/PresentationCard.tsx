@@ -9,15 +9,21 @@ import ReactionCountIcon from '@/assets/icons/icon-reaction-count.svg?react';
 import RecentIcon from '@/assets/icons/icon-recent.svg?react';
 import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
 import { getTabPath } from '@/constants/navigation';
-import { useProjectDeletion } from '@/hooks/useProjectDeletion';
-import type { Project } from '@/types/project';
+import { usePresentationDeletion } from '@/hooks/usePresentationDeletion';
+import { useRename } from '@/hooks/useRename';
+import type { Presentation } from '@/types/presentation';
 import { formatRelativeTime } from '@/utils/format';
 
 import { Dropdown } from '../common';
 import type { DropdownItem } from '../common/Dropdown';
-import DeleteProjectModal from './DeleteProjectModal';
+import { HighlightText } from '../common/HighlightText';
+import DeletePresentationModal from './DeletePresentationModal';
 
-function ProjectCardSkeleton() {
+type Props = Presentation & {
+  highlightQuery?: string;
+};
+
+function PresentationCardSkeleton() {
   return (
     <article className="rounded-2xl border-none bg-white">
       {/* 썸네일 */}
@@ -76,32 +82,42 @@ function ProjectCardSkeleton() {
   );
 }
 
-function ProjectCard({
-  id,
+function PresentationCard({
+  projectId,
   title,
+  highlightQuery = '',
   updatedAt,
-  durationMinutes,
-  pageCount,
-  commentCount,
-  reactionCount,
-  viewCount = 0,
+  durationSeconds,
+  slideCount,
+  feedbackCount,
   thumbnailUrl,
-}: Project) {
+}: Props) {
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
-    useProjectDeletion(id);
+    usePresentationDeletion(projectId);
+
+  const {
+    isRenaming,
+    isUpdating,
+    displayTitle,
+    newTitle,
+    setNewTitle,
+    inputRef,
+    startRenaming,
+    handleSubmit,
+    cancelRenaming,
+  } = useRename({ projectId, initialTitle: title });
 
   const handleCardClick = () => {
-    navigate(getTabPath(id, 'slide'));
+    if (isRenaming) return;
+    navigate(getTabPath(projectId, 'slide'));
   };
 
   const dropdownItems: DropdownItem[] = [
     {
       id: 'rename',
       label: '이름 변경',
-      onClick: () => {
-        // TODO: 이름 변경 로직 구현
-      },
+      onClick: startRenaming,
     },
     {
       id: 'delete',
@@ -115,14 +131,17 @@ function ProjectCard({
     <>
       <article
         onClick={handleCardClick}
-        className="cursor-pointer rounded-2xl border-none bg-white transition-shadow hover:shadow-lg"
+        className={clsx(
+          'rounded-2xl border-none bg-white transition-shadow',
+          !isRenaming && 'cursor-pointer hover:shadow-lg',
+        )}
       >
         <div className="aspect-video w-full overflow-hidden rounded-t-2xl bg-gray-200">
           {thumbnailUrl && (
             <img
               className="h-full w-full object-contain outline-none"
               src={thumbnailUrl}
-              alt={`${title}`}
+              alt={`${displayTitle}`}
             />
           )}
         </div>
@@ -131,52 +150,92 @@ function ProjectCard({
           {/* 제목 및 업데이트 날짜 */}
           <div className="min-h-18">
             <div className="flex justify-between gap-2">
-              <h3 className="text-body-m-bold text-gray-800 line-clamp-2">{title}</h3>
+              {isRenaming ? (
+                <form
+                  onSubmit={handleSubmit}
+                  className="flex-1 flex items-center gap-1 px-3 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm w-full max-w-full overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') cancelRenaming();
+                    }}
+                    disabled={isUpdating}
+                    className={clsx(
+                      'flex-1 min-w-0 text-body-m-bold text-gray-800',
+                      'focus:outline-none',
+                      'disabled:opacity-50 disabled:cursor-not-allowed',
+                      'placeholder:text-gray-400',
+                    )}
+                    placeholder="발표 제목을 입력하세요"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isUpdating}
+                    className={clsx(
+                      'px-2 py-1 text-caption-bold text-white bg-main rounded-full shrink-0',
+                      'hover:bg-blue-600 transition-colors',
+                      'disabled:opacity-50 disabled:cursor-not-allowed',
+                    )}
+                  >
+                    {isUpdating ? '저장 중...' : '저장'}
+                  </button>
+                </form>
+              ) : (
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-body-m-bold text-gray-800 line-clamp-2">
+                    <HighlightText
+                      text={displayTitle}
+                      query={highlightQuery}
+                      highlightClassName="bg-transparent text-main"
+                    />
+                  </h3>
+                  <p className="mt-1 text-body-s text-gray-400">{formatRelativeTime(updatedAt)}</p>
+                </div>
+              )}
+
               {/* 더보기 */}
-              <div onClick={(e) => e.stopPropagation()} className="shrink-0 mt-1">
-                <Dropdown
-                  trigger={({ isOpen }) => (
-                    <div className="p-2 -m-2">
-                      <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-400')} />
-                    </div>
-                  )}
-                  items={dropdownItems}
-                  position="bottom"
-                  align="end"
-                  ariaLabel="더보기"
-                  menuClassName="w-32"
-                />
-              </div>
+              {!isRenaming && (
+                <div onClick={(e) => e.stopPropagation()} className="shrink-0 mt-1">
+                  <Dropdown
+                    trigger={({ isOpen }) => (
+                      <div className="p-2 -m-2">
+                        <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-400')} />
+                      </div>
+                    )}
+                    items={dropdownItems}
+                    position="bottom"
+                    align="end"
+                    ariaLabel="더보기"
+                    menuClassName="w-32"
+                  />
+                </div>
+              )}
             </div>
-            <p className="mt-1 text-body-s text-gray-400">{formatRelativeTime(updatedAt)}</p>
           </div>
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-x-1 gap-y-2 text-caption text-gray-600">
-            {/* 왼쪽: 소요 시간, 페이지 수 */}
+            {/* 왼쪽: 소요 시간, 슬라이드 수 */}
             <div className="flex items-center gap-3 shrink-0">
               <div className="flex items-center gap-1">
                 <RecentIcon />
-                <span>{durationMinutes}</span>
+                <span>{Math.ceil(durationSeconds / 60)}분</span>
               </div>
               <div className="flex items-center gap-1">
                 <PageCountIcon />
-                <span>{pageCount} 페이지</span>
+                <span>{slideCount} 슬라이드</span>
               </div>
             </div>
 
-            {/* 오른쪽: 반응 모음 */}
+            {/* 오른쪽: 피드백 수 */}
             <div className="flex items-center gap-2 shrink-0">
               <div className="flex items-center gap-1">
                 <CommentCountIcon />
-                {commentCount}
-              </div>
-              <div className="flex items-center gap-1">
-                <ReactionCountIcon />
-                {reactionCount}
-              </div>
-              <div className="flex items-center gap-1">
-                <ViewCountIcon />
-                {viewCount}
+                {feedbackCount}
               </div>
             </div>
           </div>
@@ -185,9 +244,9 @@ function ProjectCard({
 
       {/* 삭제 확인 모달 */}
       <div onClick={(e) => e.stopPropagation()}>
-        <DeleteProjectModal
+        <DeletePresentationModal
           isOpen={isDeleteModalOpen}
-          projectTitle={title}
+          presentationTitle={title}
           isPending={isPending}
           onClose={closeDeleteModal}
           onConfirm={confirmDelete}
@@ -197,6 +256,6 @@ function ProjectCard({
   );
 }
 
-ProjectCard.Skeleton = ProjectCardSkeleton;
+PresentationCard.Skeleton = PresentationCardSkeleton;
 
-export default ProjectCard;
+export default PresentationCard;

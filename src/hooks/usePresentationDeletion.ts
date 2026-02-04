@@ -2,11 +2,11 @@ import { useState } from 'react';
 
 import { showToast } from '@/utils/toast';
 
-import { useDeleteProject } from './queries/useProjects';
+import { useDeletePresentation } from './queries/usePresentations';
 
-export function useProjectDeletion(projectId: string) {
+export function usePresentationDeletion(projectId: string) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const { mutate, isPending } = useDeleteProject();
+  const { mutate, isPending } = useDeletePresentation();
 
   const openDeleteModal = () => setIsDeleteModalOpen(true);
   const closeDeleteModal = () => setIsDeleteModalOpen(false);
