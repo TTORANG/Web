@@ -36,7 +36,7 @@ export function useUploadFile() {
   const [progress, setProgress] = useState<UploadProgress>(initialProgress);
   const [error, setError] = useState<string | null>(null);
 
-  const uploadFiles = useCallback(
+  const uploadFile = useCallback(
     async (data: UploadFileRequestDto): Promise<ApiResponse<UploadFileResponseDto> | null> => {
       // 업로드 시작 상태
       setIsUploading(true);
@@ -114,5 +114,5 @@ export function useUploadFile() {
     [],
   );
 
-  return { uploadFiles, isUploading, progress, error };
+  return { uploadFile, isUploading, progress, error };
 }

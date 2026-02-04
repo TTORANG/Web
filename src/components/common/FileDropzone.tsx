@@ -9,7 +9,7 @@ import { showToast } from '@/utils/toast';
 import ProgressBar from './ProgressBar';
 
 interface FileDropProps {
-  onFilesSelected: (files: File[]) => void;
+  onFileSelected: (file: File) => void;
   accept?: string;
   disabled?: boolean;
   currentStep?: UploadStep;
@@ -18,7 +18,7 @@ interface FileDropProps {
 }
 
 export default function FileDropzone({
-  onFilesSelected,
+  onFileSelected = () => {},
   accept,
   disabled,
   currentStep = 'preparing',
@@ -40,11 +40,13 @@ export default function FileDropzone({
     inputRef.current?.click();
   };
 
-  const handleFiles = (fileList: FileList | null) => {
+  const handleFile = (fileList: FileList | null) => {
     if (!fileList || disabled) return;
-    const files = Array.from(fileList);
-    if (files.length === 0) return;
-    onFilesSelected(files);
+    const file = fileList.item(0);
+    if (!file) return;
+
+    if (typeof onFileSelected !== 'function') return;
+    onFileSelected(file);
   };
 
   const handleDragEnter = (e: React.DragEvent<HTMLButtonElement>) => {
@@ -76,7 +78,16 @@ export default function FileDropzone({
     // 드롭 시 카운터 초기화해서 다음 드래그 상태가 꼬이지 않도록 함
     dragCounter.current = 0;
     setIsDragging(false);
-    handleFiles(e.dataTransfer.files);
+
+    if (e.dataTransfer.files.length > 1) {
+      showToast.warning('한 번에 하나의 파일만 업로드할 수 있습니다.');
+    }
+    // 첫번째 파일만 받아서 넘김
+    const file = e.dataTransfer.files?.item(0);
+    if (!file || disabled) return;
+
+    if (typeof onFileSelected !== 'function') return;
+    onFileSelected(file);
   };
 
   const showDragOverlay = isDragging && !disabled;
@@ -88,9 +99,8 @@ export default function FileDropzone({
         ref={inputRef}
         type="file"
         className="hidden"
-        multiple
         accept={accept}
-        onChange={(e) => handleFiles(e.target.files)}
+        onChange={(e) => handleFile(e.target.files)}
       />
 
       <button
@@ -118,10 +128,10 @@ export default function FileDropzone({
             <UploadIcon className="h-5 w-5 text-white" />
           </div>
           <div className="space-y-2 text-center">
-            <p className="text-body-m-bold text-gray-900">파일을 드래그하거나 클릭하세요.</p>
-            <p className="text-body-s text-gray-600">
-              PDF, PPTX, TXT, MP4 등 모든 파일을 한번에 업로드하세요.
+            <p className="text-body-m-bold text-gray-900">
+              발표 자료를 드래그하거나 클릭해 업로드하세요.
             </p>
+            <p className="text-body-s text-gray-600">PDF, PPTX 파일을 지원합니다.</p>
           </div>
         </div>
 

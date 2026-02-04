@@ -12,19 +12,16 @@ import { MOCK_PROJECTS } from '@/mocks/projects';
 import type { Presentation } from '@/types/presentation';
 import { showToast } from '@/utils/toast';
 
-const ACCEPTED_FILES_TYPES = '.pptx,.ppt,.pdf,.mp4,.webm';
+const ACCEPTED_FILES_TYPES = '.pptx,.pdf';
 // const MAX_SIZE_MB = 50;
 // const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
 export default function HomePage() {
   //const navigate = useNavigate();
-  const { uploadFiles, isUploading, progress, error } = useUploadFile();
+  const { uploadFile, isUploading, progress, error } = useUploadFile();
 
-  const onFilesSelected = async (files: File[]) => {
-    const file = files[0];
-    if (!file) return;
-
-    const response = await uploadFiles({ file, title: file.name });
+  const onFileSelected = async (file: File) => {
+    const response = await uploadFile({ file, title: file.name });
 
     if (response?.resultType === 'SUCCESS') {
       showToast.success('업로드 완료!');
@@ -87,7 +84,7 @@ export default function HomePage() {
         currentStep={progress.currentStep}
         progress={progress.percentage}
         error={error}
-        onFilesSelected={onFilesSelected}
+        onFileSelected={onFileSelected}
         isEmpty={isEmpty}
       />
 

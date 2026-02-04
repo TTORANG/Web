@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 
 import { FileDropzone } from '@/components/common';
+import type { UploadStep } from '@/types/uploadFile';
 import { showToast } from '@/utils/toast';
 
 export function FileUploadTestSection() {
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
+  const [uploadState, setUploadState] = useState<UploadStep>('preparing');
 
   // Simulate Upload Progress
   useEffect(() => {
@@ -30,7 +31,7 @@ export function FileUploadTestSection() {
       <div className="mb-4 flex gap-2">
         <button
           onClick={() => {
-            setUploadState('idle');
+            setUploadState('preparing');
             setUploadProgress(0);
           }}
           className="rounded bg-gray-200 px-3 py-1 text-xs hover:bg-gray-300"
@@ -49,8 +50,8 @@ export function FileUploadTestSection() {
       </div>
 
       <FileDropzone
-        onFilesSelected={(files) => showToast.success(`${files.length}개 파일 선택됨`)}
-        uploadState={uploadState}
+        onFileSelected={(file) => showToast.success(`${file.name} 선택됨`)}
+        currentStep={uploadState}
         progress={uploadProgress}
       />
     </section>

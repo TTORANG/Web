@@ -10,7 +10,7 @@ interface IntroSectionProps {
   currentStep: UploadStep;
   progress: number;
   error?: string | null;
-  onFilesSelected: (files: File[]) => void;
+  onFileSelected: (file: File) => void;
   isEmpty: boolean;
 }
 
@@ -20,7 +20,7 @@ export default function IntroSection({
   currentStep,
   progress,
   error,
-  onFilesSelected,
+  onFileSelected,
   isEmpty,
 }: IntroSectionProps) {
   return (
@@ -44,7 +44,7 @@ export default function IntroSection({
         accept={accept}
         currentStep={currentStep}
         progress={progress}
-        onFilesSelected={onFilesSelected}
+        onFileSelected={onFileSelected}
         error={error}
       />
 
