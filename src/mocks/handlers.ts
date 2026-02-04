@@ -97,6 +97,7 @@ export const handlers = [
     const newPresentation: Presentation = {
       id: `p${Date.now()}`,
       title: data.title,
+      userName: MOCK_USERS[0].name,
       updatedAt: new Date().toISOString(),
       durationMinutes: 0,
       pageCount: 0,

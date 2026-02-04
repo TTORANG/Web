@@ -6,7 +6,6 @@
  * - 클릭하면 Popover 열리고, 입력/저장 가능
  * - Enter 또는 저장 버튼으로 제출
  *
-
  */
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -17,7 +16,11 @@ import { Popover } from '@/components/common/Popover';
 import { usePresentation, useUpdatePresentation } from '@/hooks/queries/usePresentations';
 import { showToast } from '@/utils/toast';
 
-export function PresentationTitleEditor() {
+interface PresentationTitleEditorProps {
+  readOnly?: boolean;
+}
+
+export function PresentationTitleEditor({ readOnly }: PresentationTitleEditorProps) {
   const { projectId } = useParams<{ projectId: string }>();
   const { data: presentation } = usePresentation(projectId ?? '');
   const { mutate: updatePresentation, isPending } = useUpdatePresentation();
@@ -40,6 +43,7 @@ export function PresentationTitleEditor() {
   }, [isOpen]);
 
   const handleOpenChange = (nextOpen: boolean) => {
+    if (readOnly) return;
     setIsOpen(nextOpen);
 
     // 열릴 때만 초기화 (닫힐 땐 굳이 초기화 X)
@@ -72,6 +76,16 @@ export function PresentationTitleEditor() {
       },
     );
   };
+
+  if (readOnly) {
+    return (
+      <div className="flex items-center gap-2 max-w-md">
+        <span className="text-body-m-bold text-gray-800 truncate">
+          {presentation?.title ?? '내 발표'}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <Popover

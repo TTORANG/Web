@@ -20,6 +20,7 @@ export interface CreatePresentationSuccess {
 export interface Presentation {
   id: string;
   title: string;
+  userName: string;
   updatedAt: string;
   durationMinutes: number;
   pageCount: number;

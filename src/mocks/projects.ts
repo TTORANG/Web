@@ -6,6 +6,7 @@ export const MOCK_PROJECTS: Presentation[] = [
   {
     id: 'p1',
     title: '네이버 지도 리브랜딩, 새로운 여정의 시작',
+    userName: '김또랑',
     updatedAt: daysAgo(1),
     durationMinutes: 2,
     pageCount: 70,
@@ -17,6 +18,7 @@ export const MOCK_PROJECTS: Presentation[] = [
   {
     id: 'p2',
     title: '당근페이 송금의 플랫폼화: 중고거래 채팅 벗어나기',
+    userName: '춘식이',
     updatedAt: daysAgo(2),
     durationMinutes: 3,
     pageCount: 59,
@@ -28,6 +30,7 @@ export const MOCK_PROJECTS: Presentation[] = [
   {
     id: 'p3',
     title: '강남언니 회사소개서',
+    userName: '라이언',
     updatedAt: daysAgo(6),
     durationMinutes: 5,
     pageCount: 17,
@@ -39,6 +42,7 @@ export const MOCK_PROJECTS: Presentation[] = [
   {
     id: 'p4',
     title: '모빌리티 혁신 플랫폼, 소카',
+    userName: '어피치',
     updatedAt: daysAgo(8),
     pageCount: 28,
     durationMinutes: 6,

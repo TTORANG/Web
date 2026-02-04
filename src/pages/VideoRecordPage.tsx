@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { Layout, Logo, Modal } from '@/components/common';
 import { DeviceTestSection, RecordingSection } from '@/components/video';
+import { usePresentation } from '@/hooks/queries/usePresentations';
 import { useVideoUpload } from '@/hooks/useVideoUpload';
 
 type RecordStep = 'TEST' | 'RECORDING';
@@ -10,6 +11,8 @@ type RecordStep = 'TEST' | 'RECORDING';
 export default function VideoRecordPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+
+  const { data: presentation } = usePresentation(projectId!);
 
   const [step, setStep] = useState<RecordStep>('TEST');
   const [camStream, setCamStream] = useState<MediaStream | null>(null);
@@ -38,7 +41,7 @@ export default function VideoRecordPage() {
 
     try {
       const numericProjectId = projectId ? parseInt(projectId.replace(/\D/g, ''), 10) : 1;
-      const title = 'Q4 마케팅 전략 발표';
+      const title = presentation?.title || '제목 없음';
 
       const slideLogs = Object.entries(durations)
         .sort(([a], [b]) => Number(a) - Number(b))
@@ -165,7 +168,7 @@ export default function VideoRecordPage() {
           camStream && (
             <>
               <RecordingSection
-                title="Q4 마케팅 전략 발표"
+                projectId={projectId!}
                 initialStream={camStream}
                 onFinish={handleRecordingFinish}
               />
