@@ -3,7 +3,7 @@
  * @description 인증 관련 API 엔드포인트
  */
 import { apiClient } from '@/api';
-import type { SocialLoginSuccessDto } from '@/api/dto';
+import type { SocialLoginSuccessResponseDto } from '@/api/dto';
 import type { ApiResponse } from '@/types/api';
 
 /**
@@ -15,8 +15,8 @@ import type { ApiResponse } from '@/types/api';
  * @example
  * const result = await getGoogleCallback('authorization-code');
  */
-export async function getGoogleCallback(code: string): Promise<SocialLoginSuccessDto> {
-  const response = await apiClient.get<ApiResponse<SocialLoginSuccessDto>>(
+export async function getGoogleCallback(code: string): Promise<SocialLoginSuccessResponseDto> {
+  const response = await apiClient.get<ApiResponse<SocialLoginSuccessResponseDto>>(
     `/auth/google/callback`,
     { params: { code } },
   );
@@ -36,10 +36,13 @@ export async function getGoogleCallback(code: string): Promise<SocialLoginSucces
  * @example
  * const result = await getKakaoCallback('authorization-code');
  */
-export async function getKakaoCallback(code: string): Promise<SocialLoginSuccessDto> {
-  const response = await apiClient.get<ApiResponse<SocialLoginSuccessDto>>(`/auth/kakao/callback`, {
-    params: { code },
-  });
+export async function getKakaoCallback(code: string): Promise<SocialLoginSuccessResponseDto> {
+  const response = await apiClient.get<ApiResponse<SocialLoginSuccessResponseDto>>(
+    `/auth/kakao/callback`,
+    {
+      params: { code },
+    },
+  );
 
   if (response.data.resultType === 'SUCCESS') {
     return response.data.success;
@@ -56,10 +59,13 @@ export async function getKakaoCallback(code: string): Promise<SocialLoginSuccess
  * @example
  * const result = await getNaverCallback('authorization-code');
  */
-export async function getNaverCallback(code: string): Promise<SocialLoginSuccessDto> {
-  const response = await apiClient.get<ApiResponse<SocialLoginSuccessDto>>(`/auth/naver/callback`, {
-    params: { code },
-  });
+export async function getNaverCallback(code: string): Promise<SocialLoginSuccessResponseDto> {
+  const response = await apiClient.get<ApiResponse<SocialLoginSuccessResponseDto>>(
+    `/auth/naver/callback`,
+    {
+      params: { code },
+    },
+  );
 
   if (response.data.resultType === 'SUCCESS') {
     return response.data.success;
