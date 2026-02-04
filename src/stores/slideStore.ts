@@ -9,6 +9,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
+import { getExclusiveCounterpart } from '@/constants/reaction';
 import { MOCK_CURRENT_USER } from '@/mocks/users';
 import type { Comment } from '@/types/comment';
 import type { ReactionType } from '@/types/script';
@@ -98,13 +99,27 @@ export const useSlideStore = create<SlideState>()(
             if (!state.slide) return state;
 
             const currentReactions = state.slide.emojiReactions || [];
-            const newReactions = currentReactions.map((r) => {
-              if (r.type !== type) return r;
+            const targetReaction = currentReactions.find((r) => r.type === type);
+            const isActivating = !targetReaction?.active;
 
-              if (r.active) {
+            // exclusive 그룹에서 반대 타입 찾기
+            const counterpart = getExclusiveCounterpart(type);
+
+            const newReactions = currentReactions.map((r) => {
+              // 토글 대상
+              if (r.type === type) {
+                if (r.active) {
+                  return { ...r, active: false, count: Math.max(0, r.count - 1) };
+                }
+                return { ...r, active: true, count: r.count + 1 };
+              }
+
+              // 활성화 시 exclusive 반대 타입 비활성화
+              if (isActivating && counterpart && r.type === counterpart && r.active) {
                 return { ...r, active: false, count: Math.max(0, r.count - 1) };
               }
-              return { ...r, active: true, count: r.count + 1 };
+
+              return r;
             });
 
             return {
