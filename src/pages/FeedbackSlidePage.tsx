@@ -60,8 +60,8 @@ export default function FeedbackSlidePage() {
       projectId: projectIdNum,
     };
 
-    if (currentSlide?.id) {
-      const slideIdNum = Number(currentSlide.id);
+    if (currentSlide?.slideId) {
+      const slideIdNum = Number(currentSlide.slideId);
       if (Number.isFinite(slideIdNum)) {
         payload.lastSlideId = slideIdNum;
       }

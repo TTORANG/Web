@@ -22,10 +22,9 @@ import {
 import { createDefaultReactions } from '@/constants/reaction';
 import { useSlides } from '@/hooks/queries/useSlides';
 import {
-  useProjectVideos,
+  useProjectAnalyticsSummary,
   useSlideAnalytics,
-  useSummaryAnalytics,
-  useVideoExitAnalytics,
+  useVideoAnalytics,
 } from '@/hooks/useAnalytics';
 import type { DropOffSlide, DropOffTime, SummaryStat } from '@/types/insight';
 import type { Reaction } from '@/types/script';
@@ -105,12 +104,11 @@ export default function InsightPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { data: slides } = useSlides(projectId ?? '');
 
-  const { data: projectVideos } = useProjectVideos(projectId ?? '');
-  const videoId = projectVideos?.videos?.[0]?.id ?? '';
-  const hasVideo = !!videoId;
   const { data: slideAnalytics } = useSlideAnalytics(projectId ?? '');
-  const { data: videoExitAnalytics } = useVideoExitAnalytics(videoId);
-  const { data: summaryAnalytics } = useSummaryAnalytics(projectId ?? '');
+  const { data: summaryAnalytics } = useProjectAnalyticsSummary(projectId ?? '');
+  const videoId = summaryAnalytics?.videoIds?.[0] ?? '';
+  const hasVideo = !!videoId;
+  const { data: videoExitAnalytics } = useVideoAnalytics(videoId);
   const computedSummaryStats = useMemo(() => {
     if (!summaryAnalytics) return emptySummaryStats;
 
@@ -193,7 +191,16 @@ export default function InsightPage() {
       .map((item) => ({
         label: `슬라이드 ${item.slideNum}`,
         desc: `${item.exitCount}명 이탈`,
-        percent: Math.round(item.exitRate),
+        percent: Math.min(
+          100,
+          Math.round(
+            item.exitRate <= 1
+              ? item.exitRate * 100
+              : item.exitRate > 100
+                ? item.exitRate / 100
+                : item.exitRate,
+          ),
+        ),
         slideIndex: Math.max(0, item.slideNum - 1),
       }));
   }, [slideAnalytics]);
