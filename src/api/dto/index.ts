@@ -25,10 +25,12 @@ export type { RestoreScriptRequestDto } from './analytics.dto';
 export type { UpdateProjectDto } from './presentations.dto';
 // export type { UploadFileResponseDto } from './files.dto';
 export type {
+  ChunkUploadResponseDto,
   CreateOpinionDto,
-  FinishVideoRequest,
-  FinishVideoResponse,
-  StartVideoRequest,
+  FinishVideoRequestDto,
+  FinishVideoResponseDto,
+  StartVideoRequestDto,
+  StartVideoResponseDto,
 } from './video.dto';
 export type {
   CommentResponseDto,

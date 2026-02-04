@@ -8,58 +8,46 @@ export interface CreateOpinionDto {
 }
 
 /**
- * 영상 녹화 관련 DTO 정의
+ * 영상 녹화 시작 요청 DTO
  */
-export interface StartVideoRequest {
+export interface StartVideoRequestDto {
   projectId: number;
   title: string;
 }
 
-export interface StartVideoResponse {
-  resultType: 'SUCCESS' | 'FAILURE';
-  error: null | {
-    errorCode: string;
-    reason: string;
-    data?: unknown;
-  };
-  success: {
-    videoId: number;
-  };
+/**
+ * 영상 녹화 시작 응답 DTO (success 데이터)
+ */
+export interface StartVideoResponseDto {
+  videoId: number;
 }
 
-export interface FinishVideoRequest {
+/**
+ * 영상 녹화 완료 요청 DTO
+ */
+export interface FinishVideoRequestDto {
   slideLogs: Array<{
     slideId: number;
     timestampMs: number;
   }>;
 }
 
-export interface FinishVideoResponse {
-  resultType: 'SUCCESS' | 'FAILURE';
-  error: null | {
-    errorCode: string;
-    reason: string;
-    data?: unknown;
-  };
-  success: {
-    videoId: string;
-    status: string;
-    slideCount: number;
-    slideDurations: Array<{
-      slideId: string;
-      totalDurationMs: number;
-    }>;
-  };
+/**
+ * 영상 녹화 완료 응답 DTO (success 데이터)
+ */
+export interface FinishVideoResponseDto {
+  videoId: string;
+  status: string;
+  slideCount: number;
+  slideDurations: Array<{
+    slideId: string;
+    totalDurationMs: number;
+  }>;
 }
 
-export interface ChunkUploadResponse {
-  resultType: 'SUCCESS' | 'FAILURE';
-  error: null | {
-    errorCode: string;
-    reason: string;
-    data?: unknown;
-  };
-  success: {
-    ok: boolean;
-  };
+/**
+ * 청크 업로드 응답 DTO (success 데이터)
+ */
+export interface ChunkUploadResponseDto {
+  ok: boolean;
 }

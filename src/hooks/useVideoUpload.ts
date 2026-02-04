@@ -1,7 +1,8 @@
 import { useState } from 'react';
 
-import type { FinishVideoResponse, StartVideoResponse } from '@/api/dto/video.dto';
+import type { FinishVideoResponseDto, StartVideoResponseDto } from '@/api/dto';
 import { videosApi } from '@/api/endpoints/videos';
+import type { ApiResponse } from '@/types/api';
 
 interface UploadProgress {
   uploadedChunks: number;
@@ -43,7 +44,7 @@ export const useVideoUpload = () => {
       });
 
       const startResponse = await videosApi.startVideo({ projectId, title });
-      const startData: StartVideoResponse = startResponse.data;
+      const startData: ApiResponse<StartVideoResponseDto> = startResponse.data;
 
       if (startData.resultType === 'FAILURE' || !startData.success?.videoId) {
         throw new Error(startData.error?.reason || 'Video ID를 받지 못했습니다.');
@@ -93,7 +94,7 @@ export const useVideoUpload = () => {
       });
 
       const finishResponse = await videosApi.finishVideo(videoId, { slideLogs });
-      const finishData: FinishVideoResponse = finishResponse.data;
+      const finishData: ApiResponse<FinishVideoResponseDto> = finishResponse.data;
 
       if (finishData.resultType === 'FAILURE') {
         throw new Error(finishData.error?.reason || '영상 처리에 실패했습니다.');
