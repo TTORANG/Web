@@ -225,7 +225,6 @@ export default function InsightPage() {
         };
       });
   }, [videoExitAnalytics, slideChangeTimes, slides]);
-
   return (
     <div
       role="tabpanel"
