@@ -8,7 +8,7 @@
  */
 import { useMemo } from 'react';
 
-import { videosApi } from '@/api/endpoints/videos';
+import { createCommentReply, createVideoComment, deleteVideoComment } from '@/api/endpoints/videos';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Comment } from '@/types/comment';
 import { flatToTree } from '@/utils/comment';
@@ -23,6 +23,7 @@ export function useVideoComments() {
   const addCommentStore = useVideoFeedbackStore((state) => state.addComment);
   const addReplyStore = useVideoFeedbackStore((state) => state.addReply);
   const deleteCommentStore = useVideoFeedbackStore((state) => state.deleteComment);
+  const updateCommentServerId = useVideoFeedbackStore((state) => state.updateCommentServerId);
 
   // CHANGED: 전체 feedbacks의 comments를 합쳐서 반환
   const flatComments = useMemo(() => {
@@ -57,14 +58,19 @@ export function useVideoComments() {
     }
 
     // Optimistic update
-    addCommentStore(content, seconds);
+    const tempComment = addCommentStore(content, seconds);
 
     try {
       // 서버 API 호출 (초를 밀리초로 변환)
-      await videosApi.createComment(videoId, {
+      const model = await createVideoComment(videoId, {
         content,
         timestampMs: Math.floor(seconds * 1000),
       });
+
+      // 서버 ID 저장 (Model에서 serverId 추출)
+      if (model && tempComment) {
+        updateCommentServerId(tempComment.id, model.serverId);
+      }
     } catch {
       showToast.error('댓글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
     }
@@ -74,7 +80,7 @@ export function useVideoComments() {
    * 답글 추가
    */
   const addReply = async (parentId: string, content: string) => {
-    addReplyStore(parentId, content);
+    const tempReply = addReplyStore(parentId, content);
 
     try {
       // 서버 API 호출 (string을 number로 변환)
@@ -82,7 +88,12 @@ export function useVideoComments() {
       if (isNaN(parentIdNum)) {
         throw new Error('Invalid comment ID');
       }
-      await videosApi.createReply(parentIdNum, { content });
+      const model = await createCommentReply(parentIdNum, { content });
+
+      // 서버 ID 저장 (Model에서 serverId 추출)
+      if (model && tempReply) {
+        updateCommentServerId(tempReply.id, model.serverId);
+      }
     } catch {
       showToast.error('답글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
     }
@@ -92,15 +103,34 @@ export function useVideoComments() {
    * 댓글 삭제
    */
   const deleteComment = async (commentId: string) => {
+    if (!video) return;
+
+    // 삭제할 댓글 찾기
+    const allComments = video.feedbacks.flatMap((f) => f.comments);
+    const targetComment = allComments.find((c) => c.id === commentId);
+
+    if (!targetComment) {
+      showToast.error('댓글을 찾을 수 없습니다.');
+      return;
+    }
+
+    // serverId가 없으면 로컬에서만 삭제 (아직 서버에 저장되지 않음)
+    if (!targetComment.serverId) {
+      deleteCommentStore(commentId);
+      return;
+    }
+
+    // Optimistic update
     deleteCommentStore(commentId);
 
     try {
-      // 서버 API 호출 (string을 number로 변환)
-      const commentIdNum = parseInt(commentId, 10);
+      // 서버 API 호출 (serverId를 number로 변환)
+      const commentIdNum = parseInt(targetComment.serverId, 10);
       if (isNaN(commentIdNum)) {
-        throw new Error('Invalid comment ID');
+        throw new Error('Invalid comment server ID');
       }
-      await videosApi.deleteComment(commentIdNum);
+      await deleteVideoComment(commentIdNum);
+      showToast.success('댓글이 삭제되었습니다.');
     } catch {
       showToast.error('댓글 삭제에 실패했습니다.', '잠시 후 다시 시도해주세요.');
     }

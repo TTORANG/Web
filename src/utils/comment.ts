@@ -35,15 +35,15 @@ export function addReplyToFlat(
   comments: Comment[],
   parentId: string,
   input: Omit<CreateCommentInput, 'parentId'>,
-): Comment[] {
+): { comments: Comment[]; newComment: Comment } {
   const newReply = createComment({ ...input, parentId });
 
   const parentIndex = comments.findIndex((c) => c.id === parentId);
-  if (parentIndex === -1) return comments;
+  if (parentIndex === -1) return { comments, newComment: newReply };
 
   const result = [...comments];
   result.splice(parentIndex + 1, 0, newReply);
-  return result;
+  return { comments: result, newComment: newReply };
 }
 
 /**
