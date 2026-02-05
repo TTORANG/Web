@@ -6,6 +6,7 @@ import FileDropzone from '../common/FileDropzone';
 
 interface IntroSectionProps {
   accept: string;
+  resetUpload: () => void;
   disabled: boolean;
   currentStep: UploadStep;
   progress: number;
@@ -16,6 +17,7 @@ interface IntroSectionProps {
 
 export default function IntroSection({
   accept,
+  resetUpload,
   disabled,
   currentStep,
   progress,
@@ -46,6 +48,7 @@ export default function IntroSection({
         progress={progress}
         onFileSelected={onFileSelected}
         error={error}
+        onCancelUpload={resetUpload}
       />
 
       {error && <p className="mt-3 text-body-s text-red-500">업로드 실패: {error}</p>}

@@ -13,12 +13,12 @@ import type { Presentation } from '@/types/presentation';
 import { showToast } from '@/utils/toast';
 
 const ACCEPTED_FILES_TYPES = '.pptx,.pdf';
-// const MAX_SIZE_MB = 50;
+// const MAX_SIZE_MB = 1_000; // 1GB
 // const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
 export default function HomePage() {
   //const navigate = useNavigate();
-  const { uploadFile, isUploading, progress, error } = useUploadFile();
+  const { uploadFile, cancelUpload, isUploading, progress, error } = useUploadFile();
 
   const onFileSelected = async (file: File) => {
     const response = await uploadFile({ file, title: file.name });
@@ -80,6 +80,7 @@ export default function HomePage() {
       {/* 소개글 & 파일 업로드 */}
       <IntroSection
         accept={ACCEPTED_FILES_TYPES}
+        resetUpload={cancelUpload}
         disabled={isUploading}
         currentStep={progress.currentStep}
         progress={progress.percentage}

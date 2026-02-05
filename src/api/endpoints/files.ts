@@ -7,6 +7,7 @@ import type { UploadFileRequestDto, UploadFileResponseDto } from '../dto/files.d
 
 type UploadOptions = {
   onUploadProgress?: (event: AxiosProgressEvent) => void;
+  signal?: AbortSignal;
 };
 
 export const filesApi = {
@@ -27,6 +28,7 @@ export const filesApi = {
       formData,
       {
         onUploadProgress: options?.onUploadProgress,
+        signal: options?.signal,
         headers: { 'Content-Type': undefined },
       },
     );

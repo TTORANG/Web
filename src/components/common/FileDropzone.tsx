@@ -10,6 +10,7 @@ import ProgressBar from './ProgressBar';
 
 interface FileDropProps {
   onFileSelected: (file: File) => void;
+  onCancelUpload: () => void;
   accept?: string;
   disabled?: boolean;
   currentStep?: UploadStep;
@@ -19,8 +20,9 @@ interface FileDropProps {
 
 export default function FileDropzone({
   onFileSelected = () => {},
+  onCancelUpload = () => {},
   accept,
-  disabled,
+  disabled = false,
   currentStep = 'preparing',
   progress = 0,
   error,
@@ -29,30 +31,36 @@ export default function FileDropzone({
   // dragCounter : 실제로 영역을 완전히 벗어났을 때만 카운터를 false로 바꿈
   const dragCounter = useRef(0);
   const [isDragging, setIsDragging] = useState(false);
+  const isUploading = currentStep === 'uploading' || currentStep === 'finishing';
+  const isBlocked = disabled || isUploading; // 업로드 중에는 모든 입력 차단
 
   useEffect(() => {
-    if (!error) return;
-    showToast.warning('업로드에 실패했어요.', error);
+    if (error) showToast.warning('업로드에 실패했어요.', error);
   }, [error]);
 
+  /** 클릭으로 파일 선택 */
   const openFileDialog = () => {
-    if (disabled) return;
-    inputRef.current?.click();
+    if (!isBlocked) {
+      inputRef.current?.click();
+    }
   };
 
+  /** 파일 선택 */
   const handleFile = (fileList: FileList | null) => {
-    if (!fileList || disabled) return;
+    if (!fileList || isBlocked) return;
     const file = fileList.item(0);
     if (!file) return;
 
-    if (typeof onFileSelected !== 'function') return;
+    if (typeof onFileSelected != 'function') return;
     onFileSelected(file);
+
+    if (inputRef.current) inputRef.current.value = ''; // 같은 파일 다시 선택 가능하게 (선택창 value 초기화)
   };
 
   const handleDragEnter = (e: React.DragEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (disabled) return;
+    if (isBlocked) return;
     // 드래그가 영역 안에 있는 동안 지속적으로 true 유지
     dragCounter.current += 1;
     setIsDragging(true);
@@ -61,12 +69,13 @@ export default function FileDropzone({
   const handleDragOver = (e: React.DragEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isBlocked) return;
   };
 
   const handleDragLeave = (e: React.DragEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (disabled) return;
+    if (isBlocked) return;
     // 자식 요소 진입/이탈에서 발생하는 잦은 leave 이벤트로 하이라이트가 꺼지는 현상을 방지
     dragCounter.current = Math.max(0, dragCounter.current - 1);
     if (dragCounter.current === 0) setIsDragging(false);
@@ -78,20 +87,29 @@ export default function FileDropzone({
     // 드롭 시 카운터 초기화해서 다음 드래그 상태가 꼬이지 않도록 함
     dragCounter.current = 0;
     setIsDragging(false);
+    if (isBlocked) return;
 
     if (e.dataTransfer.files.length > 1) {
       showToast.warning('한 번에 하나의 파일만 업로드할 수 있습니다.');
     }
     // 첫번째 파일만 받아서 넘김
     const file = e.dataTransfer.files?.item(0);
-    if (!file || disabled) return;
+    if (!file) return;
 
-    if (typeof onFileSelected !== 'function') return;
+    if (typeof onFileSelected != 'function') return;
     onFileSelected(file);
   };
 
-  const showDragOverlay = isDragging && !disabled;
-  const showUploadOverlay = currentStep === 'uploading';
+  /** 업로드 취소 */
+  const handleCancelUploading = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (typeof onCancelUpload !== 'function') return;
+    onCancelUpload();
+  };
+
+  const showDragOverlay = isDragging && !isBlocked;
+  const showUploadOverlay = isUploading;
 
   return (
     <div className="w-full mt-10">
@@ -106,7 +124,6 @@ export default function FileDropzone({
       <button
         type="button"
         onClick={openFileDialog}
-        disabled={disabled}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -146,11 +163,24 @@ export default function FileDropzone({
 
         {/* 업로드 오버레이 : 박스 안에 진행률 표시 */}
         {showUploadOverlay && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-2xl bg-white/60 backdrop-blur-sm px-6">
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-2xl bg-white px-6 cursor-default"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+          >
             <p className="text-body-m-bold text-gray-900">업로드 중...</p>
             <div className="w-full">
               <ProgressBar value={progress} />
             </div>
+            <button
+              type="button"
+              className="text-body-s-bold text-red-500"
+              onClick={handleCancelUploading}
+            >
+              업로드 취소
+            </button>
           </div>
         )}
       </button>

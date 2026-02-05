@@ -9,7 +9,7 @@
  * @returns uploadFiles - 파일 업로드 함수
  * @returns reset - 상태 초기화 함수
  */
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import type { AxiosProgressEvent } from 'axios';
 import axios from 'axios';
@@ -20,10 +20,11 @@ import { filesApi } from '@/api/endpoints/files';
 import { sessionApi } from '@/api/endpoints/session';
 import { useAuthStore } from '@/stores/authStore';
 import type { ApiResponse } from '@/types';
+import type { UploadStep } from '@/types/uploadFile';
 
 interface UploadProgress {
   percentage: number;
-  currentStep: 'preparing' | 'uploading' | 'finishing' | 'done';
+  currentStep: UploadStep;
 }
 
 const initialProgress: UploadProgress = {
@@ -35,9 +36,26 @@ export function useUploadFile() {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState<UploadProgress>(initialProgress);
   const [error, setError] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
+  const cancelUpload = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+
+    setError(null);
+    setProgress(initialProgress);
+    setIsUploading(false);
+  }, []);
+
+  // 업로드 시작
   const uploadFile = useCallback(
     async (data: UploadFileRequestDto): Promise<ApiResponse<UploadFileResponseDto> | null> => {
+      // 기존 업로드가 남아있으면 정리
+      abortRef.current?.abort();
+
+      const controller = new AbortController();
+      abortRef.current = controller;
+
       // 업로드 시작 상태
       setIsUploading(true);
       setError(null);
@@ -61,6 +79,7 @@ export function useUploadFile() {
 
         // 업로드 요청
         const startResponse = await filesApi.uploadFile(data, {
+          signal: controller.signal,
           onUploadProgress: (e: AxiosProgressEvent) => {
             const total = e.total ?? 0;
             if (!total) return;
@@ -80,26 +99,22 @@ export function useUploadFile() {
           throw new Error(startResponse.error?.reason ?? '파일 업로드에 실패했어요.');
         }
 
-        const projectId = startResponse.success?.projectId;
-        if (!projectId) {
-          throw new Error('projectId를 받아오지 못했어요.(업로드는 성공)');
-        }
-
         // 완료 처리
         setProgress({ percentage: 100, currentStep: 'done' });
-
         return startResponse;
       } catch (err: unknown) {
+        if (
+          (axios.isAxiosError(err) && err.code === 'ERR_CANCELED') ||
+          (err instanceof DOMException && err.name === 'AbortError')
+        ) {
+          return null;
+        }
+
+        // 에러
         let errorMessage = '업로드 중 오류가 발생했습니다.';
 
         if (axios.isAxiosError<ApiFailureResponse>(err)) {
-          const reason = err.response?.data?.error?.reason;
-
-          if (typeof reason === 'string' && reason.length > 0) {
-            errorMessage = reason;
-          } else if (typeof err.message === 'string' && err.message.length > 0) {
-            errorMessage = err.message;
-          }
+          errorMessage = err.response?.data?.error?.reason || err.message || errorMessage;
         } else if (err instanceof Error) {
           errorMessage = err.message;
         }
@@ -109,10 +124,18 @@ export function useUploadFile() {
         return null;
       } finally {
         setIsUploading(false);
+        setIsUploading(false);
       }
     },
     [],
   );
 
-  return { uploadFile, isUploading, progress, error };
+  /** 상태 초기화 */
+  const resetUpload = useCallback(() => {
+    setError(null);
+    setProgress(initialProgress);
+    setIsUploading(false);
+  }, []);
+
+  return { uploadFile, cancelUpload, resetUpload, isUploading, progress, error };
 }
