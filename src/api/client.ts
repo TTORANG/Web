@@ -12,6 +12,7 @@ import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 import { handleApiError } from '@/api/errorHandler';
 import { useAuthStore } from '@/stores/authStore';
+import type { ApiErrorResponse } from '@/types';
 
 /**
  * API 관련 상수
@@ -19,16 +20,7 @@ import { useAuthStore } from '@/stores/authStore';
 export const API_TIMEOUT_MS = 10000;
 
 /**
- * API 에러 응답 타입 (FAIL 응답의 error 필드)
- */
-export interface ApiErrorResponse {
-  errorCode: string;
-  reason: string;
-  data?: unknown;
-}
-
-/**
- * API FAIL 응답 구조
+ * API FAILURE 응답 구조
  */
 export interface ApiFailureResponse {
   resultType: 'FAILURE';

@@ -23,7 +23,10 @@ export interface Presentation {
   thumbnailUrl?: string;
   slideCount: number;
   feedbackCount: number;
+  reactionCount?: number;
+  viewCount?: number;
   durationSeconds: number;
+  userName?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -45,5 +48,6 @@ export interface PresentationListResponse {
 export interface ProjectUpdateResponse {
   projectId: string;
   title: string;
+  userName: string;
   updatedAt: string;
 }
