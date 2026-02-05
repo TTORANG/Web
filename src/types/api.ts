@@ -6,7 +6,7 @@
 /**
  * API 에러 정보
  */
-export interface ApiError<TErrorData = unknown> {
+export interface ApiErrorResponse<TErrorData = unknown> {
   errorCode: string;
   reason: string;
   data?: TErrorData;
@@ -23,7 +23,7 @@ export type ApiResponse<TSuccess, TErrorData = unknown> =
     }
   | {
       resultType: 'FAILURE';
-      error: ApiError<TErrorData>;
+      error: ApiErrorResponse<TErrorData>;
       success: null;
     };
 

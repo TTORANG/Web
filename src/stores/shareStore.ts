@@ -21,12 +21,6 @@ interface ShareStoreState {
   setSelectedVideoId: (videoId: string | null) => void;
   setShareUrl: (url: string) => void;
   setStep: (step: 'form' | 'result') => void;
-  /** @deprecated API 연결 후 제거 예정 - useCreateShareLink 훅 사용 권장 */
-  generateShareLink: (params: {
-    projectId: string;
-    shareType: ShareType;
-    selectedVideoId: string | null;
-  }) => void;
   resetForm: () => void;
 }
 
@@ -63,25 +57,6 @@ export const useShareStore = create<ShareStoreState>((set, get) => ({
   setShareUrl: (url) => set({ shareUrl: url }),
 
   setStep: (step) => set({ step }),
-
-  generateShareLink: ({ projectId, shareType, selectedVideoId }) => {
-    const token = Math.random().toString(36).slice(2, 11);
-    const base = 'https://ttorang.app/share';
-
-    const query = new URLSearchParams();
-    query.set('projectId', projectId);
-    query.set('type', shareType);
-    if (shareType === 'slide_script_video' && selectedVideoId) {
-      query.set('videoId', selectedVideoId);
-    }
-
-    const shareUrl = `${base}/${token}?${query.toString()}`;
-
-    set({
-      shareUrl,
-      step: 'result',
-    });
-  },
 
   resetForm: () =>
     set({

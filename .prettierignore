@@ -1,3 +1,7 @@
 # Ignore artifacts:
 build
 coverage
+
+# MSW auto-generated files
+public/mockServiceWorker.js
+

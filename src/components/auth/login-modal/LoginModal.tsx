@@ -8,14 +8,24 @@ import type { AuthProvider } from '@/types/auth';
 
 import SocialLoginButton from './SocialLoginButton';
 
-const API_URL = import.meta.env.VITE_API_URL;
-
-function handleSocialLogin(provider: AuthProvider) {
-  window.location.href = `${API_URL}/auth/${provider}`;
-}
+// 로그인은 항상 실제 백엔드 서버로 요청 (MSW 모킹과 무관)
+const AUTH_API_URL = import.meta.env.VITE_AUTH_API_URL || import.meta.env.VITE_API_URL;
 
 export default function LoginModal() {
   const { isLoginModalOpen, closeLoginModal } = useAuthStore();
+
+  const handleSocialLogin = (provider: AuthProvider) => {
+    const width = 500;
+    const height = 600;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+
+    window.open(
+      `${AUTH_API_URL}/auth/${provider}/login`,
+      'oauth-popup',
+      `width=${width},height=${height},left=${left},top=${top}`,
+    );
+  };
 
   return (
     <Modal isOpen={isLoginModalOpen} onClose={closeLoginModal} size="sm" noPadding>

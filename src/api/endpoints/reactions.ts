@@ -8,12 +8,6 @@ import type { ApiResponse } from '@/types/api';
 import type { Reaction } from '@/types/script';
 
 /**
- * 리액션 토글 요청 타입 (하위 호환성)
- * @deprecated ToggleSlideReactionDto 사용 권장
- */
-export type ToggleReactionRequest = ToggleSlideReactionDto;
-
-/**
  * 슬라이드 리액션 토글
  *
  * @param slideId - 슬라이드 ID
