@@ -20,10 +20,15 @@ import {
 } from '@/components/insight';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useSlides } from '@/hooks/queries/useSlides';
-import { useSummaryAnalytics } from '@/hooks/useAnalytics';
+import {
+  useProjectAnalyticsSummary,
+  useSlideAnalytics,
+  useVideoAnalytics,
+} from '@/hooks/useAnalytics';
 import type { DropOffSlide, DropOffTime, SummaryStat } from '@/types/insight';
 import type { Reaction } from '@/types/script';
 import { formatVideoTimestamp } from '@/utils/format';
+import { getSlideIndexFromTime } from '@/utils/video';
 
 type RecentComment = {
   user: string;
@@ -33,61 +38,73 @@ type RecentComment = {
   text: string;
 };
 
-// 더미 데이터
-const summaryStatLabels = ['총 조회수', '완독률', '받은 피드백', '평균 시청 시간'] as const;
-const emptySummaryStats: SummaryStat[] = [
-  { label: '총 조회수', value: '247', trendValue: '12% 지난주 대비', trend: 'up' },
-  { label: '완독률', value: '68%', trendValue: '5% 지난주 대비', trend: 'down' },
-  { label: '받은 피드백', value: '42', sub: '댓글 12, 이모지 30' },
-  { label: '평균 시청 시간', value: '4:23', sub: '슬라이드당' },
-];
+// 디자인을 위해 스타일을 조금 더 부드럽게 조정했습니다.
+const cardBase = 'bg-white rounded-xl border border-gray-100 shadow-sm p-6';
+const thumbBase = 'bg-gray-100 rounded-lg aspect-video';
+const FALLBACK_SLIDE_DURATION_SECONDS = 10;
 
-const dropOffSlides: DropOffSlide[] = [
-  { label: '슬라이드 4', desc: '79명 이탈', percent: 32, slideIndex: 3 },
-  { label: '슬라이드 8', desc: '47명 이탈', percent: 28, slideIndex: 7 },
-  { label: '슬라이드 6', desc: '45명 이탈', percent: 24, slideIndex: 5 },
-];
-
-const dropOffTimes: DropOffTime[] = [
-  { time: '2:05', desc: '슬라이드 5', count: 45, slideIndex: 4 },
-  { time: '3:30', desc: '슬라이드 7', count: 38, slideIndex: 6 },
-  { time: '1:08', desc: '슬라이드 3', count: 45, slideIndex: 2 },
-];
+// --- 더미 데이터 (사진 수치 반영) ---
+const summaryStatLabels = ['총 조회수', '완료율', '받은 피드백', '평균 체류 시간'] as const;
+const emptySummaryStats: SummaryStat[] = summaryStatLabels.map((label) => ({
+  label,
+  value: '-',
+  sub: '',
+}));
 
 const recentComments: RecentComment[] = [
   { user: '익명 사용자', slide: 1, slideIndex: 0, time: '0:15', text: '이 부분 설명이 명확해요!' },
-  { user: '김철수', slide: 2, slideIndex: 1, time: '0:45', text: '좋은 발표였습니다' },
+  { user: '김철수', slide: 2, slideIndex: 1, time: '0:45', text: '좋은 발표였습니다.' },
   {
     user: '이영희',
     slide: 3,
     slideIndex: 2,
     time: '1:30',
-    text: '데이터 해석 부분이 인상적이었습니다',
+    text: '데이터 해석 부분이 인상적이에요.',
   },
   {
     user: '박민수',
     slide: 4,
     slideIndex: 3,
     time: '1:32',
-    text: '동의합니다! 정말 명확한 설명이었어요',
+    text: '동의합니다! 명확한 설명이었어요.',
   },
 ];
 
 const retentionData = [
   { time: '0:00', rate: 100 },
   { time: '1:00', rate: 90 },
+  { time: '1:40', rate: 80 }, // 급격한 이탈 지점
   { time: '2:00', rate: 80 },
   { time: '3:00', rate: 70 },
+  { time: '3:30', rate: 75 },
   { time: '4:00', rate: 65 },
   { time: '5:00', rate: 65 },
 ];
 
+const slideRetentionData = [
+  { time: 'S1', rate: 100 },
+  { time: 'S2', rate: 92 },
+  { time: 'S3', rate: 86 },
+  { time: 'S4', rate: 80 },
+  { time: 'S5', rate: 80 },
+  { time: 'S6', rate: 70 },
+  { time: 'S7', rate: 75 },
+  { time: 'S8', rate: 65 },
+  { time: 'S9', rate: 65 },
+  { time: 'S10', rate: 65 },
+];
+
+// --- 컴포넌트 시작 ---
+
 export default function InsightPage() {
-  const hasVideo = true;
   const { projectId } = useParams<{ projectId: string }>();
   const { data: slides } = useSlides(projectId ?? '');
-  const { data: summaryAnalytics } = useSummaryAnalytics(projectId ?? '');
 
+  const { data: slideAnalytics } = useSlideAnalytics(projectId ?? '');
+  const { data: summaryAnalytics } = useProjectAnalyticsSummary(projectId ?? '');
+  const videoId = summaryAnalytics?.videoIds?.[0] ?? '';
+  const hasVideo = !!videoId;
+  const { data: videoExitAnalytics } = useVideoAnalytics(videoId);
   const computedSummaryStats = useMemo(() => {
     if (!summaryAnalytics) return emptySummaryStats;
 
@@ -112,12 +129,12 @@ export default function InsightPage() {
       {
         label: summaryStatLabels[2],
         value: String(summaryAnalytics.totalFeedbackCount),
-        sub: '댓글 12, 이모지 30',
+        sub: '',
       },
       {
         label: summaryStatLabels[3],
         value: formatVideoTimestamp(summaryAnalytics.avgDurationSeconds),
-        sub: '슬라이드당',
+        sub: '',
       },
     ];
   }, [summaryAnalytics]);
@@ -149,6 +166,7 @@ export default function InsightPage() {
       .map((slide, index) => ({
         slide,
         slideIndex: index,
+        commentCount: slide.opinions?.length ?? 0,
         reactionCount: (slide.emojiReactions ?? []).reduce((sum, r) => sum + r.count, 0),
         total:
           (slide.opinions?.length ?? 0) +
@@ -160,6 +178,59 @@ export default function InsightPage() {
 
   const getThumb = (slideIndex: number) => slides?.[slideIndex]?.imageUrl;
 
+  const slideChangeTimes = useMemo(() => {
+    if (!slides?.length) return [];
+
+    return slides.map((slide, index) =>
+      Number.isFinite(slide.startTime)
+        ? (slide.startTime ?? 0)
+        : index * FALLBACK_SLIDE_DURATION_SECONDS,
+    );
+  }, [slides]);
+
+  const dropOffSlides: DropOffSlide[] = useMemo(() => {
+    const items = slideAnalytics?.slides ?? [];
+    return items
+      .slice()
+      .sort((a, b) => b.exitCount - a.exitCount)
+      .slice(0, 3)
+      .map((item) => ({
+        label: `슬라이드 ${item.slideNum}`,
+        desc: `${item.exitCount}명 이탈`,
+        percent: Math.min(
+          100,
+          Math.round(
+            item.exitRate <= 1
+              ? item.exitRate * 100
+              : item.exitRate > 100
+                ? item.exitRate / 100
+                : item.exitRate,
+          ),
+        ),
+        slideIndex: Math.max(0, item.slideNum - 1),
+      }));
+  }, [slideAnalytics]);
+
+  const dropOffTimes: DropOffTime[] = useMemo(() => {
+    const items = videoExitAnalytics?.exits ?? [];
+    return items
+      .slice()
+      .sort((a, b) => b.exitCount - a.exitCount)
+      .slice(0, 3)
+      .map((item) => {
+        const seconds = item.timestampMs / 1000;
+        const slideIndex =
+          slides?.length && slideChangeTimes.length
+            ? getSlideIndexFromTime(seconds, slideChangeTimes, slides.length - 1)
+            : 0;
+        return {
+          time: formatVideoTimestamp(seconds),
+          desc: slides?.length ? `슬라이드 ${slideIndex + 1}` : '슬라이드',
+          count: item.exitCount,
+          slideIndex,
+        };
+      });
+  }, [videoExitAnalytics, slideChangeTimes, slides]);
   return (
     <div
       role="tabpanel"
