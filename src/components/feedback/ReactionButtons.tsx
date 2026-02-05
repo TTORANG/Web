@@ -35,8 +35,8 @@ export default function ReactionButtons({
   buttonClassName,
 }: ReactionButtonsProps) {
   // confetti 트리거를 위한 카운터 (리액션 타입별)
-  const [confettiTriggers, setConfettiTriggers] = useState<Record<ReactionType, number>>(
-    {} as Record<ReactionType, number>,
+  const [confettiTriggers, setConfettiTriggers] = useState<Partial<Record<ReactionType, number>>>(
+    {},
   );
 
   const formatReactionCount = (count: number) => (count > 99 ? '99+' : count);
@@ -88,7 +88,7 @@ export default function ReactionButtons({
               {reaction.count > 0 ? formatReactionCount(reaction.count) : ''}
             </span>
 
-            {confettiTriggers[reaction.type] > 0 && (
+            {confettiTriggers[reaction.type] && confettiTriggers[reaction.type]! > 0 && (
               <EmojiConfetti key={confettiTriggers[reaction.type]} emoji={config.emoji} />
             )}
           </button>

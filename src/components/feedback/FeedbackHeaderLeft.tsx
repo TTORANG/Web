@@ -35,7 +35,7 @@ export default function FeedbackHeaderLeft() {
           className="w-72 max-w-[90vw] -translate-x-30 md:translate-x-0 rounded-2xl border border-gray-200 px-6 py-3"
         >
           <div className="grid grid-cols-[6.5rem_1fr] gap-x-5 gap-y-3 text-body-m text-gray-800">
-            <span className="text-gray-600 text-s-bold">게시자</span>
+            <span className="text-gray-600 text-body-s-bold">게시자</span>
             <span className="text-gray-800 text-body-s">{publisherName}</span>
             <span className="text-gray-600 text-body-s-bold">게시 날짜</span>
             <span className="text-gray-800 text-body-s">{postedAt}</span>

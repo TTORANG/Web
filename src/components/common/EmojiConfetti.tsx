@@ -2,7 +2,7 @@
  * @file EmojiConfetti.tsx
  * @description 이모지 confetti 효과 컴포넌트
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Particle {
   id: number;
@@ -44,15 +44,22 @@ export default function EmojiConfetti({
   const [particles] = useState(() => generateParticles(particleCount));
   const [isVisible, setIsVisible] = useState(true);
 
+  // 최신 onComplete 콜백을 참조 (useEffect 의존성 제거 목적)
+  const onCompleteRef = useRef(onComplete);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
   // 애니메이션 완료 후 정리
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false);
-      onComplete?.();
+      onCompleteRef.current?.();
     }, 800);
 
     return () => clearTimeout(timer);
-  }, [onComplete]);
+  }, []);
 
   if (!isVisible) return null;
 

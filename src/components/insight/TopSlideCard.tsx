@@ -21,7 +21,11 @@ export default function TopSlideCard({ title, thumbUrl, reactionMetrics }: TopSl
           className="h-28.25 w-full rounded-t-lg object-cover"
         />
       ) : (
-        <div className="h-28.25 w-full rounded-t-lg bg-gray-200" aria-hidden="true" />
+        <div
+          className="h-28.25 w-full rounded-t-lg bg-gray-200"
+          role="img"
+          aria-label={`${title} 썸네일 (이미지 없음)`}
+        />
       )}
 
       {/* 콘텐츠 */}

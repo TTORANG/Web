@@ -215,7 +215,7 @@ export default function InsightPage() {
                     axisLine={false}
                     tickLine={false}
                     tick={{ fontSize: 14, fill: 'var(--color-gray-600)' }}
-                    ticks={[25, 50, 75, 100]}
+                    ticks={[0, 25, 50, 75, 100]}
                     tickFormatter={(value) => `${value}%`}
                     width={50}
                   />
