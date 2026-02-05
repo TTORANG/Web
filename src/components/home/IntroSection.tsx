@@ -1,26 +1,28 @@
 import clsx from 'clsx';
 
-import type { UploadState } from '@/types/uploadFile';
+import type { UploadStep } from '@/types/uploadFile';
 
 import FileDropzone from '../common/FileDropzone';
 
 interface IntroSectionProps {
   accept: string;
+  resetUpload: () => void;
   disabled: boolean;
-  uploadState: UploadState;
+  currentStep: UploadStep;
   progress: number;
   error?: string | null;
-  onFilesSelected: (files: File[]) => void;
+  onFileSelected: (file: File) => void;
   isEmpty: boolean;
 }
 
 export default function IntroSection({
   accept,
+  resetUpload,
   disabled,
-  uploadState,
+  currentStep,
   progress,
   error,
-  onFilesSelected,
+  onFileSelected,
   isEmpty,
 }: IntroSectionProps) {
   return (
@@ -42,10 +44,11 @@ export default function IntroSection({
       <FileDropzone
         disabled={disabled}
         accept={accept}
-        uploadState={uploadState}
+        currentStep={currentStep}
         progress={progress}
-        onFilesSelected={onFilesSelected}
+        onFileSelected={onFileSelected}
         error={error}
+        onCancelUpload={resetUpload}
       />
 
       {error && <p className="mt-3 text-body-s text-red-500">업로드 실패: {error}</p>}
