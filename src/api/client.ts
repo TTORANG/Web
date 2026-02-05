@@ -19,7 +19,7 @@ import { useAuthStore } from '@/stores/authStore';
 export const API_TIMEOUT_MS = 10000;
 
 /**
- * API 에러 응답 타입 (FAILURE 응답의 error 필드)
+ * API 에러 응답 타입 (FAIL 응답의 error 필드)
  */
 export interface ApiErrorResponse {
   errorCode: string;
@@ -28,7 +28,7 @@ export interface ApiErrorResponse {
 }
 
 /**
- * API FAILURE 응답 구조
+ * API FAIL 응답 구조
  */
 export interface ApiFailureResponse {
   resultType: 'FAILURE';
