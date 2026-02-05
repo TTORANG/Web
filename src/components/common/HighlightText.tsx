@@ -6,7 +6,7 @@ type Props = {
   highlightClassName?: string;
 };
 
-/** 검색 로직(useProjectList)과 동일 : 공백 제거 + 소문자화 */
+/** 검색 로직(usePresentationList)과 동일 : 공백 제거 + 소문자화 */
 function normalizeForSearch(value: string) {
   return value.replace(/\s+/g, '').toLowerCase();
 }

@@ -40,7 +40,7 @@ export default function PresentationsSection({
 
   /**
    * 전체 프로젝트가 하나라도 존재하는지 여부
-   * 아예 데이터가 없으면 ProjectSection 자체를 숨기기 위함
+   * 아예 데이터가 없으면 PresentationSection 자체를 숨기기 위함
    */
   const hasAnyPresentations = totalCount > 0;
 
