@@ -83,18 +83,26 @@ export function useVideoComments() {
     const tempReply = addReplyStore(parentId, content);
 
     try {
-      // 서버 API 호출 (string을 number로 변환)
-      const parentIdNum = parseInt(parentId, 10);
-      if (isNaN(parentIdNum)) {
-        throw new Error('Invalid comment ID');
+      // parentId로 부모 댓글 찾기 (serverId 필요)
+      const allComments = video?.feedbacks.flatMap((f) => f.comments) || [];
+      const parentComment = allComments.find((c) => c.id === parentId);
+
+      if (!parentComment || !parentComment.serverId) {
+        throw new Error('부모 댓글의 서버 ID를 찾을 수 없습니다.');
       }
-      const model = await createCommentReply(parentIdNum, { content });
+
+      // 서버 API 호출 (serverId를 number로 변환)
+      const parentServerIdNum = parseInt(parentComment.serverId, 10);
+      if (isNaN(parentServerIdNum)) {
+        throw new Error('Invalid parent comment server ID');
+      }
+      const model = await createCommentReply(parentServerIdNum, { content });
 
       // 서버 ID 저장 (Model에서 serverId 추출)
       if (model && tempReply) {
         updateCommentServerId(tempReply.id, model.serverId);
       }
-    } catch {
+    } catch (error) {
       showToast.error('답글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
     }
   };
@@ -105,7 +113,7 @@ export function useVideoComments() {
   const deleteComment = async (commentId: string) => {
     if (!video) return;
 
-    // 삭제할 댓글 찾기
+    // 플랫 구조: 모든 댓글(답글 포함)이 같은 배열에 있음
     const allComments = video.feedbacks.flatMap((f) => f.comments);
     const targetComment = allComments.find((c) => c.id === commentId);
 
