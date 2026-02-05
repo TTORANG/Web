@@ -1,68 +1,34 @@
-/**
- * @file reactions.ts
- * @description 슬라이드 리액션 관련 API 엔드포인트
+﻿/**
+ * @file reactions.ts * @description Slide reaction APIs.
  */
 import { apiClient } from '@/api';
-import type { ApiResponse } from '@/types/api';
-import type { Reaction, ReactionType } from '@/types/script';
 import type { ToggleSlideReactionDto } from '@/api/dto';
+import type { ReactionCountDto } from '@/api/dto/reactions.dto';
+import type { ApiResponse } from '@/api/handlers';
+import type { Reaction } from '@/types/script';
 
 /**
- * 리액션 토글 요청 타입 (하위 호환성)
- * @deprecated ToggleSlideReactionDto 사용 권장
- */
-export type ToggleReactionRequest = ToggleSlideReactionDto;
-
-/**
- * 슬라이드 리액션 토글
- *
- * @param slideId - 슬라이드 ID
- * @param data - 리액션 데이터
- * @returns 업데이트된 리액션 배열
+ * Toggle a reaction for a slide.
  */
 export async function toggleReaction(
   slideId: string,
   data: ToggleSlideReactionDto,
 ): Promise<Reaction[]> {
-  const response = await apiClient.post<ApiResponse<Reaction[]>>(
-    `/slides/${slideId}/reactions`,
-    data,
-  );
-
-export const toggleReaction = async (slideId: string, data: ToggleReactionRequest) => {
   const { data: response } = await apiClient.post<Reaction[]>(
     `/slides/${slideId}/reactions/toggle`,
     data,
   );
   return response;
-};
+}
 
-export type ReactionSummary = {
-  slideId: string;
-  reactions: Partial<Record<ReactionType, number>>;
-};
-
-export async function getSlideReactionSummary(slideId: string): Promise<ReactionSummary> {
-  const response = await apiClient.get<ApiResponse<ReactionSummary>>(
+/**
+ * Get reaction summary counts for a slide.
+ */
+export async function getSlideReactionSummary(slideId: string) {
+  const { data } = await apiClient.get<ApiResponse<ReactionCountDto>>(
     `/slides/${slideId}/reactions/summary`,
   );
 
-  if (response.data.resultType === 'FAILURE') {
-    const reason = response.data.reason;
-    let errorMessage = '슬라이드 리액션 집계 조회에 실패했습니다.';
-
-    if (typeof reason === 'string') {
-      errorMessage = reason;
-    } else if (reason && typeof reason === 'object') {
-      errorMessage = reason.message || errorMessage;
-    }
-
-    throw new Error(errorMessage);
-  }
-
-  if (!response.data.success) {
-    throw new Error('데이터가 존재하지 않습니다.');
-  }
-
-  return response.data.success;
+  // ⚠️ 핵심: success 안에 있는 reactions 객체만 리턴! (없으면 빈 객체)
+  return data.success?.reactions ?? {};
 }

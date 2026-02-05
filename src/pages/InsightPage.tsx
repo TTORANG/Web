@@ -24,7 +24,6 @@ import {
 } from '@/components/insight';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useSlides } from '@/hooks/queries/useSlides';
-
 import {
   useProjectAnalyticsSummary,
   useSlideAnalytics,
@@ -32,7 +31,7 @@ import {
 } from '@/hooks/useAnalytics';
 import type { DropOffSlide, DropOffTime, SummaryStat } from '@/types/insight';
 import type { Reaction } from '@/types/script';
-import type { Slide } from '@/types/slide';
+import type { SlideListItem } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
 
@@ -151,7 +150,7 @@ export default function InsightPage() {
     const analyticsSlideIds = new Set((slideAnalytics?.slides ?? []).map((item) => item.slideId));
     const targetSlides =
       analyticsSlideIds.size > 0
-        ? slideList.filter((slide) => analyticsSlideIds.has(slide.id))
+        ? slideList.filter((slide) => analyticsSlideIds.has(slide.slideId))
         : slideList;
 
     targetSlides.forEach((slide) => {
@@ -168,11 +167,11 @@ export default function InsightPage() {
 
   const slideDataMaps = useMemo(() => {
     const slideIndexById = new Map<string, number>();
-    const slideById = new Map<string, Slide>();
+    const slideById = new Map<string, SlideListItem>();
 
     slideList.forEach((slide, index) => {
-      slideIndexById.set(slide.id, index);
-      slideById.set(slide.id, slide);
+      slideIndexById.set(slide.slideId, index);
+      slideById.set(slide.slideId, slide);
     });
 
     return { slideIndexById, slideById };
@@ -210,7 +209,7 @@ export default function InsightPage() {
     enabled: topSlideIds.length > 0,
   });
 
-  const getThumb = (slideIndex: number) => slideList[slideIndex]?.thumb;
+  const getThumb = (slideIndex: number) => slideList[slideIndex]?.imageUrl;
 
   const slideChangeTimes = useMemo(() => {
     if (!slides?.length) return [];
@@ -374,7 +373,7 @@ export default function InsightPage() {
           <h3 className="text-body-l-bold text-gray-800 mb-4">가장 많은 피드백을 받은 슬라이드</h3>
           <div className="grid grid-cols-3 gap-3 items-start">
             {topSlides.map(({ slideId, slide, slideIndex, commentCount, title }, index) => {
-              const summary = topSlideReactionSummaries?.[index]?.reactions;
+              const summary = topSlideReactionSummaries?.[index];
               const baseReactions = createDefaultReactions();
               const summaryReactions = summary
                 ? baseReactions.map((reaction) => ({
@@ -386,7 +385,7 @@ export default function InsightPage() {
 
               return (
                 <TopSlideCard
-                  key={slideId ?? slide?.id ?? `slide-${slideIndex}`}
+                  key={slideId ?? slide?.slideId ?? `slide-${slideIndex}`}
                   title={title}
                   thumbUrl={getThumb(slideIndex)}
                   reactionMetrics={reactionMetrics}
