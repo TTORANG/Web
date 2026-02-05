@@ -35,12 +35,12 @@ export interface RoomsListResponse {
  */
 export interface NewCommentPayload {
   commentId: string;
-  videoId: string;
+  videoId: number;
   userId: string;
   content: string;
+  timestamp: number; // 비디오 타임스탬프 (초 단위)
   createdAt: string;
 }
-
 export interface CommentDeletedPayload {
   commentId: string;
 }
@@ -50,10 +50,10 @@ export interface CommentDeletedPayload {
  */
 export interface NewReactionPayload {
   reactionId: string;
-  videoId: string;
+  videoId: number;
   userId: string;
   emoji: string;
-  timestamp: number; // 비디오 타임스탬프 (초 단위)
+  timestamp: number; // 백엔드에서 실제로는 timestampMs를 timestamp라는 이름으로 전송 (밀리초 단위)
 }
 
 export interface ReactionRemovedPayload {
@@ -61,7 +61,7 @@ export interface ReactionRemovedPayload {
 }
 
 export interface ReactionCountUpdatedPayload {
-  videoId: string;
+  videoId: number; // number로 변경 (API와 일관성)
   counts: Record<string, number>;
 }
 

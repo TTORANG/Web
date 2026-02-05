@@ -7,8 +7,6 @@ import { useParams } from 'react-router-dom';
 
 import { useVideoComments } from '@/hooks/useVideoComments';
 import { useVideoReactions } from '@/hooks/useVideoReactions';
-import { MOCK_SLIDES } from '@/mocks/slides';
-import { MOCK_VIDEO } from '@/mocks/videos';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Comment } from '@/types/comment';
 import { formatVideoTimestamp } from '@/utils/format';
@@ -18,6 +16,7 @@ export function useFeedbackVideo() {
   const [isLoading, setIsLoading] = useState(true);
 
   // Store selectors
+  const video = useVideoFeedbackStore((s) => s.video);
   const initVideo = useVideoFeedbackStore((s) => s.initVideo);
   const currentTime = useVideoFeedbackStore((s) => s.currentTime);
   const updateCurrentTime = useVideoFeedbackStore((s) => s.updateCurrentTime);
@@ -30,23 +29,11 @@ export function useFeedbackVideo() {
   // Comment draft state
   const [commentDraft, setCommentDraft] = useState('');
 
-  // 프로젝트 슬라이드 필터링
-  const projectSlides = useMemo(() => {
-    const targetProjectId = projectId ?? 'p1';
-    return MOCK_SLIDES.filter((slide) => slide.projectId === targetProjectId);
-  }, [projectId]);
+  // TODO: 실제 API로 프로젝트 슬라이드 조회
+  const projectSlides = useMemo(() => [], []);
 
-  // 슬라이드 전환 시간 계산
-  const slideChangeTimes = useMemo(() => {
-    if (projectSlides.length === 0) return [];
-
-    const videoDuration = MOCK_VIDEO.duration;
-    const slideCount = projectSlides.length;
-
-    return projectSlides.map(
-      (slide, i) => slide.startTime ?? Math.floor(i * (videoDuration / slideCount)),
-    );
-  }, [projectSlides]);
+  // TODO: 슬라이드 전환 시간 계산
+  const slideChangeTimes = useMemo(() => [], []);
 
   // 타임스탬프 프리픽스 (댓글 입력 시 자동 삽입)
   const timestampPrefix = useMemo(() => `${formatVideoTimestamp(currentTime)} `, [currentTime]);
@@ -66,14 +53,29 @@ export function useFeedbackVideo() {
     [requestSeek],
   );
 
-  // 비디오 초기화
+  // 비디오 초기화 - 테스트용으로 videoId=1 사용
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      initVideo(MOCK_VIDEO);
-      setIsLoading(false);
-    }, 500);
+    if (!projectId) return;
 
-    return () => window.clearTimeout(timer);
+    // 임시: 서버에 존재하는 videoId=11을 하드코딩
+    const testVideoData = {
+      videoId: 11, // 서버의 실제 비디오 ID (number 타입)
+      videoUrl: '/p1.webm',
+      title: '테스트 영상',
+      duration: 596,
+      comments: [],
+      reactionEvents: [],
+      feedbacks: [],
+    };
+
+    // console.log('[useFeedbackVideo] Using test videoId:', testVideoData.videoId);
+    initVideo(testVideoData);
+    // setState를 effect에서 직접 호출하지 않고 타이머로 지연
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [projectId, initVideo]);
 
   return {
@@ -98,7 +100,7 @@ export function useFeedbackVideo() {
     toggleReaction,
 
     // 비디오 URL
-    webcamVideoUrl: MOCK_VIDEO.videoUrl,
+    webcamVideoUrl: video?.videoUrl || '/p1.webm',
   };
 }
 

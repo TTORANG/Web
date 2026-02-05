@@ -10,5 +10,6 @@ export * from './useMediaQuery';
 export * from './useSlideNavigation';
 export * from './useSlideSelectors';
 export * from './queries/useOpinions';
-export * from './queries/useProjects';
+export * from './queries/usePresentations';
 export * from './queries/useSlides';
+export * from './useRename';

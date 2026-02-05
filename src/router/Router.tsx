@@ -1,6 +1,13 @@
 import { Navigate, createBrowserRouter } from 'react-router-dom';
 
-import { Gnb, Layout, LoginButton, Logo, ShareButton } from '@/components/common';
+import {
+  Gnb,
+  Layout,
+  LoginButton,
+  Logo,
+  PresentationTitleEditor,
+  ShareButton,
+} from '@/components/common';
 // TODO: 컴포넌트 교체
 import FeedbackHeaderLeft from '@/components/feedback/FeedbackHeaderLeft';
 import {
@@ -9,6 +16,7 @@ import {
   FdVideoPage,
   HomePage,
   InsightPage,
+  OAuthCallbackPage,
   SlidePage,
   VideoPage,
   VideoRecordPage,
@@ -25,13 +33,17 @@ export const router = createBrowserRouter([
     element: <DevTestPage />,
   },
   {
+    path: '/auth/callback',
+    element: <OAuthCallbackPage />,
+  },
+  {
     path: '/:projectId',
     element: (
       <Layout
         left={
           <>
             <Logo />
-            <span className="text-body-m-bold text-gray-800">내 발표</span>
+            <PresentationTitleEditor />
           </>
         }
         center={<Gnb />}

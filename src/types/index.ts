@@ -1,5 +1,5 @@
 // API
-export type { ApiError, ApiResponse, PaginatedData, ScriptResponse, ScriptVersion } from './api';
+export type { ApiError, ApiResponse, PaginatedData } from './api';
 
 // Auth
 export type { AuthProvider, User } from './auth';
@@ -14,10 +14,23 @@ export type { SortMode, ViewMode, FilterMode } from './home';
 export type { TabItem, TabKey } from './navigation';
 
 // Project
-export type { Project } from './project';
+export type { Presentation } from './presentation';
 
 // Script
 export type { Reaction, ReactionType } from './script';
+
+// Share
+export type {
+  ShareScope,
+  ShareableVideo,
+  ShareableVideosPagination,
+  ShareableVideosData,
+  ShareableVideosResponse,
+  CreateShareLinkRequest,
+  SharedContentSummary,
+  CreateShareLinkData,
+  CreateShareLinkResponse,
+} from './share';
 
 // Slide
 export type { Slide } from './slide';

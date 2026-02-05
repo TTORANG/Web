@@ -5,7 +5,7 @@ interface RecordingEmptySectionProps {
 }
 
 /**
- * @description 녹화 전 초기 진입 화면 !!!!임시!!!
+ * @description PD_VID_01_C01
  */
 export const RecordingEmptySection = ({ onStart }: RecordingEmptySectionProps) => {
   return (
@@ -27,7 +27,7 @@ export const RecordingEmptySection = ({ onStart }: RecordingEmptySectionProps) =
       </div>
 
       <h2 className="text-xl font-bold mb-2 text-gray-900">녹화된 영상이 없습니다.</h2>
-      <p className="text-gray-500 mb-10 text-sm font-medium">발표 연습을 녹화하고 분석해보세요.</p>
+      <p className="text-gray-500 mb-10 text-sm font-medium">발표 연습을 녹화하고 분석해보세요</p>
 
       <div className="w-full bg-gray-50 p-6 rounded-lg mb-10 text-left border border-gray-100">
         <ul className="text-xs text-gray-600 space-y-3 leading-relaxed">
@@ -38,7 +38,7 @@ export const RecordingEmptySection = ({ onStart }: RecordingEmptySectionProps) =
             <span>•</span> 웹캠으로 발표 모습을 녹화합니다.
           </li>
           <li className="flex gap-2">
-            <span>•</span> 녹화 종료 후 AI 피드백을 받을 수 있습니다.
+            <span>•</span> 나중에 피드백을 받을 수 있습니다.
           </li>
         </ul>
       </div>

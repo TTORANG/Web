@@ -11,6 +11,7 @@ import { useParams } from 'react-router-dom';
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
 import { Spinner } from '@/components/common';
+import WebSocketDebug from '@/components/common/WebSocketDebug';
 import FeedbackMobileLayout from '@/components/feedback/FeedbackMobileLayout';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
 import SlideNavigation from '@/components/feedback/SlideNavigation';
@@ -32,7 +33,7 @@ export default function FeedbackSlidePage() {
   const { data: slides, isLoading } = useSlides(projectId ?? '');
 
   // 웹소켓 연결
-  useFeedbackWebSocket({
+  const { isConnected, currentRooms, joinProject, leaveProject, getRooms } = useFeedbackWebSocket({
     projectId: projectId ?? '',
     enabled: !!projectId,
   });
@@ -64,10 +65,10 @@ export default function FeedbackSlidePage() {
       const slideLabel = `Slide ${index + 1}`;
       return (slide.opinions || []).map((op) => ({
         ...op,
-        id: `${slide.id}-${op.id}`,
-        parentId: op.parentId ? `${slide.id}-${op.parentId}` : undefined,
+        id: `${slide.slideId}-${op.id}`,
+        parentId: op.parentId ? `${slide.slideId}-${op.parentId}` : undefined,
         serverId: op.id,
-        slideId: slide.id,
+        slideId: slide.slideId,
         slideRef: slideLabel,
         ref: { kind: 'slide' as const, index },
       }));
@@ -151,7 +152,7 @@ export default function FeedbackSlidePage() {
         mediaSlot={
           currentSlide ? (
             <img
-              src={currentSlide.thumb}
+              src={currentSlide.imageUrl}
               alt={currentSlide.title}
               className="max-h-full max-w-full"
             />
@@ -213,6 +214,16 @@ export default function FeedbackSlidePage() {
           </>
         }
         commentCount={comments.length}
+      />
+
+      {/* WebSocket 디버그 UI (개발 환경에서만) */}
+      <WebSocketDebug
+        isConnected={isConnected}
+        currentRooms={currentRooms}
+        projectId={projectId}
+        onJoinProject={joinProject}
+        onLeaveProject={leaveProject}
+        onGetRooms={getRooms}
       />
     </div>
   );

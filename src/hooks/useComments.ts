@@ -20,7 +20,7 @@ import { useCreateOpinion, useDeleteOpinion } from './queries/useOpinions';
 const EMPTY_COMMENTS: Comment[] = [];
 
 export function useComments() {
-  const slideId = useSlideStore((state) => state.slide?.id);
+  const slideId = useSlideStore((state) => state.slide?.slideId);
   const flatComments = useSlideStore((state) => state.slide?.opinions);
   const addOpinionStore = useSlideStore((state) => state.addOpinion);
   const addReplyStore = useSlideStore((state) => state.addReply);
@@ -52,7 +52,7 @@ export function useComments() {
         onSuccess: () => {
           // 서버가 웹소켓을 보내지 않으므로 수동으로 쿼리 무효화
           // TODO: 서버에서 broadcastNewComment 호출 후 제거
-          console.log('✅ Comment created, invalidating queries...');
+          // console.log('✅ Comment created, invalidating queries...');
         },
         onError: () => {
           setOpinions(previousOpinions);

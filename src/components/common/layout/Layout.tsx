@@ -32,6 +32,7 @@ interface LayoutProps {
 export function Layout({ left, center, right, theme, scrollable = false, children }: LayoutProps) {
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
   const appliedTheme = theme ?? resolvedTheme;
+  const isDark = appliedTheme === 'dark';
 
   // 테마가 변경되거나 오버라이드될 때 document.documentElement에 적용 (모달 등 포탈 지원)
   useEffect(() => {
@@ -48,7 +49,7 @@ export function Layout({ left, center, right, theme, scrollable = false, childre
   return (
     <div
       data-theme={appliedTheme}
-      className={`bg-gray-100 ${scrollable ? 'min-h-screen' : 'h-screen overflow-hidden'}`}
+      className={`${isDark ? 'bg-[#1a1c21]' : 'bg-gray-100'} ${scrollable ? 'min-h-screen' : 'h-screen overflow-hidden'}`}
     >
       <header className="fixed top-0 right-0 left-0 z-50 flex h-15 items-center justify-between border-b border-gray-200 bg-white px-4 md:px-18">
         <div className="flex items-center gap-6">{left ?? <Logo />}</div>
@@ -57,7 +58,7 @@ export function Layout({ left, center, right, theme, scrollable = false, childre
       </header>
 
       <main
-        className={`mt-15 ${scrollable ? 'min-h-[calc(100vh-3.75rem)]' : 'h-[calc(100vh-3.75rem)] overflow-hidden'}`}
+        className={`mt-15 ${isDark ? 'bg-[#121418]' : 'bg-white'} ${scrollable ? 'min-h-[calc(100vh-3.75rem)]' : 'h-[calc(100vh-3.75rem)] overflow-hidden'}`}
       >
         <div className="h-full">{children || <Outlet />}</div>
       </main>

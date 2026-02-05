@@ -9,7 +9,7 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 
-import { type ApiError } from '@/api/client';
+import { type ApiFailureResponse } from '@/api/client';
 import { handleApiError } from '@/api/errorHandler';
 
 /**
@@ -25,16 +25,16 @@ export const MAX_RETRIES = 1; // 실패 시 재시도 횟수
  */
 const handleGlobalError = (error: unknown) => {
   // 1. Axios 에러인 경우
-  if (isAxiosError<ApiError>(error)) {
+  if (isAxiosError<ApiFailureResponse>(error)) {
     // 이미 Axios 인터셉터에서 처리된 에러라면 무시 (중복 토스트 방지)
     if (error.isHandled) {
       return;
     }
 
     const status = error.response?.status;
-    const message = error.response?.data?.message || error.message;
+    const reason = error.response?.data?.error?.reason || error.message;
 
-    handleApiError(status, message);
+    handleApiError(status, reason);
     return;
   }
 
@@ -65,12 +65,12 @@ export const queryKeys = {
     detail: (slideId: string) => [...queryKeys.scripts.all, 'detail', slideId] as const,
     versions: (slideId: string) => [...queryKeys.scripts.all, 'versions', slideId] as const,
   },
-  projects: {
-    all: ['projects'] as const,
-    lists: () => [...queryKeys.projects.all, 'list'] as const,
-    list: () => [...queryKeys.projects.lists()] as const,
-    details: () => [...queryKeys.projects.all, 'detail'] as const,
-    detail: (projectId: string) => [...queryKeys.projects.details(), projectId] as const,
+  presentations: {
+    all: ['presentations'] as const,
+    lists: () => [...queryKeys.presentations.all, 'list'] as const,
+    list: () => [...queryKeys.presentations.lists()] as const,
+    details: () => [...queryKeys.presentations.all, 'detail'] as const,
+    detail: (projectId: string) => [...queryKeys.presentations.details(), projectId] as const,
   },
   videos: {
     all: ['videos'] as const,
@@ -78,6 +78,16 @@ export const queryKeys = {
     list: (projectId: string) => [...queryKeys.videos.lists(), projectId] as const,
     details: () => [...queryKeys.videos.all, 'detail'] as const,
     detail: (videoId: string) => [...queryKeys.videos.details(), videoId] as const,
+  },
+  shares: {
+    all: ['shares'] as const,
+    videos: (projectId: string) => [...queryKeys.shares.all, 'videos', projectId] as const,
+  },
+  analytics: {
+    all: ['analytics'] as const,
+    slides: (projectId: string) => [...queryKeys.analytics.all, 'slides', projectId] as const,
+    videoExits: (videoId: string) => [...queryKeys.analytics.all, 'videoExits', videoId] as const,
+    summary: (projectId: string) => [...queryKeys.analytics.all, 'summary', projectId] as const,
   },
 } as const;
 

@@ -10,6 +10,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { Socket, io } from 'socket.io-client';
+import SuperJSON from 'superjson';
 
 import { useAuthStore } from '@/stores/authStore';
 import type {
@@ -118,27 +119,28 @@ export function useWebSocket({
 
   useEffect(() => {
     if (!enabled || !projectId) {
-      console.log('[WebSocket] Connection disabled');
+      // console.log('[WebSocket] Connection disabled');
       return;
     }
 
     // 이미 연결되어 있으면 중복 연결 방지
     if (socketRef.current?.connected) {
-      console.log('[WebSocket] Already connected, skipping...');
+      // console.log('[WebSocket] Already connected, skipping...');
       return;
     }
 
-    // 웹소켓 서버 URL
-    const wsUrl = import.meta.env.VITE_WS_URL || 'http://localhost:3000';
+    // 웹소켓 서버 URL (API URL과 동일)
+    const wsUrl =
+      import.meta.env.VITE_API_URL || 'https://ttorang-server-407623424780.asia-northeast3.run.app';
 
-    // 인증 설정
+    // 인증 설정 (Bearer 접두사 제거 - 서버에서 토큰만 받음)
     const auth: SocketAuthConfig = {
-      token: accessToken ? `Bearer ${accessToken}` : null,
+      token: accessToken || null,
       sessionId: accessToken ? null : getOrCreateSessionId(),
     };
 
-    console.log('[WebSocket] Connecting to:', wsUrl);
-    console.log('[WebSocket] Auth:', auth.token ? 'JWT' : `Anonymous (${auth.sessionId})`);
+    // console.log('[WebSocket] Connecting to:', wsUrl);
+    // console.log('[WebSocket] Auth:', auth.token ? 'JWT' : `Anonymous (${auth.sessionId})`);
 
     // Socket.IO 클라이언트 생성
     const socket = io(wsUrl, {
@@ -153,7 +155,7 @@ export function useWebSocket({
 
     // ========== 연결 이벤트 ==========
     socket.on('connect', () => {
-      console.log('✅ [WebSocket] Connected:', socket.id);
+      // console.log('✅ [WebSocket] Connected:', socket.id);
       setIsConnected(true);
       setConnectionError(null);
       handlersRef.current.onConnect?.();
@@ -167,15 +169,15 @@ export function useWebSocket({
       }
     });
 
-    socket.on('disconnect', (reason: string) => {
-      console.log('❌ [WebSocket] Disconnected:', reason);
+    socket.on('disconnect', () => {
+      // console.log('❌ [WebSocket] Disconnected:', reason);
       setIsConnected(false);
       setCurrentRooms([]);
       handlersRef.current.onDisconnect?.();
     });
 
     socket.on('connect_error', (error: Error) => {
-      console.error('🔴 [WebSocket] Connection Error:', error);
+      // console.error('🔴 [WebSocket] Connection Error:', error);
       setConnectionError(error.message);
 
       // 연결 실패 시 토스트 표시 (첫 연결 시도에만)
@@ -188,85 +190,74 @@ export function useWebSocket({
     });
 
     // ========== Room 관련 이벤트 ==========
-    socket.on('joined-project', (data: JoinedProjectResponse) => {
-      console.log('[WebSocket] Joined project:', data);
+    socket.on('joined-project', () => {
+      // console.log('[WebSocket] Joined project:', data);
       // Room 목록 갱신
       socket.emit('get-rooms');
     });
 
-    socket.on('left-project', (data: LeftProjectResponse) => {
-      console.log('[WebSocket] Left project:', data);
+    socket.on('left-project', () => {
+      // console.log('[WebSocket] Left project:', data);
       socket.emit('get-rooms');
     });
 
     socket.on('rooms-list', (data: RoomsListResponse) => {
-      console.log('[WebSocket] Current rooms:', data.rooms);
+      // console.log('[WebSocket] Current rooms:', data.rooms);
       setCurrentRooms(data.rooms);
     });
 
     // ========== 댓글 관련 이벤트 ==========
-    socket.on('new-comment', (data: NewCommentPayload) => {
-      console.log('💬 [WebSocket] New comment:', data);
+    socket.on('new-comment', (rawData: string) => {
+      const data = SuperJSON.parse<NewCommentPayload>(rawData);
+      // console.log('💬 [WebSocket] New comment:', data);
       handlersRef.current.onNewComment?.(data);
     });
 
-    // opinion 이벤트도 리스닝 (서버가 다른 이벤트명을 사용할 수 있음)
-    socket.on('new-opinion', (data: unknown) => {
-      console.log('💬 [WebSocket] New opinion:', data);
-      // new-comment 핸들러 재사용
-      if (data && typeof data === 'object') {
-        handlersRef.current.onNewComment?.(data as NewCommentPayload);
-      }
-    });
-
-    socket.on('comment-deleted', (data: CommentDeletedPayload) => {
-      console.log('🗑️ [WebSocket] Comment deleted:', data);
+    socket.on('comment-deleted', (rawData: string) => {
+      const data = SuperJSON.parse<CommentDeletedPayload>(rawData);
+      // console.log('🗑️ [WebSocket] Comment deleted:', data);
       handlersRef.current.onCommentDeleted?.(data);
     });
 
-    socket.on('opinion-deleted', (data: unknown) => {
-      console.log('🗑️ [WebSocket] Opinion deleted:', data);
-      if (data && typeof data === 'object') {
-        handlersRef.current.onCommentDeleted?.(data as CommentDeletedPayload);
-      }
-    });
-
     // ========== 리액션 관련 이벤트 ==========
-    socket.on('new-reaction', (data: NewReactionPayload) => {
-      console.log('[WebSocket] New reaction:', data);
+    socket.on('new-reaction', (rawData: string) => {
+      const data = SuperJSON.parse<NewReactionPayload>(rawData);
+      // console.log('[WebSocket] New reaction:', data);
       handlersRef.current.onNewReaction?.(data);
     });
 
-    socket.on('reaction-removed', (data: ReactionRemovedPayload) => {
-      console.log('[WebSocket] Reaction removed:', data);
+    socket.on('reaction-removed', (rawData: string) => {
+      const data = SuperJSON.parse<ReactionRemovedPayload>(rawData);
+      // console.log('[WebSocket] Reaction removed:', data);
       handlersRef.current.onReactionRemoved?.(data);
     });
 
-    socket.on('reaction-count-updated', (data: ReactionCountUpdatedPayload) => {
-      console.log('[WebSocket] Reaction count updated:', data);
+    socket.on('reaction-count-updated', (rawData: string) => {
+      const data = SuperJSON.parse<ReactionCountUpdatedPayload>(rawData);
+      // console.log('[WebSocket] Reaction count updated:', data);
       handlersRef.current.onReactionCountUpdated?.(data);
     });
 
     // ========== 에러 처리 ==========
     socket.on('error', (data: ErrorPayload) => {
-      console.error('[WebSocket] Error:', data.message);
+      // console.error('[WebSocket] Error:', data.message);
       showToast.error('웹소켓 오류', data.message);
     });
 
     // 모든 이벤트 로깅 (개발 환경)
-    if (import.meta.env.DEV) {
-      socket.onAny((eventName: string, ...args: unknown[]) => {
-        console.log('🔵 [WS Incoming]', eventName, args);
-      });
+    // if (import.meta.env.DEV) {
+    //   socket.onAny((eventName: string, ...args: unknown[]) => {
+    //     console.log('🔵 [WS Incoming]', eventName, args);
+    //   });
 
-      socket.onAnyOutgoing((eventName: string, ...args: unknown[]) => {
-        console.log('🟢 [WS Outgoing]', eventName, args);
-      });
-    }
+    //   socket.onAnyOutgoing((eventName: string, ...args: unknown[]) => {
+    //     console.log('🟢 [WS Outgoing]', eventName, args);
+    //   });
+    // }
 
     // cleanup
     return () => {
-      console.log('[WebSocket] Disconnecting...');
+      // console.log('[WebSocket] Disconnecting...');
 
       if (socket.connected) {
         // 프로젝트 Room 퇴장

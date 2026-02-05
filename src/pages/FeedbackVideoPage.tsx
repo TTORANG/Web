@@ -10,6 +10,7 @@ import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
+import WebSocketDebug from '@/components/common/WebSocketDebug';
 import FeedbackMobileLayout from '@/components/feedback/FeedbackMobileLayout';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
 import ScriptSection from '@/components/feedback/ScriptSection';
@@ -98,7 +99,7 @@ export default function FeedbackVideoPage() {
   }, [isDesktop]);
 
   // 웹소켓 연결
-  useFeedbackWebSocket({
+  const { isConnected, currentRooms, joinProject, leaveProject, getRooms } = useFeedbackWebSocket({
     projectId: projectId ?? '',
     enabled: !!projectId,
   });
@@ -204,6 +205,16 @@ export default function FeedbackVideoPage() {
           showLayoutToggle={!isDesktop}
         />
       </div>
+
+      {/* WebSocket 디버그 UI (개발 환경에서만) */}
+      <WebSocketDebug
+        isConnected={isConnected}
+        currentRooms={currentRooms}
+        projectId={projectId}
+        onJoinProject={joinProject}
+        onLeaveProject={leaveProject}
+        onGetRooms={getRooms}
+      />
     </div>
   );
 }

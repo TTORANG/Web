@@ -8,14 +8,17 @@
  */
 import { useMemo } from 'react';
 
+import { videosApi } from '@/api/endpoints/videos';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Comment } from '@/types/comment';
 import { flatToTree } from '@/utils/comment';
+import { showToast } from '@/utils/toast';
 
 const EMPTY_COMMENTS: Comment[] = [];
 
 export function useVideoComments() {
   const video = useVideoFeedbackStore((state) => state.video);
+  const videoId = video?.videoId;
 
   const addCommentStore = useVideoFeedbackStore((state) => state.addComment);
   const addReplyStore = useVideoFeedbackStore((state) => state.addReply);
@@ -47,22 +50,60 @@ export function useVideoComments() {
    * @param content - 댓글 내용
    * @param seconds - 댓글이 달릴 영상 타임스탬프 (초)
    */
-  const addComment = (content: string, seconds: number) => {
+  const addComment = async (content: string, seconds: number) => {
+    if (!videoId) {
+      showToast.error('비디오 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    // Optimistic update
     addCommentStore(content, seconds);
+
+    try {
+      // 서버 API 호출 (초를 밀리초로 변환)
+      await videosApi.createComment(videoId, {
+        content,
+        timestampMs: Math.floor(seconds * 1000),
+      });
+    } catch {
+      showToast.error('댓글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+    }
   };
 
   /**
    * 답글 추가
    */
-  const addReply = (parentId: string, content: string) => {
+  const addReply = async (parentId: string, content: string) => {
     addReplyStore(parentId, content);
+
+    try {
+      // 서버 API 호출 (string을 number로 변환)
+      const parentIdNum = parseInt(parentId, 10);
+      if (isNaN(parentIdNum)) {
+        throw new Error('Invalid comment ID');
+      }
+      await videosApi.createReply(parentIdNum, { content });
+    } catch {
+      showToast.error('답글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+    }
   };
 
   /**
    * 댓글 삭제
    */
-  const deleteComment = (commentId: string) => {
+  const deleteComment = async (commentId: string) => {
     deleteCommentStore(commentId);
+
+    try {
+      // 서버 API 호출 (string을 number로 변환)
+      const commentIdNum = parseInt(commentId, 10);
+      if (isNaN(commentIdNum)) {
+        throw new Error('Invalid comment ID');
+      }
+      await videosApi.deleteComment(commentIdNum);
+    } catch {
+      showToast.error('댓글 삭제에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+    }
   };
 
   return {
