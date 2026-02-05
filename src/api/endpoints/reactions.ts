@@ -8,7 +8,15 @@ import type { ApiResponse } from '@/api/handlers';
 import type { Reaction } from '@/types/script';
 
 /**
+<<<<<<< feat/pd-ins-reactions-114
  * Toggle a reaction for a slide.
+=======
+ * 슬라이드 리액션 토글
+ *
+ * @param slideId - 슬라이드 ID
+ * @param data - 리액션 데이터
+ * @returns 업데이트된 리액션 배열
+>>>>>>> develop
  */
 export async function toggleReaction(
   slideId: string,

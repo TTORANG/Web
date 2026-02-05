@@ -8,7 +8,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
-import { createDefaultReactions } from '@/constants/reaction';
+import { createDefaultReactions, getExclusiveCounterpart } from '@/constants/reaction';
 import { FEEDBACK_WINDOW } from '@/constants/video';
 import { MOCK_CURRENT_USER } from '@/mocks/users';
 import type { Comment } from '@/types/comment';
@@ -98,15 +98,27 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
             state.currentTime,
           );
 
-          const updatedReactions = targetFeedback.reactions.map((r: Reaction) => {
-            if (r.type !== type) return r;
+          const targetReaction = targetFeedback.reactions.find((r) => r.type === type);
+          const isActivating = !targetReaction?.active;
 
-            // active -> 비활성 (카운트 감소)
-            if (r.active) {
+          // exclusive 그룹에서 반대 타입 찾기
+          const counterpart = getExclusiveCounterpart(type);
+
+          const updatedReactions = targetFeedback.reactions.map((r: Reaction) => {
+            // 토글 대상
+            if (r.type === type) {
+              if (r.active) {
+                return { ...r, active: false, count: Math.max(0, r.count - 1) };
+              }
+              return { ...r, active: true, count: r.count + 1 };
+            }
+
+            // 활성화 시 exclusive 반대 타입 비활성화
+            if (isActivating && counterpart && r.type === counterpart && r.active) {
               return { ...r, active: false, count: Math.max(0, r.count - 1) };
             }
-            // 비활성 -> 활성 (카운트 증가)
-            return { ...r, active: true, count: r.count + 1 };
+
+            return r;
           });
 
           const updatedFeedbacks = feedbacks.map((f) =>
