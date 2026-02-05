@@ -38,9 +38,6 @@ type RecentComment = {
   text: string;
 };
 
-// 디자인을 위해 스타일을 조금 더 부드럽게 조정했습니다.
-const cardBase = 'bg-white rounded-xl border border-gray-100 shadow-sm p-6';
-const thumbBase = 'bg-gray-100 rounded-lg aspect-video';
 const FALLBACK_SLIDE_DURATION_SECONDS = 10;
 
 // --- 더미 데이터 (사진 수치 반영) ---
@@ -79,19 +76,6 @@ const retentionData = [
   { time: '3:30', rate: 75 },
   { time: '4:00', rate: 65 },
   { time: '5:00', rate: 65 },
-];
-
-const slideRetentionData = [
-  { time: 'S1', rate: 100 },
-  { time: 'S2', rate: 92 },
-  { time: 'S3', rate: 86 },
-  { time: 'S4', rate: 80 },
-  { time: 'S5', rate: 80 },
-  { time: 'S6', rate: 70 },
-  { time: 'S7', rate: 75 },
-  { time: 'S8', rate: 65 },
-  { time: 'S9', rate: 65 },
-  { time: 'S10', rate: 65 },
 ];
 
 // --- 컴포넌트 시작 ---

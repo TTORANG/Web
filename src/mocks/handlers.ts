@@ -7,6 +7,11 @@ import type { Presentation } from '@/types/presentation';
 import type { Slide } from '@/types/slide';
 import type { VideoFeedback, VideoTimestampFeedback } from '@/types/video';
 
+import {
+  getMockProjectAnalyticsSummary,
+  getMockSlideAnalytics,
+  getMockVideoExitAnalytics,
+} from './analytics';
 import { MOCK_PROJECTS } from './projects';
 import { MOCK_SLIDES } from './slides';
 import { MOCK_USERS } from './users';
@@ -224,6 +229,7 @@ export const handlers = [
         slideNum: index + 1,
         imageUrl: s.thumb,
         script: s.script,
+        opinions: s.opinions,
         emojiReactions: s.emojiReactions,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -251,6 +257,7 @@ export const handlers = [
         slideNum: index + 1,
         imageUrl: s.thumb,
         script: s.script,
+        opinions: s.opinions,
         emojiReactions: s.emojiReactions,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -1122,5 +1129,45 @@ export const handlers = [
     }
 
     return HttpResponse.json(wrapResponse(null));
+  }),
+
+  // =====================
+  // 분석(Analytics) 관련 핸들러
+  // =====================
+
+  /**
+   * 슬라이드 분석 조회
+   * GET /presentations/:projectId/analytics/slides
+   */
+  http.get(`${BASE_URL}/presentations/:projectId/analytics/slides`, async ({ params }) => {
+    await delay(200);
+    const { projectId } = params as { projectId: string };
+    console.log(`[MSW] GET /presentations/${projectId}/analytics/slides`);
+
+    return HttpResponse.json(wrapResponse(getMockSlideAnalytics(projectId)));
+  }),
+
+  /**
+   * 프로젝트 분석 요약 조회
+   * GET /presentations/:projectId/analytics/summary
+   */
+  http.get(`${BASE_URL}/presentations/:projectId/analytics/summary`, async ({ params }) => {
+    await delay(200);
+    const { projectId } = params as { projectId: string };
+    console.log(`[MSW] GET /presentations/${projectId}/analytics/summary`);
+
+    return HttpResponse.json(wrapResponse(getMockProjectAnalyticsSummary(projectId)));
+  }),
+
+  /**
+   * 영상 이탈 분석 조회
+   * GET /videos/:videoId/analytics/exits
+   */
+  http.get(`${BASE_URL}/videos/:videoId/analytics/exits`, async ({ params }) => {
+    await delay(200);
+    const { videoId } = params as { videoId: string };
+    console.log(`[MSW] GET /videos/${videoId}/analytics/exits`);
+
+    return HttpResponse.json(wrapResponse(getMockVideoExitAnalytics(videoId)));
   }),
 ];
