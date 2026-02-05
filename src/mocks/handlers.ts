@@ -121,7 +121,7 @@ export const handlers = [
       });
     }
 
-    return HttpResponse.json(presentation);
+    return HttpResponse.json(wrapResponse(presentation));
   }),
 
   /**
@@ -151,7 +151,9 @@ export const handlers = [
     };
 
     presentations = [newPresentation, ...presentations];
-    return HttpResponse.json(newPresentation, { status: 201 });
+    return HttpResponse.json(wrapResponse({ ...newPresentation, message: 'Created' }), {
+      status: 201,
+    });
   }),
 
   /**
@@ -179,7 +181,7 @@ export const handlers = [
       updatedAt: new Date().toISOString(),
     };
 
-    return HttpResponse.json(presentations[presentationIndex]);
+    return HttpResponse.json(wrapResponse(presentations[presentationIndex]));
   }),
 
   /**
@@ -324,7 +326,7 @@ export const handlers = [
       ...updates,
     };
 
-    return HttpResponse.json(slides[slideIndex]);
+    return HttpResponse.json(wrapResponse(slides[slideIndex]));
   }),
 
   /**
@@ -351,7 +353,7 @@ export const handlers = [
 
     slides.push(newSlide);
 
-    return HttpResponse.json(newSlide, { status: 201 });
+    return HttpResponse.json(wrapResponse(newSlide), { status: 201 });
   }),
 
   /**
@@ -423,7 +425,7 @@ export const handlers = [
       slides[slideIndex].opinions.push(newOpinion);
     }
 
-    return HttpResponse.json(newOpinion, { status: 201 });
+    return HttpResponse.json(wrapResponse(newOpinion), { status: 201 });
   }),
 
   /**
@@ -495,7 +497,7 @@ export const handlers = [
       }
     }
 
-    return HttpResponse.json(slide.emojiReactions);
+    return HttpResponse.json(wrapResponse(slide.emojiReactions));
   }),
 
   /**
@@ -547,10 +549,12 @@ export const handlers = [
       }
     }
 
-    return HttpResponse.json({
-      timestamp: targetFeedback.timestamp,
-      reactions: targetFeedback.reactions,
-    });
+    return HttpResponse.json(
+      wrapResponse({
+        timestamp: targetFeedback.timestamp,
+        reactions: targetFeedback.reactions,
+      }),
+    );
   }),
 
   /**
@@ -583,10 +587,12 @@ export const handlers = [
   http.post(`${BASE_URL}/auth/login/mock`, async () => {
     await delay(300);
     console.log('[MSW] POST /auth/login/mock');
-    return HttpResponse.json({
-      user: MOCK_USERS[0],
-      accessToken: 'mock-access-token',
-    });
+    return HttpResponse.json(
+      wrapResponse({
+        user: MOCK_USERS[0],
+        accessToken: 'mock-access-token',
+      }),
+    );
   }),
 
   /**
@@ -596,7 +602,7 @@ export const handlers = [
   http.get(`${BASE_URL}/users/me`, async () => {
     await delay(200);
     console.log('[MSW] GET /users/me');
-    return HttpResponse.json(MOCK_USERS[0]);
+    return HttpResponse.json(wrapResponse(MOCK_USERS[0]));
   }),
 
   /**
@@ -978,13 +984,15 @@ export const handlers = [
     replies.push(newReply);
     commentReplies.set(commentId, replies);
 
-    return HttpResponse.json({
-      id: newReply.id,
-      content: newReply.content,
-      parentId: newReply.parentId,
-      userId: newReply.userId,
-      createdAt: newReply.createdAt,
-    });
+    return HttpResponse.json(
+      wrapResponse({
+        id: newReply.id,
+        content: newReply.content,
+        parentId: newReply.parentId,
+        userId: newReply.userId,
+        createdAt: newReply.createdAt,
+      }),
+    );
   }),
 
   /**
@@ -1000,13 +1008,15 @@ export const handlers = [
     const replies = commentReplies.get(commentId) || [];
 
     return HttpResponse.json(
-      replies.map((reply) => ({
-        id: reply.id,
-        content: reply.content,
-        parentId: reply.parentId,
-        userId: reply.userId,
-        createdAt: reply.createdAt,
-      })),
+      wrapResponse(
+        replies.map((reply) => ({
+          id: reply.id,
+          content: reply.content,
+          parentId: reply.parentId,
+          userId: reply.userId,
+          createdAt: reply.createdAt,
+        })),
+      ),
     );
   }),
 

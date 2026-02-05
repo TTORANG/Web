@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Layout, Logo, Modal } from '@/components/common';
@@ -45,7 +45,7 @@ export default function VideoRecordPage() {
 
       const slideLogs = Object.entries(durations)
         .sort(([a], [b]) => Number(a) - Number(b))
-        .map(([slideId, _], index, arr) => {
+        .map(([slideId], index, arr) => {
           const previousDuration = arr.slice(0, index).reduce((sum, [, dur]) => sum + dur, 0);
           return {
             slideId: Number(slideId),
@@ -174,7 +174,7 @@ export default function VideoRecordPage() {
               />
 
               {isUploading && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[10001]">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-10001">
                   <div className="bg-white rounded-2xl p-8 flex flex-col items-center gap-6 min-w-[380px] max-w-[480px] shadow-2xl">
                     <div className="relative">
                       <div className="w-16 h-16 border-4 border-blue-100 rounded-full" />
@@ -196,7 +196,7 @@ export default function VideoRecordPage() {
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
                           <div
-                            className="bg-gradient-to-r from-blue-500 to-blue-600 h-full transition-all duration-300 ease-out"
+                            className="bg-linear-to-r from-blue-500 to-blue-600 h-full transition-all duration-300 ease-out"
                             style={{ width: `${progress.percentage}%` }}
                           />
                         </div>
