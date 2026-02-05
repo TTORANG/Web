@@ -21,17 +21,11 @@ export interface Presentation {
   projectId: string;
   title: string;
   thumbnailUrl?: string;
-  // Unified fields from both branches
   /**
    * 총 슬라이드 수 (표준 필드)
    * - 새 코드에서는 이 필드를 사용하세요.
    */
   slideCount: number; // Used in develop
-  /**
-   * @deprecated 기존 API 호환을 위한 필드입니다. 대신 `slideCount`를 사용하세요.
-   * 백엔드 응답에 따라 함께 내려올 수 있지만, 신규 코드에서는 참조하지 않는 것을 권장합니다.
-   */
-  pageCount?: number; // Used in HEAD
 
   /**
    * 피드백(댓글) 수 (표준 필드)
