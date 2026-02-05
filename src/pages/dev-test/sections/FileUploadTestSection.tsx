@@ -51,6 +51,11 @@ export function FileUploadTestSection() {
 
       <FileDropzone
         onFileSelected={(file) => showToast.success(`${file.name} 선택됨`)}
+        onCancelUpload={() => {
+          setUploadState('preparing');
+          setUploadProgress(0);
+          showToast.warning('업로드 취소(테스트)', '업로드 중지! 중지!');
+        }}
         currentStep={uploadState}
         progress={uploadProgress}
       />

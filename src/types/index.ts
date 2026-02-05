@@ -39,4 +39,4 @@ export type { Slide } from './slide';
 export type { ThemeMode } from './theme';
 
 // Upload
-export type { UploadState } from './uploadFile';
+export type { UploadStep } from './uploadFile';

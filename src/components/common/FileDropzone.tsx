@@ -130,7 +130,7 @@ export default function FileDropzone({
         onDrop={handleDrop}
         className={clsx(
           'group relative w-full overflow-hidden rounded-2xl border bg-white px-8 py-14 shadow-sm transition focus:ring-1 focus:ring-gray-200',
-          disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-gray-100',
+          isBlocked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-gray-100',
           showDragOverlay ? 'border-gray-900 ring-1 ring-gray-200' : 'border-gray-200',
         )}
       >
@@ -154,7 +154,7 @@ export default function FileDropzone({
 
         {/* 드래그 오버레이 : 박스 블러 + 중앙 문구만 */}
         {showDragOverlay && (
-          <div className="absolute inset-0 flex items-center justify-center rounded-2xl">
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
             <div className="rounded-xl bg-white/70 px-6 py-3 backdrop-blur-md">
               <p className="text-body-m-bold text-gray-900">여기에 놓아서 업로드</p>
             </div>
@@ -164,7 +164,7 @@ export default function FileDropzone({
         {/* 업로드 오버레이 : 박스 안에 진행률 표시 */}
         {showUploadOverlay && (
           <div
-            className="absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-2xl bg-white px-6 cursor-default"
+            className="absolute inset-0 z-20 isolate flex flex-col items-center justify-center gap-4 rounded-2xl bg-white px-6 cursor-default"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
