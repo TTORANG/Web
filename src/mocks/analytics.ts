@@ -4,10 +4,9 @@ import type {
   VideoExitAnalyticsResponseDto,
 } from '@/api/dto/analytics.dto';
 
-import { MOCK_PROJECTS } from './projects';
 import { MOCK_SLIDES } from './slides';
 
-export const getMockProjectAnalyticsSummary = (projectId: string): ProjectAnalyticsSummaryDto => {
+export const getMockProjectAnalyticsSummary = (_projectId: string): ProjectAnalyticsSummaryDto => {
   return {
     videoIds: ['1', '2'], // Mock video IDs
     totalViews: 1250,
@@ -39,7 +38,7 @@ export const getMockSlideAnalytics = (projectId: string): SlideAnalyticsResponse
   };
 };
 
-export const getMockVideoExitAnalytics = (videoId: string): VideoExitAnalyticsResponseDto => {
+export const getMockVideoExitAnalytics = (_videoId: string): VideoExitAnalyticsResponseDto => {
   // Generate some exit points every 30 seconds
   const exits = [];
   const durationMs = 300 * 1000; // 5 minutes
