@@ -24,11 +24,17 @@ import {
 } from '@/components/insight';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useSlides } from '@/hooks/queries/useSlides';
-import { useSlideAnalytics, useSummaryAnalytics } from '@/hooks/useAnalytics';
+
+import {
+  useProjectAnalyticsSummary,
+  useSlideAnalytics,
+  useVideoAnalytics,
+} from '@/hooks/useAnalytics';
 import type { DropOffSlide, DropOffTime, SummaryStat } from '@/types/insight';
 import type { Reaction } from '@/types/script';
 import type { Slide } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';
+import { getSlideIndexFromTime } from '@/utils/video';
 
 // --- 타입 및 스타일 정의 ---
 
@@ -43,26 +49,15 @@ type RecentComment = {
 // 디자인을 위해 스타일을 조금 더 부드럽게 조정했습니다.
 const cardBase = 'bg-white rounded-xl border border-gray-100 shadow-sm p-6';
 const thumbBase = 'bg-gray-100 rounded-lg aspect-video';
+const FALLBACK_SLIDE_DURATION_SECONDS = 10;
 
 // --- 더미 데이터 (사진 수치 반영) ---
-
 const summaryStatLabels = ['총 조회수', '완료율', '받은 피드백', '평균 체류 시간'] as const;
 const emptySummaryStats: SummaryStat[] = summaryStatLabels.map((label) => ({
   label,
   value: '-',
   sub: '',
 }));
-const dropOffSlides: DropOffSlide[] = [
-  { label: '슬라이드 4', desc: '79명 이탈', percent: 32, slideIndex: 3 },
-  { label: '슬라이드 8', desc: '47명 이탈', percent: 28, slideIndex: 7 },
-  { label: '슬라이드 6', desc: '45명 이탈', percent: 24, slideIndex: 5 },
-];
-
-const dropOffTimes: DropOffTime[] = [
-  { time: '2:05', desc: '슬라이드 5', count: 45, slideIndex: 4 },
-  { time: '3:30', desc: '슬라이드 7', count: 38, slideIndex: 6 },
-  { time: '1:08', desc: '슬라이드 3', count: 45, slideIndex: 2 },
-];
 
 const recentComments: RecentComment[] = [
   { user: '익명 사용자', slide: 1, slideIndex: 0, time: '0:15', text: '이 부분 설명이 명확해요!' },
@@ -111,11 +106,13 @@ const slideRetentionData = [
 // --- 컴포넌트 시작 ---
 
 export default function InsightPage() {
-  const hasVideo = true;
   const { projectId } = useParams<{ projectId: string }>();
   const { data: slides } = useSlides(projectId ?? '');
   const { data: slideAnalytics } = useSlideAnalytics(projectId ?? '');
-  const { data: summaryAnalytics } = useSummaryAnalytics(projectId ?? '');
+  const { data: summaryAnalytics } = useProjectAnalyticsSummary(projectId ?? '');
+  const videoId = summaryAnalytics?.videoIds?.[0] ?? '';
+  const hasVideo = !!videoId;
+  const { data: videoExitAnalytics } = useVideoAnalytics(videoId);
   const computedSummaryStats = useMemo(() => {
     if (!summaryAnalytics) return emptySummaryStats;
 
@@ -215,6 +212,59 @@ export default function InsightPage() {
 
   const getThumb = (slideIndex: number) => slideList[slideIndex]?.thumb;
 
+  const slideChangeTimes = useMemo(() => {
+    if (!slides?.length) return [];
+
+    return slides.map((slide, index) =>
+      Number.isFinite(slide.startTime)
+        ? (slide.startTime ?? 0)
+        : index * FALLBACK_SLIDE_DURATION_SECONDS,
+    );
+  }, [slides]);
+
+  const dropOffSlides: DropOffSlide[] = useMemo(() => {
+    const items = slideAnalytics?.slides ?? [];
+    return items
+      .slice()
+      .sort((a, b) => b.exitCount - a.exitCount)
+      .slice(0, 3)
+      .map((item) => ({
+        label: `슬라이드 ${item.slideNum}`,
+        desc: `${item.exitCount}명 이탈`,
+        percent: Math.min(
+          100,
+          Math.round(
+            item.exitRate <= 1
+              ? item.exitRate * 100
+              : item.exitRate > 100
+                ? item.exitRate / 100
+                : item.exitRate,
+          ),
+        ),
+        slideIndex: Math.max(0, item.slideNum - 1),
+      }));
+  }, [slideAnalytics]);
+
+  const dropOffTimes: DropOffTime[] = useMemo(() => {
+    const items = videoExitAnalytics?.exits ?? [];
+    return items
+      .slice()
+      .sort((a, b) => b.exitCount - a.exitCount)
+      .slice(0, 3)
+      .map((item) => {
+        const seconds = item.timestampMs / 1000;
+        const slideIndex =
+          slides?.length && slideChangeTimes.length
+            ? getSlideIndexFromTime(seconds, slideChangeTimes, slides.length - 1)
+            : 0;
+        return {
+          time: formatVideoTimestamp(seconds),
+          desc: slides?.length ? `슬라이드 ${slideIndex + 1}` : '슬라이드',
+          count: item.exitCount,
+          slideIndex,
+        };
+      });
+  }, [videoExitAnalytics, slideChangeTimes, slides]);
   return (
     <div
       role="tabpanel"

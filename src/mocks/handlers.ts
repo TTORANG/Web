@@ -29,6 +29,20 @@ const scriptVersions: Map<
   { versionNumber: number; scriptText: string; charCount: number; createdAt: string }[]
 > = new Map();
 
+// 댓글 저장소 (슬라이드별)
+interface StoredComment {
+  id: string;
+  content: string;
+  parentId?: string;
+  userId: string;
+  slideId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const slideComments: Map<string, StoredComment[]> = new Map();
+const commentReplies: Map<string, StoredComment[]> = new Map();
+
 // slides의 history 데이터로 scriptVersions 초기화
 MOCK_SLIDES.forEach((slide) => {
   if (slide.history.length > 0) {
@@ -39,8 +53,14 @@ MOCK_SLIDES.forEach((slide) => {
 // API 응답 래퍼 헬퍼
 const wrapResponse = <T>(data: T) => ({
   resultType: 'SUCCESS' as const,
-  reason: null,
+  error: null,
   success: data,
+});
+
+const wrapError = (errorCode: string, reason: string) => ({
+  resultType: 'FAILURE' as const,
+  error: { errorCode, reason },
+  success: null,
 });
 
 /**
@@ -58,10 +78,29 @@ export const handlers = [
    * 프로젝트 목록 조회
    * GET /presentations
    */
-  http.get(`${BASE_URL}/presentations`, async () => {
+  http.get(`${BASE_URL}/presentations`, async ({ request }) => {
     await delay(200);
     console.log('[MSW] GET /presentations');
-    return HttpResponse.json(presentations);
+
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const limit = parseInt(url.searchParams.get('limit') || '20', 10);
+
+    const total = presentations.length;
+    const totalPages = Math.ceil(total / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedPresentations = presentations.slice(startIndex, endIndex);
+
+    return HttpResponse.json(
+      wrapResponse({
+        presentations: paginatedPresentations,
+        total,
+        page,
+        limit,
+        totalPages,
+      }),
+    );
   }),
 
   /**
@@ -69,11 +108,11 @@ export const handlers = [
    * GET /presentations/:projectId
    */
   http.get(`${BASE_URL}/presentations/:projectId`, async ({ params }) => {
-    await delay(150);
+    await delay(200);
     const { projectId } = params;
     console.log(`[MSW] GET /presentations/${projectId}`);
 
-    const presentation = presentations.find((p) => p.id === projectId);
+    const presentation = presentations.find((p) => p.projectId === projectId);
 
     if (!presentation) {
       return new HttpResponse(null, {
@@ -95,15 +134,14 @@ export const handlers = [
     console.log('[MSW] POST /presentations', data);
 
     const newPresentation: Presentation = {
-      id: `p${Date.now()}`,
+      projectId: `p${Date.now()}`,
       title: data.title,
-      updatedAt: new Date().toISOString(),
-      durationMinutes: 0,
-      pageCount: 0,
-      commentCount: 0,
-      reactionCount: 0,
-      viewCount: 0,
       thumbnailUrl: '/thumbnails/p1/0.webp',
+      slideCount: 0,
+      feedbackCount: 0,
+      durationSeconds: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     presentations = [newPresentation, ...presentations];
@@ -120,7 +158,7 @@ export const handlers = [
     const data = (await request.json()) as { title?: string };
     console.log(`[MSW] PATCH /presentations/${projectId}`, data);
 
-    const presentationIndex = presentations.findIndex((p) => p.id === projectId);
+    const presentationIndex = presentations.findIndex((p) => p.projectId === projectId);
 
     if (presentationIndex === -1) {
       return new HttpResponse(null, {
@@ -147,7 +185,7 @@ export const handlers = [
     const { projectId } = params;
     console.log(`[MSW] DELETE /presentations/${projectId}`);
 
-    const presentationIndex = presentations.findIndex((p) => p.id === projectId);
+    const presentationIndex = presentations.findIndex((p) => p.projectId === projectId);
 
     if (presentationIndex === -1) {
       return new HttpResponse(null, {
@@ -156,7 +194,7 @@ export const handlers = [
       });
     }
 
-    presentations = presentations.filter((p) => p.id !== projectId);
+    presentations = presentations.filter((p) => p.projectId !== projectId);
     return new HttpResponse(null, { status: 204 });
   }),
 
@@ -166,27 +204,63 @@ export const handlers = [
 
   /**
    * 프로젝트의 슬라이드 목록 조회
+   * GET /projects/:projectId/slides
+   */
+  http.get(`${BASE_URL}/projects/:projectId/slides`, async ({ params }) => {
+    await delay(200);
+
+    const { projectId } = params;
+    console.log(`[MSW] GET /projects/${projectId}/slides`);
+
+    const presentationSlides = slides
+      .filter((s) => s.projectId === projectId)
+      .map((s, index) => ({
+        slideId: s.id,
+        projectId: s.projectId,
+        title: s.title,
+        slideNum: index + 1,
+        imageUrl: s.thumb,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }));
+
+    return HttpResponse.json(wrapResponse(presentationSlides));
+  }),
+
+  /**
+   * 프로젝트의 슬라이드 목록 조회 (Legacy)
    * GET /presentations/:projectId/slides
    */
   http.get(`${BASE_URL}/presentations/:projectId/slides`, async ({ params }) => {
-    await delay(200); // 네트워크 지연 시뮬레이션
+    await delay(200);
 
     const { projectId } = params;
-    console.log(`[MSW] GET /presentations/${projectId}/slides`);
+    console.log(`[MSW] GET /presentations/${projectId}/slides (legacy)`);
 
-    const presentationSlides = slides.filter((s) => s.projectId === projectId);
-    return HttpResponse.json(presentationSlides);
+    const presentationSlides = slides
+      .filter((s) => s.projectId === projectId)
+      .map((s, index) => ({
+        slideId: s.id,
+        projectId: s.projectId,
+        title: s.title,
+        slideNum: index + 1,
+        imageUrl: s.thumb,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }));
+
+    return HttpResponse.json(wrapResponse(presentationSlides));
   }),
 
   /**
    * 특정 슬라이드 조회
-   * GET /slides/:slideId
+   * GET /presentations/slides/:slideId
    */
-  http.get(`${BASE_URL}/slides/:slideId`, async ({ params }) => {
+  http.get(`${BASE_URL}/presentations/slides/:slideId`, async ({ params }) => {
     await delay(150);
 
     const { slideId } = params;
-    console.log(`[MSW] GET /slides/${slideId}`);
+    console.log(`[MSW] GET /presentations/slides/${slideId}`);
 
     const slide = slides.find((s) => s.id === slideId);
 
@@ -197,19 +271,19 @@ export const handlers = [
       });
     }
 
-    return HttpResponse.json(slide);
+    return HttpResponse.json(wrapResponse(slide));
   }),
 
   /**
    * 슬라이드 수정
-   * PATCH /slides/:slideId
+   * PATCH /presentations/slides/:slideId
    */
-  http.patch(`${BASE_URL}/slides/:slideId`, async ({ params, request }) => {
+  http.patch(`${BASE_URL}/presentations/slides/:slideId`, async ({ params, request }) => {
     await delay(200);
 
     const { slideId } = params;
     const updates = (await request.json()) as Partial<Slide>;
-    console.log(`[MSW] PATCH /slides/${slideId}`, updates);
+    console.log(`[MSW] PATCH /presentations/slides/${slideId}`, updates);
 
     const slideIndex = slides.findIndex((s) => s.id === slideId);
 
@@ -274,13 +348,13 @@ export const handlers = [
 
   /**
    * 슬라이드 삭제
-   * DELETE /slides/:slideId
+   * DELETE /presentations/slides/:slideId
    */
-  http.delete(`${BASE_URL}/slides/:slideId`, async ({ params }) => {
+  http.delete(`${BASE_URL}/presentations/slides/:slideId`, async ({ params }) => {
     await delay(200);
 
     const { slideId } = params;
-    console.log(`[MSW] DELETE /slides/${slideId}`);
+    console.log(`[MSW] DELETE /presentations/slides/${slideId}`);
 
     const slideIndex = slides.findIndex((s) => s.id === slideId);
 
@@ -530,14 +604,7 @@ export const handlers = [
     const slide = slides.find((s) => s.id === slideId);
 
     if (!slide) {
-      return new HttpResponse(
-        JSON.stringify({
-          resultType: 'FAILURE',
-          error: { code: 'NOT_FOUND', message: 'Slide not found' },
-          success: null,
-        }),
-        { status: 404 },
-      );
+      return HttpResponse.json(wrapError('NOT_FOUND', 'Slide not found'), { status: 404 });
     }
 
     return HttpResponse.json(
@@ -561,26 +628,30 @@ export const handlers = [
     await delay(200);
 
     const { slideId } = params as { slideId: string };
-    const { script } = (await request.json()) as { script: string };
-    console.log(`[MSW] PATCH /presentations/slides/${slideId}/script`);
+    const body = (await request.json()) as { script: string };
+    console.log(`[MSW] PATCH /presentations/slides/${slideId}/script`, {
+      slideId,
+      scriptLength: body.script?.length,
+      body,
+    });
+
+    if (!body || body.script === undefined) {
+      console.error('[MSW] 대본 저장 요청 body가 올바르지 않습니다:', body);
+      return HttpResponse.json(wrapError('INVALID_REQUEST', 'script field is required'), {
+        status: 400,
+      });
+    }
 
     const slideIndex = slides.findIndex((s) => s.id === slideId);
 
     if (slideIndex === -1) {
-      return new HttpResponse(
-        JSON.stringify({
-          resultType: 'FAILURE',
-          error: { code: 'NOT_FOUND', message: 'Slide not found' },
-          success: null,
-        }),
-        { status: 404 },
-      );
+      return HttpResponse.json(wrapError('NOT_FOUND', 'Slide not found'), { status: 404 });
     }
 
     const currentSlide = slides[slideIndex];
 
     // 기존 스크립트가 있으면 버전 저장
-    if (currentSlide.script.trim() && currentSlide.script !== script) {
+    if (currentSlide.script.trim() && currentSlide.script !== body.script) {
       const versions = scriptVersions.get(slideId) || [];
       versions.unshift({
         versionNumber: versions.length + 1,
@@ -592,15 +663,15 @@ export const handlers = [
     }
 
     // 스크립트 업데이트
-    slides[slideIndex] = { ...currentSlide, script };
+    slides[slideIndex] = { ...currentSlide, script: body.script };
 
     return HttpResponse.json(
       wrapResponse({
         message: '대본이 성공적으로 저장되었습니다.',
         slideId,
-        charCount: script.length,
-        scriptText: script,
-        estimatedDurationSeconds: Math.ceil(script.length / 5),
+        charCount: body.script.length,
+        scriptText: body.script,
+        estimatedDurationSeconds: Math.ceil(body.script.length / 5),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }),
@@ -620,14 +691,7 @@ export const handlers = [
     const slide = slides.find((s) => s.id === slideId);
 
     if (!slide) {
-      return new HttpResponse(
-        JSON.stringify({
-          resultType: 'FAILURE',
-          error: { code: 'NOT_FOUND', message: 'Slide not found' },
-          success: null,
-        }),
-        { status: 404 },
-      );
+      return HttpResponse.json(wrapError('NOT_FOUND', 'Slide not found'), { status: 404 });
     }
 
     const versions = scriptVersions.get(slideId) || [];
@@ -648,28 +712,14 @@ export const handlers = [
     const slideIndex = slides.findIndex((s) => s.id === slideId);
 
     if (slideIndex === -1) {
-      return new HttpResponse(
-        JSON.stringify({
-          resultType: 'FAILURE',
-          error: { code: 'NOT_FOUND', message: 'Slide not found' },
-          success: null,
-        }),
-        { status: 404 },
-      );
+      return HttpResponse.json(wrapError('NOT_FOUND', 'Slide not found'), { status: 404 });
     }
 
     const versions = scriptVersions.get(slideId) || [];
     const targetVersion = versions.find((v) => v.versionNumber === version);
 
     if (!targetVersion) {
-      return new HttpResponse(
-        JSON.stringify({
-          resultType: 'FAILURE',
-          error: { code: 'NOT_FOUND', message: 'Version not found' },
-          success: null,
-        }),
-        { status: 404 },
-      );
+      return HttpResponse.json(wrapError('NOT_FOUND', 'Version not found'), { status: 404 });
     }
 
     // 현재 스크립트를 버전으로 저장
@@ -804,5 +854,259 @@ export const handlers = [
         },
       },
     });
+  }),
+
+  /**
+   * 슬라이드 댓글 목록 조회
+   * GET /slides/:slideId/comments
+   */
+  http.get(`${BASE_URL}/slides/:slideId/comments`, async ({ params, request }) => {
+    await delay(150);
+    const { slideId } = params as { slideId: string };
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const limit = parseInt(url.searchParams.get('limit') || '20', 10);
+
+    console.log(`[MSW] GET /slides/${slideId}/comments`, { page, limit });
+
+    const comments = slideComments.get(slideId) || [];
+    const total = comments.length;
+    const totalPages = Math.ceil(total / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedComments = comments.slice(startIndex, endIndex);
+
+    const commentsWithUser = paginatedComments.map((comment) => ({
+      id: comment.id,
+      content: comment.content,
+      user: {
+        id: comment.userId,
+        nickName: MOCK_USERS.find((u) => u.id === comment.userId)?.name || '익명',
+      },
+      createdAt: comment.createdAt,
+      updatedAt: comment.updatedAt,
+    }));
+
+    return HttpResponse.json(
+      wrapResponse({
+        comments: commentsWithUser,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+        },
+      }),
+    );
+  }),
+
+  /**
+   * 슬라이드에 댓글 작성
+   * POST /slides/:slideId/comments
+   */
+  http.post(`${BASE_URL}/slides/:slideId/comments`, async ({ params, request }) => {
+    await delay(200);
+    const { slideId } = params as { slideId: string };
+    const { content } = (await request.json()) as { content: string };
+
+    console.log(`[MSW] POST /slides/${slideId}/comments`, { content });
+
+    const newComment: StoredComment = {
+      id: `${Date.now()}`,
+      content,
+      userId: MOCK_USERS[0].id,
+      slideId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const comments = slideComments.get(slideId) || [];
+    comments.push(newComment);
+    slideComments.set(slideId, comments);
+
+    return HttpResponse.json(
+      wrapResponse({
+        id: newComment.id,
+        content: newComment.content,
+        userId: newComment.userId,
+        createdAt: newComment.createdAt,
+      }),
+    );
+  }),
+
+  /**
+   * 댓글에 답글 작성
+   * POST /comments/:commentId/replies
+   */
+  http.post(`${BASE_URL}/comments/:commentId/replies`, async ({ params, request }) => {
+    await delay(200);
+    const { commentId } = params as { commentId: string };
+    const { content } = (await request.json()) as { content: string };
+
+    console.log(`[MSW] POST /comments/${commentId}/replies`, { content });
+
+    // 부모 댓글 존재 확인
+    let parentExists = false;
+    for (const comments of slideComments.values()) {
+      if (comments.some((c) => c.id === commentId)) {
+        parentExists = true;
+        break;
+      }
+    }
+
+    if (!parentExists) {
+      return HttpResponse.json(wrapError('C005', '댓글을 찾을 수 없습니다.'), { status: 404 });
+    }
+
+    const newReply: StoredComment = {
+      id: `${Date.now()}`,
+      content,
+      parentId: commentId,
+      userId: MOCK_USERS[0].id,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const replies = commentReplies.get(commentId) || [];
+    replies.push(newReply);
+    commentReplies.set(commentId, replies);
+
+    return HttpResponse.json({
+      id: newReply.id,
+      content: newReply.content,
+      parentId: newReply.parentId,
+      userId: newReply.userId,
+      createdAt: newReply.createdAt,
+    });
+  }),
+
+  /**
+   * 댓글의 답글 목록 조회
+   * GET /comments/:commentId/replies
+   */
+  http.get(`${BASE_URL}/comments/:commentId/replies`, async ({ params }) => {
+    await delay(150);
+    const { commentId } = params as { commentId: string };
+
+    console.log(`[MSW] GET /comments/${commentId}/replies`);
+
+    const replies = commentReplies.get(commentId) || [];
+
+    return HttpResponse.json(
+      replies.map((reply) => ({
+        id: reply.id,
+        content: reply.content,
+        parentId: reply.parentId,
+        userId: reply.userId,
+        createdAt: reply.createdAt,
+      })),
+    );
+  }),
+
+  /**
+   * 댓글 수정
+   * PATCH /comments/:commentId
+   */
+  http.patch(`${BASE_URL}/comments/:commentId`, async ({ params, request }) => {
+    await delay(200);
+    const { commentId } = params as { commentId: string };
+    const { content } = (await request.json()) as { content: string };
+
+    console.log(`[MSW] PATCH /comments/${commentId}`, { content });
+
+    // 슬라이드 댓글에서 찾기
+    let found = false;
+    for (const [slideId, comments] of slideComments.entries()) {
+      const commentIndex = comments.findIndex((c) => c.id === commentId);
+      if (commentIndex !== -1) {
+        comments[commentIndex] = {
+          ...comments[commentIndex],
+          content,
+          updatedAt: new Date().toISOString(),
+        };
+        slideComments.set(slideId, comments);
+        found = true;
+
+        return HttpResponse.json(
+          wrapResponse({
+            id: comments[commentIndex].id,
+            content: comments[commentIndex].content,
+            userId: comments[commentIndex].userId,
+            createdAt: comments[commentIndex].createdAt,
+          }),
+        );
+      }
+    }
+
+    // 답글에서 찾기
+    if (!found) {
+      for (const [parentId, replies] of commentReplies.entries()) {
+        const replyIndex = replies.findIndex((r) => r.id === commentId);
+        if (replyIndex !== -1) {
+          replies[replyIndex] = {
+            ...replies[replyIndex],
+            content,
+            updatedAt: new Date().toISOString(),
+          };
+          commentReplies.set(parentId, replies);
+          found = true;
+
+          return HttpResponse.json(
+            wrapResponse({
+              id: replies[replyIndex].id,
+              content: replies[replyIndex].content,
+              userId: replies[replyIndex].userId,
+              createdAt: replies[replyIndex].createdAt,
+            }),
+          );
+        }
+      }
+    }
+
+    if (!found) {
+      return HttpResponse.json(wrapError('C005', '댓글을 찾을 수 없습니다.'), { status: 404 });
+    }
+  }),
+
+  /**
+   * 댓글 삭제
+   * DELETE /comments/:commentId
+   */
+  http.delete(`${BASE_URL}/comments/:commentId`, async ({ params }) => {
+    await delay(200);
+    const { commentId } = params as { commentId: string };
+
+    console.log(`[MSW] DELETE /comments/${commentId}`);
+
+    // 슬라이드 댓글에서 삭제
+    let found = false;
+    for (const [slideId, comments] of slideComments.entries()) {
+      const filteredComments = comments.filter((c) => c.id !== commentId);
+      if (filteredComments.length !== comments.length) {
+        slideComments.set(slideId, filteredComments);
+        // 해당 댓글의 답글도 모두 삭제
+        commentReplies.delete(commentId);
+        found = true;
+        break;
+      }
+    }
+
+    // 답글에서 삭제
+    if (!found) {
+      for (const [parentId, replies] of commentReplies.entries()) {
+        const filteredReplies = replies.filter((r) => r.id !== commentId);
+        if (filteredReplies.length !== replies.length) {
+          commentReplies.set(parentId, filteredReplies);
+          found = true;
+          break;
+        }
+      }
+    }
+
+    if (!found) {
+      return HttpResponse.json(wrapError('C005', '댓글을 찾을 수 없습니다.'), { status: 404 });
+    }
+
+    return HttpResponse.json(wrapResponse(null));
   }),
 ];

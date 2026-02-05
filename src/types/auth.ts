@@ -4,6 +4,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  provider: AuthProvider;
+  sessionId: string;
+  provider?: AuthProvider;
   profileImage?: string;
 }

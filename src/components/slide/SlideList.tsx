@@ -10,7 +10,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useHotkey } from '@/hooks';
-import type { Slide } from '@/types/slide';
+import type { SlideListItem } from '@/types/slide';
 
 import SlideThumbnail from './SlideThumbnail';
 
@@ -18,7 +18,7 @@ const SKELETON_COUNT = 3;
 
 interface SlideListProps {
   /** 슬라이드 목록 */
-  slides?: Slide[];
+  slides?: SlideListItem[];
   /** 현재 선택된 슬라이드 ID */
   currentSlideId?: string;
   /** 로딩 상태 */
@@ -35,12 +35,12 @@ export default function SlideList({ slides, currentSlideId, isLoading }: SlideLi
   const navigate = useNavigate();
   const listRef = useRef<HTMLDivElement>(null);
 
-  const currentIndex = slides?.findIndex((slide) => slide.id === currentSlideId) ?? -1;
+  const currentIndex = slides?.findIndex((slide) => slide.slideId === currentSlideId) ?? -1;
 
   const navigateToSlide = useCallback(
     (index: number) => {
       if (!slides || index < 0 || index >= slides.length) return;
-      navigate({ search: `?slideId=${slides[index].id}` }, { replace: true });
+      navigate({ search: `?slideId=${slides[index].slideId}` }, { replace: true });
     },
     [slides, navigate],
   );
@@ -76,10 +76,10 @@ export default function SlideList({ slides, currentSlideId, isLoading }: SlideLi
             ))
           : slides?.map((slide, idx) => (
               <SlideThumbnail
-                key={slide.id}
+                key={slide.slideId}
                 slide={slide}
                 index={idx}
-                isActive={slide.id === currentSlideId}
+                isActive={slide.slideId === currentSlideId}
               />
             ))}
       </div>

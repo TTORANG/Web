@@ -13,7 +13,7 @@ import { useState } from 'react';
 
 import type { AxiosError } from 'axios';
 
-import { type ApiError, apiClient } from '@/api/client';
+import { type ApiFailureResponse, apiClient } from '@/api/client';
 
 type UploadState = 'idle' | 'uploading' | 'done' | 'error';
 
@@ -48,8 +48,8 @@ export function useUpload() {
       setState('error');
 
       if (typeof e === 'object' && e !== null && 'response' in e) {
-        const axiosError = e as AxiosError<ApiError>;
-        setError(axiosError.response?.data?.message ?? axiosError.message);
+        const axiosError = e as AxiosError<ApiFailureResponse>;
+        setError(axiosError.response?.data?.error?.reason ?? axiosError.message);
       } else if (e instanceof Error) {
         setError(e.message);
       } else {

@@ -19,6 +19,7 @@ import SlideTitle from '@/components/slide/script/SlideTitle';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useHotkey } from '@/hooks';
 import { useSlides } from '@/hooks/queries/useSlides';
+import { useExitTracker } from '@/hooks/useExitTracker';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
@@ -50,6 +51,27 @@ export default function FeedbackSlidePage() {
 
   useHotkey({ ArrowLeft: goPrev, ArrowRight: goNext }, { enabled: !isLoading });
 
+  const buildExitPayload = useCallback(() => {
+    if (!projectId) return null;
+    const projectIdNum = Number(projectId);
+    if (!Number.isFinite(projectIdNum)) return null;
+
+    const payload: { projectId: number; lastSlideId?: number } = {
+      projectId: projectIdNum,
+    };
+
+    if (currentSlide?.slideId) {
+      const slideIdNum = Number(currentSlide.slideId);
+      if (Number.isFinite(slideIdNum)) {
+        payload.lastSlideId = slideIdNum;
+      }
+    }
+
+    return payload;
+  }, [projectId, currentSlide]);
+
+  useExitTracker(buildExitPayload);
+
   /** 모든 슬라이드의 의견을 플랫 배열로 합침 */
   const allFlatOpinions = useMemo(() => {
     if (!slides) return [];
@@ -57,10 +79,10 @@ export default function FeedbackSlidePage() {
       const slideLabel = `Slide ${index + 1}`;
       return (slide.opinions || []).map((op) => ({
         ...op,
-        id: `${slide.id}-${op.id}`,
-        parentId: op.parentId ? `${slide.id}-${op.parentId}` : undefined,
+        id: `${slide.slideId}-${op.id}`,
+        parentId: op.parentId ? `${slide.slideId}-${op.parentId}` : undefined,
         serverId: op.id,
-        slideId: slide.id,
+        slideId: slide.slideId,
         slideRef: slideLabel,
         ref: { kind: 'slide' as const, index },
       }));
@@ -144,7 +166,7 @@ export default function FeedbackSlidePage() {
         mediaSlot={
           currentSlide ? (
             <img
-              src={currentSlide.thumb}
+              src={currentSlide.imageUrl}
               alt={currentSlide.title}
               className="max-h-full max-w-full"
             />

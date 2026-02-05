@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Logo, SlideImage } from '@/components/common';
+import type { RecordingSlide } from '@/types/recording';
 
 import { useRecorder } from '../../hooks/useRecorder';
 
@@ -12,11 +13,17 @@ interface SlideData {
 
 interface RecordingSectionProps {
   title: string;
+  slides: RecordingSlide[];
   initialStream: MediaStream;
   onFinish: (videoBlob: Blob, durations: { [key: number]: number }) => void;
 }
 
-export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSectionProps) => {
+export const RecordingSection = ({
+  title,
+  slides,
+  initialStream,
+  onFinish,
+}: RecordingSectionProps) => {
   const slideImgRef = useRef<HTMLImageElement | null>(null);
   const logContainerRef = useRef<HTMLDivElement>(null);
 
@@ -24,16 +31,25 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
 
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalSeconds, setTotalSeconds] = useState<number>(0);
-  const [slides, setSlides] = useState<{ [key: number]: SlideData }>({
+  const [slideProgress, setSlideProgress] = useState<{ [key: number]: SlideData }>({
     1: { page: 1, duration: 0, visited: true },
   });
   const [slideImageLoaded, setSlideImageLoaded] = useState<boolean>(false);
   const [recordingStartAttempted, setRecordingStartAttempted] = useState<boolean>(false);
   const [isFinishing, setIsFinishing] = useState<boolean>(false);
 
-  const totalPages = 10;
+  const totalPages = slides.length;
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
-  const getSlideImgUrl = (p: number) => `/thumbnails/p1/${p - 1}.webp`;
+
+  const getSlideImgUrl = (p: number) => {
+    const slide = slides[p - 1];
+    return slide?.imageUrl || `/thumbnails/p1/${p - 1}.webp`;
+  };
+
+  const getSlideScript = (p: number) => {
+    const slide = slides[p - 1];
+    return slide?.script || '대본이 없습니다.';
+  };
 
   useEffect(() => {
     setSlideImageLoaded(false);
@@ -55,7 +71,7 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
   useEffect(() => {
     if (initialStream && !isRecording && slideImageLoaded && !recordingStartAttempted) {
       setRecordingStartAttempted(true);
-      startRecording(initialStream, slideImgRef, () => {});
+      startRecording(initialStream, slideImgRef);
     }
   }, [initialStream, isRecording, slideImageLoaded, recordingStartAttempted, startRecording]);
 
@@ -63,7 +79,7 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
     if (!isRecording) return;
     const id = setInterval(() => {
       setTotalSeconds((v) => v + 1);
-      setSlides((prev) => ({
+      setSlideProgress((prev) => ({
         ...prev,
         [currentPage]: {
           ...prev[currentPage],
@@ -80,7 +96,7 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
       setCurrentPage((p) => {
         const next = dir === 'next' ? Math.min(p + 1, totalPages) : Math.max(p - 1, 1);
         if (next !== p) {
-          setSlides((prev) => ({
+          setSlideProgress((prev) => ({
             ...prev,
             [next]: prev[next] || { page: next, duration: 0, visited: true },
           }));
@@ -116,8 +132,9 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
     try {
       stopRecording();
       await new Promise((resolve) => setTimeout(resolve, 1500));
+
       const durations = Object.fromEntries(
-        Object.entries(slides).map(([k, v]) => [Number(k), v.duration]),
+        Object.entries(slideProgress).map(([k, v]) => [Number(k), v.duration]),
       );
 
       const finalVideoBlob = new Blob(recordedChunks, { type: 'video/webm' });
@@ -125,12 +142,14 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
       if (finalVideoBlob.size === 0) {
         throw new Error('녹화된 영상이 없습니다.');
       }
+
       onFinish(finalVideoBlob, durations);
     } catch (error) {
       alert(error instanceof Error ? error.message : '녹화 종료 중 오류가 발생했습니다.');
-      setIsFinishing(false); // 에러 발생 시에만 다시 활성화
+      setIsFinishing(false);
     }
-  }, [isFinishing, isRecording, stopRecording, recordedChunks, slides, onFinish]);
+  }, [isFinishing, isRecording, stopRecording, recordedChunks, slideProgress, onFinish]);
+
   return (
     <div
       style={{
@@ -141,7 +160,6 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
         color: 'white',
       }}
     >
-      {/* Header */}
       <header
         style={{
           position: 'fixed',
@@ -223,7 +241,6 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
         </div>
       </header>
 
-      {/* Main Content */}
       <main style={{ marginTop: '60px', height: 'calc(100vh - 60px)', display: 'flex' }}>
         <section className="flex-1 relative flex flex-col items-center justify-center p-[4vh] bg-[#121418]">
           <div className="relative w-full aspect-video max-h-full rounded-2xl ring-1 ring-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] bg-black overflow-hidden">
@@ -239,7 +256,7 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
             <div className="absolute right-8 top-8 flex flex-col items-center bg-black/70 backdrop-blur-md px-5 py-3 rounded-xl border border-blue-500/30">
               <span className="text-white/40 font-bold text-[11px] uppercase mb-1">Slide Time</span>
               <span className="text-white font-bold text-2xl font-mono">
-                {formatTime(slides[currentPage]?.duration || 0)}
+                {formatTime(slideProgress[currentPage]?.duration || 0)}
               </span>
             </div>
           </div>
@@ -250,7 +267,6 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
           )}
         </section>
 
-        {/* Sidebar */}
         <aside
           style={{
             width: '384px',
@@ -309,7 +325,7 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
               }}
               className="scrollbar-hide"
             >
-              {currentPage}페이지 대본 영역입니다. 매출이 전년 대비 30% 증가했습니다.
+              {getSlideScript(currentPage)}
             </div>
           </div>
 
@@ -332,7 +348,7 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
             >
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((idx) => {
                 const isCurrent = idx === currentPage;
-                const isVisited = slides[idx]?.visited;
+                const isVisited = slideProgress[idx]?.visited;
                 return (
                   <div
                     key={idx}
@@ -369,7 +385,7 @@ export const RecordingSection = ({ title, initialStream, onFinish }: RecordingSe
                           fontSize: '16px',
                         }}
                       >
-                        {formatTime(slides[idx]?.duration || 0)}
+                        {formatTime(slideProgress[idx]?.duration || 0)}
                       </span>
                     )}
                   </div>

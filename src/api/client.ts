@@ -19,12 +19,21 @@ import { useAuthStore } from '@/stores/authStore';
 export const API_TIMEOUT_MS = 10000;
 
 /**
- * API 에러 응답 타입
+ * API 에러 응답 타입 (FAIL 응답의 error 필드)
  */
-export interface ApiError {
-  message: string;
-  code?: string;
-  status?: number;
+export interface ApiErrorResponse {
+  errorCode: string;
+  reason: string;
+  data?: unknown;
+}
+
+/**
+ * API FAIL 응답 구조
+ */
+export interface ApiFailureResponse {
+  resultType: 'FAILURE';
+  error: ApiErrorResponse;
+  success: null;
 }
 
 /**
@@ -69,14 +78,15 @@ apiClient.interceptors.request.use(
  */
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<ApiError>) => {
+  (error: AxiosError<ApiFailureResponse>) => {
     const status = error.response?.status;
-    const message = error.response?.data?.message || '알 수 없는 오류가 발생했습니다';
+    const errorData = error.response?.data?.error;
+    const reason = errorData?.reason || '알 수 없는 오류가 발생했습니다';
 
     // [하이브리드 전략]
     // 시스템 에러 (401 인증, 500 서버 장애)는 Axios가 즉시 처리
     if (status === 401 || (status && status >= 500)) {
-      handleApiError(status, message);
+      handleApiError(status, reason);
       // 다운스트림(React Query 등)에서 중복 처리하지 않도록 플래그 설정
       error.isHandled = true;
     }
