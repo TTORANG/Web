@@ -1,12 +1,34 @@
-import type { ScriptVersion } from './api';
+import type { GetScriptVersionHistoryResponseDto } from '@/api/dto';
+
 import type { Comment } from './comment';
 import type { Reaction } from './script';
 
 /**
- * 슬라이드 데이터 모델
- *
- * 프레젠테이션의 개별 슬라이드를 나타냅니다.
- * 각 슬라이드는 대본, 의견, 수정 기록, 이모지 반응을 포함합니다.
+ * API 응답 타입: 슬라이드 목록 조회
+ */
+export interface SlideListItem {
+  slideId: string;
+  projectId: string;
+  title: string;
+  slideNum: number;
+  imageUrl: string;
+  createdAt: string;
+  updatedAt: string;
+  /** 프론트엔드 확장용 - 대본 */
+  script?: string;
+  /** 프론트엔드 확장용 - 의견 목록 */
+  opinions?: Comment[];
+  /** 프론트엔드 확장용 - 수정 기록 */
+  history?: GetScriptVersionHistoryResponseDto[];
+  /** 프론트엔드 확장용 - 이모지 반응 */
+  emojiReactions?: Reaction[];
+  /** 영상 피드백에서 슬라이드 시작 시간 (초) */
+  startTime?: number;
+}
+
+/**
+ * 슬라이드 데이터 모델 (프론트엔드 스토어용)
+ * @deprecated SlideListItem 사용 권장
  */
 export interface Slide {
   id: string;
@@ -15,8 +37,7 @@ export interface Slide {
   thumb: string;
   script: string;
   opinions: Comment[];
-  history: ScriptVersion[];
+  history: GetScriptVersionHistoryResponseDto[];
   emojiReactions: Reaction[];
-  /** 영상 피드백에서 슬라이드 시작 시간 (초) */
   startTime?: number;
 }

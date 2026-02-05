@@ -5,14 +5,13 @@
  * - 헤더에 프로젝트 제목 표시
  * - 클릭하면 Popover 열리고, 입력/저장 가능
  * - Enter 또는 저장 버튼으로 제출
- *
-
  */
-import { type FormEvent, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import clsx from 'clsx';
 
+import ArrowDownIcon from '@/assets/icons/icon-arrow-down.svg?react';
 import { Popover } from '@/components/common/Popover';
 import { usePresentation, useUpdatePresentation } from '@/hooks/queries/usePresentations';
 import { showToast } from '@/utils/toast';
@@ -22,36 +21,15 @@ export function PresentationTitleEditor() {
   const { data: presentation } = usePresentation(projectId ?? '');
   const { mutate: updatePresentation, isPending } = useUpdatePresentation();
 
-  const [isOpen, setIsOpen] = useState(false);
-
-  const [title, setTitle] = useState('');
-
-  const inputRef = useRef<HTMLInputElement>(null);
+  const resolvedTitle = presentation?.title?.trim() ? presentation.title : '내 발표';
+  const [editTitle, setEditTitle] = useState(resolvedTitle);
 
   useEffect(() => {
-    if (!isOpen) return;
+    setEditTitle(resolvedTitle);
+  }, [resolvedTitle]);
 
-    // 포커스/셀렉트는 DOM 조작이라 effect에서 해도 OK
-    const t = window.setTimeout(() => {
-      inputRef.current?.select();
-    }, 0);
-
-    return () => window.clearTimeout(t);
-  }, [isOpen]);
-
-  const handleOpenChange = (nextOpen: boolean) => {
-    setIsOpen(nextOpen);
-
-    // 열릴 때만 초기화 (닫힐 땐 굳이 초기화 X)
-    if (nextOpen) {
-      setTitle(presentation?.title ?? ''); // presentation이 아직 없으면 빈 값
-    }
-  };
-
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-
-    const trimmedTitle = title.trim();
+  const handleSave = (close: () => void) => {
+    const trimmedTitle = editTitle.trim();
     if (!trimmedTitle) {
       showToast.error('제목을 입력해주세요');
       return;
@@ -64,7 +42,7 @@ export function PresentationTitleEditor() {
       {
         onSuccess: () => {
           showToast.success('제목이 변경되었습니다');
-          setIsOpen(false);
+          close();
         },
         onError: () => {
           showToast.error('제목 변경에 실패했습니다');
@@ -75,73 +53,62 @@ export function PresentationTitleEditor() {
 
   return (
     <Popover
-      isOpen={isOpen}
-      onOpenChange={handleOpenChange}
+      trigger={({ isOpen }) => (
+        <button
+          type="button"
+          aria-label="발표 이름 변경"
+          className="inline-flex h-7 max-w-md items-center gap-1.5 rounded-md bg-transparent px-2 text-body-m-bold text-gray-800 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main"
+        >
+          <span className="truncate">{resolvedTitle}</span>
+          <ArrowDownIcon
+            className={clsx(
+              'h-4 w-4 shrink-0 transition-transform duration-300',
+              isOpen && 'rotate-180',
+            )}
+            aria-hidden="true"
+          />
+        </button>
+      )}
       position="bottom"
       align="start"
       ariaLabel="발표 이름 변경"
-      trigger={
-        <button
-          type="button"
-          className="flex items-center gap-2 max-w-md cursor-pointer hover:opacity-80 transition-opacity"
-          aria-label="발표 이름 변경"
-        >
-          {/* 표시용 텍스트는 서버 데이터(presentation.title)를 그대로 사용 */}
-          <span className="text-body-m-bold text-gray-800 truncate">
-            {presentation?.title ?? '내 발표'}
-          </span>
-
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            className="shrink-0 text-gray-800"
-          >
-            <path
-              d="M4 6L8 10L12 6"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-      }
+      className="flex w-80 items-center gap-2 border border-gray-200 px-3 py-2"
     >
-      {() => (
-        <form
-          onSubmit={handleSubmit}
-          className="flex items-center justify-between gap-3 w-80 h-12 pl-5 pr-3 py-3 bg-white border border-gray-200 rounded-lg shadow-[0px_4px_20px_0px_rgba(0,0,0,0.05)]"
-        >
+      {({ close }) => (
+        <>
           <input
-            ref={inputRef}
-            id="project-title"
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSave(close);
+              }
+            }}
             disabled={isPending}
-            className={clsx(
-              'flex-1 text-body-m-bold text-gray-800',
-              'focus:outline-none',
-              'disabled:opacity-50 disabled:cursor-not-allowed',
-              'placeholder:text-gray-400',
-            )}
+            aria-label="발표 이름"
             placeholder="발표 제목을 입력하세요"
+            className={clsx(
+              'h-9 flex-1 rounded-md border border-gray-200 px-3 text-sm text-gray-800 outline-none',
+              'focus:border-main focus-visible:outline-2 focus-visible:outline-main',
+              'placeholder:text-gray-400',
+              'disabled:opacity-50 disabled:cursor-not-allowed',
+            )}
           />
-
           <button
-            type="submit"
+            type="button"
+            onClick={() => handleSave(close)}
             disabled={isPending}
             className={clsx(
-              'px-3 py-1.5 text-caption-bold text-white bg-main rounded-full',
-              'hover:bg-blue-600 transition-colors shrink-0',
+              'h-9 rounded-full bg-main px-3 text-sm font-semibold text-white',
+              'hover:bg-blue-600 active:bg-main-variant2 transition-colors',
+              'focus-visible:outline-2 focus-visible:outline-main',
               'disabled:opacity-50 disabled:cursor-not-allowed',
             )}
           >
             {isPending ? '저장 중...' : '저장'}
           </button>
-        </form>
+        </>
       )}
     </Popover>
   );

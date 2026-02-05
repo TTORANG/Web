@@ -4,8 +4,15 @@ import KakaoIcon from '@/assets/social-icons/login-kakao.svg?react';
 import NaverIcon from '@/assets/social-icons/login-naver.svg?react';
 import { Modal } from '@/components/common/Modal';
 import { useAuthStore } from '@/stores/authStore';
+import type { AuthProvider } from '@/types/auth';
 
 import SocialLoginButton from './SocialLoginButton';
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+function handleSocialLogin(provider: AuthProvider) {
+  window.location.href = `${API_URL}/auth/${provider}`;
+}
 
 export default function LoginModal() {
   const { isLoginModalOpen, closeLoginModal } = useAuthStore();
@@ -30,16 +37,19 @@ export default function LoginModal() {
             leftIcon={<img src={GoogleIcon} alt="Google" className="size-10" />}
             label="구글로 계속하기"
             className="bg-[#F5F6F8] text-[#1a1a1a] cursor-pointer"
+            onClick={() => handleSocialLogin('google')}
           />
           <SocialLoginButton
             leftIcon={<NaverIcon />}
             label="네이버로 계속하기"
             className="bg-[#2DB400] text-[#ffffff] cursor-pointer"
+            onClick={() => handleSocialLogin('naver')}
           />
           <SocialLoginButton
             leftIcon={<KakaoIcon />}
             label="카카오로 계속하기"
             className="bg-[#F7E600] text-[#1a1a1a] cursor-pointer"
+            onClick={() => handleSocialLogin('kakao')}
           />
         </div>
 
