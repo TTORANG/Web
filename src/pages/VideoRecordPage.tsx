@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Layout, Logo, Modal } from '@/components/common';
@@ -108,7 +108,7 @@ export default function VideoRecordPage() {
     }
     setCamStream(null);
     setIsExitModalOpen(false);
-    navigate(`/${projectId}/video`);
+    navigate(`/${projectId}/slide`);
   };
 
   const getStepLabel = () => {

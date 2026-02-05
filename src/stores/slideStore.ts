@@ -13,14 +13,14 @@ import { getExclusiveCounterpart } from '@/constants/reaction';
 import { MOCK_CURRENT_USER } from '@/mocks/users';
 import type { Comment } from '@/types/comment';
 import type { ReactionType } from '@/types/script';
-import type { Slide } from '@/types/slide';
+import type { SlideListItem } from '@/types/slide';
 import { addReplyToFlat, createComment, deleteFromFlat } from '@/utils/comment';
 
 interface SlideState {
-  slide: Slide | null;
+  slide: SlideListItem | null;
 
-  initSlide: (slide: Slide) => void;
-  updateSlide: (updates: Partial<Slide>) => void;
+  initSlide: (slide: SlideListItem) => void;
+  updateSlide: (updates: Partial<SlideListItem>) => void;
   updateScript: (script: string) => void;
   deleteOpinion: (id: string) => void;
   addReply: (parentId: string, content: string) => void;
@@ -64,7 +64,7 @@ export const useSlideStore = create<SlideState>()(
             slide: state.slide
               ? {
                   ...state.slide,
-                  opinions: deleteFromFlat(state.slide.opinions, id),
+                  opinions: deleteFromFlat(state.slide.opinions ?? [], id),
                 }
               : null,
           }),
@@ -81,7 +81,7 @@ export const useSlideStore = create<SlideState>()(
             return {
               slide: {
                 ...state.slide,
-                opinions: addReplyToFlat(state.slide.opinions, parentId, {
+                opinions: addReplyToFlat(state.slide.opinions ?? [], parentId, {
                   content,
                   authorId: MOCK_CURRENT_USER.id,
                 }),
@@ -149,7 +149,7 @@ export const useSlideStore = create<SlideState>()(
             slide: state.slide
               ? {
                   ...state.slide,
-                  opinions: [newComment, ...state.slide.opinions],
+                  opinions: [newComment, ...(state.slide.opinions ?? [])],
                 }
               : null,
           }),

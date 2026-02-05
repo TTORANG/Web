@@ -30,9 +30,9 @@ export default function HomePage() {
     return (p: Presentation) => {
       switch (filter) {
         case '3m':
-          return p.durationMinutes <= 3;
+          return p.durationSeconds <= 180; // 3분 = 180초
         case '5m':
-          return p.durationMinutes <= 5;
+          return p.durationSeconds <= 300; // 5분 = 300초
 
         default:
           return true;

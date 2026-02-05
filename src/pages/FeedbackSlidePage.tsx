@@ -57,10 +57,10 @@ export default function FeedbackSlidePage() {
       const slideLabel = `Slide ${index + 1}`;
       return (slide.opinions || []).map((op) => ({
         ...op,
-        id: `${slide.id}-${op.id}`,
-        parentId: op.parentId ? `${slide.id}-${op.parentId}` : undefined,
+        id: `${slide.slideId}-${op.id}`,
+        parentId: op.parentId ? `${slide.slideId}-${op.parentId}` : undefined,
         serverId: op.id,
-        slideId: slide.id,
+        slideId: slide.slideId,
         slideRef: slideLabel,
         ref: { kind: 'slide' as const, index },
       }));
@@ -144,7 +144,7 @@ export default function FeedbackSlidePage() {
         mediaSlot={
           currentSlide ? (
             <img
-              src={currentSlide.thumb}
+              src={currentSlide.imageUrl}
               alt={currentSlide.title}
               className="max-h-full max-w-full"
             />

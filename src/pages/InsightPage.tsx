@@ -158,7 +158,7 @@ export default function InsightPage() {
       .slice(0, 3);
   }, [slides]);
 
-  const getThumb = (slideIndex: number) => slides?.[slideIndex]?.thumb;
+  const getThumb = (slideIndex: number) => slides?.[slideIndex]?.imageUrl;
 
   return (
     <div

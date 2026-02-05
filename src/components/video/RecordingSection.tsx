@@ -32,7 +32,7 @@ export const RecordingSection = ({ projectId, initialStream, onFinish }: Recordi
 
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalSeconds, setTotalSeconds] = useState<number>(0);
-  const [slides, setSlides] = useState<{ [key: number]: SlideData }>({
+  const [slideProgress, setSlideProgress] = useState<{ [key: number]: SlideData }>({
     1: { page: 1, duration: 0, visited: true },
   });
   const [slideImageLoaded, setSlideImageLoaded] = useState<boolean>(false);
@@ -44,7 +44,7 @@ export const RecordingSection = ({ projectId, initialStream, onFinish }: Recordi
   const getSlideImgUrl = useCallback(
     (p: number) => {
       const slide = slidesList[p - 1];
-      return slide ? slide.thumb : '';
+      return slide ? slide.imageUrl : '';
     },
     [slidesList],
   );
@@ -75,7 +75,7 @@ export const RecordingSection = ({ projectId, initialStream, onFinish }: Recordi
   useEffect(() => {
     if (initialStream && !isRecording && slideImageLoaded && !recordingStartAttempted) {
       setRecordingStartAttempted(true);
-      startRecording(initialStream, slideImgRef, () => {});
+      startRecording(initialStream, slideImgRef);
     }
   }, [initialStream, isRecording, slideImageLoaded, recordingStartAttempted, startRecording]);
 
@@ -83,7 +83,7 @@ export const RecordingSection = ({ projectId, initialStream, onFinish }: Recordi
     if (!isRecording) return;
     const id = setInterval(() => {
       setTotalSeconds((v) => v + 1);
-      setSlides((prev) => ({
+      setSlideProgress((prev) => ({
         ...prev,
         [currentPage]: {
           ...prev[currentPage],
@@ -100,7 +100,7 @@ export const RecordingSection = ({ projectId, initialStream, onFinish }: Recordi
       setCurrentPage((p) => {
         const next = dir === 'next' ? Math.min(p + 1, totalPages) : Math.max(p - 1, 1);
         if (next !== p) {
-          setSlides((prev) => ({
+          setSlideProgress((prev) => ({
             ...prev,
             [next]: prev[next] || { page: next, duration: 0, visited: true },
           }));
@@ -136,8 +136,9 @@ export const RecordingSection = ({ projectId, initialStream, onFinish }: Recordi
     try {
       stopRecording();
       await new Promise((resolve) => setTimeout(resolve, 1500));
+
       const durations = Object.fromEntries(
-        Object.entries(slides).map(([k, v]) => [Number(k), v.duration]),
+        Object.entries(slideProgress).map(([k, v]) => [Number(k), v.duration]),
       );
 
       const finalVideoBlob = new Blob(recordedChunks, { type: 'video/webm' });
@@ -145,12 +146,13 @@ export const RecordingSection = ({ projectId, initialStream, onFinish }: Recordi
       if (finalVideoBlob.size === 0) {
         throw new Error('녹화된 영상이 없습니다.');
       }
+
       onFinish(finalVideoBlob, durations);
     } catch (error) {
       alert(error instanceof Error ? error.message : '녹화 종료 중 오류가 발생했습니다.');
       setIsFinishing(false);
     }
-  }, [isFinishing, isRecording, stopRecording, recordedChunks, slides, onFinish]);
+  }, [isFinishing, isRecording, stopRecording, recordedChunks, slideProgress, onFinish]);
 
   return (
     <div className="fixed inset-0 z-[9999] bg-white">
@@ -220,7 +222,7 @@ export const RecordingSection = ({ projectId, initialStream, onFinish }: Recordi
               <div className="absolute right-5 top-4 flex flex-col items-start rounded-lg bg-white/65 px-4 pb-2 pt-2.5">
                 <span className="text-caption-bold text-gray-600">현재 슬라이드</span>
                 <span className="text-body-l-bold text-black">
-                  {formatTime(slides[currentPage]?.duration || 0)}
+                  {formatTime(slideProgress[currentPage]?.duration || 0)}
                 </span>
               </div>
 
@@ -285,7 +287,7 @@ export const RecordingSection = ({ projectId, initialStream, onFinish }: Recordi
             >
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((idx) => {
                 const isCurrent = idx === currentPage;
-                const isVisited = slides[idx]?.visited;
+                const isVisited = slideProgress[idx]?.visited;
                 return (
                   <div key={idx} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -310,7 +312,7 @@ export const RecordingSection = ({ projectId, initialStream, onFinish }: Recordi
                       <span
                         className={`tabular-nums text-body-m ${isCurrent ? 'text-black' : 'text-gray-800'}`}
                       >
-                        {formatTime(slides[idx]?.duration || 0)}
+                        {formatTime(slideProgress[idx]?.duration || 0)}
                       </span>
                     )}
                   </div>
