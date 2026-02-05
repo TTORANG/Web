@@ -18,10 +18,14 @@ import type { ApiResponse } from '@/types/api';
 
 /**
  * DTO → Model 변환: CommentResponseDto를 앱 내부용 Model로 변환
+ * 주의: 서버 응답에서 댓글은 'id', 답글은 'commentId'를 사용함
  */
-function commentDtoToModel(dto: CommentResponseDto): { serverId: string; content: string } {
+function commentDtoToModel(dto: CommentResponseDto & { commentId?: string }): {
+  serverId: string;
+  content: string;
+} {
   return {
-    serverId: dto.id,
+    serverId: dto.id ?? dto.commentId ?? '',
     content: dto.content,
   };
 }
@@ -101,7 +105,7 @@ export async function createCommentReply(
   commentId: number,
   data: { content: string },
 ): Promise<{ serverId: string; content: string }> {
-  const response = await apiClient.post<ApiResponse<CommentResponseDto>>(
+  const response = await apiClient.post<ApiResponse<CommentResponseDto & { commentId?: string }>>(
     `/comments/${commentId}/replies`,
     data,
   );
