@@ -16,6 +16,7 @@ bun.lock
 .env
 .env.local
 .env.*.local
+.env.development
 *.local
 !.env.local.example
 
