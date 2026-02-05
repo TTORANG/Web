@@ -2,31 +2,38 @@ import type { SummaryStat } from '@/types/insight';
 
 interface SummaryStatsSectionProps {
   stats: SummaryStat[];
-  cardClassName: string;
-  columns?: number;
 }
 
-export default function SummaryStatsSection({
-  stats,
-  cardClassName,
-  columns = 4,
-}: SummaryStatsSectionProps) {
-  const columnClass =
-    columns === 3
-      ? 'grid-cols-3'
-      : columns === 2
-        ? 'grid-cols-2'
-        : columns === 1
-          ? 'grid-cols-1'
-          : 'grid-cols-4';
-
+export default function SummaryStatsSection({ stats }: SummaryStatsSectionProps) {
   return (
-    <div className={`grid ${columnClass} gap-4 mb-6`}>
+    <div className="flex flex-wrap gap-4">
       {stats.map((stat, idx) => (
-        <div key={idx} className={`${cardClassName} p-5`}>
-          <h3 className="text-body-s text-gray-800 mb-2">{stat.label}</h3>
-          <div className="text-2xl font-bold text-gray-800 mb-2">{stat.value}</div>
-          {stat.sub && <div className="text-body-s text-gray-600">{stat.sub}</div>}
+        <div
+          key={idx}
+          className="flex min-w-60 flex-1 basis-78 flex-col gap-2 rounded-lg border border-gray-200 bg-white px-5 py-4"
+        >
+          <div className="flex flex-col gap-1">
+            <span className="text-body-s text-gray-800">{stat.label}</span>
+            <span className="text-title-s-bold text-gray-800">{stat.value}</span>
+          </div>
+          {stat.trendValue && (
+            <span
+              className={`text-body-s ${
+                stat.trend === 'up'
+                  ? 'text-main'
+                  : stat.trend === 'down'
+                    ? 'text-error'
+                    : 'text-gray-600'
+              }`}
+            >
+              {stat.trend === 'up' && '↑ '}
+              {stat.trend === 'down' && '↓ '}
+              {stat.trendValue}
+            </span>
+          )}
+          {stat.sub && !stat.trendValue && (
+            <span className="text-body-s text-gray-600">{stat.sub}</span>
+          )}
         </div>
       ))}
     </div>

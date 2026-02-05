@@ -19,6 +19,7 @@ import SlideTitle from '@/components/slide/script/SlideTitle';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useHotkey } from '@/hooks';
 import { useSlides } from '@/hooks/queries/useSlides';
+import { useExitTracker } from '@/hooks/useExitTracker';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
@@ -49,6 +50,27 @@ export default function FeedbackSlidePage() {
   };
 
   useHotkey({ ArrowLeft: goPrev, ArrowRight: goNext }, { enabled: !isLoading });
+
+  const buildExitPayload = useCallback(() => {
+    if (!projectId) return null;
+    const projectIdNum = Number(projectId);
+    if (!Number.isFinite(projectIdNum)) return null;
+
+    const payload: { projectId: number; lastSlideId?: number } = {
+      projectId: projectIdNum,
+    };
+
+    if (currentSlide?.slideId) {
+      const slideIdNum = Number(currentSlide.slideId);
+      if (Number.isFinite(slideIdNum)) {
+        payload.lastSlideId = slideIdNum;
+      }
+    }
+
+    return payload;
+  }, [projectId, currentSlide]);
+
+  useExitTracker(buildExitPayload);
 
   /** 모든 슬라이드의 의견을 플랫 배열로 합침 */
   const allFlatOpinions = useMemo(() => {

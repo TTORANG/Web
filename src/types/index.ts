@@ -1,5 +1,5 @@
 // API
-export type { ApiError, ApiResponse, PaginatedData } from './api';
+export type { ApiErrorResponse, ApiResponse, PaginatedData } from './api';
 
 // Auth
 export type { AuthProvider, User } from './auth';
@@ -39,4 +39,4 @@ export type { Slide } from './slide';
 export type { ThemeMode } from './theme';
 
 // Upload
-export type { UploadState } from './uploadFile';
+export type { UploadStep } from './uploadFile';

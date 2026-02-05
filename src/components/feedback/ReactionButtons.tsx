@@ -2,6 +2,9 @@
  * @file ReactionButtons.tsx
  * @description Emoji reaction buttons
  */
+import { useState } from 'react';
+
+import { EmojiConfetti } from '@/components/common';
 import { REACTION_CONFIG } from '@/constants/reaction';
 import type { Reaction, ReactionType } from '@/types/script';
 
@@ -31,12 +34,28 @@ export default function ReactionButtons({
   className,
   buttonClassName,
 }: ReactionButtonsProps) {
+  // confetti 트리거를 위한 카운터 (리액션 타입별)
+  const [confettiTriggers, setConfettiTriggers] = useState<Partial<Record<ReactionType, number>>>(
+    {},
+  );
+
   const formatReactionCount = (count: number) => (count > 99 ? '99+' : count);
   const isGrid = layout === 'grid-2';
   const total = reactions.length;
   const containerClass = isGrid
     ? `grid grid-cols-2 gap-2 justify-items-center ${className ?? ''}`
     : `flex gap-1.5 ${showLabel ? 'flex-wrap' : 'flex-nowrap'} ${className ?? ''}`;
+
+  const handleToggle = (type: ReactionType, isCurrentlyActive: boolean) => {
+    // 활성화될 때만 confetti 효과 트리거
+    if (!isCurrentlyActive) {
+      setConfettiTriggers((prev) => ({
+        ...prev,
+        [type]: (prev[type] || 0) + 1,
+      }));
+    }
+    onToggleReaction(type);
+  };
 
   return (
     <div className={containerClass}>
@@ -51,14 +70,14 @@ export default function ReactionButtons({
         return (
           <button
             key={reaction.type}
-            onClick={() => onToggleReaction(reaction.type)}
+            onClick={() => handleToggle(reaction.type, reaction.active ?? false)}
             className={`${baseBtn} ${widthClass} ${buttonClassName ?? ''} ${
               isLastOdd ? 'col-span-2 justify-self-start' : ''
             } ${
               reaction.active
                 ? 'bg-gray-900 border-main-variant1 text-main-variant2 text-body-m-bold'
                 : 'bg-gray-200 border-gray-400 text-black hover:border-gray-600'
-            }`}
+            } relative`}
           >
             <div className="flex items-center gap-2">
               <span>{config.emoji}</span>
@@ -68,6 +87,10 @@ export default function ReactionButtons({
             <span className="tabular-nums text-right min-w-0">
               {reaction.count > 0 ? formatReactionCount(reaction.count) : ''}
             </span>
+
+            {confettiTriggers[reaction.type] && confettiTriggers[reaction.type]! > 0 && (
+              <EmojiConfetti key={confettiTriggers[reaction.type]} emoji={config.emoji} />
+            )}
           </button>
         );
       })}
