@@ -3,12 +3,12 @@
  * @description 슬라이드 제목과 대본을 표시하는 패널
  */
 import SlideTitle from '@/components/slide/script/SlideTitle';
-import type { Slide } from '@/types/slide';
+import type { SlideListItem } from '@/types/slide';
 
 import SlideNavigation from '../SlideNavigation';
 
 interface SlideInfoPanelProps {
-  slide: Slide;
+  slide: SlideListItem;
   slideIndex: number;
   totalSlides: number;
   isFirst: boolean;

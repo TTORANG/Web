@@ -6,12 +6,12 @@
  */
 import clsx from 'clsx';
 
+import type { GetScriptVersionHistoryResponseDto } from '@/api/dto';
 import RevertIcon from '@/assets/icons/icon-revert.svg?react';
 import { Popover, Spinner } from '@/components/common';
 import { useSlideId, useSlideScript } from '@/hooks';
 import { useRestoreScript, useScriptVersions } from '@/hooks/queries/useScript';
 import { useSlideStore } from '@/stores/slideStore';
-import type { ScriptVersion } from '@/types/api';
 import { formatTimestamp } from '@/utils/format';
 import { showToast } from '@/utils/toast';
 
@@ -23,7 +23,7 @@ export default function ScriptHistory() {
   const { data: versions, isLoading } = useScriptVersions(slideId ?? '');
   const { mutate: restoreScript, isPending: isRestoring } = useRestoreScript();
 
-  const handleRestore = (version: ScriptVersion) => {
+  const handleRestore = (version: GetScriptVersionHistoryResponseDto) => {
     if (!slideId) return;
 
     restoreScript(
