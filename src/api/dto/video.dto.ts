@@ -1,14 +1,5 @@
 /**
- * 영상 타임스탬프 댓글 생성
- */
-export interface CreateOpinionDto {
-  content: string;
-  /** 답글인 경우 부모 의견 내용 고쳐라이D */
-  parentId?: string;
-}
-
-/**
- * 영상 녹화 시작 요청 DTO
+ * 영상 녹화 세션 생성 요청 DTO
  */
 export interface StartVideoRequestDto {
   projectId: number;
@@ -19,11 +10,17 @@ export interface StartVideoRequestDto {
  * 영상 녹화 시작 응답 DTO (success 데이터)
  */
 export interface StartVideoResponseDto {
-  videoId: number;
+  videoId: string;
+}
+/**
+ * 청크 업로드 응답 DTO (success 데이터)
+ */
+export interface ChunkUploadResponseDto {
+  ok: boolean;
 }
 
 /**
- * 영상 녹화 완료 요청 DTO
+ * 녹화 종료 및 영상 처리 시작 요청 DTO
  */
 export interface FinishVideoRequestDto {
   slideLogs: Array<{
@@ -33,7 +30,7 @@ export interface FinishVideoRequestDto {
 }
 
 /**
- * 영상 녹화 완료 응답 DTO (success 데이터)
+ * 녹화 종료 및 영상 처리 시작 응답 DTO (success 데이터)
  */
 export interface FinishVideoResponseDto {
   videoId: string;
@@ -43,11 +40,4 @@ export interface FinishVideoResponseDto {
     slideId: string;
     totalDurationMs: number;
   }>;
-}
-
-/**
- * 청크 업로드 응답 DTO (success 데이터)
- */
-export interface ChunkUploadResponseDto {
-  ok: boolean;
 }

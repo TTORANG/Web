@@ -30,12 +30,12 @@ export const videosApi = {
   },
 
   // POST /videos/{videoId}/finish - 녹화 종료 및 영상 처리 시작
-  finishVideo: (videoId: number, data: FinishVideoRequestDto) =>
+  finishVideo: (videoId: string, data: FinishVideoRequestDto) =>
     apiClient.post<ApiResponse<FinishVideoResponseDto>>(`/videos/${videoId}/finish`, data),
 
   // GET /videos/{videoId} - 영상 상세 조회
-  getVideoDetail: (videoId: number) => apiClient.get(`/videos/${videoId}`),
+  getVideoDetail: (videoId: string) => apiClient.get(`/videos/${videoId}`),
 
   // GET /videos/{videoId}/slides - 슬라이드 타임라인 조회
-  getVideoSlides: (videoId: number) => apiClient.get(`/videos/${videoId}/slides`),
+  getVideoSlides: (videoId: string) => apiClient.get(`/videos/${videoId}/slides`),
 };
