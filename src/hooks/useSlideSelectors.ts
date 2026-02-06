@@ -5,14 +5,12 @@
  */
 import { useShallow } from 'zustand/shallow';
 
-import type { GetScriptVersionHistoryResponseDto } from '@/api/dto';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
 import type { Reaction } from '@/types/script';
 
 // 빈 배열 상수 (참조 안정성을 위해)
 const EMPTY_COMMENTS: Comment[] = [];
-const EMPTY_HISTORY: GetScriptVersionHistoryResponseDto[] = [];
 const EMPTY_EMOJIS: Reaction[] = [];
 
 /** 슬라이드 ID 구독 */
@@ -30,10 +28,6 @@ export const useSlideScript = () => useSlideStore((state) => state.slide?.script
 /** 댓글 목록 구독 */
 export const useSlideComments = () =>
   useSlideStore((state) => state.slide?.comments ?? EMPTY_COMMENTS);
-
-/** 대본 수정 기록 구독 */
-export const useSlideHistory = () =>
-  useSlideStore((state) => state.slide?.history ?? EMPTY_HISTORY);
 
 /** 이모지 반응 목록 구독 */
 export const useSlideEmojis = () =>

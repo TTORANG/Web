@@ -6,16 +6,13 @@
  */
 import { useMemo } from 'react';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import type { CreateCommentDto } from '@/api';
 import {
   createReply,
   createSlideComment,
   deleteComment as deleteCommentApi,
-  getReplies,
-  getSlideComments,
-  updateComment,
 } from '@/api/endpoints/comments';
 import { queryKeys } from '@/api/queryClient';
 import { useSlideStore } from '@/stores/slideStore';
@@ -23,28 +20,9 @@ import type { Comment } from '@/types/comment';
 import { flatToTree } from '@/utils/comment';
 import { showToast } from '@/utils/toast';
 
-// ── TanStack Query 훅 ──────────────────────────────────────
+// ── 내부 전용 TanStack Query 훅 ─────────────────────────────
 
-/** 슬라이드 댓글 목록 조회 */
-export function useSlideCommentsQuery(slideId: string, page = 1, limit = 20) {
-  return useQuery({
-    queryKey: queryKeys.comments.list(slideId),
-    queryFn: () => getSlideComments(slideId, page, limit),
-    enabled: !!slideId,
-  });
-}
-
-/** 댓글의 답글 목록 조회 */
-export function useReplies(commentId: string) {
-  return useQuery({
-    queryKey: queryKeys.comments.replies(commentId),
-    queryFn: () => getReplies(commentId),
-    enabled: !!commentId,
-  });
-}
-
-/** 댓글 작성 (mutation) */
-export function useCreateComment() {
+function useCreateCommentMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -59,8 +37,7 @@ export function useCreateComment() {
   });
 }
 
-/** 답글 작성 (mutation) */
-export function useCreateReply() {
+function useCreateReplyMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -74,22 +51,7 @@ export function useCreateReply() {
   });
 }
 
-/** 댓글 수정 (mutation) */
-export function useUpdateComment() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ commentId, data }: { commentId: string; data: { content: string } }) =>
-      updateComment(commentId, data),
-
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.comments.all });
-    },
-  });
-}
-
-/** 댓글 삭제 (mutation) */
-export function useDeleteComment() {
+function useDeleteCommentMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -116,9 +78,9 @@ export function useComments() {
   const deleteCommentStore = useSlideStore((state) => state.deleteComment);
   const setComments = useSlideStore((state) => state.setComments);
 
-  const { mutate: createCommentMutate } = useCreateComment();
-  const { mutate: createReplyMutate } = useCreateReply();
-  const { mutate: deleteCommentMutate } = useDeleteComment();
+  const { mutate: createCommentMutate } = useCreateCommentMutation();
+  const { mutate: createReplyMutate } = useCreateReplyMutation();
+  const { mutate: deleteCommentMutate } = useDeleteCommentMutation();
 
   const findComment = (commentId: string) => flatComments?.find((c) => c.id === commentId);
 
