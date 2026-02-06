@@ -15,7 +15,7 @@ export default function ProgressBar({ value }: ProgressBarProps) {
         aria-valuemax={100}
       >
         <div
-          className="h-full bg-gray-900 transition-all"
+          className="h-full bg-gray-600 transition-all"
           style={{ width: `${normalizedValue}%` }}
         />
       </div>

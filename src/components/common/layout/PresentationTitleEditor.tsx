@@ -16,7 +16,11 @@ import { Popover } from '@/components/common/Popover';
 import { usePresentation, useUpdatePresentation } from '@/hooks/queries/usePresentations';
 import { showToast } from '@/utils/toast';
 
-export function PresentationTitleEditor() {
+interface PresentationTitleEditorProps {
+  readOnly?: boolean;
+}
+
+export function PresentationTitleEditor({ readOnly }: PresentationTitleEditorProps) {
   const { projectId } = useParams<{ projectId: string }>();
   const { data: presentation } = usePresentation(projectId ?? '');
   const { mutate: updatePresentation, isPending } = useUpdatePresentation();
@@ -51,6 +55,16 @@ export function PresentationTitleEditor() {
     );
   };
 
+  if (readOnly) {
+    return (
+      <div className="flex items-center gap-2 max-w-md">
+        <span className="text-body-m-bold text-gray-800 truncate">
+          {presentation?.title ?? '내 발표'}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <Popover
       trigger={({ isOpen }) => (
@@ -78,6 +92,7 @@ export function PresentationTitleEditor() {
         <>
           <input
             value={editTitle}
+            autoFocus
             onChange={(e) => setEditTitle(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {

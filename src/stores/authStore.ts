@@ -16,6 +16,7 @@ interface AuthState {
   isLoginModalOpen: boolean;
 
   login: (user: User, accessToken: string, refreshToken: string) => void;
+  anonymous: (accessToken: string, refreshToken: string) => void;
   logout: () => void;
   updateUser: (user: Partial<User>) => void;
   openLoginModal: () => void;
@@ -40,6 +41,17 @@ export const useAuthStore = create<AuthState>()(
             },
             false,
             'auth/login',
+          );
+        },
+
+        anonymous: (accessToken, refreshToken) => {
+          set(
+            {
+              accessToken,
+              refreshToken,
+            },
+            false,
+            'auth/anonymous',
           );
         },
 

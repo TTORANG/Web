@@ -16,7 +16,7 @@ export interface ApiResponse<T> {
  * API 응답 unwrap 헬퍼 함수
  *
  * SUCCESS인 경우 success 데이터를 반환
- * FAILURE인 경우 에러를 throw
+ * FAIL인 경우 에러를 throw
  *
  * @example
  * ```typescript

@@ -1,12 +1,54 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 
-import { getSummaryAnalytics } from '@/api/endpoints/analytics';
+import {
+  type RecordExitRequest,
+  getProjectAnalyticsSummary,
+  getSlideAnalytics,
+  getVideoAnalytics,
+  recordExit,
+} from '@/api/endpoints/analytics';
 import { queryKeys } from '@/api/queryClient';
 
-export function useSummaryAnalytics(projectId: string) {
+/**
+ * 이탈 기록 (mutation) unload 시 이탈 기록 (fetch keepalive)
+ */
+export function useRecordExit() {
+  return useMutation({
+    mutationFn: (data: RecordExitRequest) => recordExit(data),
+  });
+}
+
+/**
+ * 슬라이드별 분석
+ */
+export function useSlideAnalytics(projectId: string) {
+  return useQuery({
+    queryKey: queryKeys.analytics.slides(projectId),
+    queryFn: () => getSlideAnalytics(projectId),
+    enabled: !!projectId,
+  });
+}
+
+/**
+ * 영상 타임라인 분석(= video analytics)
+ * - 기존 useVideoExitAnalytics / getVideoExitAnalytics 대신
+ */
+export function useVideoAnalytics(videoId: string) {
+  return useQuery({
+    queryKey: queryKeys.analytics.videoExits(videoId),
+    queryFn: () => getVideoAnalytics(videoId),
+    enabled: !!videoId,
+  });
+}
+
+/**
+ * 프로젝트 요약 분석 (상단 카드 4개 + videoIds)
+ * - 기존 useSummaryAnalytics / getSummaryAnalytics 대신
+ */
+export function useProjectAnalyticsSummary(projectId: string) {
   return useQuery({
     queryKey: queryKeys.analytics.summary(projectId),
-    queryFn: () => getSummaryAnalytics(projectId),
+    queryFn: () => getProjectAnalyticsSummary(projectId),
     enabled: !!projectId,
   });
 }

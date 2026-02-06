@@ -7,6 +7,11 @@ import type { Presentation } from '@/types/presentation';
 import type { Slide } from '@/types/slide';
 import type { VideoFeedback, VideoTimestampFeedback } from '@/types/video';
 
+import {
+  getMockProjectAnalyticsSummary,
+  getMockSlideAnalytics,
+  getMockVideoExitAnalytics,
+} from './analytics';
 import { MOCK_PROJECTS } from './projects';
 import { MOCK_SLIDES } from './slides';
 import { MOCK_USERS } from './users';
@@ -121,7 +126,7 @@ export const handlers = [
       });
     }
 
-    return HttpResponse.json(presentation);
+    return HttpResponse.json(wrapResponse(presentation));
   }),
 
   /**
@@ -136,16 +141,21 @@ export const handlers = [
     const newPresentation: Presentation = {
       projectId: `p${Date.now()}`,
       title: data.title,
+      userName: MOCK_USERS[0].name,
+      updatedAt: new Date().toISOString(),
+      reactionCount: 0,
+      viewCount: 0,
       thumbnailUrl: '/thumbnails/p1/0.webp',
       slideCount: 0,
       feedbackCount: 0,
       durationSeconds: 0,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     };
 
     presentations = [newPresentation, ...presentations];
-    return HttpResponse.json(newPresentation, { status: 201 });
+    return HttpResponse.json(wrapResponse({ ...newPresentation, message: 'Created' }), {
+      status: 201,
+    });
   }),
 
   /**
@@ -173,7 +183,7 @@ export const handlers = [
       updatedAt: new Date().toISOString(),
     };
 
-    return HttpResponse.json(presentations[presentationIndex]);
+    return HttpResponse.json(wrapResponse(presentations[presentationIndex]));
   }),
 
   /**
@@ -210,8 +220,6 @@ export const handlers = [
     await delay(200);
 
     const { projectId } = params;
-    console.log(`[MSW] GET /projects/${projectId}/slides`);
-
     const presentationSlides = slides
       .filter((s) => s.projectId === projectId)
       .map((s, index) => ({
@@ -220,6 +228,9 @@ export const handlers = [
         title: s.title,
         slideNum: index + 1,
         imageUrl: s.thumb,
+        script: s.script,
+        opinions: s.opinions,
+        emojiReactions: s.emojiReactions,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }));
@@ -245,6 +256,9 @@ export const handlers = [
         title: s.title,
         slideNum: index + 1,
         imageUrl: s.thumb,
+        script: s.script,
+        opinions: s.opinions,
+        emojiReactions: s.emojiReactions,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }));
@@ -316,7 +330,7 @@ export const handlers = [
       ...updates,
     };
 
-    return HttpResponse.json(slides[slideIndex]);
+    return HttpResponse.json(wrapResponse(slides[slideIndex]));
   }),
 
   /**
@@ -343,7 +357,7 @@ export const handlers = [
 
     slides.push(newSlide);
 
-    return HttpResponse.json(newSlide, { status: 201 });
+    return HttpResponse.json(wrapResponse(newSlide), { status: 201 });
   }),
 
   /**
@@ -415,7 +429,7 @@ export const handlers = [
       slides[slideIndex].opinions.push(newOpinion);
     }
 
-    return HttpResponse.json(newOpinion, { status: 201 });
+    return HttpResponse.json(wrapResponse(newOpinion), { status: 201 });
   }),
 
   /**
@@ -487,7 +501,7 @@ export const handlers = [
       }
     }
 
-    return HttpResponse.json(slide.emojiReactions);
+    return HttpResponse.json(wrapResponse(slide.emojiReactions));
   }),
 
   /**
@@ -539,10 +553,12 @@ export const handlers = [
       }
     }
 
-    return HttpResponse.json({
-      timestamp: targetFeedback.timestamp,
-      reactions: targetFeedback.reactions,
-    });
+    return HttpResponse.json(
+      wrapResponse({
+        timestamp: targetFeedback.timestamp,
+        reactions: targetFeedback.reactions,
+      }),
+    );
   }),
 
   /**
@@ -575,10 +591,12 @@ export const handlers = [
   http.post(`${BASE_URL}/auth/login/mock`, async () => {
     await delay(300);
     console.log('[MSW] POST /auth/login/mock');
-    return HttpResponse.json({
-      user: MOCK_USERS[0],
-      accessToken: 'mock-access-token',
-    });
+    return HttpResponse.json(
+      wrapResponse({
+        user: MOCK_USERS[0],
+        accessToken: 'mock-access-token',
+      }),
+    );
   }),
 
   /**
@@ -588,7 +606,7 @@ export const handlers = [
   http.get(`${BASE_URL}/users/me`, async () => {
     await delay(200);
     console.log('[MSW] GET /users/me');
-    return HttpResponse.json(MOCK_USERS[0]);
+    return HttpResponse.json(wrapResponse(MOCK_USERS[0]));
   }),
 
   /**
@@ -749,7 +767,6 @@ export const handlers = [
       }),
     );
   }),
-  // src/mocks/handlers.ts 파일 끝부분에 추가 (마지막 ] 직전)
 
   /**
    * 영상 세션 생성
@@ -971,13 +988,15 @@ export const handlers = [
     replies.push(newReply);
     commentReplies.set(commentId, replies);
 
-    return HttpResponse.json({
-      id: newReply.id,
-      content: newReply.content,
-      parentId: newReply.parentId,
-      userId: newReply.userId,
-      createdAt: newReply.createdAt,
-    });
+    return HttpResponse.json(
+      wrapResponse({
+        id: newReply.id,
+        content: newReply.content,
+        parentId: newReply.parentId,
+        userId: newReply.userId,
+        createdAt: newReply.createdAt,
+      }),
+    );
   }),
 
   /**
@@ -993,13 +1012,15 @@ export const handlers = [
     const replies = commentReplies.get(commentId) || [];
 
     return HttpResponse.json(
-      replies.map((reply) => ({
-        id: reply.id,
-        content: reply.content,
-        parentId: reply.parentId,
-        userId: reply.userId,
-        createdAt: reply.createdAt,
-      })),
+      wrapResponse(
+        replies.map((reply) => ({
+          id: reply.id,
+          content: reply.content,
+          parentId: reply.parentId,
+          userId: reply.userId,
+          createdAt: reply.createdAt,
+        })),
+      ),
     );
   }),
 
@@ -1108,5 +1129,45 @@ export const handlers = [
     }
 
     return HttpResponse.json(wrapResponse(null));
+  }),
+
+  // =====================
+  // 분석(Analytics) 관련 핸들러
+  // =====================
+
+  /**
+   * 슬라이드 분석 조회
+   * GET /presentations/:projectId/analytics/slides
+   */
+  http.get(`${BASE_URL}/presentations/:projectId/analytics/slides`, async ({ params }) => {
+    await delay(200);
+    const { projectId } = params as { projectId: string };
+    console.log(`[MSW] GET /presentations/${projectId}/analytics/slides`);
+
+    return HttpResponse.json(wrapResponse(getMockSlideAnalytics(projectId)));
+  }),
+
+  /**
+   * 프로젝트 분석 요약 조회
+   * GET /presentations/:projectId/analytics/summary
+   */
+  http.get(`${BASE_URL}/presentations/:projectId/analytics/summary`, async ({ params }) => {
+    await delay(200);
+    const { projectId } = params as { projectId: string };
+    console.log(`[MSW] GET /presentations/${projectId}/analytics/summary`);
+
+    return HttpResponse.json(wrapResponse(getMockProjectAnalyticsSummary(projectId)));
+  }),
+
+  /**
+   * 영상 이탈 분석 조회
+   * GET /videos/:videoId/analytics/exits
+   */
+  http.get(`${BASE_URL}/videos/:videoId/analytics/exits`, async ({ params }) => {
+    await delay(200);
+    const { videoId } = params as { videoId: string };
+    console.log(`[MSW] GET /videos/${videoId}/analytics/exits`);
+
+    return HttpResponse.json(wrapResponse(getMockVideoExitAnalytics(videoId)));
   }),
 ];

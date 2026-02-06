@@ -134,17 +134,22 @@ const VideoPage = () => {
   const hasVideos = videos.length > 0;
 
   return (
-    <div className="relative h-full w-full bg-gray-100">
+    <div
+      role="tabpanel"
+      id="tabpanel-video"
+      aria-labelledby="tab-video"
+      className="relative h-full w-full overflow-y-auto bg-gray-100"
+    >
       {showSuccessToast && (
-        <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-slide-in">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <div className="fixed right-4 top-4 z-50 flex animate-slide-in items-center gap-2 rounded-lg bg-success px-6 py-3 shadow-lg">
+          <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
               d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
               clipRule="evenodd"
             />
           </svg>
-          <span className="font-medium">영상이 성공적으로 저장되었습니다!</span>
+          <span className="text-body-m-bold text-white">영상이 성공적으로 저장되었습니다!</span>
         </div>
       )}
 
@@ -233,33 +238,32 @@ const VideoPage = () => {
           );
         })()}
 
-      <div className="flex h-full flex-col p-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">녹화된 영상</h1>
-          <p className="text-gray-600">발표 연습 영상을 선택해서 확인하세요</p>
+      {isLoading ? (
+        <div className="flex h-full items-center justify-center">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-main border-t-transparent" />
         </div>
-
-        {isLoading ? (
-          <div className="flex items-center justify-center flex-1">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent" />
+      ) : !hasVideos ? (
+        <div className="flex h-full items-center justify-center">
+          <RecordingEmptySection onStart={handleStart} />
+        </div>
+      ) : (
+        <div className="flex h-full flex-col px-18 py-8">
+          <div className="mb-6 flex flex-col gap-1">
+            <h1 className="text-body-l-bold text-gray-800">녹화된 영상</h1>
+            <p className="text-body-s text-gray-600">발표 연습 영상을 선택해서 확인하세요</p>
           </div>
-        ) : !hasVideos ? (
-          <div className="flex flex-1 items-center justify-center">
-            <RecordingEmptySection onStart={handleStart} />
-          </div>
-        ) : (
-          <div className="flex-1">
-            <div className="mb-4 flex justify-between items-center">
-              <p className="text-sm text-gray-600">총 {videos.length}개의 영상</p>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <p className="text-body-s text-gray-600">총 {videos.length}개의 영상</p>
               <button
                 onClick={handleStart}
-                className="bg-blue-500 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-600 transition"
+                className="flex items-center gap-2 rounded-lg bg-main px-6 py-2.5 text-body-m-bold text-white transition-colors hover:bg-main-variant2"
               >
                 영상 녹화하기
               </button>
             </div>
 
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {videos.map((video) => {
                 const safeVideoSrc = getSafeVideoSrc(video);
                 const safeThumbnail = getSafeThumbnailUrl(video.thumbnailUrl);
@@ -268,21 +272,21 @@ const VideoPage = () => {
                   <div
                     key={video.id}
                     onClick={() => handleVideoClick(video)}
-                    className="bg-white rounded-lg p-4 shadow hover:shadow-md transition cursor-pointer group relative"
+                    className="group relative cursor-pointer overflow-hidden rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-md"
                   >
                     {video.status === 'processing' && (
-                      <div className="absolute top-2 right-2 z-10 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                      <div className="absolute right-2 top-2 z-10 rounded-full bg-warning px-2 py-1 text-caption-bold text-white">
                         처리 중
                       </div>
                     )}
 
-                    <div className="aspect-video bg-gray-200 rounded mb-3 flex items-center justify-center relative overflow-hidden">
+                    <div className="relative flex aspect-video items-center justify-center overflow-hidden bg-gray-200">
                       {safeVideoSrc ? (
                         <>
-                          <video src={safeVideoSrc} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                          <video src={safeVideoSrc} className="h-full w-full object-cover" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                             <svg
-                              className="w-16 h-16 text-white"
+                              className="h-16 w-16 text-white"
                               fill="currentColor"
                               viewBox="0 0 20 20"
                             >
@@ -294,11 +298,11 @@ const VideoPage = () => {
                         <img
                           src={safeThumbnail}
                           alt={video.title}
-                          className="w-full h-full object-cover"
+                          className="h-full w-full object-cover"
                         />
                       ) : (
                         <svg
-                          className="w-12 h-12 text-gray-400"
+                          className="h-12 w-12 text-gray-400"
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
@@ -306,26 +310,29 @@ const VideoPage = () => {
                         </svg>
                       )}
                     </div>
-                    <h3 className="font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition">
-                      {video.title}
-                    </h3>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <span>{video.slideCount}개 슬라이드</span>
-                      <span>•</span>
-                      <span>{video.durationSeconds}초</span>
-                      <span>•</span>
-                      <span>{(video.size / 1024 / 1024).toFixed(2)} MB</span>
+
+                    <div className="flex flex-col gap-1 p-4">
+                      <h3 className="text-body-m-bold text-gray-800 transition-colors group-hover:text-main">
+                        {video.title}
+                      </h3>
+                      <div className="flex items-center gap-2 text-caption text-gray-600">
+                        <span>{video.slideCount}개 슬라이드</span>
+                        <span>•</span>
+                        <span>{video.durationSeconds}초</span>
+                        <span>•</span>
+                        <span>{(video.size / 1024 / 1024).toFixed(2)} MB</span>
+                      </div>
+                      <p className="text-caption text-gray-400">
+                        {new Date(video.createdAt).toLocaleString('ko-KR')}
+                      </p>
                     </div>
-                    <p className="text-xs text-gray-400 mt-2">
-                      {new Date(video.createdAt).toLocaleString('ko-KR')}
-                    </p>
                   </div>
                 );
               })}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
