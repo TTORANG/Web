@@ -25,7 +25,7 @@ let presentations: Presentation[] = [...MOCK_PROJECTS];
 
 // 영상 피드백 데이터 저장소
 const videoFeedbacks: Map<string, VideoFeedback> = new Map([
-  [MOCK_VIDEO.videoId, structuredClone(MOCK_VIDEO)],
+  [String(MOCK_VIDEO.videoId), structuredClone(MOCK_VIDEO)],
 ]);
 
 // 슬라이드별 스크립트 버전 저장소 (slides의 history로 초기화)

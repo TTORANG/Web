@@ -17,8 +17,6 @@ import type {
   CommentDeletedPayload,
   ErrorPayload,
   JoinProjectPayload,
-  JoinedProjectResponse,
-  LeftProjectResponse,
   NewCommentPayload,
   NewReactionPayload,
   ReactionCountUpdatedPayload,

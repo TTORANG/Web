@@ -15,7 +15,6 @@ import type {
   NewCommentPayload,
   NewReactionPayload,
   ReactionCountUpdatedPayload,
-  ReactionRemovedPayload,
 } from '@/types/websocket';
 import { showToast } from '@/utils/toast';
 

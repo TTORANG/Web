@@ -16,7 +16,7 @@ let socket: Socket | null = null;
 export const initializeSocket = (token?: string | null, sessionId?: string): Socket => {
   // 이미 연결된 소켓이 있으면 재사용
   if (socket?.connected) {
-    console.log('[Socket.io] Already connected, reusing existing connection');
+    //console.log('[Socket.io] Already connected, reusing existing connection');
     return socket;
   }
 
@@ -40,19 +40,19 @@ export const initializeSocket = (token?: string | null, sessionId?: string): Soc
 
   // 연결 이벤트 핸들러
   socket.on('connect', () => {
-    console.log('[Socket.io] Connected:', socket?.id);
+    //console.log('[Socket.io] Connected:', socket?.id);
   });
 
   socket.on('disconnect', (reason) => {
-    console.log('[Socket.io] Disconnected:', reason);
+    //console.log('[Socket.io] Disconnected:', reason);
   });
 
   socket.on('connect_error', (error) => {
-    console.error('[Socket.io] Connection error:', error.message);
+    //console.error('[Socket.io] Connection error:', error.message);
   });
 
   socket.on('error', (error) => {
-    console.error('[Socket.io] Error:', error);
+    //console.error('[Socket.io] Error:', error);
   });
 
   return socket;
@@ -70,7 +70,7 @@ export const getSocket = (): Socket | null => {
  */
 export const disconnectSocket = (): void => {
   if (socket) {
-    console.log('[Socket.io] Disconnecting...');
+    //console.log('[Socket.io] Disconnecting...');
     socket.disconnect();
     socket = null;
   }
@@ -82,12 +82,12 @@ export const disconnectSocket = (): void => {
  */
 export const joinProject = (projectId: string): void => {
   if (!socket?.connected) {
-    console.warn('[Socket.io] Cannot join project - not connected');
+    //console.warn('[Socket.io] Cannot join project - not connected');
     return;
   }
 
   socket.emit('join-project', { projectId });
-  console.log('[Socket.io] Joining project:', projectId);
+  //console.log('[Socket.io] Joining project:', projectId);
 };
 
 /**
@@ -96,12 +96,12 @@ export const joinProject = (projectId: string): void => {
  */
 export const leaveProject = (projectId: string): void => {
   if (!socket?.connected) {
-    console.warn('[Socket.io] Cannot leave project - not connected');
+    //console.warn('[Socket.io] Cannot leave project - not connected');
     return;
   }
 
   socket.emit('leave-project', { projectId });
-  console.log('[Socket.io] Leaving project:', projectId);
+  //console.log('[Socket.io] Leaving project:', projectId);
 };
 
 /**
@@ -109,7 +109,7 @@ export const leaveProject = (projectId: string): void => {
  */
 export const getRooms = (): void => {
   if (!socket?.connected) {
-    console.warn('[Socket.io] Cannot get rooms - not connected');
+    //console.warn('[Socket.io] Cannot get rooms - not connected');
     return;
   }
 

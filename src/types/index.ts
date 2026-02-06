@@ -38,8 +38,9 @@ export type { Slide } from './slide';
 // Theme
 export type { ThemeMode } from './theme';
 
-// Upload
-export type { UploadState } from './uploadFile';
+// Upload _
+//export type { UploadState } from './uploadFile';
+export type { UploadStep } from './uploadFile';
 
 // WebSocket
 export type {
@@ -56,4 +57,3 @@ export type {
   SocketAuthConfig,
 } from './websocket';
 export { ClientEvents, ServerEvents } from './websocket';
-export type { UploadStep } from './uploadFile';
