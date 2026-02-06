@@ -17,7 +17,8 @@ import { MOCK_SLIDES } from './slides';
 import { MOCK_USERS } from './users';
 import { MOCK_VIDEO } from './videos';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const envBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const BASE_URL = envBaseUrl.replace(/\/$/, '');
 
 // 메모리 내 데이터 저장소 (상태 유지)
 let slides: Slide[] = [...MOCK_SLIDES];
