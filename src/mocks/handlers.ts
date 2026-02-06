@@ -276,16 +276,34 @@ export const handlers = [
     const { slideId } = params;
     console.log(`[MSW] GET /presentations/slides/${slideId}`);
 
-    const slide = slides.find((s) => s.slideId === slideId);
+    const slideIndex = slides.findIndex((s) => s.slideId === slideId);
 
-    if (!slide) {
+    if (slideIndex === -1) {
       return new HttpResponse(null, {
         status: 404,
         statusText: 'Slide not found',
       });
     }
 
-    return HttpResponse.json(wrapResponse(slide));
+    const slide = slides[slideIndex];
+    const sameProjectSlides = slides.filter((s) => s.projectId === slide.projectId);
+    const indexInProject = sameProjectSlides.findIndex((s) => s.slideId === slideId);
+
+    return HttpResponse.json(
+      wrapResponse({
+        slideId: slide.slideId,
+        projectId: slide.projectId,
+        title: slide.title,
+        slideNum: slide.slideNum,
+        imageUrl: slide.imageUrl,
+        prevSlideId: indexInProject > 0 ? sameProjectSlides[indexInProject - 1].slideId : null,
+        nextSlideId:
+          indexInProject < sameProjectSlides.length - 1
+            ? sameProjectSlides[indexInProject + 1].slideId
+            : null,
+        updatedAt: slide.updatedAt,
+      }),
+    );
   }),
 
   /**
