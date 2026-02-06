@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Layout, Logo, Modal } from '@/components/common';
-import { DeviceTestSection, RecordingSection } from '@/components/video';
+import { DeviceTestSection, RecordingSection, StopButton } from '@/components/video';
 import { usePresentation } from '@/hooks/queries/usePresentations';
 import { useVideoUpload } from '@/hooks/useVideoUpload';
 
@@ -151,12 +151,7 @@ export default function VideoRecordPage() {
         </>
       }
       right={
-        <button
-          onClick={handleExitClick}
-          className="flex items-center px-4 py-1.5 text-caption-bold text-white hover:text-gray-400 transition-colors"
-        >
-          {step === 'RECORDING' ? '녹화 중단' : '종료'}
-        </button>
+        <StopButton label={step === 'RECORDING' ? '녹화 중단' : '종료'} onClick={handleExitClick} />
       }
     >
       <div className="relative h-full w-full bg-[#1a1c21]">
@@ -228,26 +223,26 @@ export default function VideoRecordPage() {
           title={step === 'RECORDING' ? '녹화 중단' : '테스트 종료'}
           size="sm"
         >
-          <div className="flex flex-col gap-6 p-4">
-            <p className="text-sm text-gray-600">
-              {step === 'RECORDING'
-                ? '녹화를 중단하시겠습니까? 저장되지 않은 데이터는 삭제됩니다.'
-                : '테스트를 종료하시겠습니까?'}
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setIsExitModalOpen(false)}
-                className="flex-1 rounded-md bg-gray-100 py-3 text-sm font-bold text-gray-600 hover:bg-gray-200"
-              >
-                취소
-              </button>
-              <button
-                onClick={handleConfirmExit}
-                className="flex-1 rounded-md bg-red-500 py-3 text-sm font-bold text-white hover:bg-red-600"
-              >
-                종료
-              </button>
-            </div>
+          <p className="text-body-m">
+            {step === 'RECORDING'
+              ? '녹화를 중단하시겠습니까? 저장되지 않은 데이터는 삭제됩니다.'
+              : '테스트를 종료하시겠습니까?'}
+          </p>
+          <div className="mt-7 flex gap-3">
+            <button
+              onClick={() => setIsExitModalOpen(false)}
+              className="flex-1 rounded-md bg-gray-100 py-3 font-bold text-gray-600 hover:bg-gray-200 transition-colors"
+              type="button"
+            >
+              취소
+            </button>
+            <button
+              onClick={handleConfirmExit}
+              className="flex-1 rounded-md bg-error py-3 font-bold text-white hover:bg-error/90 transition-colors"
+              type="button"
+            >
+              종료
+            </button>
           </div>
         </Modal>
       </div>

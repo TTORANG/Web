@@ -2,11 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import IconArrowLeft from '@/assets/icons/icon-arrow-left.svg?react';
 import IconArrowRight from '@/assets/icons/icon-arrow-right.svg?react';
-import IconStop from '@/assets/icons/icon-stop.svg?react';
 import { Logo, PresentationTitleEditor, SlideImage } from '@/components/common';
 import { useSlides } from '@/hooks/queries/useSlides';
 
 import { useRecorder } from '../../hooks/useRecorder';
+import StopButton from './StopButton';
 
 interface SlideData {
   page: number;
@@ -186,14 +186,11 @@ export const RecordingSection = ({ projectId, initialStream, onFinish }: Recordi
               {formatTime(totalSeconds)}
             </span>
           </div>
-          <button
-            onClick={handleFinish}
+          <StopButton
+            label={isFinishing ? '처리중' : '종료'}
             disabled={!isRecording || isFinishing}
-            className="flex items-center gap-1 rounded-full bg-gray-400 py-1.5 pl-3 pr-2 transition-colors hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <span className="text-caption-bold text-black">{isFinishing ? '처리중' : '종료'}</span>
-            {!isFinishing && <IconStop className="h-4 w-4 text-black" />}
-          </button>
+            onClick={handleFinish}
+          />
         </div>
       </header>
 
