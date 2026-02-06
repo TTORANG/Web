@@ -16,6 +16,7 @@ import { formatRelativeTime } from '@/utils/format';
 
 import { Dropdown, type DropdownItem } from '../common/Dropdown';
 import DeletePresentationModal from './DeletePresentationModal';
+import RenamePresentationModal from './RenamePresentationModal';
 
 type Props = Presentation & {
   highlightQuery?: string;
@@ -94,19 +95,17 @@ function PresentationList({
     usePresentationDeletion(projectId);
 
   const {
-    isRenaming,
-    isUpdating,
+    isRenameModalOpen,
+    isPending: isRenamePending,
     displayTitle,
     newTitle,
     setNewTitle,
-    inputRef,
-    startRenaming,
-    handleSubmit,
-    cancelRenaming,
+    openRenameModal,
+    closeRenameModal,
+    confirmRename,
   } = useRename({ projectId, initialTitle: title });
 
   const handleListClick = () => {
-    if (isRenaming) return;
     navigate(getTabPath(projectId, 'slide'));
   };
 
@@ -114,7 +113,7 @@ function PresentationList({
     {
       id: 'rename',
       label: '이름 변경',
-      onClick: startRenaming,
+      onClick: openRenameModal,
     },
     {
       id: 'delete',
@@ -128,10 +127,7 @@ function PresentationList({
     <>
       <article
         onClick={handleListClick}
-        className={clsx(
-          'flex w-full items-center justify-between bg-white px-5 py-4 rounded-2xl border border-gray-200 transition-shadow',
-          !isRenaming && 'cursor-pointer hover:shadow-lg',
-        )}
+        className="flex w-full items-center justify-between bg-white px-5 py-4 rounded-2xl border border-gray-200 transition-shadow cursor-pointer hover:shadow-lg"
       >
         {/* 썸네일 */}
         <div className="w-35 h-19.5 shrink-0 overflow-hidden rounded-lg bg-gray-200">
@@ -148,46 +144,7 @@ function PresentationList({
         <div className="flex flex-1 items-center justify-between pl-6">
           <div className="flex flex-col gap-0.5">
             {/* 제목 */}
-            {isRenaming ? (
-              <form
-                onSubmit={handleSubmit}
-                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm max-w-md w-full overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      cancelRenaming();
-                    }
-                  }}
-                  disabled={isUpdating}
-                  className={clsx(
-                    'flex-1 min-w-0 text-body-m-bold text-gray-800',
-                    'focus:outline-none',
-                    'disabled:opacity-50 disabled:cursor-not-allowed',
-                    'placeholder:text-gray-400',
-                  )}
-                  placeholder="발표 제목을 입력하세요"
-                />
-                <button
-                  type="submit"
-                  disabled={isUpdating}
-                  className={clsx(
-                    'px-2 py-1 text-caption-bold text-white bg-main rounded-full shrink-0',
-                    'hover:bg-blue-600 transition-colors',
-                    'disabled:opacity-50 disabled:cursor-not-allowed',
-                  )}
-                >
-                  {isUpdating ? '저장 중...' : '저장'}
-                </button>
-              </form>
-            ) : (
-              <div className="truncate text-body-m-bold text-gray-800">{displayTitle}</div>
-            )}
+            <div className="truncate text-body-m-bold text-gray-800">{displayTitle}</div>
 
             {/* 메타 정보 */}
             <div className="flex items-center gap-4 text-caption text-gray-600">
@@ -218,22 +175,20 @@ function PresentationList({
           </div>
 
           {/* 더보기 */}
-          {!isRenaming && (
-            <div onClick={(e) => e.stopPropagation()} className="-m-2">
-              <Dropdown
-                trigger={({ isOpen }) => (
-                  <div className="p-2">
-                    <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-600')} />
-                  </div>
-                )}
-                items={dropdownItems}
-                position="bottom"
-                align="end"
-                ariaLabel="더보기"
-                menuClassName="w-32"
-              />
-            </div>
-          )}
+          <div onClick={(e) => e.stopPropagation()} className="-m-2">
+            <Dropdown
+              trigger={({ isOpen }) => (
+                <div className="p-2">
+                  <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-600')} />
+                </div>
+              )}
+              items={dropdownItems}
+              position="bottom"
+              align="end"
+              ariaLabel="더보기"
+              menuClassName="w-32"
+            />
+          </div>
         </div>
       </article>
 
@@ -245,6 +200,18 @@ function PresentationList({
           isPending={isPending}
           onClose={closeDeleteModal}
           onConfirm={confirmDelete}
+        />
+      </div>
+
+      {/* 이름 변경 모달 */}
+      <div onClick={(e) => e.stopPropagation()}>
+        <RenamePresentationModal
+          isOpen={isRenameModalOpen}
+          currentTitle={newTitle}
+          isPending={isRenamePending}
+          onClose={closeRenameModal}
+          onConfirm={confirmRename}
+          onTitleChange={setNewTitle}
         />
       </div>
     </>

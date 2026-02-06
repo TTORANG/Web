@@ -13,6 +13,7 @@ import clsx from 'clsx';
 
 import ArrowDownIcon from '@/assets/icons/icon-arrow-down.svg?react';
 import { Popover } from '@/components/common/Popover';
+import { TextField } from '@/components/common/TextField';
 import { usePresentation, useUpdatePresentation } from '@/hooks/queries/usePresentations';
 import { showToast } from '@/utils/toast';
 
@@ -90,7 +91,7 @@ export function PresentationTitleEditor({ readOnly }: PresentationTitleEditorPro
     >
       {({ close }) => (
         <>
-          <input
+          <TextField
             value={editTitle}
             autoFocus
             onChange={(e) => setEditTitle(e.target.value)}
@@ -103,12 +104,7 @@ export function PresentationTitleEditor({ readOnly }: PresentationTitleEditorPro
             disabled={isPending}
             aria-label="발표 이름"
             placeholder="발표 제목을 입력하세요"
-            className={clsx(
-              'h-9 flex-1 rounded-md border border-gray-200 px-3 text-sm text-gray-800 outline-none',
-              'focus:border-main focus-visible:outline-2 focus-visible:outline-main',
-              'placeholder:text-gray-400',
-              'disabled:opacity-50 disabled:cursor-not-allowed',
-            )}
+            className="h-9 flex-1 text-sm"
           />
           <button
             type="button"

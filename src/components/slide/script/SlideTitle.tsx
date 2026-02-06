@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 
 import ArrowDownIcon from '@/assets/icons/icon-arrow-down.svg?react';
-import { Popover } from '@/components/common';
+import { Popover, TextField } from '@/components/common';
 import { useSlideActions, useSlideId, useSlideTitle, useUpdateSlide } from '@/hooks';
 
 interface SlideTitleProps {
@@ -85,7 +85,7 @@ export default function SlideTitle({
     >
       {({ close }) => (
         <>
-          <input
+          <TextField
             value={editTitle}
             onChange={(e) => setEditTitle(e.target.value)}
             onKeyDown={(e) => {
@@ -96,7 +96,7 @@ export default function SlideTitle({
               }
             }}
             aria-label="슬라이드 이름"
-            className="h-9 flex-1 rounded-md border border-gray-200 px-3 text-sm text-gray-800 outline-none focus:border-main focus-visible:outline-2 focus-visible:outline-main"
+            className="h-9 flex-1 text-sm"
           />
           <button
             type="button"
