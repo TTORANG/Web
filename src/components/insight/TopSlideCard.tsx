@@ -31,7 +31,7 @@ export default function TopSlideCard({ title, thumbUrl, reactionMetrics }: TopSl
       {/* 콘텐츠 */}
       <div className="flex flex-col gap-4 bg-white px-4 pb-4 pt-3">
         <span className="truncate text-body-m-bold text-gray-800">{title}</span>
-        <div className="flex flex-col gap-2">
+        <div className="flex min-h-15 flex-col gap-2">
           {topReactions.map((reaction) => (
             <div
               key={reaction.type}
