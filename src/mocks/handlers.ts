@@ -538,7 +538,7 @@ const commentHandlers = [
     const { commentId } = params as { commentId: string };
     const body = (await request.json()) as { content: string };
 
-    // 부모 댓글 존재 확인
+    // 부모 댓글의 slideId 탐색 (slideComments → commentReplies 순)
     let parentSlideId = '';
     for (const [sid, comments] of slideComments) {
       if (comments.some((c) => c.id === commentId)) {
@@ -547,7 +547,6 @@ const commentHandlers = [
       }
     }
     if (!parentSlideId) {
-      // 답글의 답글일 수도 있으므로 commentReplies에서도 검색
       for (const replies of commentReplies.values()) {
         const found = replies.find((r) => r.id === commentId);
         if (found) {
@@ -556,7 +555,8 @@ const commentHandlers = [
         }
       }
     }
-    if (!parentSlideId) return fail(404, 'C001', '댓글을 찾을 수 없습니다.');
+    // 옵티미스틱 UI에서 생성된 UUID로 요청할 수 있으므로, 못 찾아도 허용
+    if (!parentSlideId) parentSlideId = 'unknown';
 
     const id = nextId();
     const now = new Date().toISOString();
@@ -622,7 +622,9 @@ const commentHandlers = [
         return ok({ commentId, content: r.content, userId: r.userId, createdAt: r.createdAt });
       }
     }
-    return fail(404, 'C001', '댓글을 찾을 수 없습니다.');
+    // 옵티미스틱 UI에서 생성된 UUID로 요청할 수 있으므로, 못 찾아도 성공 처리
+    const now = new Date().toISOString();
+    return ok({ commentId, content: body.content, userId: MOCK_CURRENT_USER.id, createdAt: now });
   }),
 
   // 댓글 삭제
@@ -649,7 +651,8 @@ const commentHandlers = [
         return ok(null);
       }
     }
-    return fail(404, 'C001', '댓글을 찾을 수 없습니다.');
+    // 옵티미스틱 UI에서 생성된 UUID로 요청할 수 있으므로, 못 찾아도 성공 처리
+    return ok(null);
   }),
 
   // 영상 댓글 작성
