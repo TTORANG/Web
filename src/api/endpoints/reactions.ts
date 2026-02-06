@@ -1,39 +1,47 @@
-﻿/**
- * @file reactions.ts * @description Slide reaction APIs.
+/**
+ * @file reactions.ts
+ * @description 슬라이드 리액션 관련 API 엔드포인트
  */
 import { apiClient } from '@/api';
 import type { ToggleSlideReactionDto } from '@/api/dto';
-import type { ReactionCountDto } from '@/api/dto/reactions.dto';
-import type { ApiResponse } from '@/api/handlers';
-import type { Reaction } from '@/types/script';
+import type { ReactionCountDto, ToggleSlideReactionResponseDto } from '@/api/dto/reactions.dto';
+import type { ApiResponse } from '@/types/api';
 
 /**
- * Toggle a reaction for a slide.
  * 슬라이드 리액션 토글
  *
  * @param slideId - 슬라이드 ID
  * @param data - 리액션 데이터
- * @returns 업데이트된 리액션 배열
+ * @returns { active: boolean } - 토글 후 활성 상태
  */
 export async function toggleReaction(
   slideId: string,
   data: ToggleSlideReactionDto,
-): Promise<Reaction[]> {
-  const { data: response } = await apiClient.post<ApiResponse<Reaction[]>>(
+): Promise<ToggleSlideReactionResponseDto> {
+  const { data: response } = await apiClient.post<ApiResponse<ToggleSlideReactionResponseDto>>(
     `/slides/${slideId}/reactions/toggle`,
     data,
   );
-  return response.success;
+
+  if (response.resultType === 'SUCCESS') {
+    return response.success;
+  }
+  throw new Error(response.error.reason);
 }
 
 /**
- * Get reaction summary counts for a slide.
+ * 슬라이드 리액션 집계 조회
+ *
+ * @param slideId - 슬라이드 ID
+ * @returns Record<ReactionType, number> - 이모지별 카운트
  */
 export async function getSlideReactionSummary(slideId: string) {
   const { data } = await apiClient.get<ApiResponse<ReactionCountDto>>(
     `/slides/${slideId}/reactions/summary`,
   );
 
-  // ⚠️ 핵심: success 안에 있는 reactions 객체만 리턴! (없으면 빈 객체)
-  return data.success?.reactions ?? {};
+  if (data.resultType === 'SUCCESS') {
+    return data.success.reactions;
+  }
+  throw new Error(data.error.reason);
 }

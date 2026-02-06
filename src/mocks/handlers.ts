@@ -468,14 +468,14 @@ export const handlers = [
 
   /**
    * 리액션 토글
-   * POST /slides/:slideId/reactions
+   * POST /slides/:slideId/reactions/toggle
    */
-  http.post(`${BASE_URL}/slides/:slideId/reactions`, async ({ params, request }) => {
+  http.post(`${BASE_URL}/slides/:slideId/reactions/toggle`, async ({ params, request }) => {
     await delay(100);
 
     const { slideId } = params;
     const { type } = (await request.json()) as { type: string };
-    console.log(`[MSW] POST /slides/${slideId}/reactions`, type);
+    console.log(`[MSW] POST /slides/${slideId}/reactions/toggle`, type);
 
     const slideIndex = slides.findIndex((s) => s.id === slideId);
 
@@ -488,9 +488,9 @@ export const handlers = [
 
     const slide = slides[slideIndex];
     const reactionIndex = slide.emojiReactions.findIndex((r) => r.type === type);
+    let active = false;
 
     if (reactionIndex !== -1) {
-      // 이미 있으면 토글 (count 증감, active 토글)
       const currentReaction = slide.emojiReactions[reactionIndex];
       if (currentReaction.active) {
         currentReaction.count = Math.max(0, currentReaction.count - 1);
@@ -499,9 +499,37 @@ export const handlers = [
         currentReaction.count += 1;
         currentReaction.active = true;
       }
+      active = currentReaction.active;
     }
 
-    return HttpResponse.json(wrapResponse(slide.emojiReactions));
+    return HttpResponse.json(wrapResponse({ active }));
+  }),
+
+  /**
+   * 리액션 집계 조회
+   * GET /slides/:slideId/reactions/summary
+   */
+  http.get(`${BASE_URL}/slides/:slideId/reactions/summary`, async ({ params }) => {
+    await delay(100);
+
+    const { slideId } = params;
+    console.log(`[MSW] GET /slides/${slideId}/reactions/summary`);
+
+    const slide = slides.find((s) => s.id === slideId);
+
+    if (!slide) {
+      return new HttpResponse(null, {
+        status: 404,
+        statusText: 'Slide not found',
+      });
+    }
+
+    const reactions: Record<string, number> = {};
+    for (const r of slide.emojiReactions) {
+      reactions[r.type] = r.count;
+    }
+
+    return HttpResponse.json(wrapResponse({ slideId, reactions }));
   }),
 
   /**
@@ -541,6 +569,7 @@ export const handlers = [
     }
 
     // 리액션 토글
+    let active = false;
     const reactionIndex = targetFeedback.reactions.findIndex((r) => r.type === type);
     if (reactionIndex !== -1) {
       const currentReaction = targetFeedback.reactions[reactionIndex];
@@ -551,14 +580,10 @@ export const handlers = [
         currentReaction.count += 1;
         currentReaction.active = true;
       }
+      active = currentReaction.active;
     }
 
-    return HttpResponse.json(
-      wrapResponse({
-        timestamp: targetFeedback.timestamp,
-        reactions: targetFeedback.reactions,
-      }),
-    );
+    return HttpResponse.json(wrapResponse({ active }));
   }),
 
   /**
