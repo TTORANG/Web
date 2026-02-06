@@ -129,19 +129,16 @@ function Comment({ comment, isIndented = false }: CommentProps) {
                     type="button"
                     onClick={handleToggleEdit}
                     aria-label="댓글 수정"
-                    className="flex items-center gap-1 rounded text-caption-bold text-white/80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)] hover:text-white active:opacity-80 focus-visible:outline-2 focus-visible:outline-gray-400"
+                    className="flex items-center gap-1 rounded text-caption-bold text-[#FFFFFF] hover:text-[rgba(255,255,255,0.8)] active:opacity-80 focus-visible:outline-2 focus-visible:outline-gray-400"
                   >
                     수정
-                    <ModifyIcon
-                      className="h-4 w-4 drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]"
-                      aria-hidden="true"
-                    />
+                    <ModifyIcon className="h-4 w-4" aria-hidden="true" />
                   </button>
                   <button
                     type="button"
                     onClick={handleDelete}
                     aria-label="댓글 삭제"
-                    className="flex items-center gap-1 rounded text-caption-bold text-error active:opacity-80 focus-visible:outline-2 focus-visible:outline-error"
+                    className="flex items-center gap-1 rounded text-caption-bold text-error hover:text-red-400 active:opacity-80 focus-visible:outline-2 focus-visible:outline-error"
                   >
                     삭제
                     <RemoveIcon className="h-4 w-4" aria-hidden="true" />
