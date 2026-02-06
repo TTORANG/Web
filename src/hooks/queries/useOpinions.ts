@@ -1,13 +1,20 @@
 /**
  * 의견 관련 TanStack Query 훅
+ * @deprecated 이 파일은 사용되지 않습니다. useComments.ts 사용 권장
+ *
+ * 실제 API 엔드포인트가 존재하지 않아 동작하지 않음
+ * 대신 사용: src/hooks/useComments.ts
  */
+
+/* ⚠️ LEGACY CODE - 사용되지 않음
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { updateComment } from '@/api/endpoints/comments';
 import { type CreateOpinionRequest, createOpinion, deleteOpinion } from '@/api/endpoints/opinions';
 import { queryKeys } from '@/api/queryClient';
 
-/** 의견 추가 */
+/** 의견 추가 *\/
 export function useCreateOpinion() {
   const queryClient = useQueryClient();
 
@@ -22,7 +29,7 @@ export function useCreateOpinion() {
   });
 }
 
-/** 의견 삭제 */
+/** 의견 삭제 *\/
 export function useDeleteOpinion() {
   const queryClient = useQueryClient();
 
@@ -36,7 +43,7 @@ export function useDeleteOpinion() {
   });
 }
 
-/** 의견 수정 */
+/** 의견 수정 *\/
 export function useUpdateOpinion() {
   const queryClient = useQueryClient();
 
@@ -56,3 +63,5 @@ export function useUpdateOpinion() {
     },
   });
 }
+
+*/
