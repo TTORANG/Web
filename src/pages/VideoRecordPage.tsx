@@ -146,7 +146,7 @@ export default function VideoRecordPage() {
       theme="dark"
       left={
         <>
-          <Logo />
+          <Logo onClick={handleExitClick} />
           <span className="text-body-m-bold text-white">영상 녹화</span>
         </>
       }
@@ -154,7 +154,7 @@ export default function VideoRecordPage() {
         <StopButton label={step === 'RECORDING' ? '녹화 중단' : '종료'} onClick={handleExitClick} />
       }
     >
-      <div className="relative h-full w-full bg-[#1a1c21]">
+      <div className="relative h-full w-full bg-white">
         {step === 'TEST' ? (
           <div className="h-full w-full flex items-center justify-center">
             <DeviceTestSection onComplete={handleTestComplete} />
@@ -166,10 +166,11 @@ export default function VideoRecordPage() {
                 projectId={projectId!}
                 initialStream={camStream}
                 onFinish={handleRecordingFinish}
+                onExitClick={handleExitClick}
               />
 
               {isUploading && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-10001">
+                <div className="fixed inset-0 z-80 bg-black/80 backdrop-blur-sm flex items-center justify-center">
                   <div className="bg-white rounded-2xl p-8 flex flex-col items-center gap-6 min-w-[380px] max-w-[480px] shadow-2xl">
                     <div className="relative">
                       <div className="w-16 h-16 border-4 border-blue-100 rounded-full" />

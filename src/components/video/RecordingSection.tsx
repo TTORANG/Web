@@ -18,9 +18,15 @@ interface RecordingSectionProps {
   projectId: string;
   initialStream: MediaStream;
   onFinish: (videoBlob: Blob, durations: { [key: number]: number }) => void;
+  onExitClick?: () => void;
 }
 
-export const RecordingSection = ({ projectId, initialStream, onFinish }: RecordingSectionProps) => {
+export const RecordingSection = ({
+  projectId,
+  initialStream,
+  onFinish,
+  onExitClick,
+}: RecordingSectionProps) => {
   const slideImgRef = useRef<HTMLImageElement | null>(null);
   const logContainerRef = useRef<HTMLDivElement>(null);
 
@@ -155,12 +161,12 @@ export const RecordingSection = ({ projectId, initialStream, onFinish }: Recordi
   }, [isFinishing, isRecording, stopRecording, recordedChunks, slideProgress, onFinish]);
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-white">
+    <div className="fixed inset-0 z-60 bg-white">
       {/* Header */}
-      <header className="fixed left-0 top-0 z-[10000] flex h-15 w-full items-center justify-between border-b border-gray-400 bg-gray-200 px-18">
+      <header className="fixed left-0 top-0 z-70 flex h-15 w-full items-center justify-between border-b border-gray-200 bg-white px-18">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-6">
-            <Logo />
+            <Logo onClick={onExitClick} />
             <PresentationTitleEditor readOnly />
           </div>
           <div className="flex items-center gap-2">
@@ -248,7 +254,7 @@ export const RecordingSection = ({ projectId, initialStream, onFinish }: Recordi
         </section>
 
         {/* Sidebar */}
-        <aside className="flex w-96 shrink-0 flex-col gap-6 bg-gray-200 px-4 py-6">
+        <aside className="flex w-96 shrink-0 flex-col gap-6 bg-gray-100 px-4 py-6">
           {/* Next Slide Preview */}
           <div className="flex flex-col gap-2">
             <h3 className="text-body-s-bold text-gray-800">다음 슬라이드</h3>
