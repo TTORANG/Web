@@ -21,3 +21,4 @@ export { default as ListView } from './ListView';
 export { default as CardView } from './CardView';
 export { default as EmojiConfetti } from './EmojiConfetti';
 export { TextField } from './TextField';
+export { TitleEditorPopover } from './TitleEditorPopover';
