@@ -1,4 +1,3 @@
-import type { CommentResponseDto, CommentWithUserDto } from '@/api/dto';
 import type { Comment, CreateCommentInput } from '@/types/comment';
 
 /**
