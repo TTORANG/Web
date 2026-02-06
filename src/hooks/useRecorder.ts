@@ -59,6 +59,28 @@ export const useRecorder = () => {
     [],
   );
 
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current?.state !== 'inactive') {
+      mediaRecorderRef.current?.stop();
+    }
+
+    if (requestRef.current) {
+      cancelAnimationFrame(requestRef.current);
+      requestRef.current = null;
+    }
+
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.srcObject = null;
+      if (videoRef.current.parentNode) {
+        document.body.removeChild(videoRef.current);
+      }
+      videoRef.current = null;
+    }
+
+    setIsRecording(false);
+  }, []);
+
   const startRecording = useCallback(
     async (
       camStream: MediaStream,
@@ -128,28 +150,6 @@ export const useRecorder = () => {
     },
     [drawCanvas, stopRecording],
   );
-
-  const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current?.state !== 'inactive') {
-      mediaRecorderRef.current?.stop();
-    }
-
-    if (requestRef.current) {
-      cancelAnimationFrame(requestRef.current);
-      requestRef.current = null;
-    }
-
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.srcObject = null;
-      if (videoRef.current.parentNode) {
-        document.body.removeChild(videoRef.current);
-      }
-      videoRef.current = null;
-    }
-
-    setIsRecording(false);
-  }, []);
 
   return {
     canvasRef,
