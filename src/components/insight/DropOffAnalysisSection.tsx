@@ -15,34 +15,59 @@ export default function DropOffAnalysisSection({
   getThumb,
   showVideoDropOff = true,
 }: DropOffAnalysisSectionProps) {
+  const isSlideOnly = !showVideoDropOff; // !hasVideo 일때
   return (
     <div className="flex flex-wrap gap-4">
       {/* 슬라이드 이탈 */}
       <div className="flex min-w-80 flex-1 basis-160 flex-col gap-1 rounded-lg border border-gray-200 bg-white px-5 py-4">
         <h3 className="text-body-l-bold text-gray-800">가장 많이 이탈한 슬라이드</h3>
-        {dropOffSlides.map((item, idx) => (
-          <div
-            key={idx}
-            className={`flex h-24.75 items-center gap-6 py-4 pr-2 ${
-              idx < dropOffSlides.length - 1 ? 'border-b border-gray-200' : ''
-            }`}
-          >
-            <SlideThumb
-              src={getThumb(item.slideIndex)}
-              alt={`${item.label} 썸네일`}
-              className="h-16.75 w-30 shrink-0 rounded object-cover"
-              fallbackClassName="h-[67px] w-[120px] shrink-0 rounded bg-gray-200"
-            />
-            <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <span className="truncate text-body-m-bold text-gray-800">{item.label}</span>
-              <span className="text-caption text-gray-600">{item.desc}</span>
-            </div>
-            <div className="flex shrink-0 flex-col items-end">
-              <span className="text-body-l-bold text-error">{item.percent}%</span>
-              <span className="text-caption text-gray-600">이탈률</span>
-            </div>
+
+        {isSlideOnly ? (
+          // !hasVideo UI
+          <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-3">
+            {dropOffSlides.map((item, idx) => (
+              <div key={`${item.label}-${idx}`} className="flex flex-col items-center">
+                <SlideThumb
+                  src={getThumb(item.slideIndex)}
+                  alt={`${item.label} 썸네일`}
+                  className="aspect-video w-full rounded-lg object-cover"
+                  fallbackClassName="aspect-video w-full rounded-lg bg-gray-200"
+                />
+
+                <div className="mt-4 text-center">
+                  <p className="text-body-l-bold text-gray-800">{item.label}</p>
+                  <p className="mt-1 text-body-l-bold text-error">이탈률 {item.percent}%</p>
+                  <p className="mt-1 text-body-s text-gray-600">({item.desc})</p>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        ) : (
+          // hasVideo UI
+          dropOffSlides.map((item, idx) => (
+            <div
+              key={idx}
+              className={`flex h-24.75 items-center gap-6 py-4 pr-2 ${
+                idx < dropOffSlides.length - 1 ? 'border-b border-gray-200' : ''
+              }`}
+            >
+              <SlideThumb
+                src={getThumb(item.slideIndex)}
+                alt={`${item.label} 썸네일`}
+                className="h-16.75 w-30 shrink-0 rounded object-cover"
+                fallbackClassName="h-[67px] w-[120px] shrink-0 rounded bg-gray-200"
+              />
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <span className="truncate text-body-m-bold text-gray-800">{item.label}</span>
+                <span className="text-caption text-gray-600">{item.desc}</span>
+              </div>
+              <div className="flex shrink-0 flex-col items-end">
+                <span className="text-body-l-bold text-error">{item.percent}%</span>
+                <span className="text-caption text-gray-600">이탈률</span>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* 영상 구간 이탈 */}
