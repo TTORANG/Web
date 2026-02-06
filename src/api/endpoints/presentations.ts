@@ -5,7 +5,7 @@
  * 서버와 통신하는 함수들을 정의합니다.
  * 이 함수들은 직접 호출하지 않고, hooks/queries에서 사용합니다.
  */
-import { apiClient } from '@/api';
+import { apiClient } from '@/api/client';
 import type { UpdateProjectDto } from '@/api/dto';
 import type { ApiResponse, ConversionStatusResponse } from '@/types/api';
 import type {

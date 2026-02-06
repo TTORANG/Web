@@ -2,7 +2,7 @@
  * @file reactions.ts
  * @description 슬라이드 리액션 관련 API 엔드포인트
  */
-import { apiClient } from '@/api';
+import { apiClient } from '@/api/client';
 import type { ToggleSlideReactionDto } from '@/api/dto';
 import type { ReactionCountDto, ToggleSlideReactionResponseDto } from '@/api/dto/reactions.dto';
 import type { ApiResponse } from '@/types/api';

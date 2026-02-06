@@ -2,7 +2,7 @@
  * @file analytics.ts
  * @description 인사이트 페이지 관련 API 엔드포인트
  */
-import { apiClient } from '@/api';
+import { apiClient } from '@/api/client';
 import type {
   ProjectAnalyticsSummaryDto,
   SlideAnalyticsResponseDto,

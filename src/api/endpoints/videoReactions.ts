@@ -2,7 +2,7 @@
  * @file videoReactions.ts
  * @description 영상 리액션 관련 API 엔드포인트
  */
-import { apiClient } from '@/api';
+import { apiClient } from '@/api/client';
 import type {
   ToggleVideoReactionDto,
   ToggleVideoReactionResponseDto,

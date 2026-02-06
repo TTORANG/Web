@@ -1,7 +1,6 @@
 ﻿import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { useQuery } from '@tanstack/react-query';
 // 1. Recharts 컴포넌트 임포트
 import {
   Area,
@@ -13,8 +12,6 @@ import {
   YAxis,
 } from 'recharts';
 
-import { getSlideReactionSummary } from '@/api/endpoints/reactions';
-import { queryKeys } from '@/api/queryClient';
 import {
   DropOffAnalysisSection,
   FeedbackDistributionSection,
@@ -23,6 +20,7 @@ import {
   TopSlideCard,
 } from '@/components/insight';
 import { createDefaultReactions } from '@/constants/reaction';
+import { useSlideReactionSummaries } from '@/hooks/queries/useReactionQueries';
 import { useSlides } from '@/hooks/queries/useSlides';
 import {
   useProjectAnalyticsSummary,
@@ -202,11 +200,7 @@ export default function InsightPage() {
   }, [slideAnalytics, slideDataMaps]);
 
   const topSlideIds = useMemo(() => topSlides.map((item) => item.slideId), [topSlides]);
-  const { data: topSlideReactionSummaries } = useQuery({
-    queryKey: queryKeys.reactions.summary(topSlideIds.join('|')),
-    queryFn: () => Promise.all(topSlideIds.map((slideId) => getSlideReactionSummary(slideId))),
-    enabled: topSlideIds.length > 0,
-  });
+  const { data: topSlideReactionSummaries } = useSlideReactionSummaries(topSlideIds);
 
   const getThumb = (slideIndex: number) => slideList[slideIndex]?.imageUrl;
 
