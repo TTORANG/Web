@@ -5,9 +5,6 @@ interface TopSlideCardProps {
   title: string;
   thumbUrl?: string;
   reactionMetrics: Reaction[];
-  commentCount: number;
-  cardClassName: string;
-  thumbFallbackClassName: string;
 }
 
 export default function TopSlideCard({ title, thumbUrl, reactionMetrics }: TopSlideCardProps) {
