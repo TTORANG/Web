@@ -13,7 +13,13 @@ import { MOCK_CURRENT_USER } from '@/mocks/users';
 import type { Comment } from '@/types/comment';
 import type { ReactionType } from '@/types/script';
 import type { SlideListItem } from '@/types/slide';
-import { addReplyToFlat, createComment, deleteFromFlat } from '@/utils/comment';
+import {
+  addReplyToFlat,
+  createComment,
+  deleteFromFlat,
+  findRootParentId,
+  updateInFlat,
+} from '@/utils/comment';
 
 interface SlideState {
   slide: SlideListItem | null;
@@ -22,6 +28,7 @@ interface SlideState {
   updateSlide: (updates: Partial<SlideListItem>) => void;
   updateScript: (script: string) => void;
   deleteOpinion: (id: string) => void;
+  updateOpinion: (id: string, content: string) => void;
   addReply: (parentId: string, content: string) => void;
   toggleReaction: (type: ReactionType) => void;
   addOpinion: (content: string, slideIndex: number) => void;
@@ -72,18 +79,42 @@ export const useSlideStore = create<SlideState>()(
         );
       },
 
+      updateOpinion: (id, content) => {
+        set(
+          (state) => ({
+            slide: state.slide
+              ? {
+                  ...state.slide,
+                  opinions: updateInFlat(state.slide.opinions ?? [], id, content),
+                }
+              : null,
+          }),
+          false,
+          'slide/updateOpinion',
+        );
+      },
+
       addReply: (parentId, content) => {
         set(
           (state) => {
             if (!state.slide) return state;
 
+            // 항상 최상위 부모 댓글에 답글을 달도록 rootParentId를 찾음
+            const rootParentId = findRootParentId(state.slide.opinions ?? [], parentId);
+
+            const { comments: updatedOpinions } = addReplyToFlat(
+              state.slide.opinions ?? [],
+              rootParentId,
+              {
+                content,
+                authorId: MOCK_CURRENT_USER.id,
+              },
+            );
+
             return {
               slide: {
                 ...state.slide,
-                opinions: addReplyToFlat(state.slide.opinions ?? [], parentId, {
-                  content,
-                  authorId: MOCK_CURRENT_USER.id,
-                }),
+                opinions: updatedOpinions,
               },
             };
           },
