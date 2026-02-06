@@ -81,6 +81,13 @@ export function deleteFromFlat(comments: Comment[], targetId: string): Comment[]
 }
 
 /**
+ * 플랫 배열에서 댓글 수정
+ */
+export function updateInFlat(comments: Comment[], targetId: string, content: string): Comment[] {
+  return comments.map((c) => (c.id === targetId ? { ...c, content: content.trim() } : c));
+}
+
+/**
  * 중첩 배열에서 댓글 삭제
  */
 export function deleteFromTree(comments: Comment[], targetId: string): Comment[] {

@@ -11,6 +11,7 @@ import React, { useCallback } from 'react';
 import clsx from 'clsx';
 
 import FileIcon from '@/assets/icons/icon-document.svg?react';
+import ModifyIcon from '@/assets/icons/icon-modify.svg?react';
 import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
 import { MOCK_USERS } from '@/mocks/users';
@@ -41,6 +42,12 @@ function Comment({ comment, isIndented = false }: CommentProps) {
     toggleReply,
     submitReply,
     cancelReply,
+    editingId,
+    editDraft,
+    setEditDraft,
+    toggleEdit,
+    submitEdit,
+    cancelEdit,
     deleteComment,
     goToRef,
   } = useCommentContext();
@@ -49,7 +56,8 @@ function Comment({ comment, isIndented = false }: CommentProps) {
   const authorName = user?.name ?? '알 수 없음';
   const authorProfileImage = user?.profileImage;
 
-  const isActive = replyingToId === comment.id;
+  const isActive = replyingToId === comment.id || editingId === comment.id;
+  const isEditing = editingId === comment.id;
 
   const handleToggleReply = useCallback(() => {
     toggleReply(comment.id);
@@ -62,6 +70,14 @@ function Comment({ comment, isIndented = false }: CommentProps) {
   const handleDelete = useCallback(() => {
     deleteComment?.(comment.id);
   }, [deleteComment, comment.id]);
+
+  const handleToggleEdit = useCallback(() => {
+    toggleEdit(comment.id, comment.content);
+  }, [toggleEdit, comment.id, comment.content]);
+
+  const handleSubmitEdit = useCallback(() => {
+    submitEdit(comment.id);
+  }, [submitEdit, comment.id]);
 
   const handleGoToRef = useCallback(() => {
     if (comment.ref) {
@@ -108,64 +124,96 @@ function Comment({ comment, isIndented = false }: CommentProps) {
               </div>
 
               {comment.isMine && deleteComment && (
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  aria-label="댓글 삭제"
-                  className="flex items-center gap-1 rounded text-caption-bold text-error active:opacity-80 focus-visible:outline-2 focus-visible:outline-error"
-                >
-                  삭제
-                  <RemoveIcon className="h-4 w-4" aria-hidden="true" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleToggleEdit}
+                    aria-label="댓글 수정"
+                    className="flex items-center gap-1 rounded text-caption-bold text-white/80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)] hover:text-white active:opacity-80 focus-visible:outline-2 focus-visible:outline-gray-400"
+                  >
+                    수정
+                    <ModifyIcon
+                      className="h-4 w-4 drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]"
+                      aria-hidden="true"
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    aria-label="댓글 삭제"
+                    className="flex items-center gap-1 rounded text-caption-bold text-error active:opacity-80 focus-visible:outline-2 focus-visible:outline-error"
+                  >
+                    삭제
+                    <RemoveIcon className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </div>
               )}
             </div>
 
-            <div className="text-body-s text-black">
-              {comment.ref && (
-                <button
-                  type="button"
-                  onClick={handleGoToRef}
-                  className={clsx(
-                    'mr-2 inline-flex items-center align-middle rounded text-body-s-bold hover:underline focus-visible:outline-2 focus-visible:outline-main',
-                    comment.ref.kind === 'slide' ? 'text-main-variant1' : 'text-main',
-                  )}
-                  aria-label={
-                    comment.ref.kind === 'slide' ? `${refLabel}로 이동` : `영상 ${refLabel}로 이동`
-                  }
-                >
-                  {comment.ref.kind === 'slide' && (
-                    <FileIcon className="text-main-variant1" aria-hidden="true" />
-                  )}
-                  {comment.ref.kind === 'slide' ? <>&nbsp;</> : null}
-                  {refLabel}
-                </button>
-              )}
+            {!isEditing && (
+              <div className="text-body-s text-black">
+                {comment.ref && (
+                  <button
+                    type="button"
+                    onClick={handleGoToRef}
+                    className={clsx(
+                      'mr-2 inline-flex items-center align-middle rounded text-body-s-bold hover:underline focus-visible:outline-2 focus-visible:outline-main',
+                      comment.ref.kind === 'slide' ? 'text-main-variant1' : 'text-main',
+                    )}
+                    aria-label={
+                      comment.ref.kind === 'slide'
+                        ? `${refLabel}로 이동`
+                        : `영상 ${refLabel}로 이동`
+                    }
+                  >
+                    {comment.ref.kind === 'slide' && (
+                      <FileIcon className="text-main-variant1" aria-hidden="true" />
+                    )}
+                    {comment.ref.kind === 'slide' ? <>&nbsp;</> : null}
+                    {refLabel}
+                  </button>
+                )}
 
-              <span className="align-middle">{comment.content}</span>
+                <span className="align-middle">{comment.content}</span>
+              </div>
+            )}
+          </div>
+
+          {!isEditing && (
+            <div className="flex items-center">
+              <button
+                type="button"
+                onClick={handleToggleReply}
+                aria-expanded={isActive}
+                aria-label={`${authorName}에게 답글 달기`}
+                className={clsx(
+                  'flex items-center gap-1 rounded text-caption-bold transition focus-visible:outline-2 focus-visible:outline-main',
+                  isActive
+                    ? 'text-gray-400'
+                    : 'text-main hover:text-main-variant1 active:text-main-variant2',
+                )}
+              >
+                답글
+                <ReplyIcon className="h-4 w-4" aria-hidden="true" />
+              </button>
             </div>
-          </div>
-
-          <div className="flex items-center">
-            <button
-              type="button"
-              onClick={handleToggleReply}
-              aria-expanded={isActive}
-              aria-label={`${authorName}에게 답글 달기`}
-              className={clsx(
-                'flex items-center gap-1 rounded text-caption-bold transition focus-visible:outline-2 focus-visible:outline-main',
-                isActive
-                  ? 'text-gray-400'
-                  : 'text-main hover:text-main-variant1 active:text-main-variant2',
-              )}
-            >
-              답글
-              <ReplyIcon className="h-4 w-4" aria-hidden="true" />
-            </button>
-          </div>
+          )}
         </div>
       </div>
 
-      {isActive && (
+      {isEditing && (
+        <CommentInput
+          value={editDraft}
+          onChange={setEditDraft}
+          onSubmit={handleSubmitEdit}
+          onCancel={cancelEdit}
+          autoFocus
+          className="pb-4 pr-4 pl-15 bg-gray-200"
+          textareaClassName="text-body-s text-black"
+        />
+      )}
+
+      {replyingToId === comment.id && (
         <CommentInput
           value={replyDraft}
           onChange={setReplyDraft}

@@ -17,9 +17,11 @@ import { CommentProvider } from './CommentContext';
 
 export default function CommentPopover() {
   const opinions = useSlideOpinions();
-  const { deleteOpinion, addReply } = useSlideActions();
+  const { deleteOpinion, updateOpinion, addReply } = useSlideActions();
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState('');
 
   const submitReply = useCallback(
     (targetId: string) => {
@@ -42,6 +44,30 @@ export default function CommentPopover() {
     setReplyDraft('');
   }, []);
 
+  const toggleEdit = useCallback((commentId: string, currentContent: string) => {
+    setEditingId((prev) => (prev === commentId ? null : commentId));
+    setEditDraft(currentContent);
+    // 수정 모드 진입 시 답글 모드 취소
+    setReplyingToId(null);
+    setReplyDraft('');
+  }, []);
+
+  const submitEdit = useCallback(
+    (commentId: string) => {
+      if (editDraft.trim()) {
+        updateOpinion(commentId, editDraft);
+      }
+      setEditDraft('');
+      setEditingId(null);
+    },
+    [editDraft, updateOpinion],
+  );
+
+  const cancelEdit = useCallback(() => {
+    setEditingId(null);
+    setEditDraft('');
+  }, []);
+
   const contextValue = useMemo(
     () => ({
       replyingToId,
@@ -50,10 +76,28 @@ export default function CommentPopover() {
       toggleReply,
       submitReply,
       cancelReply,
+      editingId,
+      editDraft,
+      setEditDraft,
+      toggleEdit,
+      submitEdit,
+      cancelEdit,
       deleteComment: deleteOpinion,
       goToRef: () => {}, // 슬라이드 페이지에서는 ref 이동 불필요
     }),
-    [replyingToId, replyDraft, toggleReply, submitReply, cancelReply, deleteOpinion],
+    [
+      replyingToId,
+      replyDraft,
+      toggleReply,
+      submitReply,
+      cancelReply,
+      editingId,
+      editDraft,
+      toggleEdit,
+      submitEdit,
+      cancelEdit,
+      deleteOpinion,
+    ],
   );
 
   return (

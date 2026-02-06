@@ -18,6 +18,7 @@ interface CommentListProps {
   onAddReply: (targetId: string, content: string) => void;
   onGoToRef: (ref: NonNullable<CommentType['ref']>) => void;
   onDeleteComment?: (commentId: string) => void;
+  onUpdateComment?: (commentId: string, content: string) => void;
   isLoading?: boolean;
 }
 
@@ -28,10 +29,13 @@ export default function CommentList({
   onAddReply,
   onGoToRef,
   onDeleteComment,
+  onUpdateComment,
   isLoading = false,
 }: CommentListProps) {
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState('');
 
   const submitReply = useCallback(
     (targetId: string) => {
@@ -54,6 +58,30 @@ export default function CommentList({
     setReplyDraft('');
   }, []);
 
+  const toggleEdit = useCallback((commentId: string, currentContent: string) => {
+    setEditingId((prev) => (prev === commentId ? null : commentId));
+    setEditDraft(currentContent);
+    // 수정 모드 진입 시 답글 모드 취소
+    setReplyingToId(null);
+    setReplyDraft('');
+  }, []);
+
+  const submitEdit = useCallback(
+    (commentId: string) => {
+      if (editDraft.trim() && onUpdateComment) {
+        onUpdateComment(commentId, editDraft);
+      }
+      setEditDraft('');
+      setEditingId(null);
+    },
+    [editDraft, onUpdateComment],
+  );
+
+  const cancelEdit = useCallback(() => {
+    setEditingId(null);
+    setEditDraft('');
+  }, []);
+
   const contextValue = useMemo(
     () => ({
       replyingToId,
@@ -62,10 +90,29 @@ export default function CommentList({
       toggleReply,
       submitReply,
       cancelReply,
+      editingId,
+      editDraft,
+      setEditDraft,
+      toggleEdit,
+      submitEdit,
+      cancelEdit,
       deleteComment: onDeleteComment,
       goToRef: onGoToRef,
     }),
-    [replyingToId, replyDraft, toggleReply, submitReply, cancelReply, onDeleteComment, onGoToRef],
+    [
+      replyingToId,
+      replyDraft,
+      toggleReply,
+      submitReply,
+      cancelReply,
+      editingId,
+      editDraft,
+      toggleEdit,
+      submitEdit,
+      cancelEdit,
+      onDeleteComment,
+      onGoToRef,
+    ],
   );
 
   if (isLoading) {

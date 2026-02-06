@@ -3,6 +3,7 @@
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { updateComment } from '@/api/endpoints/comments';
 import { type CreateOpinionRequest, createOpinion, deleteOpinion } from '@/api/endpoints/opinions';
 import { queryKeys } from '@/api/queryClient';
 
@@ -27,6 +28,27 @@ export function useDeleteOpinion() {
 
   return useMutation({
     mutationFn: ({ opinionId }: { opinionId: string; slideId: string }) => deleteOpinion(opinionId),
+
+    onSuccess: (_, { slideId }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.lists() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
+    },
+  });
+}
+
+/** 의견 수정 */
+export function useUpdateOpinion() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      opinionId,
+      data,
+    }: {
+      opinionId: string;
+      data: { content: string };
+      slideId: string;
+    }) => updateComment(opinionId, data),
 
     onSuccess: (_, { slideId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.slides.lists() });

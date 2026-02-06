@@ -21,10 +21,12 @@ interface CommentPopoverProps {
 
 export default function CommentPopover({ isLoading }: CommentPopoverProps) {
   const opinions = useSlideOpinions();
-  const { comments: treeOpinions, addReply, deleteComment } = useComments();
+  const { comments: treeOpinions, addReply, deleteComment, updateComment } = useComments();
 
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState('');
 
   const submitReply = useCallback(
     (targetId: string) => {
@@ -47,6 +49,30 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
     setReplyDraft('');
   }, []);
 
+  const toggleEdit = useCallback((commentId: string, currentContent: string) => {
+    setEditingId((prev) => (prev === commentId ? null : commentId));
+    setEditDraft(currentContent);
+    // 수정 모드 진입 시 답글 모드 취소
+    setReplyingToId(null);
+    setReplyDraft('');
+  }, []);
+
+  const submitEdit = useCallback(
+    (commentId: string) => {
+      if (editDraft.trim()) {
+        updateComment(commentId, editDraft);
+      }
+      setEditDraft('');
+      setEditingId(null);
+    },
+    [editDraft, updateComment],
+  );
+
+  const cancelEdit = useCallback(() => {
+    setEditingId(null);
+    setEditDraft('');
+  }, []);
+
   const contextValue = useMemo(
     () => ({
       replyingToId,
@@ -55,10 +81,28 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
       toggleReply,
       submitReply,
       cancelReply,
+      editingId,
+      editDraft,
+      setEditDraft,
+      toggleEdit,
+      submitEdit,
+      cancelEdit,
       deleteComment,
       goToRef: () => {}, // 슬라이드 페이지에서는 ref 이동 불필요
     }),
-    [replyingToId, replyDraft, toggleReply, submitReply, cancelReply, deleteComment],
+    [
+      replyingToId,
+      replyDraft,
+      toggleReply,
+      submitReply,
+      cancelReply,
+      editingId,
+      editDraft,
+      toggleEdit,
+      submitEdit,
+      cancelEdit,
+      deleteComment,
+    ],
   );
 
   return (

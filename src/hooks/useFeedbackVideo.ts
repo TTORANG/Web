@@ -23,7 +23,7 @@ export function useFeedbackVideo() {
   const requestSeek = useVideoFeedbackStore((s) => s.requestSeek);
 
   // Comments & Reactions
-  const { comments, addComment, addReply, deleteComment } = useVideoComments();
+  const { comments, addComment, addReply, deleteComment, updateComment } = useVideoComments();
   const { reactions, toggleReaction } = useVideoReactions();
 
   // Comment draft state
@@ -97,6 +97,7 @@ export function useFeedbackVideo() {
     handleGoToTimeRef,
     addReply,
     deleteComment,
+    updateComment,
     toggleReaction,
 
     // 비디오 URL

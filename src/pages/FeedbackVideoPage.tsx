@@ -42,6 +42,7 @@ export default function FeedbackVideoPage() {
     handleGoToTimeRef,
     addReply,
     deleteComment,
+    updateComment,
     toggleReaction,
   } = ctx;
 
@@ -129,6 +130,7 @@ export default function FeedbackVideoPage() {
               onAddReply={addReply}
               onGoToRef={handleGoToTimeRef}
               onDeleteComment={deleteComment}
+              onUpdateComment={updateComment}
               isLoading={isLoading}
             />
           </div>
@@ -177,6 +179,7 @@ export default function FeedbackVideoPage() {
                 onAddReply={addReply}
                 onGoToRef={handleGoToTimeRef}
                 onDeleteComment={deleteComment}
+                onUpdateComment={updateComment}
               />
             </div>
             <div className="shrink-0 px-4 py-3">

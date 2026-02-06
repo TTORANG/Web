@@ -14,7 +14,7 @@ import { MOCK_CURRENT_USER } from '@/mocks/users';
 import type { Comment } from '@/types/comment';
 import type { Reaction, ReactionType } from '@/types/script';
 import type { VideoFeedback, VideoTimestampFeedback } from '@/types/video';
-import { addReplyToFlat, createComment, deleteFromFlat } from '@/utils/comment';
+import { addReplyToFlat, createComment, deleteFromFlat, updateInFlat } from '@/utils/comment';
 import { extractTimestampFromComment } from '@/utils/format';
 
 // 현재 시간대에 리액션 찾기
@@ -64,6 +64,7 @@ interface VideoFeedbackState {
   addComment: (content: string, seconds: number) => Comment | null;
   addReply: (parentId: string, content: string) => Comment | null;
   deleteComment: (commentId: string) => void;
+  updateComment: (commentId: string, content: string) => void;
   updateCommentServerId: (commentId: string, serverId: string) => void;
 }
 
@@ -235,6 +236,31 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
         },
         false,
         'video/deleteComment',
+      ),
+
+    updateComment: (commentId, content) =>
+      set(
+        (state) => {
+          if (!state.video) return state;
+
+          const targetFeedback = state.video.feedbacks.find((f) =>
+            hasCommentId(f.comments, commentId),
+          );
+
+          if (!targetFeedback) return state;
+
+          const updatedComments = updateInFlat(targetFeedback.comments, commentId, content);
+
+          const updatedFeedbacks = state.video.feedbacks.map((f) =>
+            f.timestamp === targetFeedback.timestamp ? { ...f, comments: updatedComments } : f,
+          );
+
+          return {
+            video: { ...state.video, feedbacks: updatedFeedbacks },
+          };
+        },
+        false,
+        'video/updateComment',
       ),
 
     updateCommentServerId: (commentId, serverId) =>

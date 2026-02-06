@@ -15,7 +15,7 @@ import type { Comment } from '@/types/comment';
 import { flatToTree } from '@/utils/comment';
 import { showToast } from '@/utils/toast';
 
-import { useCreateOpinion, useDeleteOpinion } from './queries/useOpinions';
+import { useCreateOpinion, useDeleteOpinion, useUpdateOpinion } from './queries/useOpinions';
 
 const EMPTY_COMMENTS: Comment[] = [];
 
@@ -25,10 +25,12 @@ export function useComments() {
   const addOpinionStore = useSlideStore((state) => state.addOpinion);
   const addReplyStore = useSlideStore((state) => state.addReply);
   const deleteOpinionStore = useSlideStore((state) => state.deleteOpinion);
+  const updateOpinionStore = useSlideStore((state) => state.updateOpinion);
   const setOpinions = useSlideStore((state) => state.setOpinions);
 
   const { mutate: createOpinionApi } = useCreateOpinion();
   const { mutate: deleteOpinionApi } = useDeleteOpinion();
+  const { mutate: updateOpinionApi } = useUpdateOpinion();
 
   const findOpinion = (opinionId: string) => flatComments?.find((c) => c.id === opinionId);
 
@@ -102,10 +104,31 @@ export function useComments() {
     );
   };
 
+  const updateComment = (commentId: string, content: string) => {
+    const target = findOpinion(commentId);
+    const targetSlideId = target?.slideId ?? slideId;
+    const targetServerId = target?.serverId ?? commentId;
+    if (!targetSlideId) return;
+
+    const previousOpinions = flatComments ?? [];
+    updateOpinionStore(commentId, content);
+
+    updateOpinionApi(
+      { opinionId: targetServerId, data: { content }, slideId: targetSlideId },
+      {
+        onError: () => {
+          setOpinions(previousOpinions);
+          showToast.error('댓글 수정에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+        },
+      },
+    );
+  };
+
   return {
     comments,
     addComment,
     addReply,
     deleteComment,
+    updateComment,
   };
 }

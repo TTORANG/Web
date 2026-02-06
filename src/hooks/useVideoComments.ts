@@ -8,6 +8,7 @@
  */
 import { useMemo } from 'react';
 
+import { updateComment as updateCommentApi } from '@/api/endpoints/comments';
 import { createCommentReply, createVideoComment, deleteVideoComment } from '@/api/endpoints/videos';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Comment } from '@/types/comment';
@@ -23,6 +24,7 @@ export function useVideoComments() {
   const addCommentStore = useVideoFeedbackStore((state) => state.addComment);
   const addReplyStore = useVideoFeedbackStore((state) => state.addReply);
   const deleteCommentStore = useVideoFeedbackStore((state) => state.deleteComment);
+  const updateCommentStore = useVideoFeedbackStore((state) => state.updateComment);
   const updateCommentServerId = useVideoFeedbackStore((state) => state.updateCommentServerId);
 
   // CHANGED: 전체 feedbacks의 comments를 합쳐서 반환
@@ -102,7 +104,7 @@ export function useVideoComments() {
       if (model && tempReply) {
         updateCommentServerId(tempReply.id, model.serverId);
       }
-    } catch (error) {
+    } catch {
       showToast.error('답글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
     }
   };
@@ -144,10 +146,46 @@ export function useVideoComments() {
     }
   };
 
+  /**
+   * 댓글 수정
+   */
+  const updateComment = async (commentId: string, content: string) => {
+    if (!video) return;
+
+    const allComments = video.feedbacks.flatMap((f) => f.comments);
+    const targetComment = allComments.find((c) => c.id === commentId);
+
+    if (!targetComment) {
+      showToast.error('댓글을 찾을 수 없습니다.');
+      return;
+    }
+
+    if (!targetComment.serverId) {
+      showToast.error('서버에 저장되지 않은 댓글은 수정할 수 없습니다.');
+      return;
+    }
+
+    // Optimistic update
+    updateCommentStore(commentId, content);
+
+    try {
+      // 서버 API 호출 (serverId를 number로 변환)
+      const commentIdNum = parseInt(targetComment.serverId, 10);
+      if (isNaN(commentIdNum)) {
+        throw new Error('Invalid comment server ID');
+      }
+      await updateCommentApi(String(commentIdNum), { content });
+      showToast.success('댓글이 수정되었습니다.');
+    } catch {
+      showToast.error('댓글 수정에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+    }
+  };
+
   return {
     comments,
     addComment,
     addReply,
     deleteComment,
+    updateComment,
   };
 }
