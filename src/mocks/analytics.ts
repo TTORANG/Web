@@ -23,7 +23,7 @@ export const getMockSlideAnalytics = (projectId: string): SlideAnalyticsResponse
 
   return {
     slides: slidesToUse.map((slide, index) => ({
-      slideId: slide.id,
+      slideId: slide.slideId,
       slideNum: index + 1,
       title: slide.title || `슬라이드 ${index + 1}`,
       viewCount: Math.floor(Math.random() * 1000) + 100,
