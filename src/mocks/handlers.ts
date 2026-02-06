@@ -56,7 +56,7 @@ const commentReplies = new Map<string, StoredComment[]>();
 
 // 댓글 초기화 (slide opinions → comment stores)
 MOCK_SLIDES.forEach((slide) => {
-  const opinions = slide.opinions ?? [];
+  const opinions = slide.comments ?? [];
   if (opinions.length === 0) return;
   const roots: StoredComment[] = [];
   for (const op of opinions) {

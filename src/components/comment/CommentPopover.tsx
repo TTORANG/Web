@@ -10,14 +10,14 @@ import { useCallback, useMemo, useState } from 'react';
 import clsx from 'clsx';
 
 import { Popover } from '@/components/common';
-import { useSlideActions, useSlideOpinions } from '@/hooks';
+import { useSlideActions, useSlideComments } from '@/hooks';
 
 import Comment from './Comment';
 import { CommentProvider } from './CommentContext';
 
 export default function CommentPopover() {
-  const opinions = useSlideOpinions();
-  const { deleteOpinion, addReply } = useSlideActions();
+  const comments = useSlideComments();
+  const { deleteComment, addReply } = useSlideActions();
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
 
@@ -50,10 +50,10 @@ export default function CommentPopover() {
       toggleReply,
       submitReply,
       cancelReply,
-      deleteComment: deleteOpinion,
+      deleteComment,
       goToRef: () => {}, // 슬라이드 페이지에서는 ref 이동 불필요
     }),
-    [replyingToId, replyDraft, toggleReply, submitReply, cancelReply, deleteOpinion],
+    [replyingToId, replyDraft, toggleReply, submitReply, cancelReply, deleteComment],
   );
 
   return (
@@ -61,7 +61,7 @@ export default function CommentPopover() {
       trigger={({ isOpen }) => (
         <button
           type="button"
-          aria-label={`의견 ${opinions.length}개 보기`}
+          aria-label={`의견 ${comments.length}개 보기`}
           className={clsx(
             'inline-flex h-7 items-center gap-1 rounded px-2',
             'outline-1 -outline-offset-1',
@@ -84,7 +84,7 @@ export default function CommentPopover() {
               isOpen ? 'text-main-variant1' : 'text-gray-600',
             )}
           >
-            {opinions.length}
+            {comments.length}
           </span>
         </button>
       )}
@@ -101,8 +101,8 @@ export default function CommentPopover() {
       {/* 의견 목록 */}
       <CommentProvider value={contextValue}>
         <div className="h-80 overflow-y-auto">
-          {opinions.map((opinion) => (
-            <Comment key={opinion.id} comment={opinion} isIndented={opinion.isReply} />
+          {comments.map((comment) => (
+            <Comment key={comment.id} comment={comment} isIndented={comment.isReply} />
           ))}
         </div>
       </CommentProvider>

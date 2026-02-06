@@ -32,7 +32,7 @@ export type { UpdateProjectDto } from './presentations.dto';
 // export type { UploadFileResponseDto } from './files.dto';
 export type {
   ChunkUploadResponseDto,
-  CreateOpinionDto,
+  CreateCommentDto,
   FinishVideoRequestDto,
   FinishVideoResponseDto,
   StartVideoRequestDto,

@@ -1,9 +1,9 @@
 /**
  * 영상 타임스탬프 댓글 생성
  */
-export interface CreateOpinionDto {
+export interface CreateCommentDto {
   content: string;
-  /** 답글인 경우 부모 의견 내용 고쳐라이D */
+  /** 답글인 경우 부모 댓글 ID */
   parentId?: string;
 }
 

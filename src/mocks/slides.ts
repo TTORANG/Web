@@ -29,7 +29,6 @@ const createDefaultSlide = (projectId: string, index: number): SlideListItem => 
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   script: `${projectId} 프로젝트의 슬라이드 ${index + 1}번 내용입니다.`,
-  opinions: [],
   history: [],
   emojiReactions: [],
   startTime: index * 60, // 슬라이드당 60초 간격
@@ -50,7 +49,7 @@ const p1Slides: SlideListItem[] = [
 다음 주 월요일에 네이버지도 서비스 개편과 함께 리브랜딩된 모습이 공개될 예정입니다.
 많은 관심 부탁드리고 지금부터 네이버 지도 리브랜딩 과정 소개해 드리도록 하겠습니다.
     `,
-    opinions: [
+    comments: [
       {
         id: '1',
         authorId: MOCK_USERS[1].id,
@@ -108,7 +107,7 @@ const p1Slides: SlideListItem[] = [
     updatedAt: '2025-01-01T00:00:00.000Z',
     startTime: 37,
     script: '',
-    opinions: [
+    comments: [
       {
         id: '1',
         authorId: MOCK_USERS[1].id,
@@ -197,7 +196,7 @@ const p1Slides: SlideListItem[] = [
 지도 서비스 래브랜딩 필요성을 주도적으로 검토하였고요.
 이후 사업부서와의 긴밀한 논의와 공감대 형성을 거쳐서 리브랜딩 프로젝트를 진행했습니다.
     `,
-    opinions: [],
+    comments: [],
     history: [
       {
         versionNumber: 1,
@@ -257,7 +256,7 @@ const p1Slides: SlideListItem[] = [
     updatedAt: '2025-01-01T00:00:00.000Z',
     startTime: 66,
     script: '그럼 왜 네이버 지도 서비스였을까 궁금하실 텐데요.',
-    opinions: [
+    comments: [
       {
         id: '1',
         authorId: MOCK_USERS[3].id,
@@ -291,7 +290,7 @@ const p1Slides: SlideListItem[] = [
 사용자는 발견 탭을 통해서 자신의 취향에 맞는 장소를 추천받고 새로운 장소를 발견할 수 있는데요.
 이러한 점을 미루어봤을 때 네이버 지도의 역할이 점차 확장되고 있다는 인상을 받았습니다.
     `,
-    opinions: [],
+    comments: [],
     history: [
       {
         versionNumber: 1,
@@ -325,7 +324,7 @@ const p1Slides: SlideListItem[] = [
 그래서 네이버 지도는 단순한 길 찾기 앱을 넘어 사용자의 온오프라인 장소 경험을 연결하고, 확장하고 지원하는 생활 밀착형 플랫폼,
 나아가 슈퍼 앱을 목표로 하는 만큼 플랫폼적 역할까지 강화하고 있음을 확인할 수 있었는데요.
     `,
-    opinions: [
+    comments: [
       {
         id: '1',
         authorId: MOCK_USERS[4].id,
@@ -357,7 +356,7 @@ const p1Slides: SlideListItem[] = [
 앞서 말씀드린 발견 피드뿐 아니라 예약과 저장 기능이 전면 탭에 등장하면서 네이버 지도는 이제 모빌리티뿐 아니라
 장소 기반, 컨텐츠 전반을 아우르는 통합 플랫폼으로 진화하고 있음을 확인할 수 있었습니다.
     `,
-    opinions: [],
+    comments: [],
     history: [
       {
         versionNumber: 1,
@@ -387,7 +386,7 @@ const p1Slides: SlideListItem[] = [
     script: `그래서 저희는 지금 네이버 지도 서비스 방향성이 전환되고 확장되는 매우 중요한 모멘텀이라고 판단했고요.
 네이버 지도의 미래 방향성과 서비스 철학을 담아낼 새로운 브랜드 아이덴티티가 필요하다고 보았습니다.
     `,
-    opinions: [
+    comments: [
       {
         id: '1',
         authorId: MOCK_USERS[0].id,
@@ -437,7 +436,7 @@ const p1Slides: SlideListItem[] = [
 길, 이동, 모빌리티가 강조된 앱 아이콘, 그리고 큰 차별점이 없는 브랜드 메시지, 그리고 브랜드 색상과 그래픽 에셋 역시
 전략 아래 운영되기보다는 캠페인 별, 기능 별로 개별적으로 사용되고 있어 일관성이 부족한 상황이었습니다.
     `,
-    opinions: [
+    comments: [
       {
         id: '1',
         authorId: MOCK_USERS[1].id,
@@ -484,7 +483,7 @@ const p1Slides: SlideListItem[] = [
 브랜드 조직에서는 이번 리브랜딩을 통해서 네이버 지도의 미래 방향성을 담은 브랜드 메시지, 디자인 그리고
 캠페인까지, 전반적으로 브랜드 재정비가 필요하다고 판단했습니다.
 `,
-    opinions: [],
+    comments: [],
     history: [],
     emojiReactions: [
       { type: 'fire', count: 0 },
@@ -508,7 +507,7 @@ const p1Slides: SlideListItem[] = [
 그 근거를 찾기 위해 가장 먼저 진행한 단계는 사업부서 인터뷰와 사용자 조사였습니다.
 앞서 리서치를 통해 얻은 인사이트가 우리 내부만의 시각인지, 혹은 사업부서와 사용자 모두가 공감하는 문제인지 확인이 필요했는데요.
 `,
-    opinions: [],
+    comments: [],
     history: [],
     emojiReactions: [
       { type: 'fire', count: 0 },
@@ -531,7 +530,7 @@ const p1Slides: SlideListItem[] = [
     script: `사업부서 13분과의 심층 인터뷰를 통해서 네이버 지도는 어떤 서비스라고 생각하는지, 앞으로 서비스가 어떤 방향으로 나아가야 한다고 생각하는지
 그리고 브랜드 아이덴티티 측면에서도 어떤 부분이 부족하고 보안이 필요한지 인터뷰를 진행했습니다.
 `,
-    opinions: [],
+    comments: [],
     history: [],
     emojiReactions: [
       { type: 'fire', count: 0 },
@@ -554,7 +553,7 @@ const p1Slides: SlideListItem[] = [
     script: `많은 분들이 공통적으로 네이버 지도는 온오프라인을 연결해 주는 서비스, 장소 경험이 완결되고 확장되는 서비스라고 말씀 주셨습니다.
 하지만 그에 비해 브랜드 아이덴티티는 이러한 서비스의 가치와 방향성을 충분히 담아내지 못하고 있다는 의견이 공통적으로 있었고요.
     `,
-    opinions: [],
+    comments: [],
     history: [],
     emojiReactions: [
       { type: 'fire', count: 0 },
@@ -577,7 +576,7 @@ const p1Slides: SlideListItem[] = [
     script: `사용자 조사에서도 네이버 지도를 떠올렸을 때 연상되는 이미지, 사용성, 만족도, 아쉬운 점이나 개선되었으면 하는 점에 대해서 질문을 드렸고
 사용성, 서비스 만족도 면에서는 높은 평가를 받았지만, 그에 비해 브랜드로서의 인상이나 고요한 이미지는 뚜렷하지 않다는 점이 드러났습니다.
     `,
-    opinions: [],
+    comments: [],
     history: [],
     emojiReactions: [
       { type: 'fire', count: 0 },
@@ -601,7 +600,7 @@ const p1Slides: SlideListItem[] = [
 서비스 방향성으로는 네이버 지도가 장소와 관련된 모든 경험을 제공하고 연결하는 올인원 플랫폼으로 나아가고 있다는 점,
 브랜드 측면에서는 이러한 서비스의 변화를 사용자에게 명확하게 전달할 수 있는 새로운 브랜드 아이덴티티가 필요하다는 공감대가 형성되었습니다.
     `,
-    opinions: [],
+    comments: [],
     history: [],
     emojiReactions: [
       { type: 'fire', count: 0 },
@@ -622,7 +621,7 @@ const p1Slides: SlideListItem[] = [
     updatedAt: '2025-01-01T00:00:00.000Z',
     startTime: 444,
     script: ``,
-    opinions: [],
+    comments: [],
     history: [],
     emojiReactions: [
       { type: 'fire', count: 0 },

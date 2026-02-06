@@ -16,8 +16,8 @@ export interface SlideListItem {
   updatedAt: string;
   /** 프론트엔드 확장용 - 대본 */
   script?: string;
-  /** 프론트엔드 확장용 - 의견 목록 */
-  opinions?: Comment[];
+  /** 프론트엔드 확장용 - 댓글 목록 */
+  comments?: Comment[];
   /** 프론트엔드 확장용 - 수정 기록 */
   history?: GetScriptVersionHistoryResponseDto[];
   /** 프론트엔드 확장용 - 이모지 반응 */

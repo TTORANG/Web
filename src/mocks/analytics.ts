@@ -30,10 +30,10 @@ export const getMockSlideAnalytics = (projectId: string): SlideAnalyticsResponse
       exitCount: Math.floor(Math.random() * 50),
       exitRate: Math.random() * 0.3,
       reactionCount: (slide.emojiReactions || []).reduce((acc, r) => acc + r.count, 0),
-      commentCount: (slide.opinions || []).length,
+      commentCount: (slide.comments || []).length,
       feedbackCount:
         (slide.emojiReactions || []).reduce((acc, r) => acc + r.count, 0) +
-        (slide.opinions || []).length,
+        (slide.comments || []).length,
     })),
   };
 };

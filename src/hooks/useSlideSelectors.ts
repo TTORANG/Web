@@ -11,7 +11,7 @@ import type { Comment } from '@/types/comment';
 import type { Reaction } from '@/types/script';
 
 // 빈 배열 상수 (참조 안정성을 위해)
-const EMPTY_OPINIONS: Comment[] = [];
+const EMPTY_COMMENTS: Comment[] = [];
 const EMPTY_HISTORY: GetScriptVersionHistoryResponseDto[] = [];
 const EMPTY_EMOJIS: Reaction[] = [];
 
@@ -27,9 +27,9 @@ export const useSlideThumb = () => useSlideStore((state) => state.slide?.imageUr
 /** 슬라이드 대본 구독 */
 export const useSlideScript = () => useSlideStore((state) => state.slide?.script ?? '');
 
-/** 의견 목록 구독 */
-export const useSlideOpinions = () =>
-  useSlideStore((state) => state.slide?.opinions ?? EMPTY_OPINIONS);
+/** 댓글 목록 구독 */
+export const useSlideComments = () =>
+  useSlideStore((state) => state.slide?.comments ?? EMPTY_COMMENTS);
 
 /** 대본 수정 기록 구독 */
 export const useSlideHistory = () =>
@@ -46,8 +46,8 @@ export const useSlideActions = () =>
       initSlide: state.initSlide,
       updateSlide: state.updateSlide,
       updateScript: state.updateScript,
-      deleteOpinion: state.deleteOpinion,
+      deleteComment: state.deleteComment,
       addReply: state.addReply,
-      setOpinions: state.setOpinions,
+      setComments: state.setComments,
     })),
   );

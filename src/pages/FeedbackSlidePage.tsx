@@ -72,12 +72,12 @@ export default function FeedbackSlidePage() {
 
   useExitTracker(buildExitPayload);
 
-  /** 모든 슬라이드의 의견을 플랫 배열로 합침 */
-  const allFlatOpinions = useMemo(() => {
+  /** 모든 슬라이드의 댓글을 플랫 배열로 합침 */
+  const allFlatComments = useMemo(() => {
     if (!slides) return [];
     return slides.flatMap((slide, index) => {
       const slideLabel = `Slide ${index + 1}`;
-      return (slide.opinions || []).map((op) => ({
+      return (slide.comments || []).map((op) => ({
         ...op,
         id: `${slide.slideId}-${op.id}`,
         parentId: op.parentId ? `${slide.slideId}-${op.parentId}` : undefined,
@@ -95,13 +95,13 @@ export default function FeedbackSlidePage() {
 
     initSlide({
       ...currentSlide,
-      opinions: allFlatOpinions,
+      comments: allFlatComments,
       emojiReactions:
         currentSlide.emojiReactions && currentSlide.emojiReactions.length > 0
           ? currentSlide.emojiReactions
           : createDefaultReactions(),
     });
-  }, [slideIndex, currentSlide, initSlide, allFlatOpinions]);
+  }, [slideIndex, currentSlide, initSlide, allFlatComments]);
 
   const handleGoToRef = useCallback(
     (ref: NonNullable<Comment['ref']>) => {
