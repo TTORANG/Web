@@ -1,1 +1,1 @@
-export type UploadState = 'idle' | 'uploading' | 'done' | 'error';
+export type UploadStep = 'preparing' | 'uploading' | 'finishing' | 'done';

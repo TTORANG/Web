@@ -1,8 +1,9 @@
 export type SummaryStat = {
   label: string;
   value: string;
-  sub: string;
-  trend?: 'up' | 'down';
+  sub?: string;
+  trend?: 'up' | 'down' | 'neutral';
+  trendValue?: string;
 };
 
 export type DropOffSlide = {

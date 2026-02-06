@@ -5,7 +5,7 @@
  * 데스크톱과 모바일 뷰를 모두 포함하며, 반응형으로 UI를 렌더링합니다.
  * CSS-only 방식으로 단일 비디오 요소의 위치를 조정하여 심리스한 전환을 지원합니다.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
@@ -15,16 +15,17 @@ import FeedbackMobileLayout from '@/components/feedback/FeedbackMobileLayout';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
 import ScriptSection from '@/components/feedback/ScriptSection';
 import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
-// import FeedbackVideoDesktop from '@/components/feedback/video/FeedbackVideoDesktop';
-// import FeedbackVideoMobile from '@/components/feedback/video/FeedbackVideoMobile';
+import { useExitTracker } from '@/hooks/useExitTracker';
 import { useFeedbackVideo } from '@/hooks/useFeedbackVideo';
 import { useFeedbackWebSocket } from '@/hooks/useFeedbackWebSocket';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
+import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 
 export default function FeedbackVideoPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const isDesktop = useIsDesktop();
   const ctx = useFeedbackVideo();
+  const videoId = useVideoFeedbackStore((s) => s.video?.videoId);
   const {
     isLoading,
     currentTime,
@@ -45,6 +46,33 @@ export default function FeedbackVideoPage() {
     updateComment,
     toggleReaction,
   } = ctx;
+
+  const buildExitPayload = useCallback(() => {
+    if (!projectId) return null;
+    const projectIdNum = Number(projectId);
+    if (!Number.isFinite(projectIdNum)) return null;
+
+    const payload: {
+      projectId: number;
+      lastVideoId?: number;
+      lastVideoTimeMs?: number;
+    } = {
+      projectId: projectIdNum,
+    };
+
+    if (videoId) {
+      const videoIdNum = Number(videoId);
+      if (Number.isFinite(videoIdNum)) {
+        payload.lastVideoId = videoIdNum;
+      }
+    }
+
+    payload.lastVideoTimeMs = Math.max(0, Math.round(currentTime * 1000));
+
+    return payload;
+  }, [projectId, videoId, currentTime]);
+
+  useExitTracker(buildExitPayload);
 
   // 비디오 위치 계산을 위한 refs
   const desktopPlaceholderRef = useRef<HTMLDivElement>(null);

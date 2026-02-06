@@ -1,5 +1,5 @@
 // API
-export type { ApiError, ApiResponse, PaginatedData } from './api';
+export type { ApiErrorResponse, ApiResponse, PaginatedData } from './api';
 
 // Auth
 export type { AuthProvider, User } from './auth';
@@ -56,3 +56,4 @@ export type {
   SocketAuthConfig,
 } from './websocket';
 export { ClientEvents, ServerEvents } from './websocket';
+export type { UploadStep } from './uploadFile';
