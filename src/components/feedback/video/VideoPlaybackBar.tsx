@@ -14,14 +14,14 @@ import fullscreenIcon from '@/assets/playbackBar-icons/sizeupdown-icon.webp';
 import ProgressBar from '@/components/feedback/ProgressBar';
 import VolumeControl from '@/components/feedback/video/VolumeControl';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
-import type { Slide } from '@/types/slide';
+import type { SlideListItem } from '@/types/slide';
 import { computeSegmentHighlightsFromFeedbacks } from '@/utils/video';
 
 interface VideoPlaybackBarProps {
   videoElement: HTMLVideoElement | null;
   duration: number;
   fullscreenTargetRef?: React.RefObject<HTMLElement>;
-  slides?: Slide[];
+  slides?: SlideListItem[];
   slideChangeTimes?: number[];
   layoutToggle?: {
     label: ReactNode;

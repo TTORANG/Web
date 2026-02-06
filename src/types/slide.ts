@@ -25,19 +25,3 @@ export interface SlideListItem {
   /** 영상 피드백에서 슬라이드 시작 시간 (초) */
   startTime?: number;
 }
-
-/**
- * 슬라이드 데이터 모델 (프론트엔드 스토어용)
- * @deprecated
- */
-export interface Slide {
-  id: string;
-  projectId: string;
-  title: string;
-  thumb: string;
-  script: string;
-  opinions: Comment[];
-  history: GetScriptVersionHistoryResponseDto[];
-  emojiReactions: Reaction[];
-  startTime?: number;
-}

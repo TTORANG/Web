@@ -4,7 +4,7 @@ import { HttpResponse, delay, http } from 'msw';
 import { createDefaultReactions } from '@/constants/reaction';
 import { FEEDBACK_WINDOW } from '@/constants/video';
 import type { Presentation } from '@/types/presentation';
-import type { Slide } from '@/types/slide';
+import type { SlideListItem } from '@/types/slide';
 import type { VideoFeedback, VideoTimestampFeedback } from '@/types/video';
 
 import {
@@ -20,7 +20,7 @@ import { MOCK_VIDEO } from './videos';
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 // 메모리 내 데이터 저장소 (상태 유지)
-let slides: Slide[] = [...MOCK_SLIDES];
+let slides: SlideListItem[] = [...MOCK_SLIDES];
 let presentations: Presentation[] = [...MOCK_PROJECTS];
 
 // 영상 피드백 데이터 저장소
@@ -50,8 +50,8 @@ const commentReplies: Map<string, StoredComment[]> = new Map();
 
 // slides의 history 데이터로 scriptVersions 초기화
 MOCK_SLIDES.forEach((slide) => {
-  if (slide.history.length > 0) {
-    scriptVersions.set(slide.id, [...slide.history]);
+  if ((slide.history ?? []).length > 0) {
+    scriptVersions.set(slide.slideId, [...(slide.history ?? [])]);
   }
 });
 
@@ -223,11 +223,11 @@ export const handlers = [
     const presentationSlides = slides
       .filter((s) => s.projectId === projectId)
       .map((s, index) => ({
-        slideId: s.id,
+        slideId: s.slideId,
         projectId: s.projectId,
         title: s.title,
         slideNum: index + 1,
-        imageUrl: s.thumb,
+        imageUrl: s.imageUrl,
         script: s.script,
         opinions: s.opinions,
         emojiReactions: s.emojiReactions,
@@ -251,11 +251,11 @@ export const handlers = [
     const presentationSlides = slides
       .filter((s) => s.projectId === projectId)
       .map((s, index) => ({
-        slideId: s.id,
+        slideId: s.slideId,
         projectId: s.projectId,
         title: s.title,
         slideNum: index + 1,
-        imageUrl: s.thumb,
+        imageUrl: s.imageUrl,
         script: s.script,
         opinions: s.opinions,
         emojiReactions: s.emojiReactions,
@@ -276,7 +276,7 @@ export const handlers = [
     const { slideId } = params;
     console.log(`[MSW] GET /presentations/slides/${slideId}`);
 
-    const slide = slides.find((s) => s.id === slideId);
+    const slide = slides.find((s) => s.slideId === slideId);
 
     if (!slide) {
       return new HttpResponse(null, {
@@ -296,10 +296,10 @@ export const handlers = [
     await delay(200);
 
     const { slideId } = params;
-    const updates = (await request.json()) as Partial<Slide>;
+    const updates = (await request.json()) as Partial<SlideListItem>;
     console.log(`[MSW] PATCH /presentations/slides/${slideId}`, updates);
 
-    const slideIndex = slides.findIndex((s) => s.id === slideId);
+    const slideIndex = slides.findIndex((s) => s.slideId === slideId);
 
     if (slideIndex === -1) {
       return new HttpResponse(null, {
@@ -314,14 +314,16 @@ export const handlers = [
     if (
       updates.script !== undefined &&
       updates.script !== currentSlide.script &&
-      currentSlide.script.trim()
+      (currentSlide.script ?? '').trim()
     ) {
-      currentSlide.history.unshift({
-        versionNumber: currentSlide.history.length + 1,
-        scriptText: currentSlide.script,
-        charCount: currentSlide.script.length,
+      const history = currentSlide.history ?? [];
+      history.unshift({
+        versionNumber: history.length + 1,
+        scriptText: currentSlide.script ?? '',
+        charCount: (currentSlide.script ?? '').length,
         createdAt: new Date().toISOString(),
       });
+      currentSlide.history = history;
     }
 
     // 슬라이드 업데이트
@@ -344,15 +346,18 @@ export const handlers = [
     const data = (await request.json()) as { title: string; script?: string };
     console.log(`[MSW] POST /presentations/${projectId}/slides`, data);
 
-    const newSlide: Slide = {
-      id: crypto.randomUUID(),
+    const newSlide: SlideListItem = {
+      slideId: crypto.randomUUID(),
       projectId,
       title: data.title,
-      thumb: `/thumbnails/slide-${slides.length % 52}.webp`,
+      slideNum: slides.filter((s) => s.projectId === projectId).length + 1,
+      imageUrl: `/thumbnails/slide-${slides.length % 52}.webp`,
       script: data.script || '',
       opinions: [],
       history: [],
       emojiReactions: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     slides.push(newSlide);
@@ -370,7 +375,7 @@ export const handlers = [
     const { slideId } = params;
     console.log(`[MSW] DELETE /presentations/slides/${slideId}`);
 
-    const slideIndex = slides.findIndex((s) => s.id === slideId);
+    const slideIndex = slides.findIndex((s) => s.slideId === slideId);
 
     if (slideIndex === -1) {
       return new HttpResponse(null, {
@@ -379,7 +384,7 @@ export const handlers = [
       });
     }
 
-    slides = slides.filter((s) => s.id !== slideId);
+    slides = slides.filter((s) => s.slideId !== slideId);
 
     return new HttpResponse(null, { status: 204 });
   }),
@@ -395,7 +400,7 @@ export const handlers = [
     const data = (await request.json()) as { content: string; parentId?: string };
     console.log(`[MSW] POST /slides/${slideId}/opinions`, data);
 
-    const slideIndex = slides.findIndex((s) => s.id === slideId);
+    const slideIndex = slides.findIndex((s) => s.slideId === slideId);
 
     if (slideIndex === -1) {
       return new HttpResponse(null, {
@@ -414,19 +419,26 @@ export const handlers = [
       parentId: data.parentId,
     };
 
+    // opinions 배열이 없으면 초기화
+    if (!slides[slideIndex].opinions) {
+      slides[slideIndex].opinions = [];
+    }
+
     // 답글인 경우 부모 의견 바로 다음에 삽입
     if (data.parentId) {
-      const parentIndex = slides[slideIndex].opinions.findIndex((o) => o.id === data.parentId);
+      const parentIndex = (slides[slideIndex].opinions ?? []).findIndex(
+        (o) => o.id === data.parentId,
+      );
       if (parentIndex !== -1) {
-        slides[slideIndex].opinions.splice(parentIndex + 1, 0, newOpinion);
+        slides[slideIndex].opinions!.splice(parentIndex + 1, 0, newOpinion);
       } else {
         console.warn(
           `[MSW] Parent opinion with id "${data.parentId}" not found. Adding as a root comment.`,
         );
-        slides[slideIndex].opinions.push(newOpinion);
+        slides[slideIndex].opinions!.push(newOpinion);
       }
     } else {
-      slides[slideIndex].opinions.push(newOpinion);
+      slides[slideIndex].opinions!.push(newOpinion);
     }
 
     return HttpResponse.json(wrapResponse(newOpinion), { status: 201 });
@@ -445,10 +457,10 @@ export const handlers = [
     // 모든 슬라이드에서 해당 의견 찾기
     let found = false;
     for (const slide of slides) {
-      const opinionIndex = slide.opinions.findIndex((o) => o.id === opinionId);
+      const opinionIndex = (slide.opinions ?? []).findIndex((o) => o.id === opinionId);
       if (opinionIndex !== -1) {
         // 해당 의견과 답글 모두 삭제
-        slide.opinions = slide.opinions.filter(
+        slide.opinions = (slide.opinions ?? []).filter(
           (o) => o.id !== opinionId && o.parentId !== opinionId,
         );
         found = true;
@@ -477,7 +489,7 @@ export const handlers = [
     const { type } = (await request.json()) as { type: string };
     console.log(`[MSW] POST /slides/${slideId}/reactions/toggle`, type);
 
-    const slideIndex = slides.findIndex((s) => s.id === slideId);
+    const slideIndex = slides.findIndex((s) => s.slideId === slideId);
 
     if (slideIndex === -1) {
       return new HttpResponse(null, {
@@ -487,11 +499,11 @@ export const handlers = [
     }
 
     const slide = slides[slideIndex];
-    const reactionIndex = slide.emojiReactions.findIndex((r) => r.type === type);
+    const reactionIndex = (slide.emojiReactions ?? []).findIndex((r) => r.type === type);
     let active = false;
 
     if (reactionIndex !== -1) {
-      const currentReaction = slide.emojiReactions[reactionIndex];
+      const currentReaction = (slide.emojiReactions ?? [])[reactionIndex];
       if (currentReaction.active) {
         currentReaction.count = Math.max(0, currentReaction.count - 1);
         currentReaction.active = false;
@@ -515,7 +527,7 @@ export const handlers = [
     const { slideId } = params;
     console.log(`[MSW] GET /slides/${slideId}/reactions/summary`);
 
-    const slide = slides.find((s) => s.id === slideId);
+    const slide = slides.find((s) => s.slideId === slideId);
 
     if (!slide) {
       return new HttpResponse(null, {
@@ -525,7 +537,7 @@ export const handlers = [
     }
 
     const reactions: Record<string, number> = {};
-    for (const r of slide.emojiReactions) {
+    for (const r of slide.emojiReactions ?? []) {
       reactions[r.type] = r.count;
     }
 
@@ -644,19 +656,20 @@ export const handlers = [
     const { slideId } = params;
     console.log(`[MSW] GET /presentations/slides/${slideId}/script`);
 
-    const slide = slides.find((s) => s.id === slideId);
+    const slide = slides.find((s) => s.slideId === slideId);
 
     if (!slide) {
       return HttpResponse.json(wrapError('NOT_FOUND', 'Slide not found'), { status: 404 });
     }
 
+    const scriptText = slide.script ?? '';
     return HttpResponse.json(
       wrapResponse({
         message: '대본이 성공적으로 조회되었습니다.',
-        slideId: slide.id,
-        charCount: slide.script.length,
-        scriptText: slide.script,
-        estimatedDurationSeconds: Math.ceil(slide.script.length / 5),
+        slideId: slide.slideId,
+        charCount: scriptText.length,
+        scriptText,
+        estimatedDurationSeconds: Math.ceil(scriptText.length / 5),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }),
@@ -685,7 +698,7 @@ export const handlers = [
       });
     }
 
-    const slideIndex = slides.findIndex((s) => s.id === slideId);
+    const slideIndex = slides.findIndex((s) => s.slideId === slideId);
 
     if (slideIndex === -1) {
       return HttpResponse.json(wrapError('NOT_FOUND', 'Slide not found'), { status: 404 });
@@ -694,12 +707,12 @@ export const handlers = [
     const currentSlide = slides[slideIndex];
 
     // 기존 스크립트가 있으면 버전 저장
-    if (currentSlide.script.trim() && currentSlide.script !== body.script) {
+    if ((currentSlide.script ?? '').trim() && currentSlide.script !== body.script) {
       const versions = scriptVersions.get(slideId) || [];
       versions.unshift({
         versionNumber: versions.length + 1,
-        scriptText: currentSlide.script,
-        charCount: currentSlide.script.length,
+        scriptText: currentSlide.script ?? '',
+        charCount: (currentSlide.script ?? '').length,
         createdAt: new Date().toISOString(),
       });
       scriptVersions.set(slideId, versions);
@@ -731,7 +744,7 @@ export const handlers = [
     const { slideId } = params as { slideId: string };
     console.log(`[MSW] GET /presentations/slides/${slideId}/versions`);
 
-    const slide = slides.find((s) => s.id === slideId);
+    const slide = slides.find((s) => s.slideId === slideId);
 
     if (!slide) {
       return HttpResponse.json(wrapError('NOT_FOUND', 'Slide not found'), { status: 404 });
@@ -752,7 +765,7 @@ export const handlers = [
     const { version } = (await request.json()) as { version: number };
     console.log(`[MSW] POST /presentations/slides/${slideId}/restore`, { version });
 
-    const slideIndex = slides.findIndex((s) => s.id === slideId);
+    const slideIndex = slides.findIndex((s) => s.slideId === slideId);
 
     if (slideIndex === -1) {
       return HttpResponse.json(wrapError('NOT_FOUND', 'Slide not found'), { status: 404 });
@@ -767,11 +780,11 @@ export const handlers = [
 
     // 현재 스크립트를 버전으로 저장
     const currentSlide = slides[slideIndex];
-    if (currentSlide.script.trim()) {
+    if ((currentSlide.script ?? '').trim()) {
       versions.unshift({
         versionNumber: versions.length + 1,
-        scriptText: currentSlide.script,
-        charCount: currentSlide.script.length,
+        scriptText: currentSlide.script ?? '',
+        charCount: (currentSlide.script ?? '').length,
         createdAt: new Date().toISOString(),
       });
       scriptVersions.set(slideId, versions);

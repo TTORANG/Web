@@ -1,9 +1,9 @@
-import type { Slide } from './slide';
+import type { SlideListItem } from './slide';
 
 /**
  * 녹화용 슬라이드 데이터
  *
- * Slide 타입에서 녹화에 필요한 필드만 추출
+ * SlideListItem 타입에서 녹화에 필요한 필드만 추출
  */
 export interface RecordingSlide {
   id: string;
@@ -25,25 +25,28 @@ export interface RecordingProject {
 }
 
 /**
- * Slide 배열을 RecordingSlide 배열로 변환
+ * SlideListItem 배열을 RecordingSlide 배열로 변환
  */
-export function convertToRecordingSlides(slides: Slide[], projectId: string): RecordingSlide[] {
+export function convertToRecordingSlides(
+  slides: SlideListItem[],
+  projectId: string,
+): RecordingSlide[] {
   return slides.map((slide, index) => ({
-    id: slide.id,
+    id: slide.slideId,
     page: index + 1,
-    imageUrl: slide.thumb || `/thumbnails/${projectId}/${index}.webp`,
+    imageUrl: slide.imageUrl || `/thumbnails/${projectId}/${index}.webp`,
     script: slide.script || '',
     title: slide.title,
   }));
 }
 
 /**
- * Slide 배열로부터 RecordingProject 생성
+ * SlideListItem 배열로부터 RecordingProject 생성
  */
 export function createRecordingProject(
   projectId: string,
   projectTitle: string,
-  slides: Slide[],
+  slides: SlideListItem[],
 ): RecordingProject {
   return {
     projectId,
