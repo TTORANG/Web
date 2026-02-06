@@ -353,7 +353,7 @@ export default function InsightPage() {
                   <Area
                     type="linear"
                     dataKey="rate"
-                    stroke="#6366F1"
+                    stroke="var(--color-main)"
                     strokeWidth={2}
                     fillOpacity={1}
                     fill="url(#colorRate)"
@@ -398,9 +398,7 @@ export default function InsightPage() {
           </div>
 
           <div className="flex w-full flex-col gap-4">
-            {/* ✅ 이 래퍼가 absolute 기준점 */}
             <div className="relative">
-              {/* 블러는 내용에만 */}
               <div
                 className={`flex flex-col gap-2 ${!hasVideo ? 'blur-[3px] pointer-events-none select-none' : ''}`}
               >
@@ -421,7 +419,6 @@ export default function InsightPage() {
               {/* ✅ 오버레이: 이 영역 안에서만 덮음 */}
               {!hasVideo && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center text-center pointer-events-auto">
-                  {/* (선택) 배경 살짝 깔아주면 가독성 좋아짐 */}
                   <div className="px-6 py-5">
                     <p className="text-body-l-bold text-gray-800">
                       영상을 녹화하면 더 자세한 분석을 받을 수 있어요

@@ -19,11 +19,11 @@ export async function toggleReaction(
   slideId: string,
   data: ToggleSlideReactionDto,
 ): Promise<Reaction[]> {
-  const { data: response } = await apiClient.post<Reaction[]>(
+  const { data: response } = await apiClient.post<ApiResponse<Reaction[]>>(
     `/slides/${slideId}/reactions/toggle`,
     data,
   );
-  return response;
+  return response.success;
 }
 
 /**

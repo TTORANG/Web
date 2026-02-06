@@ -28,6 +28,7 @@ export interface SlideListItem {
 
 /**
  * 슬라이드 데이터 모델 (프론트엔드 스토어용)
+ * @deprecated
  */
 export interface Slide {
   id: string;
