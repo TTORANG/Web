@@ -407,9 +407,9 @@ export const handlers = [
 
     const newOpinion = {
       id: crypto.randomUUID(),
-      authorId: MOCK_USERS[0].id,
+      userId: MOCK_USERS[0].id,
       content: data.content,
-      timestamp: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
       isMine: true,
       isReply: !!data.parentId,
       parentId: data.parentId,

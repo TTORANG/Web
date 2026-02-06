@@ -37,7 +37,7 @@ export function useComments() {
     if (!flatComments) return EMPTY_COMMENTS;
     const tree = flatToTree(flatComments);
     return [...tree].sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
   }, [flatComments]);
 
