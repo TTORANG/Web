@@ -20,9 +20,30 @@ interface PresentationTitleEditorProps {
 export function PresentationTitleEditor({ readOnlyContent }: PresentationTitleEditorProps) {
   const { projectId } = useParams<{ projectId: string }>();
   const { data: presentation } = usePresentation(projectId ?? '');
-  const { mutate: updatePresentation, isPending } = useUpdatePresentation();
 
   const resolvedTitle = presentation?.title?.trim() ? presentation.title : '내 발표';
+
+  if (readOnlyContent) {
+    return (
+      <TitleEditorPopover
+        title={resolvedTitle}
+        readOnlyContent={readOnlyContent}
+        ariaLabel="발표 정보"
+      />
+    );
+  }
+
+  return <PresentationTitleEditorEditable projectId={projectId} title={resolvedTitle} />;
+}
+
+function PresentationTitleEditorEditable({
+  projectId,
+  title,
+}: {
+  projectId?: string;
+  title: string;
+}) {
+  const { mutate: updatePresentation, isPending } = useUpdatePresentation();
 
   const handleSave = (newTitle: string, close: () => void) => {
     const trimmedTitle = newTitle.trim();
@@ -49,9 +70,8 @@ export function PresentationTitleEditor({ readOnlyContent }: PresentationTitleEd
 
   return (
     <TitleEditorPopover
-      title={resolvedTitle}
+      title={title}
       onSave={handleSave}
-      readOnlyContent={readOnlyContent}
       ariaLabel="발표 이름 변경"
       isPending={isPending}
     />

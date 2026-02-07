@@ -20,15 +20,43 @@ export default function SlideTitle({
   fallbackTitle,
   readOnly = false,
 }: SlideTitleProps) {
-  const slideId = useSlideId();
   const title = useSlideTitle();
-  const { updateSlide } = useSlideActions();
-  const { mutate: updateSlideApi } = useUpdateSlide();
   const resolvedFallback = fallbackTitle?.trim() ? fallbackTitle : undefined;
   const resolvedTitle = title?.trim() ? title : (resolvedFallback ?? '');
 
+  if (readOnly) {
+    return (
+      <span className="inline-flex h-7 items-center px-2 text-sm font-semibold text-gray-800">
+        <span className="whitespace-normal wrap-break-word">{resolvedTitle}</span>
+      </span>
+    );
+  }
+
+  return (
+    <SlideTitleEditable
+      title={resolvedTitle}
+      fallbackTitle={resolvedFallback}
+      isCollapsed={isCollapsed}
+    />
+  );
+}
+
+function SlideTitleEditable({
+  title,
+  fallbackTitle,
+  isCollapsed,
+}: {
+  title: string;
+  fallbackTitle?: string;
+  isCollapsed: boolean;
+}) {
+  const slideId = useSlideId();
+  const storeTitle = useSlideTitle();
+  const { updateSlide } = useSlideActions();
+  const { mutate: updateSlideApi } = useUpdateSlide();
+
   const handleSave = (newTitle: string, close: () => void) => {
-    const nextTitle = newTitle.trim() || title || resolvedFallback;
+    const nextTitle = newTitle.trim() || storeTitle || fallbackTitle;
     if (!nextTitle) return;
 
     updateSlide({ title: nextTitle });
@@ -42,9 +70,8 @@ export default function SlideTitle({
 
   return (
     <TitleEditorPopover
-      title={resolvedTitle}
+      title={title}
       onSave={handleSave}
-      readOnly={readOnly}
       isCollapsed={isCollapsed}
       ariaLabel="슬라이드 이름 변경"
     />
