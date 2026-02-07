@@ -69,22 +69,29 @@ export function useVideoReactions() {
   }, [video, currentTime]);
 
   const toggleReaction = (type: ReactionType) => {
-    if (!video) return;
+    if (!video) {
+      return;
+    }
+
+    const requestData = {
+      videoId: video.videoId,
+      data: {
+        emojiType: type,
+        timestampMs: Math.round(currentTime * 1000),
+      },
+    };
 
     // 1. Store 즉시 업데이트 (optimistic)
     toggleReactionStore(type);
 
     // 2. API 비동기 호출
-    toggleReactionApi(
-      { videoId: video.videoId, data: { type, timestamp: Math.round(currentTime) } },
-      {
-        onError: () => {
-          // 3. 실패 시 rollback
-          showToast.error('반응을 반영하지 못했습니다.');
-          toggleReactionStore(type);
-        },
+    toggleReactionApi(requestData, {
+      onSuccess: () => {},
+      onError: () => {
+        showToast.error('반응을 반영하지 못했습니다.');
+        toggleReactionStore(type);
       },
-    );
+    });
   };
 
   return { reactions, toggleReaction };
