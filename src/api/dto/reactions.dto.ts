@@ -20,3 +20,18 @@ export interface ReactionCountDto {
     confused: number;
   };
 }
+
+/**
+ * 프로젝트 전체 슬라이드 리액션 집계 조회 Dto
+ */
+export interface ReactionSummaryDto {
+  projectId: string;
+  totalReactions: {
+    fire: number;
+    good: number;
+    bad: number;
+    sleepy: number;
+    confused: number;
+  };
+  totalCount: number;
+}

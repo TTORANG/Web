@@ -13,7 +13,7 @@ import type {
 import type { ApiResponse } from '@/types/api';
 
 // 슬라이드 분석 api 연동
-export async function getSlideAnalytics(projectId: string): Promise<SlideAnalyticsResponseDto> {
+export async function getSlideAnalytics(projectId: number): Promise<SlideAnalyticsResponseDto> {
   const response = await apiClient.get<ApiResponse<SlideAnalyticsResponseDto>>(
     `/presentations/${projectId}/analytics/slides`,
   );
@@ -38,7 +38,7 @@ export async function getVideoAnalytics(videoId: number): Promise<VideoExitAnaly
 
 // 프로젝트 분석 요약 api 연동(상단 카드 4개 + videoId)
 export async function getProjectAnalyticsSummary(
-  projectId: string,
+  projectId: number,
 ): Promise<ProjectAnalyticsSummaryDto> {
   const response = await apiClient.get<ApiResponse<ProjectAnalyticsSummaryDto>>(
     `/presentations/${projectId}/analytics/summary`,
@@ -76,7 +76,7 @@ export function recordExit(data: RecordExitRequest) {
 }
 
 // 슬라이드별 청중 잔존률 api 연동
-export async function getSlideRetention(projectId: string): Promise<SlideRetentionResponseDto> {
+export async function getSlideRetention(projectId: number): Promise<SlideRetentionResponseDto> {
   const response = await apiClient.get<ApiResponse<SlideRetentionResponseDto>>(
     `/presentations/${projectId}/analytics/slide-retention`,
   );

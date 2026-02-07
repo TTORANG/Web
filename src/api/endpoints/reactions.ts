@@ -3,7 +3,7 @@
  */
 import { apiClient } from '@/api';
 import type { ToggleSlideReactionDto } from '@/api/dto';
-import type { ReactionCountDto } from '@/api/dto/reactions.dto';
+import type { ReactionCountDto, ReactionSummaryDto } from '@/api/dto/reactions.dto';
 import type { ApiResponse } from '@/api/handlers';
 import type { Reaction } from '@/types/script';
 
@@ -36,4 +36,16 @@ export async function getSlideReactionSummary(slideId: string) {
 
   // ⚠️ 핵심: success 안에 있는 reactions 객체만 리턴! (없으면 빈 객체)
   return data.success?.reactions ?? {};
+}
+
+// 슬라이드 이모지 피드백 분포 - 인사이트 페이지
+export async function getTotalReactions(projectId: string): Promise<ReactionSummaryDto> {
+  const response = await apiClient.get<ApiResponse<ReactionSummaryDto>>(
+    `/presentations/${projectId}/slides/reactions/summary`,
+  );
+  // 데이터가 없으면 에러 발생 (null 반환 방지)
+  if (!response.data.success) {
+    throw new Error('슬라이드 이모지 피드백 분포를 불러올 수 없습니다.');
+  }
+  return response.data.success;
 }
