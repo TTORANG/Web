@@ -44,8 +44,8 @@ export interface SegmentHighlight {
  * 영상의 특정 시점(초 단위)에 달린 댓글과 리액션을 포함합니다.
  */
 export interface VideoTimestampFeedback {
-  /** 영상 내 타임스탬프 (초 단위, 예: 5.5 = 5초 500ms) */
-  timestamp: number;
+  /** 영상 내 타임스탬프 (밀리초 단위) */
+  timestampMs: number;
   /** 해당 타임스탬프의 댓글 목록 */
   comments: Comment[];
   /** 해당 타임스탐프의 리액션 목록 */

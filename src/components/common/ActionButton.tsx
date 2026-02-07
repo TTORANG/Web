@@ -1,3 +1,7 @@
+/**
+ * @file ActionButton.tsx
+ * @description 하단 영역 주요 액션 버튼
+ */
 interface ActionButtonProps {
   text: string;
   onClick: () => void;

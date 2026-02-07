@@ -47,7 +47,7 @@ export interface CreateCommentResponseDto {
  * 댓글 작성자 정보
  */
 export interface CommentUserDto {
-  id: string;
+  userId: string;
   nickName: string;
 }
 
@@ -55,7 +55,7 @@ export interface CommentUserDto {
  * 사용자 정보 포함 댓글
  */
 export interface CommentWithUserDto {
-  id: string;
+  commentId: string;
   content: string;
   user: CommentUserDto;
   createdAt: string;
@@ -79,7 +79,7 @@ export interface GetSlideCommentsResponseDto {
  * 댓글 생성/수정 응답
  */
 export interface CommentResponseDto {
-  id: string;
+  commentId: string;
   content: string;
   parentId?: string;
   userId: string;
@@ -94,7 +94,7 @@ export type GetReplyListResponseDto = CommentResponseDto[];
  * 댓글 수정
  */
 export interface UpdateCommentResponseDto {
-  id: string;
+  commentId: string;
   content: string;
   userId: string;
   createdAt: string;

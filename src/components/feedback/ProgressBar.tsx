@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { REACTION_CONFIG } from '@/constants/reaction';
-import type { Slide } from '@/types/slide';
+import type { SlideListItem } from '@/types/slide';
 import type { SegmentHighlight } from '@/types/video';
 import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
@@ -22,7 +22,7 @@ interface ProgressBarProps {
   /** seek 콜백 */
   onSeek: (time: number) => void;
   /** 슬라이드 목록 (썸네일 미리보기용) */
-  slides?: Slide[];
+  slides?: SlideListItem[];
   /** 슬라이드 전환 시간 배열 */
   slideChangeTimes?: number[];
   /** 5초 버킷별 세그먼트 하이라이트 (재생바 위 이모지 표시) */
@@ -214,7 +214,7 @@ export default function ProgressBar({
         >
           {slides && hoverSlideIndex !== null && slides[hoverSlideIndex] && (
             <img
-              src={slides[hoverSlideIndex].thumb}
+              src={slides[hoverSlideIndex].imageUrl}
               alt="slide thumbnail"
               className="h-22.5 w-40 min-w-40 shrink-0 rounded bg-gray-200 object-cover"
             />

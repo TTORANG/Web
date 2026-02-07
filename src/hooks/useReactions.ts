@@ -8,13 +8,13 @@
  */
 import { useQuery } from '@tanstack/react-query';
 
-import { getSlideReactionSummary, getTotalReactions } from '@/api/endpoints/reactions';
+import { getTotalReactions } from '@/api/endpoints/reactions';
 import { queryKeys } from '@/api/queryClient';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Reaction, ReactionType } from '@/types/script';
 import { showToast } from '@/utils/toast';
 
-import { useToggleReaction } from './queries/useReactionQueries';
+import { useToggleReaction } from './queries/useReaction.ts';
 
 const EMPTY_REACTIONS: Reaction[] = [];
 
@@ -31,7 +31,7 @@ export function useReactions() {
     toggleReactionStore(type);
 
     toggleReactionApi(
-      { slideId, data: { type } },
+      { slideId, data: { emojiType: type } },
       {
         onError: () => {
           showToast.error('반응을 반영하지 못했습니다.');
@@ -42,17 +42,6 @@ export function useReactions() {
   };
 
   return { reactions, toggleReaction };
-}
-
-/**
- * 가장 많은 피드백을 받은 슬라이드
- */
-export function useSlideReactionSummaries(slideIds: string[]) {
-  return useQuery({
-    queryKey: queryKeys.reactions.summary(slideIds.join('|')),
-    queryFn: () => Promise.all(slideIds.map((slideId) => getSlideReactionSummary(slideId))),
-    enabled: slideIds.length > 0,
-  });
 }
 
 /**

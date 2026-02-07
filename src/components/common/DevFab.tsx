@@ -1,3 +1,7 @@
+/**
+ * @file DevFab.tsx
+ * @description 개발 환경 전용 플로팅 액션 버튼 (DevTestPage 이동)
+ */
 import GanadiIcon from '@/assets/icons/ganadi.webp';
 
 export function DevFab() {

@@ -26,17 +26,17 @@ export const getMockSlideAnalytics = (projectId: string): ReadSlideAnalyticsResp
 
   return {
     slides: slidesToUse.map((slide, index) => ({
-      slideId: slide.id,
+      slideId: slide.slideId,
       slideNum: index + 1,
       title: slide.title || `슬라이드 ${index + 1}`,
       viewCount: Math.floor(Math.random() * 1000) + 100,
       exitCount: Math.floor(Math.random() * 50),
       exitRate: Math.random() * 0.3,
       reactionCount: (slide.emojiReactions || []).reduce((acc, r) => acc + r.count, 0),
-      commentCount: (slide.opinions || []).length,
+      commentCount: (slide.comments || []).length,
       feedbackCount:
         (slide.emojiReactions || []).reduce((acc, r) => acc + r.count, 0) +
-        (slide.opinions || []).length,
+        (slide.comments || []).length,
     })),
   };
 };

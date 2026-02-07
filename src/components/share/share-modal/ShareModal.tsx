@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 
 import clsx from 'clsx';
@@ -38,9 +38,6 @@ export function ShareModal() {
   const resetForm = useShareStore((s) => s.resetForm);
   const setShareUrl = useShareStore((s) => s.setShareUrl);
   const setStep = useShareStore((s) => s.setStep);
-
-  // 복사완료 토스트 알림용
-  const [copied, setCopied] = useState(false);
 
   // 공유 가능 영상 목록 조회 (모달이 열려있고, 영상포함 유형일 때만 fetch)
   const {
@@ -99,13 +96,12 @@ export function ShareModal() {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
+      showToast.success('복사가 완료되었습니다.');
     } catch {
-      setCopied(false);
       showToast.error('복사에 실패했습니다.');
     }
   };
+
   const handleGenerate = async () => {
     // 프로젝트 id없으면 생성x
     if (!projectId) return;
@@ -313,18 +309,6 @@ export function ShareModal() {
               >
                 <IconCopy className="h-4 w-4" />
               </button>
-              {copied && (
-                <div
-                  role="status"
-                  className={clsx(
-                    'absolute -top-11 right-0',
-                    'rounded-md bg-gray-900 px-3 py-2 text-caption text-white shadow-lg',
-                    'whitespace-nowrap',
-                  )}
-                >
-                  URL을 복사했습니다.
-                </div>
-              )}
             </div>
           </div>
         </div>

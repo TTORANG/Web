@@ -1,4 +1,4 @@
-import type { Slide } from '@/types/slide';
+import type { SlideListItem } from '@/types/slide';
 
 import { MOCK_USERS } from './users';
 import { timeAgo, timeAt } from './utils';
@@ -20,31 +20,36 @@ const PROJECT_SLIDE_COUNTS = {
 };
 
 // 기본 슬라이드 생성 함수
-const createDefaultSlide = (projectId: string, index: number): Slide => ({
-  id: `${projectId}-${index}`,
+const createDefaultSlide = (projectId: string, index: number): SlideListItem => ({
+  slideId: `${projectId}-${index}`,
   projectId,
   title: `슬라이드 ${index + 1}`,
-  thumb: `/thumbnails/${projectId}/${index}.webp`,
+  slideNum: index + 1,
+  imageUrl: `/thumbnails/${projectId}/${index}.webp`,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
   script: `${projectId} 프로젝트의 슬라이드 ${index + 1}번 내용입니다.`,
-  opinions: [],
   history: [],
   emojiReactions: [],
   startTime: index * 60, // 슬라이드당 60초 간격
 });
 
-const p1Slides: Slide[] = [
+const p1Slides: SlideListItem[] = [
   {
-    id: 'p1-0',
+    slideId: 'p1-0',
     projectId: 'p1',
     title: '도입',
-    thumb: '/thumbnails/p1/0.webp',
+    slideNum: 1,
+    imageUrl: '/thumbnails/p1/0.webp',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z',
     startTime: 12,
     script: `안녕하세요, 세션에 참석해주셔서 감사합니다.
 네이버 지도 리브랜딩 진행한 최은혜, 원종원이고요.
 다음 주 월요일에 네이버지도 서비스 개편과 함께 리브랜딩된 모습이 공개될 예정입니다.
 많은 관심 부탁드리고 지금부터 네이버 지도 리브랜딩 과정 소개해 드리도록 하겠습니다.
     `,
-    opinions: [
+    comments: [
       {
         id: '1',
         userId: MOCK_USERS[1].id,
@@ -93,13 +98,16 @@ const p1Slides: Slide[] = [
   },
 
   {
-    id: 'p1-1',
+    slideId: 'p1-1',
     projectId: 'p1',
     title: '문제 정의',
-    thumb: '/thumbnails/p1/1.webp',
+    slideNum: 2,
+    imageUrl: '/thumbnails/p1/1.webp',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z',
     startTime: 37,
     script: '',
-    opinions: [
+    comments: [
       {
         id: '1',
         userId: MOCK_USERS[1].id,
@@ -174,10 +182,13 @@ const p1Slides: Slide[] = [
   },
 
   {
-    id: 'p1-2',
+    slideId: 'p1-2',
     projectId: 'p1',
     title: '문제 분석',
-    thumb: '/thumbnails/p1/2.webp',
+    slideNum: 3,
+    imageUrl: '/thumbnails/p1/2.webp',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z',
     startTime: 38,
     script: `먼저 네이버 지도 리브랜딩이 어떻게 시작되었는지 설명드리고자 하는데요.
 일반적으로 리브랜딩은 사업부서의 요청에 따라 추진되는 경우가 많은데,
@@ -185,7 +196,7 @@ const p1Slides: Slide[] = [
 지도 서비스 래브랜딩 필요성을 주도적으로 검토하였고요.
 이후 사업부서와의 긴밀한 논의와 공감대 형성을 거쳐서 리브랜딩 프로젝트를 진행했습니다.
     `,
-    opinions: [],
+    comments: [],
     history: [
       {
         versionNumber: 1,
@@ -236,13 +247,16 @@ const p1Slides: Slide[] = [
   },
 
   {
-    id: 'p1-3',
+    slideId: 'p1-3',
     projectId: 'p1',
     title: '해결 목표',
-    thumb: '/thumbnails/p1/3.webp',
+    slideNum: 4,
+    imageUrl: '/thumbnails/p1/3.webp',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z',
     startTime: 66,
     script: '그럼 왜 네이버 지도 서비스였을까 궁금하실 텐데요.',
-    opinions: [
+    comments: [
       {
         id: '1',
         userId: MOCK_USERS[3].id,
@@ -262,10 +276,13 @@ const p1Slides: Slide[] = [
   },
 
   {
-    id: 'p1-4',
+    slideId: 'p1-4',
     projectId: 'p1',
     title: '해결 방안',
-    thumb: '/thumbnails/p1/4.webp',
+    slideNum: 5,
+    imageUrl: '/thumbnails/p1/4.webp',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z',
     startTime: 71,
     script: `네이버 지도를 떠올리면 대부분 장소 검색이나 길 찾기, 이동 기능을 먼저 생각하실 것 같아요.
 하지만 올해 중순에 새롭게 추가된 발견 탭을 통해서 네이버 지도 서비스가 변화하고 있다는 흐름을 감지할 수 있었습니다.
@@ -273,7 +290,7 @@ const p1Slides: Slide[] = [
 사용자는 발견 탭을 통해서 자신의 취향에 맞는 장소를 추천받고 새로운 장소를 발견할 수 있는데요.
 이러한 점을 미루어봤을 때 네이버 지도의 역할이 점차 확장되고 있다는 인상을 받았습니다.
     `,
-    opinions: [],
+    comments: [],
     history: [
       {
         versionNumber: 1,
@@ -292,10 +309,13 @@ const p1Slides: Slide[] = [
   },
 
   {
-    id: 'p1-5',
+    slideId: 'p1-5',
     projectId: 'p1',
     title: '기능 구성 및 상세 설계 - 핵심 모듈 분석',
-    thumb: '/thumbnails/p1/5.webp',
+    slideNum: 6,
+    imageUrl: '/thumbnails/p1/5.webp',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z',
     startTime: 105,
     script: `최근 2, 3년간 보도 자료를 통해서도 네이버 지도 서비스의 방향과 전략이 변화하고 있음을 알 수 있었는데요.
 왼쪽 모빌리티 영역에서는 VR, 3D 맵, 글로벌 타겟 확장 등 기술적 고도화를 꾸준히 이어가고 있었고,
@@ -304,7 +324,7 @@ const p1Slides: Slide[] = [
 그래서 네이버 지도는 단순한 길 찾기 앱을 넘어 사용자의 온오프라인 장소 경험을 연결하고, 확장하고 지원하는 생활 밀착형 플랫폼,
 나아가 슈퍼 앱을 목표로 하는 만큼 플랫폼적 역할까지 강화하고 있음을 확인할 수 있었는데요.
     `,
-    opinions: [
+    comments: [
       {
         id: '1',
         userId: MOCK_USERS[4].id,
@@ -324,16 +344,19 @@ const p1Slides: Slide[] = [
   },
 
   {
-    id: 'p1-6',
+    slideId: 'p1-6',
     projectId: 'p1',
     title: '화면 흐름',
-    thumb: '/thumbnails/p1/6.webp',
+    slideNum: 7,
+    imageUrl: '/thumbnails/p1/6.webp',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z',
     startTime: 150,
     script: `곧 공개될 서비스 개편에서도 네이버 지도의 확장 방향성을 확인할 수 있었습니다.
 앞서 말씀드린 발견 피드뿐 아니라 예약과 저장 기능이 전면 탭에 등장하면서 네이버 지도는 이제 모빌리티뿐 아니라
 장소 기반, 컨텐츠 전반을 아우르는 통합 플랫폼으로 진화하고 있음을 확인할 수 있었습니다.
     `,
-    opinions: [],
+    comments: [],
     history: [
       {
         versionNumber: 1,
@@ -352,15 +375,18 @@ const p1Slides: Slide[] = [
   },
 
   {
-    id: 'p1-7',
+    slideId: 'p1-7',
     projectId: 'p1',
     title: '기술적 구현',
-    thumb: '/thumbnails/p1/7.webp',
+    slideNum: 8,
+    imageUrl: '/thumbnails/p1/7.webp',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z',
     startTime: 174,
     script: `그래서 저희는 지금 네이버 지도 서비스 방향성이 전환되고 확장되는 매우 중요한 모멘텀이라고 판단했고요.
 네이버 지도의 미래 방향성과 서비스 철학을 담아낼 새로운 브랜드 아이덴티티가 필요하다고 보았습니다.
     `,
-    opinions: [
+    comments: [
       {
         id: '1',
         userId: MOCK_USERS[0].id,
@@ -396,10 +422,13 @@ const p1Slides: Slide[] = [
   },
 
   {
-    id: 'p1-8',
+    slideId: 'p1-8',
     projectId: 'p1',
     title: '기대 효과',
-    thumb: '/thumbnails/p1/8.webp',
+    slideNum: 9,
+    imageUrl: '/thumbnails/p1/8.webp',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z',
     startTime: 192,
     script: `그렇다면 현재 브랜드 아이덴티티는 어떠한지 점검해보았는데요.
 점차 진화하고 있는 서비스 방향에 비해서 현재 브랜드 아이덴티티는 이전의 네이버 지도 이미지에 머물러있다는 인상을 받았습니다.
@@ -407,7 +436,7 @@ const p1Slides: Slide[] = [
 길, 이동, 모빌리티가 강조된 앱 아이콘, 그리고 큰 차별점이 없는 브랜드 메시지, 그리고 브랜드 색상과 그래픽 에셋 역시
 전략 아래 운영되기보다는 캠페인 별, 기능 별로 개별적으로 사용되고 있어 일관성이 부족한 상황이었습니다.
     `,
-    opinions: [
+    comments: [
       {
         id: '1',
         userId: MOCK_USERS[1].id,
@@ -441,17 +470,20 @@ const p1Slides: Slide[] = [
   },
 
   {
-    id: 'p1-9',
+    slideId: 'p1-9',
     projectId: 'p1',
     title: '결론',
-    thumb: '/thumbnails/p1/9.webp',
+    slideNum: 10,
+    imageUrl: '/thumbnails/p1/9.webp',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z',
     startTime: 227,
     script: `광고 캠페인 측면에서도 지난해 외국인 관광객 대상 바이럴 필름을 제외하고는
 네이버 지도의 변화를 알리는 캠페인이 적극적으로 진행되지 않았기 때문에,
 브랜드 조직에서는 이번 리브랜딩을 통해서 네이버 지도의 미래 방향성을 담은 브랜드 메시지, 디자인 그리고
 캠페인까지, 전반적으로 브랜드 재정비가 필요하다고 판단했습니다.
 `,
-    opinions: [],
+    comments: [],
     history: [],
     emojiReactions: [
       { type: 'fire', count: 0 },
@@ -463,16 +495,19 @@ const p1Slides: Slide[] = [
   },
 
   {
-    id: 'p1-10',
+    slideId: 'p1-10',
     projectId: 'p1',
     title: '결론',
-    thumb: '/thumbnails/p1/10.webp',
+    slideNum: 11,
+    imageUrl: '/thumbnails/p1/10.webp',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z',
     startTime: 251,
     script: `그래서 저희는 네이버 지도 브랜드를 어떤 방향성과 언어, 디자인으로 사용자를 설득할 수 있을지에 대해 뾰족한 나침판을 세워보기로 했는데요.
 그 근거를 찾기 위해 가장 먼저 진행한 단계는 사업부서 인터뷰와 사용자 조사였습니다.
 앞서 리서치를 통해 얻은 인사이트가 우리 내부만의 시각인지, 혹은 사업부서와 사용자 모두가 공감하는 문제인지 확인이 필요했는데요.
 `,
-    opinions: [],
+    comments: [],
     history: [],
     emojiReactions: [
       { type: 'fire', count: 0 },
@@ -484,15 +519,18 @@ const p1Slides: Slide[] = [
   },
 
   {
-    id: 'p1-11',
+    slideId: 'p1-11',
     projectId: 'p1',
     title: '결론',
-    thumb: '/thumbnails/p1/11.webp',
+    slideNum: 12,
+    imageUrl: '/thumbnails/p1/11.webp',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z',
     startTime: 282,
     script: `사업부서 13분과의 심층 인터뷰를 통해서 네이버 지도는 어떤 서비스라고 생각하는지, 앞으로 서비스가 어떤 방향으로 나아가야 한다고 생각하는지
 그리고 브랜드 아이덴티티 측면에서도 어떤 부분이 부족하고 보안이 필요한지 인터뷰를 진행했습니다.
 `,
-    opinions: [],
+    comments: [],
     history: [],
     emojiReactions: [
       { type: 'fire', count: 0 },
@@ -504,15 +542,18 @@ const p1Slides: Slide[] = [
   },
 
   {
-    id: 'p1-12',
+    slideId: 'p1-12',
     projectId: 'p1',
     title: '결론',
-    thumb: '/thumbnails/p1/12.webp',
+    slideNum: 13,
+    imageUrl: '/thumbnails/p1/12.webp',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z',
     startTime: 302,
     script: `많은 분들이 공통적으로 네이버 지도는 온오프라인을 연결해 주는 서비스, 장소 경험이 완결되고 확장되는 서비스라고 말씀 주셨습니다.
 하지만 그에 비해 브랜드 아이덴티티는 이러한 서비스의 가치와 방향성을 충분히 담아내지 못하고 있다는 의견이 공통적으로 있었고요.
     `,
-    opinions: [],
+    comments: [],
     history: [],
     emojiReactions: [
       { type: 'fire', count: 0 },
@@ -524,15 +565,18 @@ const p1Slides: Slide[] = [
   },
 
   {
-    id: 'p1-13',
+    slideId: 'p1-13',
     projectId: 'p1',
     title: '결론',
-    thumb: '/thumbnails/p1/13.webp',
+    slideNum: 14,
+    imageUrl: '/thumbnails/p1/13.webp',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z',
     startTime: 323,
     script: `사용자 조사에서도 네이버 지도를 떠올렸을 때 연상되는 이미지, 사용성, 만족도, 아쉬운 점이나 개선되었으면 하는 점에 대해서 질문을 드렸고
 사용성, 서비스 만족도 면에서는 높은 평가를 받았지만, 그에 비해 브랜드로서의 인상이나 고요한 이미지는 뚜렷하지 않다는 점이 드러났습니다.
     `,
-    opinions: [],
+    comments: [],
     history: [],
     emojiReactions: [
       { type: 'fire', count: 0 },
@@ -544,16 +588,19 @@ const p1Slides: Slide[] = [
   },
 
   {
-    id: 'p1-14',
+    slideId: 'p1-14',
     projectId: 'p1',
     title: '결론',
-    thumb: '/thumbnails/p1/14.webp',
+    slideNum: 15,
+    imageUrl: '/thumbnails/p1/14.webp',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z',
     startTime: 347,
     script: `그 결과 리서치를 통해 얻었던 인사이트와 내부, 외부의 시선이 일치하다는 것을 확인할 수 있었는데요.
 서비스 방향성으로는 네이버 지도가 장소와 관련된 모든 경험을 제공하고 연결하는 올인원 플랫폼으로 나아가고 있다는 점,
 브랜드 측면에서는 이러한 서비스의 변화를 사용자에게 명확하게 전달할 수 있는 새로운 브랜드 아이덴티티가 필요하다는 공감대가 형성되었습니다.
     `,
-    opinions: [],
+    comments: [],
     history: [],
     emojiReactions: [
       { type: 'fire', count: 0 },
@@ -565,13 +612,16 @@ const p1Slides: Slide[] = [
   },
 
   {
-    id: 'p1-15',
+    slideId: 'p1-15',
     projectId: 'p1',
     title: '결론',
-    thumb: '/thumbnails/p1/15.webp',
+    slideNum: 16,
+    imageUrl: '/thumbnails/p1/15.webp',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z',
     startTime: 444,
     script: ``,
-    opinions: [],
+    comments: [],
     history: [],
     emojiReactions: [
       { type: 'fire', count: 0 },
@@ -592,4 +642,4 @@ const generatedSlides = Object.entries(PROJECT_SLIDE_COUNTS).flatMap(([projectId
   );
 });
 
-export const MOCK_SLIDES: Slide[] = [...p1Slides, ...generatedSlides];
+export const MOCK_SLIDES: SlideListItem[] = [...p1Slides, ...generatedSlides];

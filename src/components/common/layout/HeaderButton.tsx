@@ -1,3 +1,7 @@
+/**
+ * @file HeaderButton.tsx
+ * @description 헤더 우측 영역 아이콘+텍스트 버튼
+ */
 import type { ReactNode } from 'react';
 
 import clsx from 'clsx';

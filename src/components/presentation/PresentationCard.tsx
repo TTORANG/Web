@@ -18,6 +18,7 @@ import { Dropdown } from '../common';
 import type { DropdownItem } from '../common/Dropdown';
 import { HighlightText } from '../common/HighlightText';
 import DeletePresentationModal from './DeletePresentationModal';
+import RenamePresentationModal from './RenamePresentationModal';
 
 type Props = Presentation & {
   highlightQuery?: string;
@@ -97,19 +98,17 @@ function PresentationCard({
     usePresentationDeletion(projectId);
 
   const {
-    isRenaming,
-    isUpdating,
+    isRenameModalOpen,
+    isPending: isRenamePending,
     displayTitle,
     newTitle,
     setNewTitle,
-    inputRef,
-    startRenaming,
-    handleSubmit,
-    cancelRenaming,
+    openRenameModal,
+    closeRenameModal,
+    confirmRename,
   } = useRename({ projectId, initialTitle: title });
 
   const handleCardClick = () => {
-    if (isRenaming) return;
     navigate(getTabPath(projectId, 'slide'));
   };
 
@@ -117,7 +116,7 @@ function PresentationCard({
     {
       id: 'rename',
       label: '이름 변경',
-      onClick: startRenaming,
+      onClick: openRenameModal,
     },
     {
       id: 'delete',
@@ -131,10 +130,7 @@ function PresentationCard({
     <>
       <article
         onClick={handleCardClick}
-        className={clsx(
-          'rounded-2xl border-none bg-white transition-shadow',
-          !isRenaming && 'cursor-pointer hover:shadow-lg',
-        )}
+        className="rounded-2xl border-none bg-white transition-shadow cursor-pointer hover:shadow-lg"
       >
         <div className="aspect-video w-full overflow-hidden rounded-t-2xl bg-gray-200">
           {thumbnailUrl && (
@@ -150,71 +146,32 @@ function PresentationCard({
           {/* 제목 및 업데이트 날짜 */}
           <div className="min-h-18">
             <div className="flex justify-between gap-2">
-              {isRenaming ? (
-                <form
-                  onSubmit={handleSubmit}
-                  className="flex-1 flex items-center gap-1 px-3 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm w-full max-w-full overflow-hidden"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Escape') cancelRenaming();
-                    }}
-                    disabled={isUpdating}
-                    className={clsx(
-                      'flex-1 min-w-0 text-body-m-bold text-gray-800',
-                      'focus:outline-none',
-                      'disabled:opacity-50 disabled:cursor-not-allowed',
-                      'placeholder:text-gray-400',
-                    )}
-                    placeholder="발표 제목을 입력하세요"
+              <div className="flex-1 min-w-0">
+                <h3 className="text-body-m-bold text-gray-800 line-clamp-2">
+                  <HighlightText
+                    text={displayTitle}
+                    query={highlightQuery}
+                    highlightClassName="bg-transparent text-main"
                   />
-                  <button
-                    type="submit"
-                    disabled={isUpdating}
-                    className={clsx(
-                      'px-2 py-1 text-caption-bold text-white bg-main rounded-full shrink-0',
-                      'hover:bg-blue-600 transition-colors',
-                      'disabled:opacity-50 disabled:cursor-not-allowed',
-                    )}
-                  >
-                    {isUpdating ? '저장 중...' : '저장'}
-                  </button>
-                </form>
-              ) : (
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-body-m-bold text-gray-800 line-clamp-2">
-                    <HighlightText
-                      text={displayTitle}
-                      query={highlightQuery}
-                      highlightClassName="bg-transparent text-main"
-                    />
-                  </h3>
-                  <p className="mt-1 text-body-s text-gray-400">{formatRelativeTime(updatedAt)}</p>
-                </div>
-              )}
+                </h3>
+                <p className="mt-1 text-body-s text-gray-400">{formatRelativeTime(updatedAt)}</p>
+              </div>
 
               {/* 더보기 */}
-              {!isRenaming && (
-                <div onClick={(e) => e.stopPropagation()} className="shrink-0 mt-1">
-                  <Dropdown
-                    trigger={({ isOpen }) => (
-                      <div className="p-2 -m-2">
-                        <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-400')} />
-                      </div>
-                    )}
-                    items={dropdownItems}
-                    position="bottom"
-                    align="end"
-                    ariaLabel="더보기"
-                    menuClassName="w-32"
-                  />
-                </div>
-              )}
+              <div onClick={(e) => e.stopPropagation()} className="shrink-0 mt-1">
+                <Dropdown
+                  trigger={({ isOpen }) => (
+                    <div className="p-2 -m-2">
+                      <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-400')} />
+                    </div>
+                  )}
+                  items={dropdownItems}
+                  position="bottom"
+                  align="end"
+                  ariaLabel="더보기"
+                  menuClassName="w-32"
+                />
+              </div>
             </div>
           </div>
 
@@ -250,6 +207,18 @@ function PresentationCard({
           isPending={isPending}
           onClose={closeDeleteModal}
           onConfirm={confirmDelete}
+        />
+      </div>
+
+      {/* 이름 변경 모달 */}
+      <div onClick={(e) => e.stopPropagation()}>
+        <RenamePresentationModal
+          isOpen={isRenameModalOpen}
+          currentTitle={newTitle}
+          isPending={isRenamePending}
+          onClose={closeRenameModal}
+          onConfirm={confirmRename}
+          onTitleChange={setNewTitle}
         />
       </div>
     </>

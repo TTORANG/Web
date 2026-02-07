@@ -44,7 +44,8 @@ export function useVideoReactions() {
 
     // 가장 가까운 버킷 (active 상태 기준)
     const closestFeedback = overlappingFeedbacks.reduce((closest, current) => {
-      return Math.abs(current.timestamp - currentTime) < Math.abs(closest.timestamp - currentTime)
+      return Math.abs(current.timestampMs - currentTime * 1000) <
+        Math.abs(closest.timestampMs - currentTime * 1000)
         ? current
         : closest;
     });
@@ -76,7 +77,7 @@ export function useVideoReactions() {
 
     // 2. API 비동기 호출
     toggleReactionApi(
-      { videoId: video.videoId, data: { type, timestamp: Math.round(currentTime) } },
+      { videoId: video.videoId, data: { emojiType: type, timestampMs: Math.round(currentTime) } },
       {
         onError: () => {
           // 3. 실패 시 rollback

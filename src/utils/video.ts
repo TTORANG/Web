@@ -61,12 +61,14 @@ export function clamp(n: number, min: number, max: number): number {
  * @param window - 탐색 범위 (기본값: 5초)
  * @returns 범위 내 피드백 배열
  */
-export function getOverlappingFeedbacks<T extends { timestamp: number }>(
+export function getOverlappingFeedbacks<T extends { timestampMs: number }>(
   feedbacks: T[],
   currentTime: number,
   window: number = 5,
 ): T[] {
-  return feedbacks.filter((f) => Math.abs(f.timestamp - currentTime) <= window);
+  const currentTimeMs = currentTime * 1000;
+  const windowMs = window * 1000;
+  return feedbacks.filter((f) => Math.abs(f.timestampMs - currentTimeMs) <= windowMs);
 }
 
 /**
@@ -173,7 +175,7 @@ export function computeSegmentHighlights(
  */
 export function computeUserActiveHighlights(
   feedbacks: Array<{
-    timestamp: number;
+    timestampMs: number;
     reactions: Array<{ type: ReactionType; active?: boolean }>;
   }>,
   duration: number,
@@ -187,7 +189,7 @@ export function computeUserActiveHighlights(
     const activeReactions = feedback.reactions.filter((r) => r.active);
     if (!activeReactions.length) return;
 
-    const bucketIndex = Math.floor(feedback.timestamp / SEGMENT_BUCKET_SIZE);
+    const bucketIndex = Math.floor(feedback.timestampMs / 1000 / SEGMENT_BUCKET_SIZE);
 
     if (!bucketMap.has(bucketIndex)) {
       bucketMap.set(bucketIndex, new Set());
@@ -236,7 +238,10 @@ export function computeUserActiveHighlights(
  * 5) 최종 결과는 시간순 정렬
  */
 export function computeSegmentHighlightsFromFeedbacks(
-  feedbacks: Array<{ timestamp: number; reactions: Array<{ type: ReactionType; count: number }> }>,
+  feedbacks: Array<{
+    timestampMs: number;
+    reactions: Array<{ type: ReactionType; count: number }>;
+  }>,
   duration: number,
   topN: number = 10,
 ): SegmentHighlight[] {
@@ -246,7 +251,7 @@ export function computeSegmentHighlightsFromFeedbacks(
   const bucketMap = new Map<number, Record<ReactionType, number>>();
 
   feedbacks.forEach((feedback) => {
-    const bucketIndex = Math.floor(feedback.timestamp / SEGMENT_BUCKET_SIZE);
+    const bucketIndex = Math.floor(feedback.timestampMs / 1000 / SEGMENT_BUCKET_SIZE);
 
     if (!bucketMap.has(bucketIndex)) {
       const counts = {} as Record<ReactionType, number>;

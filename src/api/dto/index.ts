@@ -20,13 +20,19 @@ export type {
   GetScriptVersionHistoryResponseDto,
   RestoreScriptResponseDto,
 } from './scripts.dto';
-export type { ToggleSlideReactionDto } from './reactions.dto';
+export type {
+  ReadReactionCountDto,
+  ToggleSlideReactionDto,
+  ToggleSlideReactionResponseDto,
+  ToggleVideoReactionDto,
+  ToggleVideoReactionResponseDto,
+} from './reactions.dto';
 export type { RestoreScriptRequestDto } from './analytics.dto';
 export type { UpdateProjectDto } from './presentations.dto';
 // export type { UploadFileResponseDto } from './files.dto';
 export type {
   ChunkUploadResponseDto,
-  CreateOpinionDto,
+  CreateCommentDto,
   FinishVideoRequestDto,
   FinishVideoResponseDto,
   StartVideoRequestDto,

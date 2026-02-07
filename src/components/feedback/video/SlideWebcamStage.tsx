@@ -14,7 +14,7 @@ import clsx from 'clsx';
 import RefreshIcon from '@/assets/icons/icon-refresh.svg?react';
 import VideoPlaybackBar from '@/components/feedback/video/VideoPlaybackBar';
 import { useVideoSync } from '@/hooks/useVideoSync';
-import type { Slide } from '@/types/slide';
+import type { SlideListItem } from '@/types/slide';
 import { getSlideIndexFromTime } from '@/utils/video';
 
 const LAYOUT_STORAGE_KEY = 'feedback-video-layout';
@@ -76,7 +76,7 @@ function MediaBox({ isMain, showPip, onToggle, label, className, children }: Med
 
 // 메인 컴포넌트
 type SlideWebcamStageProps = {
-  slides: Slide[];
+  slides: SlideListItem[];
   slideChangeTimes: number[];
   webcamVideoUrl: string;
   onTimeUpdate?: (time: number) => void;
@@ -202,7 +202,7 @@ export default function SlideWebcamStage({
           className="bg-[#000000]/20"
         >
           <img
-            src={activeSlide.thumb}
+            src={activeSlide.imageUrl}
             alt={`슬라이드 ${activeIndex + 1} - ${activeSlide.title}`}
             className={clsx(
               'h-full w-full',
