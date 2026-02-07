@@ -72,3 +72,41 @@ export interface ProjectAnalyticsSummaryDto {
   completionRate: number;
   totalFeedbackCount: number;
 }
+
+/**
+ * 슬라이드별 잔존률 조회 Dto
+ */
+export interface SlideRetentionDto {
+  slideId: string;
+  slideNum: number;
+  title: string;
+  sessionCount: number;
+  retentionRate: number;
+}
+
+/**
+ * 슬라이드별 잔존률 응답 Dto
+ */
+export interface SlideRetentionResponseDto {
+  totalSessions: number;
+  slideRetention: SlideRetentionDto[];
+}
+
+/**
+ * 영상별 잔존률 조회 Dto
+ */
+export interface VideoRetentionDto {
+  timestampMs: number;
+  sessionCount: number;
+  retentionRate: number;
+}
+
+/**
+ * 영상별 잔존률 응답 Dto
+ */
+export interface VideoRetentionResponseDto {
+  totalSessions: number;
+  durationSeconds: number;
+  intervalMs: number;
+  videoRetention: VideoRetentionDto[];
+}

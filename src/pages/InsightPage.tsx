@@ -12,6 +12,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
+import type { TooltipContentProps } from 'recharts/types/component/Tooltip';
 
 import { getSlideReactionSummary } from '@/api/endpoints/reactions';
 import { queryKeys } from '@/api/queryClient';
@@ -27,7 +29,9 @@ import { useSlides } from '@/hooks/queries/useSlides';
 import {
   useProjectAnalyticsSummary,
   useSlideAnalytics,
+  useSlideRetention,
   useVideoAnalytics,
+  useVideoRetention,
 } from '@/hooks/useAnalytics';
 import type { DropOffSlide, DropOffTime, SummaryStat } from '@/types/insight';
 import type { Reaction } from '@/types/script';
@@ -45,7 +49,16 @@ type RecentComment = {
   text: string;
 };
 
-// 디자인을 위해 스타일을 조금 더 부드럽게 조정했습니다.
+// 툴팁용 타입
+interface ChartDataPoint {
+  label: string;
+  value: number;
+  tooltipTitle: string;
+  sessionCount: number;
+  originalTime?: number; // 영상 시간 계산용
+}
+
+// 디자인을 위해 스타일을 조금 더 부드럽게 조정함
 const thumbBase = 'bg-gray-100 rounded-lg aspect-video';
 const FALLBACK_SLIDE_DURATION_SECONDS = 10;
 
@@ -76,41 +89,43 @@ const recentComments: RecentComment[] = [
   },
 ];
 
-// Recharts용 데이터 (그라데이션 그래프용)
-const retentionData = [
-  { time: '0:00', rate: 100 },
-  { time: '1:00', rate: 90 },
-  { time: '1:40', rate: 80 }, // 급격한 이탈 지점
-  { time: '2:00', rate: 80 },
-  { time: '3:00', rate: 70 },
-  { time: '3:30', rate: 75 },
-  { time: '4:00', rate: 65 },
-  { time: '5:00', rate: 65 },
-];
-
-const slideRetentionData = [
-  { time: 'S1', rate: 100 },
-  { time: 'S2', rate: 92 },
-  { time: 'S3', rate: 86 },
-  { time: 'S4', rate: 80 },
-  { time: 'S5', rate: 80 },
-  { time: 'S6', rate: 70 },
-  { time: 'S7', rate: 75 },
-  { time: 'S8', rate: 65 },
-  { time: 'S9', rate: 65 },
-  { time: 'S10', rate: 65 },
-];
+// --- 커스텀 툴팁 컴포넌트 ---
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+  hasVideo,
+}: TooltipContentProps<ValueType, NameType> & { hasVideo: boolean }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload as ChartDataPoint;
+    return (
+      <div className="rounded-lg border border-gray-100 bg-white p-3 shadow-lg">
+        <p className="mb-1 text-xs font-semibold text-gray-500">
+          {hasVideo ? `재생 시간: ${label}` : `슬라이드: ${data.tooltipTitle}`}
+        </p>
+        <div className="flex items-end gap-2">
+          <p className="text-sm font-bold text-indigo-600">잔존율 {data.value}%</p>
+          <span className="text-xs text-gray-400">({data.sessionCount}명)</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
 
 // --- 컴포넌트 시작 ---
+
+const normalizeRate = (rate: number) => (rate <= 1 ? rate * 100 : rate);
 
 export default function InsightPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { data: slides } = useSlides(projectId ?? '');
   const { data: slideAnalytics } = useSlideAnalytics(projectId ?? '');
   const { data: summaryAnalytics } = useProjectAnalyticsSummary(projectId ?? '');
-  const videoId = summaryAnalytics?.videoIds?.[0] ?? '';
-  const hasVideo = !!videoId;
-  const { data: videoExitAnalytics } = useVideoAnalytics(videoId);
+  const videoIdStr = summaryAnalytics?.videoIds?.[0] ?? '';
+  const videoIdNum = videoIdStr ? Number(videoIdStr) : 0;
+  const hasVideo = !!videoIdNum;
+  const { data: videoExitAnalytics } = useVideoAnalytics(videoIdNum);
   const computedSummaryStats = useMemo(() => {
     if (!summaryAnalytics) return emptySummaryStats;
 
@@ -264,6 +279,115 @@ export default function InsightPage() {
       });
   }, [videoExitAnalytics, slideChangeTimes, slides]);
 
+  // 잔존율 데이터 Fetching
+  // 1. 영상 잔존율 (영상이 있을 때만 호출)
+  const { data: videoRetentionRes } = useVideoRetention(videoIdNum);
+
+  // 2. 슬라이드 잔존율 (영상이 없을 때 호출)
+  const { data: slideRetentionRes } = useSlideRetention(projectId ?? '');
+
+  // --- Chart Data 가공 ---
+  const videoChartData = useMemo<ChartDataPoint[]>(() => {
+    if (!videoRetentionRes?.videoRetention) return [];
+    return videoRetentionRes.videoRetention.map((item) => ({
+      label: formatVideoTimestamp(item.timestampMs / 1000), // x축: 00:00
+      value: Math.round(normalizeRate(item.retentionRate)), // y축: 0~100%
+      tooltipTitle: formatVideoTimestamp(item.timestampMs / 1000),
+      sessionCount: item.sessionCount,
+      originalTime: item.timestampMs,
+    }));
+  }, [videoRetentionRes]);
+
+  const slideChartData = useMemo<ChartDataPoint[]>(() => {
+    if (!slideRetentionRes?.slideRetention) return [];
+    return slideRetentionRes.slideRetention.map((item) => ({
+      label: `S${item.slideNum}`, // x축: S1, S2
+      value: Math.round(normalizeRate(item.retentionRate)),
+      tooltipTitle: item.title || `슬라이드 ${item.slideNum}`, // 툴팁: 제목
+      sessionCount: item.sessionCount,
+    }));
+  }, [slideRetentionRes]);
+
+  const renderRetentionChart = (title: string, data: ChartDataPoint[], isVideo: boolean) => (
+    <div className="flex w-full flex-col gap-6 rounded-lg border border-gray-200 bg-white px-5 pb-8 pt-4">
+      <h3 className="text-body-l-bold text-gray-800">{title}</h3>
+      <div className="h-100 w-full px-6">
+        {data.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient
+                  id={`colorRate-${isVideo ? 'video' : 'slide'}`}
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop offset="5%" stopColor="var(--color-main)" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="var(--color-main)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="var(--color-gray-400)"
+              />
+
+              <XAxis
+                dataKey="label"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: 'var(--color-gray-600)', fontWeight: 600 }}
+                dy={10}
+                interval={isVideo ? 'preserveStartEnd' : 0}
+                minTickGap={30}
+              />
+
+              <YAxis
+                domain={[0, 100]}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: 'var(--color-gray-600)' }}
+                ticks={[0, 25, 50, 75, 100]}
+                unit="%"
+              />
+
+              <Tooltip
+                content={(props) => <CustomTooltip {...props} hasVideo={isVideo} />}
+                cursor={{ stroke: 'var(--color-error)', strokeDasharray: '4 4', strokeWidth: 1 }}
+              />
+
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke="var(--color-main)"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill={`url(#colorRate-${isVideo ? 'video' : 'slide'})`}
+                dot={
+                  !isVideo
+                    ? { r: 4, fill: '#fff', stroke: 'var(--color-main)', strokeWidth: 2 }
+                    : false
+                }
+                activeDot={{
+                  r: 5,
+                  fill: 'var(--color-error)',
+                  stroke: '#fff',
+                  strokeWidth: 2,
+                }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-gray-400">
+            <p>데이터를 분석 중이거나 결과가 없습니다.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div
       role="tabpanel"
@@ -290,82 +414,12 @@ export default function InsightPage() {
             showVideoDropOff={hasVideo}
           />
 
-          {/* 잔존률 차트 (단독 1열) */}
-          <div className="flex w-full flex-col gap-6 rounded-lg border border-gray-200 bg-white px-5 pb-8 pt-4">
-            <h3 className="text-body-l-bold text-gray-800">
-              {hasVideo ? '영상 시청 잔존률' : '슬라이드별 청중 잔존률'}
-            </h3>
-            <div className="h-100 w-full px-6">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={hasVideo ? retentionData : slideRetentionData}
-                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                >
-                  {/* 그라데이션 정의 */}
-                  <defs>
-                    <linearGradient id="colorRate" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--color-main)" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="var(--color-main)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-
-                  {/* 배경 그리드 (점선) */}
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="var(--color-gray-400)"
-                  />
-
-                  {/* X축 (시간) */}
-                  <XAxis
-                    dataKey="time"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: 'var(--color-gray-600)', fontWeight: 600 }}
-                    dy={10}
-                  />
-
-                  {/* Y축 (퍼센트) */}
-                  <YAxis
-                    domain={[0, 100]}
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: 'var(--color-gray-600)' }}
-                    ticks={[0, 25, 50, 75, 100]}
-                    unit="%"
-                  />
-
-                  {/* 툴팁 */}
-                  <Tooltip
-                    cursor={{
-                      stroke: 'var(--color-error)',
-                      strokeDasharray: '4 4',
-                      strokeWidth: 1,
-                    }}
-                    contentStyle={{
-                      borderRadius: '8px',
-                      border: 'none',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                    }}
-                  />
-
-                  {/* 메인 데이터 영역 (곡선 + 채우기) */}
-                  <Area
-                    type="linear"
-                    dataKey="rate"
-                    stroke="var(--color-main)"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#colorRate)"
-                    dot={
-                      hasVideo ? false : { r: 4, fill: '#fff', stroke: '#6366F1', strokeWidth: 2 }
-                    }
-                    activeDot={{ r: 5, fill: 'var(--color-error)', stroke: '#fff', strokeWidth: 2 }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+          {/* 잔존률 차트 */}
+          {renderRetentionChart(
+            hasVideo ? '영상 시청 잔존률' : '슬라이드별 청중 잔존률',
+            hasVideo ? videoChartData : slideChartData,
+            hasVideo,
+          )}
 
           <div className="flex flex-wrap items-start justify-between gap-6 py-4">
             <FeedbackDistributionSection reactions={reactions} />
@@ -416,7 +470,7 @@ export default function InsightPage() {
                 ))}
               </div>
 
-              {/* ✅ 오버레이: 이 영역 안에서만 덮음 */}
+              {/* 오버레이: 이 영역 안에서만 덮음 */}
               {!hasVideo && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center text-center pointer-events-auto">
                   <div className="px-6 py-5">
