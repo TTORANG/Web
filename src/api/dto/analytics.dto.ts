@@ -110,3 +110,41 @@ export interface VideoRetentionResponseDto {
   intervalMs: number;
   videoRetention: VideoRetentionDto[];
 }
+
+/**
+ * 최근 댓글 피드백 응답 Dto
+ */
+export interface RecentCommentListResponseDto {
+  comments: RecentCommentDto[];
+}
+
+/**
+ * 최근 댓글 피드백 조회 Dto
+ */
+export interface RecentCommentDto {
+  commentId: string;
+  content: string;
+  timestampMs: number;
+  createdAt: string;
+  user: RecentCommentUserDto;
+  slide: RecentCommentSlideDto;
+}
+
+/**
+ * 최근 댓글 피드백 유저 Dto
+ */
+export interface RecentCommentUserDto {
+  userId: string;
+  nickName: string;
+  name: string;
+}
+
+/**
+ * 최근 댓글 피드백 슬라이드 Dto
+ */
+export interface RecentCommentSlideDto {
+  slideId: string;
+  slideNum: number;
+  title: string;
+  imageUrl: string;
+}

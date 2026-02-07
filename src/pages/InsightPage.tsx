@@ -28,6 +28,7 @@ import { createDefaultReactions } from '@/constants/reaction';
 import { useSlides } from '@/hooks/queries/useSlides';
 import {
   useProjectAnalyticsSummary,
+  useRecentComments,
   useSlideAnalytics,
   useSlideRetention,
   useVideoAnalytics,
@@ -40,15 +41,6 @@ import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
 
 // --- 타입 및 스타일 정의 ---
-
-type RecentComment = {
-  user: string;
-  slide: number;
-  slideIndex: number;
-  time: string;
-  text: string;
-};
-
 // 툴팁용 타입
 interface ChartDataPoint {
   label: string;
@@ -69,25 +61,6 @@ const emptySummaryStats: SummaryStat[] = summaryStatLabels.map((label) => ({
   value: '-',
   sub: '',
 }));
-
-const recentComments: RecentComment[] = [
-  { user: '익명 사용자', slide: 1, slideIndex: 0, time: '0:15', text: '이 부분 설명이 명확해요!' },
-  { user: '김철수', slide: 2, slideIndex: 1, time: '0:45', text: '좋은 발표였습니다.' },
-  {
-    user: '이영희',
-    slide: 3,
-    slideIndex: 2,
-    time: '1:30',
-    text: '데이터 해석 부분이 인상적이에요.',
-  },
-  {
-    user: '박민수',
-    slide: 4,
-    slideIndex: 3,
-    time: '1:32',
-    text: '동의합니다! 명확한 설명이었어요.',
-  },
-];
 
 // --- 커스텀 툴팁 컴포넌트 ---
 const CustomTooltip = ({
@@ -118,10 +91,12 @@ const CustomTooltip = ({
 const normalizeRate = (rate: number) => (rate <= 1 ? rate * 100 : rate);
 
 export default function InsightPage() {
-  const { projectId } = useParams<{ projectId: string }>();
-  const { data: slides } = useSlides(projectId ?? '');
-  const { data: slideAnalytics } = useSlideAnalytics(projectId ?? '');
-  const { data: summaryAnalytics } = useProjectAnalyticsSummary(projectId ?? '');
+  const { projectId: projectIdStr } = useParams<{ projectId: string }>();
+  const projectIdNum = projectIdStr ? Number(projectIdStr) : 0;
+  const { data: slides } = useSlides(projectIdStr ?? '');
+  const { data: slideAnalytics } = useSlideAnalytics(projectIdNum);
+  const { data: summaryAnalytics } = useProjectAnalyticsSummary(projectIdNum);
+  const { data: recentCommentsData } = useRecentComments(projectIdNum);
   const videoIdStr = summaryAnalytics?.videoIds?.[0] ?? '';
   const videoIdNum = videoIdStr ? Number(videoIdStr) : 0;
   const hasVideo = !!videoIdNum;
@@ -284,7 +259,7 @@ export default function InsightPage() {
   const { data: videoRetentionRes } = useVideoRetention(videoIdNum);
 
   // 2. 슬라이드 잔존율 (영상이 없을 때 호출)
-  const { data: slideRetentionRes } = useSlideRetention(projectId ?? '');
+  const { data: slideRetentionRes } = useSlideRetention(projectIdNum ?? '');
 
   // --- Chart Data 가공 ---
   const videoChartData = useMemo<ChartDataPoint[]>(() => {
@@ -457,17 +432,25 @@ export default function InsightPage() {
                 className={`flex flex-col gap-2 ${!hasVideo ? 'blur-[3px] pointer-events-none select-none' : ''}`}
               >
                 <h3 className="text-body-l-bold text-gray-800">최근 댓글 피드백</h3>
-                {recentComments.map((comment, idx) => (
-                  <RecentCommentItem
-                    key={idx}
-                    user={comment.user}
-                    slideLabel={`슬라이드 ${comment.slide}`}
-                    time={comment.time}
-                    text={comment.text}
-                    thumbUrl={getThumb(comment.slideIndex)}
-                    thumbFallbackClassName={thumbBase}
-                  />
-                ))}
+                {recentCommentsData?.comments && recentCommentsData.comments.length > 0 ? (
+                  recentCommentsData.comments.map((comment) => (
+                    <RecentCommentItem
+                      key={comment.commentId}
+                      user={comment.user.name}
+                      slideLabel={`슬라이드 ${comment.slide.slideNum}`}
+                      // API는 ms 단위이므로 초 단위로 변환
+                      time={formatVideoTimestamp(comment.timestampMs / 1000)}
+                      text={comment.content}
+                      thumbUrl={comment.slide.imageUrl}
+                      thumbFallbackClassName={thumbBase}
+                    />
+                  ))
+                ) : (
+                  /* 댓글이 없을 경우 표시할 UI (선택 사항) */
+                  <div className="py-4 text-center text-gray-400 text-body-s">
+                    아직 등록된 댓글이 없습니다.
+                  </div>
+                )}
               </div>
 
               {/* 오버레이: 이 영역 안에서만 덮음 */}

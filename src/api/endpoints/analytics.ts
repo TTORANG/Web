@@ -5,6 +5,7 @@
 import { apiClient } from '@/api';
 import type {
   ProjectAnalyticsSummaryDto,
+  RecentCommentListResponseDto,
   SlideAnalyticsResponseDto,
   SlideRetentionResponseDto,
   VideoExitAnalyticsResponseDto,
@@ -13,7 +14,7 @@ import type {
 import type { ApiResponse } from '@/types/api';
 
 // 슬라이드 분석 api 연동
-export async function getSlideAnalytics(projectId: string): Promise<SlideAnalyticsResponseDto> {
+export async function getSlideAnalytics(projectId: number): Promise<SlideAnalyticsResponseDto> {
   const response = await apiClient.get<ApiResponse<SlideAnalyticsResponseDto>>(
     `/presentations/${projectId}/analytics/slides`,
   );
@@ -38,7 +39,7 @@ export async function getVideoAnalytics(videoId: number): Promise<VideoExitAnaly
 
 // 프로젝트 분석 요약 api 연동(상단 카드 4개 + videoId)
 export async function getProjectAnalyticsSummary(
-  projectId: string,
+  projectId: number,
 ): Promise<ProjectAnalyticsSummaryDto> {
   const response = await apiClient.get<ApiResponse<ProjectAnalyticsSummaryDto>>(
     `/presentations/${projectId}/analytics/summary`,
@@ -76,7 +77,7 @@ export function recordExit(data: RecordExitRequest) {
 }
 
 // 슬라이드별 청중 잔존률 api 연동
-export async function getSlideRetention(projectId: string): Promise<SlideRetentionResponseDto> {
+export async function getSlideRetention(projectId: number): Promise<SlideRetentionResponseDto> {
   const response = await apiClient.get<ApiResponse<SlideRetentionResponseDto>>(
     `/presentations/${projectId}/analytics/slide-retention`,
   );
@@ -95,6 +96,18 @@ export async function getVideoRetention(videoId: number): Promise<VideoRetention
   // 데이터가 없으면 에러 발생 (null 반환 방지)
   if (!response.data.success) {
     throw new Error('영상 시청 잔존률을 불러올 수 없습니다.');
+  }
+  return response.data.success;
+}
+
+// 최근 댓글 피드백 api 연동
+export async function getRecentComments(projectId: number): Promise<RecentCommentListResponseDto> {
+  const response = await apiClient.get<ApiResponse<RecentCommentListResponseDto>>(
+    `/presentations/${projectId}/analytics/recent-comments`,
+  );
+  // 데이터가 없으면 에러 발생 (null 반환 방지)
+  if (!response.data.success) {
+    throw new Error('최근 댓글 피드백을 불러올 수 없습니다.');
   }
   return response.data.success;
 }
