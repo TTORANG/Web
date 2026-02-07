@@ -261,7 +261,7 @@ export default function InsightPage() {
   const { data: videoRetentionRes } = useVideoRetention(videoIdNum);
 
   // 2. 슬라이드 잔존율 (영상이 없을 때 호출)
-  const { data: slideRetentionRes } = useSlideRetention(projectIdNum ?? '');
+  const { data: slideRetentionRes } = useSlideRetention(projectIdNum);
 
   // --- Chart Data 가공 ---
   const videoChartData = useMemo<ChartDataPoint[]>(() => {
