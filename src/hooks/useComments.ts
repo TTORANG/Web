@@ -15,7 +15,7 @@ import type { Comment } from '@/types/comment';
 import { flatToTree } from '@/utils/comment';
 import { showToast } from '@/utils/toast';
 
-import { useCreateOpinion, useDeleteOpinion } from './queries/useOpinions';
+import { useCreateOpinion, useCreateReply, useDeleteOpinion } from './queries/useOpinions';
 
 const EMPTY_COMMENTS: Comment[] = [];
 
@@ -28,6 +28,7 @@ export function useComments() {
   const setOpinions = useSlideStore((state) => state.setOpinions);
 
   const { mutate: createOpinionApi } = useCreateOpinion();
+  const { mutate: createReplyApi } = useCreateReply();
   const { mutate: deleteOpinionApi } = useDeleteOpinion();
 
   const findOpinion = (opinionId: string) => flatComments?.find((c) => c.id === opinionId);
@@ -36,7 +37,7 @@ export function useComments() {
     if (!flatComments) return EMPTY_COMMENTS;
     const tree = flatToTree(flatComments);
     return [...tree].sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
   }, [flatComments]);
 
@@ -59,15 +60,13 @@ export function useComments() {
 
   const addReply = (parentId: string, content: string) => {
     const target = findOpinion(parentId);
-    const targetSlideId = target?.slideId ?? slideId;
     const targetServerId = target?.serverId ?? parentId;
-    if (!targetSlideId) return;
 
     const previousOpinions = flatComments ?? [];
     addReplyStore(parentId, content);
 
-    createOpinionApi(
-      { slideId: targetSlideId, data: { content, parentId: targetServerId } },
+    createReplyApi(
+      { commentId: targetServerId, data: { content } },
       {
         onError: () => {
           setOpinions(previousOpinions);

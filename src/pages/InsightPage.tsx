@@ -1,6 +1,8 @@
-import { useMemo } from 'react';
+﻿import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { useQuery } from '@tanstack/react-query';
+// 1. Recharts 컴포넌트 임포트
 import {
   Area,
   AreaChart,
@@ -11,6 +13,8 @@ import {
   YAxis,
 } from 'recharts';
 
+import { getSlideReactionSummary } from '@/api/endpoints/reactions';
+import { queryKeys } from '@/api/queryClient';
 import {
   DropOffAnalysisSection,
   FeedbackDistributionSection,
@@ -27,8 +31,11 @@ import {
 } from '@/hooks/useAnalytics';
 import type { DropOffSlide, DropOffTime, SummaryStat } from '@/types/insight';
 import type { Reaction } from '@/types/script';
+import type { SlideListItem } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
+
+// --- 타입 및 스타일 정의 ---
 
 type RecentComment = {
   user: string;
@@ -38,6 +45,8 @@ type RecentComment = {
   text: string;
 };
 
+// 디자인을 위해 스타일을 조금 더 부드럽게 조정했습니다.
+const thumbBase = 'bg-gray-100 rounded-lg aspect-video';
 const FALLBACK_SLIDE_DURATION_SECONDS = 10;
 
 // --- 더미 데이터 (사진 수치 반영) ---
@@ -67,6 +76,7 @@ const recentComments: RecentComment[] = [
   },
 ];
 
+// Recharts용 데이터 (그라데이션 그래프용)
 const retentionData = [
   { time: '0:00', rate: 100 },
   { time: '1:00', rate: 90 },
@@ -78,12 +88,24 @@ const retentionData = [
   { time: '5:00', rate: 65 },
 ];
 
+const slideRetentionData = [
+  { time: 'S1', rate: 100 },
+  { time: 'S2', rate: 92 },
+  { time: 'S3', rate: 86 },
+  { time: 'S4', rate: 80 },
+  { time: 'S5', rate: 80 },
+  { time: 'S6', rate: 70 },
+  { time: 'S7', rate: 75 },
+  { time: 'S8', rate: 65 },
+  { time: 'S9', rate: 65 },
+  { time: 'S10', rate: 65 },
+];
+
 // --- 컴포넌트 시작 ---
 
 export default function InsightPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { data: slides } = useSlides(projectId ?? '');
-
   const { data: slideAnalytics } = useSlideAnalytics(projectId ?? '');
   const { data: summaryAnalytics } = useProjectAnalyticsSummary(projectId ?? '');
   const videoId = summaryAnalytics?.videoIds?.[0] ?? '';
@@ -98,18 +120,8 @@ export default function InsightPage() {
         : summaryAnalytics.completionRate;
 
     return [
-      {
-        label: summaryStatLabels[0],
-        value: String(summaryAnalytics.totalViews),
-        trendValue: '12% 지난주 대비',
-        trend: 'up' as const,
-      },
-      {
-        label: summaryStatLabels[1],
-        value: `${Math.round(completionRate)}%`,
-        trendValue: '5% 지난주 대비',
-        trend: 'down' as const,
-      },
+      { label: summaryStatLabels[0], value: String(summaryAnalytics.totalViews), sub: '' },
+      { label: summaryStatLabels[1], value: `${Math.round(completionRate)}%`, sub: '' },
       {
         label: summaryStatLabels[2],
         value: String(summaryAnalytics.totalFeedbackCount),
@@ -127,12 +139,20 @@ export default function InsightPage() {
     ? computedSummaryStats
     : computedSummaryStats.filter((stat) => stat.label !== summaryStatLabels[3]);
 
+  const slideList = useMemo(() => (Array.isArray(slides) ? slides : []), [slides]);
+
   const reactions = useMemo(() => {
     const base = createDefaultReactions();
-    if (!slides?.length) return base;
+    if (!slideList.length) return base;
 
     const totals = new Map<Reaction['type'], number>();
-    slides.forEach((slide) => {
+    const analyticsSlideIds = new Set((slideAnalytics?.slides ?? []).map((item) => item.slideId));
+    const targetSlides =
+      analyticsSlideIds.size > 0
+        ? slideList.filter((slide) => analyticsSlideIds.has(slide.slideId))
+        : slideList;
+
+    targetSlides.forEach((slide) => {
       slide.emojiReactions?.forEach((reaction) => {
         totals.set(reaction.type, (totals.get(reaction.type) ?? 0) + reaction.count);
       });
@@ -142,25 +162,53 @@ export default function InsightPage() {
       ...reaction,
       count: totals.get(reaction.type) ?? 0,
     }));
-  }, [slides]);
+  }, [slideList, slideAnalytics]);
+
+  const slideDataMaps = useMemo(() => {
+    const slideIndexById = new Map<string, number>();
+    const slideById = new Map<string, SlideListItem>();
+
+    slideList.forEach((slide, index) => {
+      slideIndexById.set(slide.slideId, index);
+      slideById.set(slide.slideId, slide);
+    });
+
+    return { slideIndexById, slideById };
+  }, [slideList]);
 
   const topSlides = useMemo(() => {
-    if (!slides?.length) return [];
-    return slides
-      .map((slide, index) => ({
-        slide,
-        slideIndex: index,
-        commentCount: slide.opinions?.length ?? 0,
-        reactionCount: (slide.emojiReactions ?? []).reduce((sum, r) => sum + r.count, 0),
-        total:
-          (slide.opinions?.length ?? 0) +
-          (slide.emojiReactions ?? []).reduce((sum, r) => sum + r.count, 0),
-      }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 3);
-  }, [slides]);
+    const analyticsSlides = slideAnalytics?.slides ?? [];
+    if (!analyticsSlides.length) return [];
+    const { slideIndexById, slideById } = slideDataMaps;
 
-  const getThumb = (slideIndex: number) => slides?.[slideIndex]?.imageUrl;
+    return analyticsSlides
+      .slice()
+      .sort((a, b) => b.feedbackCount - a.feedbackCount)
+      .slice(0, 3)
+      .map((item) => {
+        const slide = slideById.get(item.slideId);
+        const slideIndex = slideIndexById.get(item.slideId) ?? Math.max(0, item.slideNum - 1);
+        const title = slide?.title || item.title || `슬라이드 ${slideIndex + 1}`;
+
+        return {
+          slideId: item.slideId,
+          slide,
+          slideIndex,
+          title,
+          commentCount: item.commentCount,
+          feedbackCount: item.feedbackCount,
+        };
+      });
+  }, [slideAnalytics, slideDataMaps]);
+
+  const topSlideIds = useMemo(() => topSlides.map((item) => item.slideId), [topSlides]);
+  const { data: topSlideReactionSummaries } = useQuery({
+    queryKey: queryKeys.reactions.summary(topSlideIds.join('|')),
+    queryFn: () => Promise.all(topSlideIds.map((slideId) => getSlideReactionSummary(slideId))),
+    enabled: topSlideIds.length > 0,
+  });
+
+  const getThumb = (slideIndex: number) => slideList[slideIndex]?.imageUrl;
 
   const slideChangeTimes = useMemo(() => {
     if (!slides?.length) return [];
@@ -215,6 +263,7 @@ export default function InsightPage() {
         };
       });
   }, [videoExitAnalytics, slideChangeTimes, slides]);
+
   return (
     <div
       role="tabpanel"
@@ -241,39 +290,52 @@ export default function InsightPage() {
             showVideoDropOff={hasVideo}
           />
 
-          {/* 잔존률 차트 */}
+          {/* 잔존률 차트 (단독 1열) */}
           <div className="flex w-full flex-col gap-6 rounded-lg border border-gray-200 bg-white px-5 pb-8 pt-4">
-            <h3 className="text-body-l-bold text-gray-800">영상 시청 잔존률</h3>
-            <div className="h-100 w-full">
+            <h3 className="text-body-l-bold text-gray-800">
+              {hasVideo ? '영상 시청 잔존률' : '슬라이드별 청중 잔존률'}
+            </h3>
+            <div className="h-100 w-full px-6">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={retentionData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <AreaChart
+                  data={hasVideo ? retentionData : slideRetentionData}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
+                  {/* 그라데이션 정의 */}
                   <defs>
                     <linearGradient id="colorRate" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="var(--color-main)" stopOpacity={0.2} />
                       <stop offset="95%" stopColor="var(--color-main)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
+
+                  {/* 배경 그리드 (점선) */}
                   <CartesianGrid
                     strokeDasharray="3 3"
                     vertical={false}
-                    stroke="var(--color-gray-200)"
+                    stroke="var(--color-gray-400)"
                   />
+
+                  {/* X축 (시간) */}
                   <XAxis
                     dataKey="time"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 14, fill: 'var(--color-gray-600)', fontWeight: 600 }}
+                    tick={{ fontSize: 12, fill: 'var(--color-gray-600)', fontWeight: 600 }}
                     dy={10}
                   />
+
+                  {/* Y축 (퍼센트) */}
                   <YAxis
                     domain={[0, 100]}
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 14, fill: 'var(--color-gray-600)' }}
+                    tick={{ fontSize: 12, fill: 'var(--color-gray-600)' }}
                     ticks={[0, 25, 50, 75, 100]}
-                    tickFormatter={(value) => `${value}%`}
-                    width={50}
+                    unit="%"
                   />
+
+                  {/* 툴팁 */}
                   <Tooltip
                     cursor={{
                       stroke: 'var(--color-error)',
@@ -284,12 +346,10 @@ export default function InsightPage() {
                       borderRadius: '8px',
                       border: 'none',
                       boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                      backgroundColor: 'var(--color-white)',
-                      color: 'var(--color-gray-800)',
                     }}
-                    labelStyle={{ color: 'var(--color-gray-800)' }}
-                    itemStyle={{ color: 'var(--color-gray-800)' }}
                   />
+
+                  {/* 메인 데이터 영역 (곡선 + 채우기) */}
                   <Area
                     type="linear"
                     dataKey="rate"
@@ -297,34 +357,37 @@ export default function InsightPage() {
                     strokeWidth={2}
                     fillOpacity={1}
                     fill="url(#colorRate)"
-                    dot={false}
-                    activeDot={{
-                      r: 5,
-                      fill: 'var(--color-error)',
-                      stroke: 'var(--color-white)',
-                      strokeWidth: 2,
-                    }}
+                    dot={
+                      hasVideo ? false : { r: 4, fill: '#fff', stroke: '#6366F1', strokeWidth: 2 }
+                    }
+                    activeDot={{ r: 5, fill: 'var(--color-error)', stroke: '#fff', strokeWidth: 2 }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* 피드백 분포 + 피드백 TOP 슬라이드 */}
           <div className="flex flex-wrap items-start justify-between gap-6 py-4">
             <FeedbackDistributionSection reactions={reactions} />
 
             <div className="flex min-w-80 flex-1 basis-160 flex-col gap-6">
               <h3 className="text-body-l-bold text-gray-800">가장 많은 피드백을 받은 슬라이드</h3>
               <div className="flex flex-wrap gap-4">
-                {topSlides.map(({ slide, slideIndex }) => {
-                  const reactionMetrics = (slide.emojiReactions ?? []).filter(
-                    (reaction) => reaction.count > 0,
-                  );
+                {topSlides.map(({ slideId, slide, slideIndex, title }, index) => {
+                  const summary = topSlideReactionSummaries?.[index];
+                  const baseReactions = createDefaultReactions();
+                  const summaryReactions = summary
+                    ? baseReactions.map((reaction) => ({
+                        ...reaction,
+                        count: summary[reaction.type] ?? 0,
+                      }))
+                    : (slide?.emojiReactions ?? baseReactions);
+                  const reactionMetrics = summaryReactions.filter((reaction) => reaction.count > 0);
+
                   return (
                     <TopSlideCard
-                      key={slide.slideId}
-                      title={slide.title || `슬라이드 ${slideIndex + 1}`}
+                      key={slideId ?? slide?.slideId ?? `slide-${slideIndex}`}
+                      title={title}
                       thumbUrl={getThumb(slideIndex)}
                       reactionMetrics={reactionMetrics}
                     />
@@ -334,20 +397,40 @@ export default function InsightPage() {
             </div>
           </div>
 
-          {/* 최근 댓글 피드백 */}
           <div className="flex w-full flex-col gap-4">
-            <h3 className="text-body-l-bold text-gray-800">최근 댓글 피드백</h3>
-            <div className="flex flex-col gap-2">
-              {recentComments.map((comment, idx) => (
-                <RecentCommentItem
-                  key={idx}
-                  user={comment.user}
-                  slideLabel={`슬라이드 ${comment.slide}`}
-                  time={comment.time}
-                  text={comment.text}
-                  thumbUrl={getThumb(comment.slideIndex)}
-                />
-              ))}
+            <div className="relative">
+              <div
+                className={`flex flex-col gap-2 ${!hasVideo ? 'blur-[3px] pointer-events-none select-none' : ''}`}
+              >
+                <h3 className="text-body-l-bold text-gray-800">최근 댓글 피드백</h3>
+                {recentComments.map((comment, idx) => (
+                  <RecentCommentItem
+                    key={idx}
+                    user={comment.user}
+                    slideLabel={`슬라이드 ${comment.slide}`}
+                    time={comment.time}
+                    text={comment.text}
+                    thumbUrl={getThumb(comment.slideIndex)}
+                    thumbFallbackClassName={thumbBase}
+                  />
+                ))}
+              </div>
+
+              {/* ✅ 오버레이: 이 영역 안에서만 덮음 */}
+              {!hasVideo && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center text-center pointer-events-auto">
+                  <div className="px-6 py-5">
+                    <p className="text-body-l-bold text-gray-800">
+                      영상을 녹화하면 더 자세한 분석을 받을 수 있어요
+                    </p>
+                    <ul className="mt-3 mx-auto w-fit text-left text-body-m text-gray-800">
+                      <li>• 시청 구간별 이탈률 분석</li>
+                      <li>• 영상 잔존율 그래프</li>
+                      <li>• 타임라인 기반 댓글 피드백</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

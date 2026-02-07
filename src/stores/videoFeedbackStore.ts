@@ -156,7 +156,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
 
           const newComment: Comment = createComment({
             content: finalContent,
-            authorId: MOCK_CURRENT_USER.id,
+            userId: MOCK_CURRENT_USER.id,
             ref,
           });
 
@@ -188,7 +188,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
 
           const updatedComments = addReplyToFlat(targetFeedback.comments, parentId, {
             content: content.trim(),
-            authorId: MOCK_CURRENT_USER.id,
+            userId: MOCK_CURRENT_USER.id,
           });
 
           const updatedFeedbacks = state.video.feedbacks.map((f) =>

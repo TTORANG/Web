@@ -4,9 +4,9 @@ export interface Comment {
   serverId?: string;
   /** 의견이 속한 슬라이드 ID (피드백 화면에서 필요) */
   slideId?: string;
-  authorId: string;
+  userId: string;
   content: string;
-  timestamp: string;
+  createdAt: string;
   /** true면 삭제/수정 가능 (본인 작성) */
   isMine: boolean;
   /** 참조 정보 - 답글은 없음 */
@@ -25,7 +25,7 @@ export interface Comment {
  */
 export interface CreateCommentInput {
   content: string;
-  authorId?: string;
+  userId?: string;
   ref?: Comment['ref'];
   parentId?: string;
 }
