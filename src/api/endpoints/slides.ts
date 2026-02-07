@@ -72,38 +72,3 @@ export async function updateSlide(
   }
   throw new Error(response.data.error.reason);
 }
-
-/**
- * 슬라이드 생성
- *
- * @param projectId - 프로젝트 ID
- * @param data - 생성할 슬라이드 데이터
- * @returns 생성된 슬라이드
- */
-export async function createSlide(
-  projectId: string,
-  data: { title: string; script?: string },
-): Promise<GetSlideResponseDto> {
-  const response = await apiClient.post<ApiResponse<GetSlideResponseDto>>(
-    `/presentations/${projectId}/slides`,
-    data,
-  );
-
-  if (response.data.resultType === 'SUCCESS') {
-    return response.data.success;
-  }
-  throw new Error(response.data.error.reason);
-}
-
-/**
- * 슬라이드 삭제
- *
- * @param slideId - 삭제할 슬라이드 ID
- */
-export async function deleteSlide(slideId: string): Promise<void> {
-  const response = await apiClient.delete<ApiResponse<null>>(`/presentations/slides/${slideId}`);
-
-  if (response.data.resultType === 'FAILURE') {
-    throw new Error(response.data.error.reason);
-  }
-}
