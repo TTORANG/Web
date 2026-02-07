@@ -8,6 +8,8 @@ import type {
 } from '@/api/dto';
 import type { ApiResponse } from '@/types/api';
 
+import type { GetMyVideosResponseDto } from '../dto/video.dto';
+
 export const videosApi = {
   // POST /videos/start - 영상 녹화 세션 생성
   startVideo: (data: StartVideoRequestDto) =>
@@ -38,4 +40,22 @@ export const videosApi = {
 
   // GET /videos/{videoId}/slides - 슬라이드 타임라인 조회
   getVideoSlides: (videoId: string) => apiClient.get(`/videos/${videoId}/slides`),
+  /**
+   * GET /me/videos - 내 영상 목록 조회
+   */
+  getMyVideos: (params?: {
+    search?: string;
+    filter?: '3m' | '5m'; // 'all' 제외, undefined로 전체 조회
+    sort?: 'recent' | 'commentCount' | 'name';
+  }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.search) searchParams.set('search', params.search);
+    if (params?.filter) searchParams.set('filter', params.filter);
+    if (params?.sort) searchParams.set('sort', params.sort);
+
+    const queryString = searchParams.toString();
+    const url = `/me/videos${queryString ? `?${queryString}` : ''}`;
+
+    return apiClient.get<ApiResponse<GetMyVideosResponseDto>>(url);
+  },
 };

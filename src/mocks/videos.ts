@@ -4,7 +4,7 @@
  * - MOCK_USERS 기반으로 작성자 지정
  * - feedbacks의 reactions를 기반으로 재생바 하이라이트 생성
  */
-import type { VideoFeedback } from '@/types/video';
+import type { MockVideo, VideoFeedback } from '@/types/video';
 
 import { MOCK_USERS } from './users';
 import { timeAgo } from './utils';
@@ -309,3 +309,119 @@ export const MOCK_VIDEO: VideoFeedback = {
     },
   ],
 };
+
+/**
+ * Mock Videos 목록 (localStorage 및 API 목록 조회용)
+ */
+export const MOCK_VIDEOS: MockVideo[] = [
+  {
+    id: 1,
+    title: '테스트 영상',
+    createdAt: '2026-02-03T13:20:00.000Z',
+    durationSeconds: 596,
+    slideCount: 10,
+    rootCommentCount: 8,
+    replyCount: 7,
+    reactionCount: 156,
+    viewCount: 42,
+  },
+  {
+    id: 2,
+    title: '내 발표 리허설',
+    createdAt: '2026-02-03T10:30:00.000Z',
+    durationSeconds: 95,
+    slideCount: 5,
+    rootCommentCount: 2,
+    replyCount: 1,
+    reactionCount: 7,
+    viewCount: 4,
+  },
+  {
+    id: 3,
+    title: 'Q4 마케팅 전략 발표',
+    createdAt: '2026-02-02T15:45:00.000Z',
+    durationSeconds: 420,
+    slideCount: 15,
+    rootCommentCount: 5,
+    replyCount: 3,
+    reactionCount: 34,
+    viewCount: 18,
+  },
+  {
+    id: 4,
+    title: '신제품 소개',
+    createdAt: '2026-02-01T09:00:00.000Z',
+    durationSeconds: 180,
+    slideCount: 8,
+    rootCommentCount: 3,
+    replyCount: 2,
+    reactionCount: 15,
+    viewCount: 12,
+  },
+  {
+    id: 5,
+    title: '프로젝트 최종 발표',
+    createdAt: '2026-01-31T14:20:00.000Z',
+    durationSeconds: 300,
+    slideCount: 12,
+    rootCommentCount: 7,
+    replyCount: 5,
+    reactionCount: 48,
+    viewCount: 25,
+  },
+  {
+    id: 6,
+    title: '주간 업무 보고',
+    createdAt: '2026-01-30T11:00:00.000Z',
+    durationSeconds: 240,
+    slideCount: 6,
+    rootCommentCount: 1,
+    replyCount: 0,
+    reactionCount: 5,
+    viewCount: 8,
+  },
+  {
+    id: 7,
+    title: '고객 피드백 분석',
+    createdAt: '2026-01-29T16:30:00.000Z',
+    durationSeconds: 360,
+    slideCount: 18,
+    rootCommentCount: 4,
+    replyCount: 2,
+    reactionCount: 22,
+    viewCount: 15,
+  },
+  {
+    id: 8,
+    title: '2026 전략 수립',
+    createdAt: '2026-01-28T13:15:00.000Z',
+    durationSeconds: 480,
+    slideCount: 20,
+    rootCommentCount: 9,
+    replyCount: 6,
+    reactionCount: 67,
+    viewCount: 31,
+  },
+  {
+    id: 9,
+    title: '팀 빌딩 아이디어',
+    createdAt: '2026-01-27T10:45:00.000Z',
+    durationSeconds: 150,
+    slideCount: 7,
+    rootCommentCount: 6,
+    replyCount: 8,
+    reactionCount: 41,
+    viewCount: 22,
+  },
+  {
+    id: 10,
+    title: '디자인 시스템 소개',
+    createdAt: '2026-01-26T14:00:00.000Z',
+    durationSeconds: 270,
+    slideCount: 11,
+    rootCommentCount: 3,
+    replyCount: 1,
+    reactionCount: 18,
+    viewCount: 10,
+  },
+];

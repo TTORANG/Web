@@ -3,6 +3,7 @@ import { useState } from 'react';
 import type { FinishVideoResponseDto, StartVideoResponseDto } from '@/api/dto';
 import { videosApi } from '@/api/endpoints/videos';
 import type { ApiResponse } from '@/types/api';
+import type { MockVideo } from '@/types/video';
 
 interface UploadProgress {
   uploadedChunks: number;
@@ -98,6 +99,30 @@ export const useVideoUpload = () => {
 
       if (finishData.resultType === 'FAILURE') {
         throw new Error(finishData.error?.reason || '영상 처리에 실패했습니다.');
+      }
+
+      if (import.meta.env.DEV) {
+        try {
+          const storedData = localStorage.getItem('mockVideos');
+          const mockVideos: MockVideo[] = storedData ? JSON.parse(storedData) : [];
+
+          const newVideo: MockVideo = {
+            id: videoId,
+            title,
+            createdAt: new Date().toISOString(),
+            durationSeconds: Math.round(videoBlob.size / 1024 / 100),
+            slideCount: slideLogs.length,
+            rootCommentCount: 0,
+            replyCount: 0,
+            reactionCount: 0,
+            viewCount: 0,
+          };
+
+          mockVideos.unshift(newVideo);
+          localStorage.setItem('mockVideos', JSON.stringify(mockVideos));
+        } catch (err) {
+          console.warn('Failed to update localStorage:', err);
+        }
       }
 
       setProgress({

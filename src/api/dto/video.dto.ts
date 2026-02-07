@@ -1,3 +1,21 @@
+export interface VideoDto {
+  videoId: string;
+  title: string;
+  status: 'processing' | 'ready' | 'failed';
+  durationSeconds: number;
+  rootCommentCount: number;
+  replyCount: number;
+  reactionCount: number;
+  viewCount: number;
+  thumbnailUrl: string;
+  createdAt: string;
+}
+/**
+ * 내 영상 목록 조회 응답 DTO
+ */
+export interface GetMyVideosResponseDto {
+  videos: VideoDto[];
+}
 /**
  * 영상 녹화 세션 생성 요청 DTO
  */

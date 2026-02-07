@@ -1,11 +1,12 @@
 /* eslint-disable no-console */
 import { HttpResponse, delay, http } from 'msw';
 
+import type { VideoDto } from '@/api/dto/video.dto';
 import { createDefaultReactions } from '@/constants/reaction';
 import { FEEDBACK_WINDOW } from '@/constants/video';
 import type { Presentation } from '@/types/presentation';
 import type { Slide } from '@/types/slide';
-import type { VideoFeedback, VideoTimestampFeedback } from '@/types/video';
+import type { MockVideo, VideoFeedback, VideoTimestampFeedback } from '@/types/video';
 
 import {
   getMockProjectAnalyticsSummary,
@@ -1170,5 +1171,66 @@ export const handlers = [
     console.log(`[MSW] GET /videos/${videoId}/analytics/exits`);
 
     return HttpResponse.json(wrapResponse(getMockVideoExitAnalytics(videoId)));
+  }),
+
+  /**
+   * 내 영상 목록 조회
+   * GET /me/videos
+   */
+  http.get(`${BASE_URL}/me/videos`, async ({ request }) => {
+    await delay(200);
+
+    const url = new URL(request.url);
+    const search = url.searchParams.get('search') || '';
+    const filter = url.searchParams.get('filter') || 'all';
+    const sort = url.searchParams.get('sort') || 'recent';
+
+    console.log('[MSW] GET /me/videos', { search, filter, sort });
+
+    const storedData = localStorage.getItem('mockVideos');
+    if (!storedData) {
+      return HttpResponse.json(wrapResponse({ videos: [] }));
+    }
+
+    const mockVideos: MockVideo[] = JSON.parse(storedData) as MockVideo[];
+
+    // MockVideo를 VideoDto 형식으로 변환
+    let videos: VideoDto[] = mockVideos.map((video) => ({
+      videoId: String(video.id),
+      title: video.title,
+      status: 'ready' as const,
+      durationSeconds: video.durationSeconds,
+      rootCommentCount: video.rootCommentCount,
+      replyCount: video.replyCount,
+      reactionCount: video.reactionCount,
+      viewCount: video.viewCount,
+      thumbnailUrl: `https://example.com/thumb${video.id}.jpg`,
+      createdAt: video.createdAt,
+    }));
+
+    // 검색 필터링
+    if (search) {
+      videos = videos.filter((video) => video.title.toLowerCase().includes(search.toLowerCase()));
+    }
+
+    // 듀레이션 필터링
+    if (filter === '3m') {
+      videos = videos.filter((video) => video.durationSeconds <= 180);
+    } else if (filter === '5m') {
+      videos = videos.filter((video) => video.durationSeconds <= 300);
+    }
+
+    // 정렬
+    if (sort === 'recent') {
+      videos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } else if (sort === 'commentCount') {
+      videos.sort(
+        (a, b) => b.rootCommentCount + b.replyCount - (a.rootCommentCount + a.replyCount),
+      );
+    } else if (sort === 'name') {
+      videos.sort((a, b) => a.title.localeCompare(b.title, 'ko'));
+    }
+
+    return HttpResponse.json(wrapResponse({ videos }));
   }),
 ];

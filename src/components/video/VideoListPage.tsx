@@ -1,35 +1,42 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import type { Presentation } from '@/types';
+import { useMyVideos } from '@/hooks/useVideos';
 import type { FilterMode, SortMode, ViewMode } from '@/types/home';
+import type { VideoPresentation } from '@/types/video';
 
+import { CardView, ListView } from '../common';
 import PresentationCard from '../presentation/PresentationCard';
 import PresentationHeader from '../presentation/PresentationHeader';
 import PresentationList from '../presentation/PresentationList';
 import { RecordingEmptySection } from './RecordingEmptySection';
 
-interface MockVideo {
-  id: number;
-  title: string;
-  createdAt: string;
-  durationSeconds: number;
-  slideCount: number;
-  size: number;
-}
+const SKELETON_CARD_COUNT = 6;
+const SKELETON_LIST_COUNT = 4;
 
 export default function VideoListPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
   const [showSuccessToast, setShowSuccessToast] = useState(false);
-  const [projects, setProjects] = useState<Presentation[]>([]);
   const [query, setQuery] = useState('');
+  const [appliedQuery, setAppliedQuery] = useState('');
   const [sort, setSort] = useState<SortMode>('recent');
   const [filter, setFilter] = useState<FilterMode>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('card');
 
-  const hasProjects = projects.length > 0;
+  const { data, isLoading } = useMyVideos({
+    search: appliedQuery,
+    filter,
+    sort,
+  });
+
+  const videos: VideoPresentation[] = data?.videos || [];
+  const totalCount = data?.total || 0;
+
+  const isDebouncing = query.trim() !== appliedQuery.trim();
+  const hasAppliedQuery = appliedQuery.trim().length > 0;
+  const hasResults = videos.length > 0;
 
   useEffect(() => {
     if (location.state?.uploadSuccess) {
@@ -42,35 +49,12 @@ export default function VideoListPage() {
   }, [location, navigate]);
 
   useEffect(() => {
-    const loadMockVideos = () => {
-      try {
-        const storedData = localStorage.getItem('mockVideos');
-        if (!storedData) {
-          setProjects([]);
-          return;
-        }
+    const timer = setTimeout(() => {
+      setAppliedQuery(query);
+    }, 300);
 
-        const mockVideos: MockVideo[] = JSON.parse(storedData);
-
-        const formattedProjects: Presentation[] = mockVideos.map((video) => ({
-          projectId: String(video.id),
-          title: video.title,
-          thumbnailUrl: undefined,
-          slideCount: video.slideCount,
-          feedbackCount: 0,
-          durationSeconds: video.durationSeconds,
-          createdAt: video.createdAt,
-          updatedAt: video.createdAt,
-        }));
-
-        setProjects(formattedProjects);
-      } catch {
-        setProjects([]);
-      }
-    };
-
-    loadMockVideos();
-  }, []);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   const handleStartRecording = () => {
     navigate('/recording');
@@ -97,7 +81,7 @@ export default function VideoListPage() {
             <h1 className="text-display-s-bold text-gray-900 mb-2">녹화된 영상</h1>
             <p className="text-body-m-medium text-gray-500">발표 연습 영상을 선택해서 확인하세요</p>
           </div>
-          {hasProjects && (
+          {!isLoading && totalCount > 0 && (
             <button
               onClick={handleStartRecording}
               className="bg-primary text-white px-6 py-2.5 rounded-lg font-bold hover:bg-primary-dark transition"
@@ -107,21 +91,7 @@ export default function VideoListPage() {
           )}
         </div>
 
-        {!hasProjects ? (
-          //   <div
-          //     className={
-          //       viewMode === 'card' ? 'grid grid-cols-2 gap-4 lg:grid-cols-3' : 'flex flex-col gap-3'
-          //     }
-          //   >
-          //     {Array.from({ length: 6 }).map((_, i) =>
-          //       viewMode === 'card' ? (
-          //         <ProjectCard.Skeleton key={i} />
-          //       ) : (
-          //         <ProjectList.Skeleton key={i} />
-          //       ),
-          //     )}
-          //   </div>
-          // ) : (
+        {!isLoading && totalCount === 0 && !hasAppliedQuery ? (
           <div className="flex justify-center py-20">
             <RecordingEmptySection onStart={handleStartRecording} />
           </div>
@@ -138,21 +108,49 @@ export default function VideoListPage() {
               onChangeViewMode={setViewMode}
             />
 
-            <div className="mt-6">
-              {viewMode === 'card' ? (
-                <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-                  {projects.map((item) => (
-                    <PresentationCard key={item.projectId} {...item} />
+            {isLoading || isDebouncing ? (
+              viewMode === 'card' ? (
+                <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
+                  {Array.from({ length: SKELETON_CARD_COUNT }).map((_, index) => (
+                    <PresentationCard.Skeleton key={index} />
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-col gap-3">
-                  {projects.map((item) => (
-                    <PresentationList key={item.projectId} {...item} />
+                <div className="mt-6 flex flex-col gap-3">
+                  {Array.from({ length: SKELETON_LIST_COUNT }).map((_, index) => (
+                    <PresentationList.Skeleton key={index} />
                   ))}
                 </div>
-              )}
-            </div>
+              )
+            ) : !hasResults ? (
+              <div className="flex items-center justify-center p-40">
+                <p className="text-body-m text-gray-500">
+                  {hasAppliedQuery
+                    ? `'${appliedQuery}'에 대한 검색 결과를 찾지 못했어요.`
+                    : '선택한 필터에 맞는 영상을 찾지 못했어요.'}
+                </p>
+              </div>
+            ) : (
+              <div>
+                {viewMode === 'card' ? (
+                  <CardView
+                    items={videos}
+                    getKey={(item) => item.projectId}
+                    className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3"
+                    renderCard={(item) => <PresentationCard {...item} />}
+                    empty={null}
+                  />
+                ) : (
+                  <ListView
+                    items={videos}
+                    getKey={(item) => item.projectId}
+                    className="mt-6 flex flex-col gap-3"
+                    renderInfo={(item) => <PresentationList {...item} />}
+                    empty={null}
+                  />
+                )}
+              </div>
+            )}
           </section>
         )}
       </main>
