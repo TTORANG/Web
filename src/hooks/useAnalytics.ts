@@ -4,7 +4,9 @@ import {
   type RecordExitRequest,
   getProjectAnalyticsSummary,
   getSlideAnalytics,
+  getSlideRetention,
   getVideoAnalytics,
+  getVideoRetention,
   recordExit,
 } from '@/api/endpoints/analytics';
 import { queryKeys } from '@/api/queryClient';
@@ -33,7 +35,7 @@ export function useSlideAnalytics(projectId: string) {
  * 영상 타임라인 분석(= video analytics)
  * - 기존 useVideoExitAnalytics / getVideoExitAnalytics 대신
  */
-export function useVideoAnalytics(videoId: string) {
+export function useVideoAnalytics(videoId: number) {
   return useQuery({
     queryKey: queryKeys.analytics.videoExits(videoId),
     queryFn: () => getVideoAnalytics(videoId),
@@ -50,5 +52,27 @@ export function useProjectAnalyticsSummary(projectId: string) {
     queryKey: queryKeys.analytics.summary(projectId),
     queryFn: () => getProjectAnalyticsSummary(projectId),
     enabled: !!projectId,
+  });
+}
+
+/**
+ * 슬라이드별 청중 잔존률
+ */
+export function useSlideRetention(projectId: string) {
+  return useQuery({
+    queryKey: queryKeys.analytics.slideRetention(projectId),
+    queryFn: () => getSlideRetention(projectId),
+    enabled: !!projectId,
+  });
+}
+
+/**
+ * 영상별 시청 잔존률
+ */
+export function useVideoRetention(videoId: number) {
+  return useQuery({
+    queryKey: queryKeys.analytics.videoRetention(videoId),
+    queryFn: () => getVideoRetention(videoId),
+    enabled: !!videoId, // 🧷hasVideo 일때만 enabled하게 처리해야하나?
   });
 }
