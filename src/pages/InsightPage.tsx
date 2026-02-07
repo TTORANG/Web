@@ -58,7 +58,7 @@ interface ChartDataPoint {
   originalTime?: number; // 영상 시간 계산용
 }
 
-// 디자인을 위해 스타일을 조금 더 부드럽게 조정했습니다.
+// 디자인을 위해 스타일을 조금 더 부드럽게 조정함
 const thumbBase = 'bg-gray-100 rounded-lg aspect-video';
 const FALLBACK_SLIDE_DURATION_SECONDS = 10;
 
@@ -283,8 +283,7 @@ export default function InsightPage() {
   // 1. 영상 잔존율 (영상이 있을 때만 호출)
   const { data: videoRetentionRes } = useVideoRetention(videoIdNum);
 
-  // 2. 슬라이드 잔존율 (영상이 없을 때 호출 - 또는 항상 호출해도 됨)
-  // hasVideo가 true면 굳이 슬라이드 잔존율을 안 보여줄거라면 enabled 처리를 해도 됩니다.
+  // 2. 슬라이드 잔존율 (영상이 없을 때 호출)
   const { data: slideRetentionRes } = useSlideRetention(projectId ?? '');
 
   // --- Chart Data 가공 ---
@@ -471,7 +470,7 @@ export default function InsightPage() {
                 ))}
               </div>
 
-              {/* ✅ 오버레이: 이 영역 안에서만 덮음 */}
+              {/* 오버레이: 이 영역 안에서만 덮음 */}
               {!hasVideo && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center text-center pointer-events-auto">
                   <div className="px-6 py-5">
