@@ -3,8 +3,11 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   type RecordExitRequest,
   getProjectAnalyticsSummary,
+  getRecentComments,
   getSlideAnalytics,
+  getSlideRetention,
   getVideoAnalytics,
+  getVideoRetention,
   recordExit,
 } from '@/api/endpoints/analytics';
 import { queryKeys } from '@/api/queryClient';
@@ -21,7 +24,7 @@ export function useRecordExit() {
 /**
  * 슬라이드별 분석
  */
-export function useSlideAnalytics(projectId: string) {
+export function useSlideAnalytics(projectId: number) {
   return useQuery({
     queryKey: queryKeys.analytics.slides(projectId),
     queryFn: () => getSlideAnalytics(projectId),
@@ -33,7 +36,7 @@ export function useSlideAnalytics(projectId: string) {
  * 영상 타임라인 분석(= video analytics)
  * - 기존 useVideoExitAnalytics / getVideoExitAnalytics 대신
  */
-export function useVideoAnalytics(videoId: string) {
+export function useVideoAnalytics(videoId: number) {
   return useQuery({
     queryKey: queryKeys.analytics.videoExits(videoId),
     queryFn: () => getVideoAnalytics(videoId),
@@ -45,10 +48,43 @@ export function useVideoAnalytics(videoId: string) {
  * 프로젝트 요약 분석 (상단 카드 4개 + videoIds)
  * - 기존 useSummaryAnalytics / getSummaryAnalytics 대신
  */
-export function useProjectAnalyticsSummary(projectId: string) {
+export function useProjectAnalyticsSummary(projectId: number) {
   return useQuery({
     queryKey: queryKeys.analytics.summary(projectId),
     queryFn: () => getProjectAnalyticsSummary(projectId),
+    enabled: !!projectId,
+  });
+}
+
+/**
+ * 슬라이드별 청중 잔존률
+ */
+export function useSlideRetention(projectId: number) {
+  return useQuery({
+    queryKey: queryKeys.analytics.slideRetention(projectId),
+    queryFn: () => getSlideRetention(projectId),
+    enabled: !!projectId,
+  });
+}
+
+/**
+ * 영상별 시청 잔존률
+ */
+export function useVideoRetention(videoId: number) {
+  return useQuery({
+    queryKey: queryKeys.analytics.videoRetention(videoId),
+    queryFn: () => getVideoRetention(videoId),
+    enabled: !!videoId,
+  });
+}
+
+/**
+ * 최근 댓글 피드백
+ */
+export function useRecentComments(projectId: number) {
+  return useQuery({
+    queryKey: queryKeys.analytics.comments(projectId),
+    queryFn: () => getRecentComments(projectId),
     enabled: !!projectId,
   });
 }

@@ -4,7 +4,11 @@
  */
 import { apiClient } from '@/api/client';
 import type { ToggleSlideReactionDto } from '@/api/dto';
-import type { ReactionCountDto, ToggleSlideReactionResponseDto } from '@/api/dto/reactions.dto';
+import type {
+  ReactionCountDto,
+  ReactionSummaryDto,
+  ToggleSlideReactionResponseDto,
+} from '@/api/dto/reactions.dto';
 import type { ApiResponse } from '@/types/api';
 
 /**
@@ -42,6 +46,23 @@ export async function getSlideReactionSummary(slideId: string) {
 
   if (data.resultType === 'SUCCESS') {
     return data.success.reactions;
+  }
+  throw new Error(data.error.reason);
+}
+
+/**
+ * 프로젝트 전체 슬라이드 리액션 집계 조회
+ *
+ * @param projectId - 프로젝트 ID
+ * @returns ReactionSummaryDto - 이모지별 총 카운트
+ */
+export async function getTotalReactions(projectId: string): Promise<ReactionSummaryDto> {
+  const { data } = await apiClient.get<ApiResponse<ReactionSummaryDto>>(
+    `/projects/${projectId}/reactions/summary`,
+  );
+
+  if (data.resultType === 'SUCCESS') {
+    return data.success;
   }
   throw new Error(data.error.reason);
 }
