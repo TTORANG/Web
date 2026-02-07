@@ -28,8 +28,6 @@ import { createDefaultReactions } from '@/constants/reaction';
 import { useSlides } from '@/hooks/queries/useSlides';
 import {
   useProjectAnalyticsSummary,
-  useRecordExit,
-  // 🧷안쓸건데 왜 훅이 있음???
   useSlideAnalytics,
   useSlideRetention,
   useVideoAnalytics,
