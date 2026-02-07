@@ -21,10 +21,12 @@ interface CommentPopoverProps {
 
 export default function CommentPopover({ isLoading }: CommentPopoverProps) {
   const slideComments = useSlideComments();
-  const { comments: treeComments, addReply, deleteComment } = useComments();
+  const { comments: treeComments, addReply, deleteComment, updateComment } = useComments();
 
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState('');
 
   const submitReply = useCallback(
     (targetId: string) => {
@@ -47,6 +49,27 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
     setReplyDraft('');
   }, []);
 
+  const startEdit = useCallback((id: string, currentContent: string) => {
+    setEditingId(id);
+    setEditDraft(currentContent);
+  }, []);
+
+  const cancelEdit = useCallback(() => {
+    setEditingId(null);
+    setEditDraft('');
+  }, []);
+
+  const submitEdit = useCallback(
+    (id: string) => {
+      if (editDraft.trim()) {
+        updateComment(id, editDraft.trim());
+      }
+      setEditingId(null);
+      setEditDraft('');
+    },
+    [editDraft, updateComment],
+  );
+
   const contextValue = useMemo(
     () => ({
       replyingToId,
@@ -56,9 +79,27 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
       submitReply,
       cancelReply,
       deleteComment,
+      editingId,
+      editDraft,
+      setEditDraft,
+      startEdit,
+      cancelEdit,
+      submitEdit,
       goToRef: () => {}, // 슬라이드 페이지에서는 ref 이동 불필요
     }),
-    [replyingToId, replyDraft, toggleReply, submitReply, cancelReply, deleteComment],
+    [
+      replyingToId,
+      replyDraft,
+      toggleReply,
+      submitReply,
+      cancelReply,
+      deleteComment,
+      editingId,
+      editDraft,
+      startEdit,
+      cancelEdit,
+      submitEdit,
+    ],
   );
 
   return (

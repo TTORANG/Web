@@ -11,6 +11,7 @@ import React, { useCallback } from 'react';
 import clsx from 'clsx';
 
 import FileIcon from '@/assets/icons/icon-document.svg?react';
+import EditIcon from '@/assets/icons/icon-edit.svg?react';
 import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
 import { MOCK_USERS } from '@/mocks/users';
@@ -42,6 +43,12 @@ function Comment({ comment, isIndented = false }: CommentProps) {
     submitReply,
     cancelReply,
     deleteComment,
+    editingId,
+    editDraft,
+    setEditDraft,
+    startEdit,
+    cancelEdit,
+    submitEdit,
     goToRef,
   } = useCommentContext();
 
@@ -50,6 +57,16 @@ function Comment({ comment, isIndented = false }: CommentProps) {
   const authorProfileImage = user?.profileImage;
 
   const isActive = replyingToId === comment.id;
+  const isEditing = editingId === comment.id;
+
+  const handleStartEdit = useCallback(() => {
+    if (editingId === comment.id) return;
+    startEdit(comment.id, comment.content);
+  }, [startEdit, editingId, comment.id, comment.content]);
+
+  const handleSubmitEdit = useCallback(() => {
+    submitEdit(comment.id);
+  }, [submitEdit, comment.id]);
 
   const handleToggleReply = useCallback(() => {
     toggleReply(comment.id);
@@ -82,7 +99,7 @@ function Comment({ comment, isIndented = false }: CommentProps) {
         className={clsx(
           'flex gap-3 py-3 pr-4 transition-colors',
           isIndented ? 'pl-15' : 'pl-4',
-          isActive ? 'bg-gray-200' : 'bg-gray-100',
+          isEditing ? 'bg-gray-100' : isActive ? 'bg-gray-200' : 'bg-gray-100',
         )}
       >
         <div className="w-8 shrink-0">
@@ -107,42 +124,72 @@ function Comment({ comment, isIndented = false }: CommentProps) {
                 </span>
               </div>
 
-              {comment.isMine && deleteComment && (
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  aria-label="댓글 삭제"
-                  className="flex items-center gap-1 rounded text-caption-bold text-error active:opacity-80 focus-visible:outline-2 focus-visible:outline-error"
-                >
-                  삭제
-                  <RemoveIcon className="h-4 w-4" aria-hidden="true" />
-                </button>
+              {comment.isMine && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleStartEdit}
+                    aria-label="댓글 수정"
+                    className={clsx(
+                      'flex items-center gap-1 rounded text-caption-bold active:opacity-80 focus-visible:outline-2 focus-visible:outline-main',
+                      isEditing ? 'text-gray-400' : 'text-black',
+                    )}
+                  >
+                    수정
+                    <EditIcon className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                  {deleteComment && (
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      aria-label="댓글 삭제"
+                      className="flex items-center gap-1 rounded text-caption-bold text-error active:opacity-80 focus-visible:outline-2 focus-visible:outline-error"
+                    >
+                      삭제
+                      <RemoveIcon className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
               )}
             </div>
 
-            <div className="text-body-s text-black">
-              {comment.ref && (
-                <button
-                  type="button"
-                  onClick={handleGoToRef}
-                  className={clsx(
-                    'mr-2 inline-flex items-center align-middle rounded text-body-s-bold hover:underline focus-visible:outline-2 focus-visible:outline-main',
-                    comment.ref.kind === 'slide' ? 'text-main-variant1' : 'text-main',
-                  )}
-                  aria-label={
-                    comment.ref.kind === 'slide' ? `${refLabel}로 이동` : `영상 ${refLabel}로 이동`
-                  }
-                >
-                  {comment.ref.kind === 'slide' && (
-                    <FileIcon className="text-main-variant1" aria-hidden="true" />
-                  )}
-                  {comment.ref.kind === 'slide' ? <>&nbsp;</> : null}
-                  {refLabel}
-                </button>
-              )}
+            {isEditing ? (
+              <CommentInput
+                value={editDraft}
+                onChange={setEditDraft}
+                onSubmit={handleSubmitEdit}
+                onCancel={cancelEdit}
+                submitLabel="저장"
+                autoFocus
+                textareaClassName="text-body-s text-black"
+              />
+            ) : (
+              <div className="text-body-s text-black">
+                {comment.ref && (
+                  <button
+                    type="button"
+                    onClick={handleGoToRef}
+                    className={clsx(
+                      'mr-2 inline-flex items-center align-middle rounded text-body-s-bold hover:underline focus-visible:outline-2 focus-visible:outline-main',
+                      comment.ref.kind === 'slide' ? 'text-main-variant1' : 'text-main',
+                    )}
+                    aria-label={
+                      comment.ref.kind === 'slide'
+                        ? `${refLabel}로 이동`
+                        : `영상 ${refLabel}로 이동`
+                    }
+                  >
+                    {comment.ref.kind === 'slide' && (
+                      <FileIcon className="text-main-variant1" aria-hidden="true" />
+                    )}
+                    {comment.ref.kind === 'slide' ? <>&nbsp;</> : null}
+                    {refLabel}
+                  </button>
+                )}
 
-              <span className="align-middle">{comment.content}</span>
-            </div>
+                <span className="align-middle">{comment.content}</span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center">

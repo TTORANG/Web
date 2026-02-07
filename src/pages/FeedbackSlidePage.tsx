@@ -37,7 +37,7 @@ export default function FeedbackSlidePage() {
 
   const currentSlide = slides?.[slideIndex];
 
-  const { comments, addComment, addReply, deleteComment } = useComments();
+  const { comments, addComment, addReply, deleteComment, updateComment } = useComments();
   const { reactions, toggleReaction } = useReactions();
   const initSlide = useSlideStore((state) => state.initSlide);
 
@@ -139,6 +139,7 @@ export default function FeedbackSlidePage() {
               onAddReply={addReply}
               onGoToRef={handleGoToRef}
               onDeleteComment={deleteComment}
+              onUpdateComment={updateComment}
               isLoading={isLoading}
             />
           </div>
@@ -213,6 +214,7 @@ export default function FeedbackSlidePage() {
                 onAddReply={addReply}
                 onGoToRef={handleGoToRef}
                 onDeleteComment={deleteComment}
+                onUpdateComment={updateComment}
                 isLoading={isLoading}
               />
             </div>

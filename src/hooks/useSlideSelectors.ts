@@ -41,6 +41,7 @@ export const useSlideActions = () =>
       updateSlide: state.updateSlide,
       updateScript: state.updateScript,
       deleteComment: state.deleteComment,
+      updateComment: state.updateComment,
       addReply: state.addReply,
       setComments: state.setComments,
     })),

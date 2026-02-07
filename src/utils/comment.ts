@@ -74,6 +74,13 @@ export function addReplyToTree(
 }
 
 /**
+ * 플랫 배열에서 특정 댓글의 content를 업데이트
+ */
+export function updateInFlat(comments: Comment[], targetId: string, content: string): Comment[] {
+  return comments.map((c) => (c.id === targetId ? { ...c, content } : c));
+}
+
+/**
  * 플랫 배열에서 댓글 삭제 (부모 삭제 시 자식도 함께 삭제)
  */
 export function deleteFromFlat(comments: Comment[], targetId: string): Comment[] {

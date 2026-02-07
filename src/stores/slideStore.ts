@@ -14,7 +14,7 @@ import { MOCK_CURRENT_USER } from '@/mocks/users';
 import type { Comment } from '@/types/comment';
 import type { ReactionType } from '@/types/script';
 import type { SlideListItem } from '@/types/slide';
-import { addReplyToFlat, createComment, deleteFromFlat } from '@/utils/comment';
+import { addReplyToFlat, createComment, deleteFromFlat, updateInFlat } from '@/utils/comment';
 
 interface SlideState {
   slide: SlideListItem | null;
@@ -23,6 +23,7 @@ interface SlideState {
   updateSlide: (updates: Partial<SlideListItem>) => void;
   updateScript: (script: string) => void;
   deleteComment: (id: string) => void;
+  updateComment: (id: string, content: string) => void;
   addReply: (parentId: string, content: string) => void;
   toggleReaction: (type: ReactionType) => void;
   addComment: (content: string, slideIndex: number) => void;
@@ -70,6 +71,21 @@ export const useSlideStore = create<SlideState>()(
           }),
           false,
           'slide/deleteComment',
+        );
+      },
+
+      updateComment: (id, content) => {
+        set(
+          (state) => ({
+            slide: state.slide
+              ? {
+                  ...state.slide,
+                  comments: updateInFlat(state.slide.comments ?? [], id, content),
+                }
+              : null,
+          }),
+          false,
+          'slide/updateComment',
         );
       },
 
