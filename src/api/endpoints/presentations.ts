@@ -9,8 +9,6 @@ import { apiClient } from '@/api/client';
 import type { UpdateProjectDto } from '@/api/dto';
 import type { ApiResponse, ConversionStatusResponse } from '@/types/api';
 import type {
-  CreatePresentationRequest,
-  CreatePresentationSuccess,
   Presentation,
   PresentationListResponse,
   ProjectUpdateResponse,
@@ -58,26 +56,6 @@ export async function updatePresentation(
 ): Promise<ProjectUpdateResponse> {
   const response = await apiClient.patch<ApiResponse<ProjectUpdateResponse>>(
     `/presentations/${projectId}`,
-    data,
-  );
-
-  if (response.data.resultType === 'SUCCESS') {
-    return response.data.success;
-  }
-  throw new Error(response.data.error.reason);
-}
-
-/**
- * 프로젝트 생성 (POST)
- *
- * @param data - 생성할 프로젝트 데이터
- * @returns CreatePresentationSuccess - 생성된 프로젝트 정보
- */
-export async function createPresentation(
-  data: CreatePresentationRequest,
-): Promise<CreatePresentationSuccess> {
-  const response = await apiClient.post<ApiResponse<CreatePresentationSuccess>>(
-    `/presentations`,
     data,
   );
 
