@@ -1,3 +1,7 @@
+/**
+ * @file FileDropzone.tsx
+ * @description 드래그 앤 드롭 파일 업로드 컴포넌트
+ */
 import { useEffect, useRef, useState } from 'react';
 
 import clsx from 'clsx';

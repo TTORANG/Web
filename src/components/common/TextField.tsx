@@ -1,3 +1,7 @@
+/**
+ * @file TextField.tsx
+ * @description 공용 텍스트 입력 필드 컴포넌트
+ */
 import { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import clsx from 'clsx';

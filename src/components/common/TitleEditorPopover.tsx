@@ -1,3 +1,10 @@
+/**
+ * @file TitleEditorPopover.tsx
+ * @description 제목 편집/정보 팝오버 컴포넌트
+ *
+ * readOnlyContent가 제공되면 InfoIcon + 정보 팝오버를 표시하고,
+ * 없으면 ArrowDownIcon + 편집 팝오버를 표시합니다.
+ */
 import { type ReactNode, useEffect, useState } from 'react';
 
 import clsx from 'clsx';
