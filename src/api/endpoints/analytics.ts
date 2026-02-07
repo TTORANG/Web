@@ -4,18 +4,18 @@
  */
 import { apiClient } from '@/api';
 import type {
-  ProjectAnalyticsSummaryDto,
-  RecentCommentListResponseDto,
-  SlideAnalyticsResponseDto,
-  SlideRetentionResponseDto,
-  VideoExitAnalyticsResponseDto,
-  VideoRetentionResponseDto,
+  ReadProjectAnalyticsSummaryDto,
+  ReadRecentCommentListResponseDto,
+  ReadSlideAnalyticsResponseDto,
+  ReadSlideRetentionResponseDto,
+  ReadVideoExitAnalyticsResponseDto,
+  ReadVideoRetentionResponseDto,
 } from '@/api/dto/analytics.dto';
 import type { ApiResponse } from '@/types/api';
 
 // 슬라이드 분석 api 연동
-export async function getSlideAnalytics(projectId: number): Promise<SlideAnalyticsResponseDto> {
-  const response = await apiClient.get<ApiResponse<SlideAnalyticsResponseDto>>(
+export async function getSlideAnalytics(projectId: number): Promise<ReadSlideAnalyticsResponseDto> {
+  const response = await apiClient.get<ApiResponse<ReadSlideAnalyticsResponseDto>>(
     `/presentations/${projectId}/analytics/slides`,
   );
   // 데이터가 없으면 에러 발생 (null 반환 방지)
@@ -26,8 +26,10 @@ export async function getSlideAnalytics(projectId: number): Promise<SlideAnalyti
 }
 
 // 영상 분석 api 연동
-export async function getVideoAnalytics(videoId: number): Promise<VideoExitAnalyticsResponseDto> {
-  const response = await apiClient.get<ApiResponse<VideoExitAnalyticsResponseDto>>(
+export async function getVideoAnalytics(
+  videoId: number,
+): Promise<ReadVideoExitAnalyticsResponseDto> {
+  const response = await apiClient.get<ApiResponse<ReadVideoExitAnalyticsResponseDto>>(
     `/videos/${videoId}/analytics/exits`,
   );
   // 데이터가 없으면 에러 발생 (null 반환 방지)
@@ -40,8 +42,8 @@ export async function getVideoAnalytics(videoId: number): Promise<VideoExitAnaly
 // 프로젝트 분석 요약 api 연동(상단 카드 4개 + videoId)
 export async function getProjectAnalyticsSummary(
   projectId: number,
-): Promise<ProjectAnalyticsSummaryDto> {
-  const response = await apiClient.get<ApiResponse<ProjectAnalyticsSummaryDto>>(
+): Promise<ReadProjectAnalyticsSummaryDto> {
+  const response = await apiClient.get<ApiResponse<ReadProjectAnalyticsSummaryDto>>(
     `/presentations/${projectId}/analytics/summary`,
   );
   // 데이터가 없으면 에러 발생 (null 반환 방지)
@@ -77,8 +79,8 @@ export function recordExit(data: RecordExitRequest) {
 }
 
 // 슬라이드별 청중 잔존률 api 연동
-export async function getSlideRetention(projectId: number): Promise<SlideRetentionResponseDto> {
-  const response = await apiClient.get<ApiResponse<SlideRetentionResponseDto>>(
+export async function getSlideRetention(projectId: number): Promise<ReadSlideRetentionResponseDto> {
+  const response = await apiClient.get<ApiResponse<ReadSlideRetentionResponseDto>>(
     `/presentations/${projectId}/analytics/slide-retention`,
   );
   // 데이터가 없으면 에러 발생 (null 반환 방지)
@@ -89,8 +91,8 @@ export async function getSlideRetention(projectId: number): Promise<SlideRetenti
 }
 
 // 영상별 시청 잔존률 api 연동
-export async function getVideoRetention(videoId: number): Promise<VideoRetentionResponseDto> {
-  const response = await apiClient.get<ApiResponse<VideoRetentionResponseDto>>(
+export async function getVideoRetention(videoId: number): Promise<ReadVideoRetentionResponseDto> {
+  const response = await apiClient.get<ApiResponse<ReadVideoRetentionResponseDto>>(
     `/videos/${videoId}/analytics/retention`,
   );
   // 데이터가 없으면 에러 발생 (null 반환 방지)
@@ -101,8 +103,10 @@ export async function getVideoRetention(videoId: number): Promise<VideoRetention
 }
 
 // 최근 댓글 피드백 api 연동
-export async function getRecentComments(projectId: number): Promise<RecentCommentListResponseDto> {
-  const response = await apiClient.get<ApiResponse<RecentCommentListResponseDto>>(
+export async function getRecentComments(
+  projectId: number,
+): Promise<ReadRecentCommentListResponseDto> {
+  const response = await apiClient.get<ApiResponse<ReadRecentCommentListResponseDto>>(
     `/presentations/${projectId}/analytics/recent-comments`,
   );
   // 데이터가 없으면 에러 발생 (null 반환 방지)
