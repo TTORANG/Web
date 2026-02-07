@@ -73,6 +73,6 @@ export function useVideoRetention(videoId: number) {
   return useQuery({
     queryKey: queryKeys.analytics.videoRetention(videoId),
     queryFn: () => getVideoRetention(videoId),
-    enabled: !!videoId, // 🧷hasVideo 일때만 enabled하게 처리해야하나?
+    enabled: !!videoId,
   });
 }
