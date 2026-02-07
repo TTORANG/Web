@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   type RecordExitRequest,
   getProjectAnalyticsSummary,
+  getRecentComments,
   getSlideAnalytics,
   getSlideRetention,
   getVideoAnalytics,
@@ -23,7 +24,7 @@ export function useRecordExit() {
 /**
  * 슬라이드별 분석
  */
-export function useSlideAnalytics(projectId: string) {
+export function useSlideAnalytics(projectId: number) {
   return useQuery({
     queryKey: queryKeys.analytics.slides(projectId),
     queryFn: () => getSlideAnalytics(projectId),
@@ -47,7 +48,7 @@ export function useVideoAnalytics(videoId: number) {
  * 프로젝트 요약 분석 (상단 카드 4개 + videoIds)
  * - 기존 useSummaryAnalytics / getSummaryAnalytics 대신
  */
-export function useProjectAnalyticsSummary(projectId: string) {
+export function useProjectAnalyticsSummary(projectId: number) {
   return useQuery({
     queryKey: queryKeys.analytics.summary(projectId),
     queryFn: () => getProjectAnalyticsSummary(projectId),
@@ -58,7 +59,7 @@ export function useProjectAnalyticsSummary(projectId: string) {
 /**
  * 슬라이드별 청중 잔존률
  */
-export function useSlideRetention(projectId: string) {
+export function useSlideRetention(projectId: number) {
   return useQuery({
     queryKey: queryKeys.analytics.slideRetention(projectId),
     queryFn: () => getSlideRetention(projectId),
@@ -74,5 +75,16 @@ export function useVideoRetention(videoId: number) {
     queryKey: queryKeys.analytics.videoRetention(videoId),
     queryFn: () => getVideoRetention(videoId),
     enabled: !!videoId,
+  });
+}
+
+/**
+ * 최근 댓글 피드백
+ */
+export function useRecentComments(projectId: number) {
+  return useQuery({
+    queryKey: queryKeys.analytics.comments(projectId),
+    queryFn: () => getRecentComments(projectId),
+    enabled: !!projectId,
   });
 }
