@@ -5,6 +5,7 @@
  * 로컬 store 즉시 업데이트 후 서버 API를 호출하고, 실패 시 롤백합니다.
  */
 import { useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -26,12 +27,19 @@ function useCreateCommentMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ slideId, data }: { slideId: string; data: CreateCommentDto }) =>
-      createSlideComment(slideId, data),
+    mutationFn: ({
+      slideId,
+      projectId,
+      data,
+    }: {
+      slideId: string;
+      projectId: string;
+      data: CreateCommentDto;
+    }) => createSlideComment(slideId, data),
 
-    onSuccess: (_, { slideId }) => {
+    onSuccess: (_, { slideId, projectId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(slideId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.lists() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.list(projectId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
     },
   });
@@ -41,12 +49,23 @@ function useCreateReplyMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ commentId, data }: { commentId: string; data: { content: string } }) =>
-      createReply(commentId, data),
+    mutationFn: ({
+      commentId,
+      slideId,
+      projectId,
+      data,
+    }: {
+      commentId: string;
+      slideId: string;
+      projectId: string;
+      data: { content: string };
+    }) => createReply(commentId, data),
 
-    onSuccess: (_, { commentId }) => {
+    onSuccess: (_, { commentId, slideId, projectId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.comments.replies(commentId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.comments.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(slideId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.list(projectId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
     },
   });
 }
@@ -55,12 +74,12 @@ function useDeleteCommentMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ commentId }: { commentId: string; slideId: string }) =>
+    mutationFn: ({ commentId }: { commentId: string; slideId: string; projectId: string }) =>
       deleteCommentApi(commentId),
 
-    onSuccess: (_, { slideId }) => {
+    onSuccess: (_, { slideId, projectId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(slideId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.lists() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.list(projectId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
     },
   });
@@ -71,6 +90,7 @@ function useDeleteCommentMutation() {
 const EMPTY_COMMENTS: Comment[] = [];
 
 export function useComments() {
+  const { projectId = '' } = useParams<{ projectId: string }>();
   const slideId = useSlideStore((state) => state.slide?.slideId);
   const flatComments = useSlideStore((state) => state.slide?.comments);
   const addCommentStore = useSlideStore((state) => state.addComment);
@@ -99,7 +119,7 @@ export function useComments() {
     addCommentStore(content, currentSlideIndex);
 
     createCommentMutate(
-      { slideId, data: { content } },
+      { slideId, projectId, data: { content } },
       {
         onError: () => {
           setComments(previousComments);
@@ -119,7 +139,7 @@ export function useComments() {
     addReplyStore(parentId, content);
 
     createReplyMutate(
-      { commentId: targetServerId, data: { content } },
+      { commentId: targetServerId, slideId: targetSlideId, projectId, data: { content } },
       {
         onError: () => {
           setComments(previousComments);
@@ -139,7 +159,7 @@ export function useComments() {
     deleteCommentStore(commentId);
 
     deleteCommentMutate(
-      { commentId: targetServerId, slideId: targetSlideId },
+      { commentId: targetServerId, slideId: targetSlideId, projectId },
       {
         onError: () => {
           setComments(previousComments);

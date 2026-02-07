@@ -21,7 +21,7 @@ export type {
   RestoreScriptResponseDto,
 } from './scripts.dto';
 export type {
-  ReactionCountDto,
+  ReadReactionCountDto,
   ToggleSlideReactionDto,
   ToggleSlideReactionResponseDto,
   ToggleVideoReactionDto,

@@ -5,8 +5,8 @@
 import { apiClient } from '@/api/client';
 import type { ToggleSlideReactionDto } from '@/api/dto';
 import type {
-  ReactionCountDto,
-  ReactionSummaryDto,
+  ReadReactionCountDto,
+  ReadReactionSummaryDto,
   ToggleSlideReactionResponseDto,
 } from '@/api/dto/reactions.dto';
 import type { ApiResponse } from '@/types/api';
@@ -40,7 +40,7 @@ export async function toggleReaction(
  * @returns Record<ReactionType, number> - 이모지별 카운트
  */
 export async function getSlideReactionSummary(slideId: string) {
-  const { data } = await apiClient.get<ApiResponse<ReactionCountDto>>(
+  const { data } = await apiClient.get<ApiResponse<ReadReactionCountDto>>(
     `/slides/${slideId}/reactions/summary`,
   );
 
@@ -56,8 +56,8 @@ export async function getSlideReactionSummary(slideId: string) {
  * @param projectId - 프로젝트 ID
  * @returns ReactionSummaryDto - 이모지별 총 카운트
  */
-export async function getTotalReactions(projectId: string): Promise<ReactionSummaryDto> {
-  const { data } = await apiClient.get<ApiResponse<ReactionSummaryDto>>(
+export async function getTotalReactions(projectId: string): Promise<ReadReactionSummaryDto> {
+  const { data } = await apiClient.get<ApiResponse<ReadReactionSummaryDto>>(
     `/projects/${projectId}/reactions/summary`,
   );
 

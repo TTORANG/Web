@@ -38,7 +38,7 @@ export interface ToggleVideoReactionResponseDto {
  *
  * TODO: 백엔드 emojiType 확정 후 키 이름 변경 필요
  */
-export interface ReactionCountDto {
+export interface ReadReactionCountDto {
   slideId: string;
   reactions: Record<ReactionType, number>;
 }
@@ -46,7 +46,7 @@ export interface ReactionCountDto {
 /**
  * 프로젝트 전체 슬라이드 리액션 집계 조회 Dto
  */
-export interface ReactionSummaryDto {
+export interface ReadReactionSummaryDto {
   projectId: string;
   totalReactions: {
     fire: number;

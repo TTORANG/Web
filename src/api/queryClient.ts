@@ -102,8 +102,10 @@ export const queryKeys = {
   },
   reactions: {
     all: ['reactions'] as const,
-    summary: (slideId: string) => [...queryKeys.reactions.all, 'summary', slideId] as const,
-    total: (projectId: string) => [...queryKeys.reactions.all, 'total', projectId] as const,
+    summaries: () => [...queryKeys.reactions.all, 'summary'] as const,
+    summary: (slideId: string) => [...queryKeys.reactions.summaries(), slideId] as const,
+    totals: () => [...queryKeys.reactions.all, 'total'] as const,
+    total: (projectId: string) => [...queryKeys.reactions.totals(), projectId] as const,
   },
 } as const;
 
