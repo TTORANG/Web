@@ -43,15 +43,15 @@ export const initializeSocket = (token?: string | null, sessionId?: string): Soc
     //console.log('[Socket.io] Connected:', socket?.id);
   });
 
-  socket.on('disconnect', (reason) => {
+  socket.on('disconnect', () => {
     //console.log('[Socket.io] Disconnected:', reason);
   });
 
-  socket.on('connect_error', (error) => {
+  socket.on('connect_error', () => {
     //console.error('[Socket.io] Connection error:', error.message);
   });
 
-  socket.on('error', (error) => {
+  socket.on('error', () => {
     //console.error('[Socket.io] Error:', error);
   });
 
