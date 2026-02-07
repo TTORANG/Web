@@ -50,7 +50,7 @@ export const useVideoUpload = () => {
         throw new Error(startData.error?.reason || 'Video ID를 받지 못했습니다.');
       }
 
-      const videoId = startData.success.videoId;
+      const videoId = Number(startData.success.videoId);
       const CHUNK_SIZE = 1024 * 1024; // 1MB
       const totalChunks = Math.ceil(videoBlob.size / CHUNK_SIZE);
       const chunks: Blob[] = [];
@@ -93,7 +93,7 @@ export const useVideoUpload = () => {
         currentStep: 'finishing',
       });
 
-      const finishResponse = await videosApi.finishVideo(videoId, { slideLogs });
+      const finishResponse = await videosApi.finishVideo(videoId.toString(), { slideLogs });
       const finishData: ApiResponse<FinishVideoResponseDto> = finishResponse.data;
 
       if (finishData.resultType === 'FAILURE') {
