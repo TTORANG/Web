@@ -31,7 +31,7 @@ export function useReactions() {
     toggleReactionStore(type);
 
     toggleReactionApi(
-      { slideId, data: { type } },
+      { slideId, data: { emojiType: type } },
       {
         onError: () => {
           showToast.error('반응을 반영하지 못했습니다.');

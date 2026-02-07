@@ -76,7 +76,7 @@ export function useVideoReactions() {
 
     // 2. API 비동기 호출
     toggleReactionApi(
-      { videoId: video.videoId, data: { type, timestamp: Math.round(currentTime) } },
+      { videoId: video.videoId, data: { emojiType: type, timestampMs: Math.round(currentTime) } },
       {
         onError: () => {
           // 3. 실패 시 rollback

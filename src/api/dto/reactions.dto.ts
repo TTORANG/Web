@@ -16,12 +16,10 @@ export interface ToggleSlideReactionResponseDto {
 
 /**
  * 영상 리액션 토글 요청 DTO
- *
- * TODO: 백엔드 확정 시 필드명 `type` → `emojiType`, `timestamp` → `timestampMs`(밀리초)로 변경 필요
  */
 export interface ToggleVideoReactionDto {
-  type: ReactionType;
-  timestamp: number;
+  emojiType: ReactionType;
+  timestampMs: number;
 }
 
 /**
