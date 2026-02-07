@@ -173,9 +173,15 @@ export default function VideoRecordPage() {
           size="sm"
         >
           <p className="text-body-m">
-            {step === 'RECORDING'
-              ? '녹화를 중단하시겠습니까? 저장되지 않은 데이터는 삭제됩니다.'
-              : '테스트를 종료하시겠습니까?'}
+            {step === 'RECORDING' ? (
+              <>
+                녹화를 중단하시겠습니까?
+                <br />
+                저장되지 않은 데이터는 삭제됩니다.
+              </>
+            ) : (
+              '테스트를 종료하시겠습니까?'
+            )}
           </p>
           <div className="mt-7 flex gap-3">
             <button
