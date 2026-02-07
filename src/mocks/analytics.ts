@@ -1,12 +1,14 @@
 import type {
-  ProjectAnalyticsSummaryDto,
-  SlideAnalyticsResponseDto,
-  VideoExitAnalyticsResponseDto,
+  ReadProjectAnalyticsSummaryDto,
+  ReadSlideAnalyticsResponseDto,
+  ReadVideoExitAnalyticsResponseDto,
 } from '@/api/dto/analytics.dto';
 
 import { MOCK_SLIDES } from './slides';
 
-export const getMockProjectAnalyticsSummary = (_projectId: string): ProjectAnalyticsSummaryDto => {
+export const getMockProjectAnalyticsSummary = (
+  _projectId: string,
+): ReadProjectAnalyticsSummaryDto => {
   return {
     videoIds: ['1', '2'], // Mock video IDs
     totalViews: 1250,
@@ -16,7 +18,7 @@ export const getMockProjectAnalyticsSummary = (_projectId: string): ProjectAnaly
   };
 };
 
-export const getMockSlideAnalytics = (projectId: string): SlideAnalyticsResponseDto => {
+export const getMockSlideAnalytics = (projectId: string): ReadSlideAnalyticsResponseDto => {
   // Filter slides for the project or use default mock slides if none match
   const projectSlides = MOCK_SLIDES.filter((s) => s.projectId === projectId);
   const slidesToUse = projectSlides.length > 0 ? projectSlides : MOCK_SLIDES.slice(0, 5);
@@ -38,7 +40,7 @@ export const getMockSlideAnalytics = (projectId: string): SlideAnalyticsResponse
   };
 };
 
-export const getMockVideoExitAnalytics = (_videoId: string): VideoExitAnalyticsResponseDto => {
+export const getMockVideoExitAnalytics = (_videoId: string): ReadVideoExitAnalyticsResponseDto => {
   // Generate some exit points every 30 seconds
   const exits = [];
   const durationMs = 300 * 1000; // 5 minutes
