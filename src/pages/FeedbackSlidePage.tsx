@@ -5,7 +5,7 @@
  * 슬라이드 뷰어, 댓글 목록, 리액션 버튼을 포함합니다.
  * 좌우 화살표 키로 슬라이드 이동이 가능합니다.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
