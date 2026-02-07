@@ -27,15 +27,8 @@ function useCreateCommentMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      slideId,
-      projectId,
-      data,
-    }: {
-      slideId: string;
-      projectId: string;
-      data: CreateCommentDto;
-    }) => createSlideComment(slideId, data),
+    mutationFn: (variables: { slideId: string; projectId: string; data: CreateCommentDto }) =>
+      createSlideComment(variables.slideId, variables.data),
 
     onSuccess: (_, { slideId, projectId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(slideId) });
@@ -49,17 +42,12 @@ function useCreateReplyMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      commentId,
-      slideId,
-      projectId,
-      data,
-    }: {
+    mutationFn: (variables: {
       commentId: string;
       slideId: string;
       projectId: string;
       data: { content: string };
-    }) => createReply(commentId, data),
+    }) => createReply(variables.commentId, variables.data),
 
     onSuccess: (_, { commentId, slideId, projectId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.comments.replies(commentId) });
@@ -74,8 +62,8 @@ function useDeleteCommentMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ commentId }: { commentId: string; slideId: string; projectId: string }) =>
-      deleteCommentApi(commentId),
+    mutationFn: (variables: { commentId: string; slideId: string; projectId: string }) =>
+      deleteCommentApi(variables.commentId),
 
     onSuccess: (_, { slideId, projectId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(slideId) });
