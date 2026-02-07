@@ -108,7 +108,7 @@ export async function deletePresentation(projectId: string): Promise<void> {
  */
 export async function getConversionStatus(projectId: string): Promise<ConversionStatusResponse> {
   const response = await apiClient.get<ApiResponse<ConversionStatusResponse>>(
-    `/presentations/${projectId}/conversion-status`,
+    `/presentations/${projectId}/status`,
   );
 
   if (response.data.resultType === 'SUCCESS') {
