@@ -91,7 +91,7 @@ export default function ReactionButtons({
             ) : (
               <>
                 <span>{config.emoji}</span>
-                <span className="tabular-nums min-w-4 text-right">
+                <span className="tabular-nums min-w-4">
                   {reaction.count > 0 ? formatReactionCount(reaction.count) : ''}
                 </span>
               </>
