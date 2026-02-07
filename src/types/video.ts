@@ -90,6 +90,7 @@ export interface MockVideo {
  * 영상 프레젠테이션 (Presentation 확장)
  */
 export interface VideoPresentation extends Presentation {
+  commentCount: number;
   reactionCount: number;
   viewCount: number;
   status: 'processing' | 'ready' | 'failed';

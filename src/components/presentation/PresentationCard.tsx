@@ -12,6 +12,7 @@ import { getTabPath } from '@/constants/navigation';
 import { usePresentationDeletion } from '@/hooks/usePresentationDeletion';
 import { useRename } from '@/hooks/useRename';
 import type { Presentation } from '@/types/presentation';
+import type { VideoPresentation } from '@/types/video';
 import { formatRelativeTime } from '@/utils/format';
 
 import { Dropdown } from '../common';
@@ -19,37 +20,37 @@ import type { DropdownItem } from '../common/Dropdown';
 import { HighlightText } from '../common/HighlightText';
 import DeletePresentationModal from './DeletePresentationModal';
 
-type Props = Presentation & {
+type Props = (Presentation | VideoPresentation) & {
   highlightQuery?: string;
+  mode?: 'slide' | 'video'; // 슬라이드 모드인지 영상 모드인지 구분
 };
+
+// 타입 가드 함수
+function isVideoPresentation(item: Presentation | VideoPresentation): item is VideoPresentation {
+  return 'reactionCount' in item && 'viewCount' in item;
+}
 
 function PresentationCardSkeleton() {
   return (
     <article className="rounded-2xl border-none bg-white">
-      {/* 썸네일 */}
       <div className="aspect-video w-full overflow-hidden rounded-t-2xl bg-gray-200 animate-pulse" />
 
       <div className="p-4">
-        {/* 제목 및 업데이트 날짜 */}
         <div className="min-h-18">
           <div className="flex justify-between gap-2">
-            {/* 제목 스켈레톤 */}
             <div className="flex-1">
               <div className="h-5 w-3/4 rounded bg-gray-200 animate-pulse" />
             </div>
-            {/* 더보기 아이콘 - 그대로 유지 */}
             <div className="shrink-0 mt-1">
               <div className="p-2 -m-2">
                 <MoreIcon className="text-gray-400" />
               </div>
             </div>
           </div>
-          {/* 날짜 스켈레톤 */}
           <div className="mt-1 h-4 w-16 rounded bg-gray-200 animate-pulse" />
         </div>
 
         <div className="mt-5 flex items-center justify-between text-caption text-gray-600">
-          {/* 왼쪽: 소요 시간, 페이지 수 */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1">
               <RecentIcon />
@@ -61,7 +62,6 @@ function PresentationCardSkeleton() {
             </div>
           </div>
 
-          {/* 오른쪽: 반응 모음 */}
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
               <CommentCountIcon />
@@ -91,6 +91,8 @@ function PresentationCard({
   slideCount,
   feedbackCount,
   thumbnailUrl,
+  mode = 'slide',
+  ...props
 }: Props) {
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
@@ -108,9 +110,14 @@ function PresentationCard({
     cancelRenaming,
   } = useRename({ projectId, initialTitle: title });
 
+  const isVideo = 'reactionCount' in props && 'viewCount' in props;
+  const commentCount = isVideo ? (props as VideoPresentation).commentCount : feedbackCount;
+  const reactionCount = isVideo ? (props as VideoPresentation).reactionCount : 0;
+  const viewCount = isVideo ? (props as VideoPresentation).viewCount : 0;
+
   const handleCardClick = () => {
     if (isRenaming) return;
-    navigate(getTabPath(projectId, 'slide'));
+    navigate(getTabPath(projectId, mode));
   };
 
   const dropdownItems: DropdownItem[] = [
@@ -147,7 +154,6 @@ function PresentationCard({
         </div>
 
         <div className="p-4">
-          {/* 제목 및 업데이트 날짜 */}
           <div className="min-h-18">
             <div className="flex justify-between gap-2">
               {isRenaming ? (
@@ -198,7 +204,6 @@ function PresentationCard({
                 </div>
               )}
 
-              {/* 더보기 */}
               {!isRenaming && (
                 <div onClick={(e) => e.stopPropagation()} className="shrink-0 mt-1">
                   <Dropdown
@@ -225,24 +230,37 @@ function PresentationCard({
                 <RecentIcon />
                 <span>{Math.ceil(durationSeconds / 60)}분</span>
               </div>
-              <div className="flex items-center gap-1">
-                <PageCountIcon />
-                <span>{slideCount} 슬라이드</span>
-              </div>
+              {mode === 'slide' && (
+                <div className="flex items-center gap-1">
+                  <PageCountIcon />
+                  <span>{slideCount} 슬라이드</span>
+                </div>
+              )}
             </div>
 
-            {/* 오른쪽: 피드백 수 */}
+            {/* 오른쪽: 댓글, 리액션, 조회수 */}
             <div className="flex items-center gap-2 shrink-0">
               <div className="flex items-center gap-1">
                 <CommentCountIcon />
-                {feedbackCount}
+                <span>{commentCount ?? 0}</span>
               </div>
+              {isVideo && (
+                <>
+                  <div className="flex items-center gap-1">
+                    <ReactionCountIcon />
+                    <span>{reactionCount}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <ViewCountIcon />
+                    <span>{viewCount}</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
       </article>
 
-      {/* 삭제 확인 모달 */}
       <div onClick={(e) => e.stopPropagation()}>
         <DeletePresentationModal
           isOpen={isDeleteModalOpen}

@@ -12,30 +12,31 @@ import { getTabPath } from '@/constants/navigation';
 import { usePresentationDeletion } from '@/hooks/usePresentationDeletion';
 import { useRename } from '@/hooks/useRename';
 import type { Presentation } from '@/types/presentation';
+import type { VideoPresentation } from '@/types/video';
 import { formatRelativeTime } from '@/utils/format';
 
 import { Dropdown, type DropdownItem } from '../common/Dropdown';
 import DeletePresentationModal from './DeletePresentationModal';
 
-type Props = Presentation & {
+type Props = (Presentation | VideoPresentation) & {
   highlightQuery?: string;
+  mode?: 'slide' | 'video';
 };
+
+function isVideoPresentation(item: Presentation | VideoPresentation): item is VideoPresentation {
+  return 'reactionCount' in item && 'viewCount' in item;
+}
 
 function PresentationListSkeleton() {
   return (
     <article className="flex w-full items-center justify-between bg-white px-5 py-4 rounded-2xl border border-gray-200">
-      {/* 썸네일 */}
       <div className="w-35 h-19.5 shrink-0 overflow-hidden rounded-lg bg-gray-200 animate-pulse" />
 
-      {/* 본문 */}
       <div className="flex flex-1 items-center justify-between pl-6">
         <div className="flex flex-col gap-0.5">
-          {/* 제목 스켈레톤 */}
           <div className="h-5 w-40 rounded bg-gray-200 animate-pulse" />
 
-          {/* 메타 정보 */}
           <div className="flex items-center gap-4 text-caption text-gray-600">
-            {/* 날짜 & 소요 시간 */}
             <div className="flex items-center gap-4">
               <div className="h-3 w-12 rounded bg-gray-200 animate-pulse" />
               <span className="flex items-center gap-1.5">
@@ -44,10 +45,8 @@ function PresentationListSkeleton() {
               </span>
             </div>
 
-            {/* 구분선 */}
             <span className="h-3.5 w-px bg-gray-200" />
 
-            {/* 페이지 수 & 반응 모음 */}
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1">
                 <PageCountIcon className="w-4 h-4" />
@@ -69,7 +68,6 @@ function PresentationListSkeleton() {
           </div>
         </div>
 
-        {/* 더보기 아이콘 - 그대로 유지 */}
         <div className="-m-2">
           <div className="p-2">
             <MoreIcon className="text-gray-600" />
@@ -80,15 +78,18 @@ function PresentationListSkeleton() {
   );
 }
 
-function PresentationList({
-  projectId,
-  title,
-  updatedAt,
-  durationSeconds,
-  slideCount,
-  feedbackCount,
-  thumbnailUrl,
-}: Props) {
+function PresentationList(props: Props) {
+  const {
+    projectId,
+    title,
+    updatedAt,
+    durationSeconds,
+    slideCount,
+    feedbackCount,
+    thumbnailUrl,
+    mode = 'slide',
+  } = props;
+
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
     usePresentationDeletion(projectId);
@@ -105,9 +106,14 @@ function PresentationList({
     cancelRenaming,
   } = useRename({ projectId, initialTitle: title });
 
+  const isVideo = 'reactionCount' in props && 'viewCount' in props;
+  const commentCount = isVideo ? (props as VideoPresentation).commentCount : feedbackCount;
+  const reactionCount = isVideo ? (props as VideoPresentation).reactionCount : 0;
+  const viewCount = isVideo ? (props as VideoPresentation).viewCount : 0;
+
   const handleListClick = () => {
     if (isRenaming) return;
-    navigate(getTabPath(projectId, 'slide'));
+    navigate(getTabPath(projectId, mode));
   };
 
   const dropdownItems: DropdownItem[] = [
@@ -203,16 +209,30 @@ function PresentationList({
               {/* 구분선 */}
               <span className="h-3.5 w-px bg-gray-200" />
 
-              {/* 슬라이드 수 & 피드백 수 */}
+              {/* 슬라이드 수 & 피드백 정보 */}
               <div className="flex items-center gap-4">
-                <span className="flex items-center gap-1">
-                  <PageCountIcon className="w-4 h-4" />
-                  {slideCount} 슬라이드
-                </span>
+                {mode === 'slide' && (
+                  <span className="flex items-center gap-1">
+                    <PageCountIcon className="w-4 h-4" />
+                    {slideCount} 슬라이드
+                  </span>
+                )}
                 <span className="flex items-center gap-1">
                   <CommentCountIcon className="w-4 h-4" />
-                  {feedbackCount}
+                  {commentCount ?? 0}
                 </span>
+                {isVideo && (
+                  <>
+                    <span className="flex items-center gap-1">
+                      <ReactionCountIcon className="w-4 h-4" />
+                      {reactionCount}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <ViewCountIcon className="w-4 h-4" />
+                      {viewCount}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>
