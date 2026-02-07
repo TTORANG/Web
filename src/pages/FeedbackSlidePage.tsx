@@ -17,7 +17,8 @@ import SlideNavigation from '@/components/feedback/SlideNavigation';
 import SlideViewer from '@/components/feedback/SlideViewer';
 import SlideTitle from '@/components/slide/script/SlideTitle';
 import { createDefaultReactions } from '@/constants/reaction';
-import { useHotkey } from '@/hooks';
+import { useHotkey, useSlideActions } from '@/hooks';
+import { useSlideCommentsQuery } from '@/hooks/queries/useCommentQueries';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { useExitTracker } from '@/hooks/useExitTracker';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
@@ -40,6 +41,10 @@ export default function FeedbackSlidePage() {
   const { comments, addComment, addReply, deleteComment, updateComment } = useComments();
   const { reactions, toggleReaction } = useReactions();
   const initSlide = useSlideStore((state) => state.initSlide);
+  const { setComments } = useSlideActions();
+  const { data: fetchedComments, isLoading: isCommentsLoading } = useSlideCommentsQuery(
+    currentSlide?.slideId,
+  );
 
   const [commentDraft, setCommentDraft] = useState('');
 
@@ -72,36 +77,32 @@ export default function FeedbackSlidePage() {
 
   useExitTracker(buildExitPayload);
 
-  /** 모든 슬라이드의 댓글을 플랫 배열로 합침 */
-  const allFlatComments = useMemo(() => {
-    if (!slides) return [];
-    return slides.flatMap((slide, index) => {
-      const slideLabel = `Slide ${index + 1}`;
-      return (slide.comments || []).map((op) => ({
-        ...op,
-        id: `${slide.slideId}-${op.id}`,
-        parentId: op.parentId ? `${slide.slideId}-${op.parentId}` : undefined,
-        serverId: op.id,
-        slideId: slide.slideId,
-        slideRef: slideLabel,
-        ref: { kind: 'slide' as const, index },
-      }));
-    });
-  }, [slides]);
-
   /** 슬라이드 변경 시 store 초기화 */
   useEffect(() => {
     if (!currentSlide) return;
 
     initSlide({
       ...currentSlide,
-      comments: allFlatComments,
       emojiReactions:
         currentSlide.emojiReactions && currentSlide.emojiReactions.length > 0
           ? currentSlide.emojiReactions
           : createDefaultReactions(),
     });
-  }, [slideIndex, currentSlide, initSlide, allFlatComments]);
+    setComments([]);
+  }, [slideIndex, currentSlide, initSlide, setComments]);
+
+  useEffect(() => {
+    if (!currentSlide || !fetchedComments) return;
+    const slideLabel = `Slide ${slideIndex + 1}`;
+    setComments(
+      fetchedComments.map((comment) => ({
+        ...comment,
+        slideId: currentSlide.slideId,
+        ref: { kind: 'slide', index: slideIndex },
+        slideRef: slideLabel,
+      })),
+    );
+  }, [currentSlide, fetchedComments, setComments, slideIndex]);
 
   const handleGoToRef = useCallback(
     (ref: NonNullable<Comment['ref']>) => {
@@ -140,7 +141,7 @@ export default function FeedbackSlidePage() {
               onGoToRef={handleGoToRef}
               onDeleteComment={deleteComment}
               onUpdateComment={updateComment}
-              isLoading={isLoading}
+              isLoading={isLoading || isCommentsLoading}
             />
           </div>
 
