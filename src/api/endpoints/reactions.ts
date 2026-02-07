@@ -58,7 +58,7 @@ export async function getSlideReactionSummary(slideId: string) {
  */
 export async function getTotalReactions(projectId: string): Promise<ReadReactionSummaryDto> {
   const { data } = await apiClient.get<ApiResponse<ReadReactionSummaryDto>>(
-    `/projects/${projectId}/reactions/summary`,
+    `/presentations/${projectId}/slides/reactions/summary`,
   );
 
   if (data.resultType === 'SUCCESS') {
