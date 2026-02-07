@@ -5,14 +5,15 @@
  * 대본에 대한 팀원들의 의견을 보여주고, 답글을 달 수 있습니다.
  * useComments 훅을 통해 API와 동기화합니다.
  */
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import clsx from 'clsx';
 
 import Comment from '@/components/comment/Comment';
 import { CommentProvider } from '@/components/comment/CommentContext';
 import { Popover, Skeleton } from '@/components/common';
-import { useSlideComments } from '@/hooks';
+import { useSlideActions, useSlideComments, useSlideId } from '@/hooks';
+import { useSlideCommentsQuery } from '@/hooks/queries/useCommentQueries';
 import { useComments } from '@/hooks/useComments';
 
 interface CommentPopoverProps {
@@ -20,8 +21,17 @@ interface CommentPopoverProps {
 }
 
 export default function CommentPopover({ isLoading }: CommentPopoverProps) {
+  const slideId = useSlideId();
+  const { setComments } = useSlideActions();
   const slideComments = useSlideComments();
   const { comments: treeComments, addReply, deleteComment, updateComment } = useComments();
+  const { data: fetchedComments, isLoading: isCommentsLoading } = useSlideCommentsQuery(slideId);
+
+  useEffect(() => {
+    if (fetchedComments) {
+      setComments(fetchedComments);
+    }
+  }, [fetchedComments, setComments]);
 
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
@@ -130,7 +140,7 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
               isOpen ? 'text-main-variant1' : 'text-gray-600',
             )}
           >
-            {isLoading ? (
+            {isLoading || isCommentsLoading ? (
               <Skeleton width="100%" height={16} className="rounded" />
             ) : (
               slideComments.length
