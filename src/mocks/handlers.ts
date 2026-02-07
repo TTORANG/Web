@@ -761,7 +761,7 @@ const reactionHandlers = [
     const markers: { timestampMs: number; emojiType: string; count: number }[] = [];
     if (videoId === MOCK_VIDEO.videoId) {
       MOCK_VIDEO.feedbacks.forEach((fb) => {
-        const bucket = Math.floor((fb.timestamp * 1000) / intervalMs) * intervalMs;
+        const bucket = Math.floor(fb.timestampMs / intervalMs) * intervalMs;
         fb.reactions.forEach((r) => {
           if (r.count > 0) markers.push({ timestampMs: bucket, emojiType: r.type, count: r.count });
         });
@@ -782,8 +782,7 @@ const reactionHandlers = [
     if (videoId === MOCK_VIDEO.videoId) {
       const totals: Record<string, number> = {};
       MOCK_VIDEO.feedbacks.forEach((fb) => {
-        const ms = fb.timestamp * 1000;
-        if (ms >= timestampMs - windowMs && ms <= timestampMs + windowMs) {
+        if (fb.timestampMs >= timestampMs - windowMs && fb.timestampMs <= timestampMs + windowMs) {
           fb.reactions.forEach((r) => {
             totals[r.type] = (totals[r.type] ?? 0) + r.count;
           });
@@ -868,7 +867,7 @@ const videoHandlers = [
       fb.reactions.forEach((r) => {
         if (r.count > 0) {
           timelineReactions.push({
-            timestampMs: fb.timestamp * 1000,
+            timestampMs: fb.timestampMs,
             emojiType: r.type,
             count: r.count,
           });
@@ -878,7 +877,7 @@ const videoHandlers = [
         const user = MOCK_USERS.find((u) => u.id === c.userId);
         timelineComments.push({
           commentId: c.id,
-          timestampMs: fb.timestamp * 1000,
+          timestampMs: fb.timestampMs,
           content: c.content,
           createdAt: c.createdAt,
           user: { userId: c.userId, name: user?.name ?? '알 수 없음' },
