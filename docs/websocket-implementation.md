@@ -45,16 +45,11 @@ Socket.IO를 사용한 실시간 댓글/리액션 시스템이 구현되었습�
 
 ### .env.development
 
-```env
-# API와 WebSocket은 같은 서버에서 실행됨
-# WS_URL은 또랑닷컴으로 하니까 안됨
-VITE_API_URL=https://ttorang-server-407623424780.asia-northeast3.run.app
-VITE_WS_URL=https://ttorang-server-407623424780.asia-northeast3.run.app
-VITE_APP_TITLE=또랑 (개발)
-
 # MSW 목업 활성화 (서버 API 미완성 시)
+
 VITE_API_MOCKING=true
-```
+
+````
 
 ### 로컬 테스트용 .env.local
 
@@ -63,7 +58,7 @@ VITE_API_URL=http://localhost:3000
 VITE_WS_URL=http://localhost:3000
 VITE_APP_TITLE=또랑 (로컬)
 VITE_API_MOCKING=false
-```
+````
 
 ---
 

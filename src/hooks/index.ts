@@ -9,8 +9,6 @@ export * from './useHotkey';
 export * from './useMediaQuery';
 export * from './useSlideNavigation';
 export * from './useSlideSelectors';
-// ⚠️ LEGACY: useOpinions는 사용되지 않음 - useComments 사용
-// export * from './queries/useOpinions';
 export * from './queries/usePresentations';
 export * from './queries/useSlides';
 export * from './useRename';
