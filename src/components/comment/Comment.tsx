@@ -56,7 +56,11 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
     goToRef,
   } = useCommentContext();
 
-  const user = MOCK_USERS.find((u) => u.id === comment.userId);
+  // 서버가 userId를 숫자로 반환하는 경우 user-{id} 형식으로 변환하여 매칭
+  const normalizedUserId = comment.userId?.startsWith('user-')
+    ? comment.userId
+    : `user-${comment.userId}`;
+  const user = MOCK_USERS.find((u) => u.id === normalizedUserId || u.id === comment.userId);
   const authorName = user?.name ?? '알 수 없음';
   const authorProfileImage = user?.profileImage;
 
@@ -227,10 +231,15 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
         />
       )}
 
-      {comment.replies && comment.replies.length > 0 && (
+      {comment.replies && Array.isArray(comment.replies) && comment.replies.length > 0 && (
         <div>
-          {comment.replies.map((reply) => (
-            <Comment key={reply.id} comment={reply} isIndented rootCommentId={resolvedRootId} />
+          {comment.replies.map((reply, index) => (
+            <Comment
+              key={reply.id ?? `reply-${comment.id}-${index}`}
+              comment={reply}
+              isIndented
+              rootCommentId={resolvedRootId}
+            />
           ))}
         </div>
       )}

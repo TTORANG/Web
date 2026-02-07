@@ -18,14 +18,14 @@ import type { ApiResponse } from '@/types/api';
 
 /**
  * DTO → Model 변환: CommentResponseDto를 앱 내부용 Model로 변환
- * 주의: 서버 응답에서 댓글은 'id', 답글은 'commentId'를 사용함
+ * 주의: 서버 응답에서 댓글은 'id', 답글은 'commentId' 또는 'replyId'를 사용함
  */
-function commentDtoToModel(dto: CommentResponseDto & { commentId?: string }): {
+function commentDtoToModel(dto: CommentResponseDto & { commentId?: string; replyId?: string }): {
   serverId: string;
   content: string;
 } {
   return {
-    serverId: dto.id ?? dto.commentId ?? '',
+    serverId: dto.id ?? dto.commentId ?? dto.replyId ?? '',
     content: dto.content,
   };
 }
@@ -82,17 +82,10 @@ export async function createVideoComment(
   videoId: number,
   data: { content: string; timestampMs?: number },
 ): Promise<{ serverId: string; content: string }> {
-  console.log('[createVideoComment] POST 요청:', {
-    url: `/videos/${videoId}/comments`,
-    data,
-  });
-
   const response = await apiClient.post<ApiResponse<CommentResponseDto>>(
     `/videos/${videoId}/comments`,
     data,
   );
-
-  console.log('[createVideoComment] 응답:', response.data);
 
   if (response.data.resultType === 'SUCCESS') {
     // DTO → Model 변환
@@ -112,10 +105,9 @@ export async function createCommentReply(
   commentId: number,
   data: { content: string },
 ): Promise<{ serverId: string; content: string }> {
-  const response = await apiClient.post<ApiResponse<CommentResponseDto & { commentId?: string }>>(
-    `/comments/${commentId}/replies`,
-    data,
-  );
+  const response = await apiClient.post<
+    ApiResponse<CommentResponseDto & { commentId?: string; replyId?: string }>
+  >(`/comments/${commentId}/replies`, data);
 
   if (response.data.resultType === 'SUCCESS') {
     // DTO → Model 변환

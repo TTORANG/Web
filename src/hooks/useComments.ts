@@ -10,15 +10,7 @@
  */
 import { useMemo } from 'react';
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-
-import {
-  createReply,
-  createSlideComment,
-  deleteComment as deleteCommentApi,
-  updateComment as updateCommentApi,
-} from '@/api/endpoints/comments';
-import { queryKeys } from '@/api/queryClient';
+import { updateComment as updateCommentApi } from '@/api/endpoints/comments';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
 import { findRootParentId, flatToTree } from '@/utils/comment';
@@ -29,7 +21,6 @@ import { useCreateOpinion, useCreateReply, useDeleteOpinion } from './queries/us
 const EMPTY_COMMENTS: Comment[] = [];
 
 export function useComments() {
-  const queryClient = useQueryClient();
   const slideId = useSlideStore((state) => state.slide?.slideId);
   const flatComments = useSlideStore((state) => state.slide?.opinions);
   const addOpinionStore = useSlideStore((state) => state.addOpinion);
@@ -58,8 +49,8 @@ export function useComments() {
     const previousOpinions = flatComments ?? [];
     addOpinionStore(content, currentSlideIndex);
 
-    createCommentMutation(
-      { slideId, content },
+    createOpinionApi(
+      { slideId, data: { content } },
       {
         onSuccess: () => {
           // 서버가 웹소켓을 보내지 않으므로 수동으로 쿼리 무효화
@@ -76,6 +67,7 @@ export function useComments() {
   const addReply = (parentId: string, content: string) => {
     const target = findOpinion(parentId);
     const targetServerId = target?.serverId ?? parentId;
+    const rootParentId = findRootParentId(flatComments ?? [], parentId) ?? parentId;
 
     const previousOpinions = flatComments ?? [];
     // 최상위 부모에게 답글 달기 (로컬 저장)
@@ -111,8 +103,8 @@ export function useComments() {
     const previousOpinions = flatComments ?? [];
     deleteOpinionStore(commentId);
 
-    deleteCommentMutation(
-      { commentId: targetServerId },
+    deleteOpinionApi(
+      { opinionId: targetServerId, slideId: targetSlideId },
       {
         onError: () => {
           setOpinions(previousOpinions);
@@ -141,15 +133,14 @@ export function useComments() {
     const previousOpinions = flatComments ?? [];
     updateOpinionStore(commentId, content);
 
-    updateCommentMutation(
-      { commentId: targetServerId, content },
-      {
-        onError: () => {
-          setOpinions(previousOpinions);
-          showToast.error('댓글 수정에 실패했습니다.', '잠시 후 다시 시도해주세요.');
-        },
-      },
-    );
+    updateCommentApi(targetServerId, { content })
+      .then(() => {
+        // 성공 시 자동으로 쿼리 무효화됨
+      })
+      .catch(() => {
+        setOpinions(previousOpinions);
+        showToast.error('댓글 수정에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+      });
   };
 
   return {
