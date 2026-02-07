@@ -198,7 +198,9 @@ export default function InsightPage() {
     enabled: topSlideIds.length > 0,
   });
 
-  const getThumb = (slideIndex: number) => slideList[slideIndex]?.imageUrl;
+  const toPublicUrl = (url?: string) =>
+    url?.startsWith('gs://') ? `https://storage.googleapis.com/${url.slice(5)}` : url;
+  const getThumb = (slideIndex: number) => toPublicUrl(slideList[slideIndex]?.imageUrl);
 
   const slideChangeTimes = useMemo(() => {
     if (!slides?.length) return [];
