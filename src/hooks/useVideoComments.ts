@@ -30,7 +30,7 @@ export function useVideoComments() {
 
     // 정렬(선택): 최신 댓글이 위로 오게 하고 싶으면 아래처럼
     // createComment()가 timestamp를 ISO로 넣는 구조라 문자열 비교 가능
-    merged.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1));
+    merged.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 
     return merged;
   }, [video]);

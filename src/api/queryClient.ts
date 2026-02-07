@@ -83,6 +83,12 @@ export const queryKeys = {
     all: ['shares'] as const,
     videos: (projectId: string) => [...queryKeys.shares.all, 'videos', projectId] as const,
   },
+  comments: {
+    all: ['comments'] as const,
+    lists: () => [...queryKeys.comments.all, 'list'] as const,
+    list: (slideId: string) => [...queryKeys.comments.lists(), slideId] as const,
+    replies: (commentId: string) => [...queryKeys.comments.all, 'replies', commentId] as const,
+  },
   analytics: {
     all: ['analytics'] as const,
     slides: (projectId: string) => [...queryKeys.analytics.all, 'slides', projectId] as const,
