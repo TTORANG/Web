@@ -5,14 +5,22 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { videosApi } from '@/api/endpoints/videos';
 import { useVideoComments } from '@/hooks/useVideoComments';
 import { useVideoReactions } from '@/hooks/useVideoReactions';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Comment } from '@/types/comment';
 import { formatVideoTimestamp } from '@/utils/format';
 
+/**
+ * 테스트용 하드코딩 비디오 ID
+ * DB에서 ready 상태인 9초 영상 (id=26, project_id=136)
+ */
+const TEST_VIDEO_ID = 26;
+
 export function useFeedbackVideo() {
-  const { projectId } = useParams<{ projectId: string }>();
+  // projectId는 라우트에서 추출하지만 현재 테스트 모드에서는 사용하지 않음
+  useParams<{ projectId: string }>();
   const [isLoading, setIsLoading] = useState(true);
 
   // Store selectors
@@ -53,30 +61,81 @@ export function useFeedbackVideo() {
     [requestSeek],
   );
 
-  // 비디오 초기화 - 테스트용으로 videoId=1 사용
+  // 비디오 초기화 - 서버 API로 실제 비디오 데이터를 가져옴
   useEffect(() => {
-    if (!projectId) return;
+    let cancelled = false;
 
-    // 임시: 서버에 존재하는 videoId=11을 하드코딩
-    const testVideoData = {
-      videoId: 11, // 서버의 실제 비디오 ID (number 타입)
-      videoUrl: '/p1.webm',
-      title: '테스트 영상',
-      duration: 596,
-      comments: [],
-      reactionEvents: [],
-      feedbacks: [],
+    const loadVideo = async () => {
+      try {
+        // 서버에서 비디오 상세 정보 조회
+        const response = await videosApi.getVideoDetail(TEST_VIDEO_ID);
+        if (cancelled) return;
+
+        // 서버 응답 구조: { resultType: "SUCCESS", success: { video: {...}, timeline: {...} } }
+        const successData = response.data?.success;
+        const serverVideo = successData?.video ?? successData;
+
+        // 서버 응답에서 비디오 URL 추출 (hlsMasterUrl이 실제 필드명)
+        let videoUrl =
+          serverVideo?.hlsMasterUrl ||
+          serverVideo?.streamFileUrl ||
+          serverVideo?.videoUrl ||
+          serverVideo?.streamUrl ||
+          serverVideo?.url ||
+          serverVideo?.playbackUrl ||
+          '';
+
+        // 개발 환경에서 CDN CORS 우회를 위해 proxy 사용
+        if (videoUrl && import.meta.env.DEV && videoUrl.includes('cdn.ttorang.com')) {
+          videoUrl = videoUrl.replace('https://cdn.ttorang.com', '/cdn-proxy');
+        }
+
+        const videoData = {
+          videoId: TEST_VIDEO_ID,
+          videoUrl,
+          title: serverVideo?.title || '테스트 영상',
+          duration: serverVideo?.durationSeconds || serverVideo?.duration || 9,
+          comments: [],
+          reactionEvents: [],
+          feedbacks: [],
+        };
+
+        console.log('[useFeedbackVideo] 서버 비디오 로드:', {
+          videoId: TEST_VIDEO_ID,
+          videoUrl,
+          title: videoData.title,
+          duration: videoData.duration,
+          fullResponse: response.data,
+        });
+
+        initVideo(videoData);
+      } catch (error) {
+        console.error('[useFeedbackVideo] 비디오 로드 실패, 폴백 사용:', error);
+        if (cancelled) return;
+
+        // 서버 요청 실패 시 폴백: videoId만 실제 값 사용
+        initVideo({
+          videoId: TEST_VIDEO_ID,
+          videoUrl: '',
+          title: '테스트 영상',
+          duration: 9,
+          comments: [],
+          reactionEvents: [],
+          feedbacks: [],
+        });
+      } finally {
+        if (!cancelled) {
+          setTimeout(() => setIsLoading(false), 0);
+        }
+      }
     };
 
-    // console.log('[useFeedbackVideo] Using test videoId:', testVideoData.videoId);
-    initVideo(testVideoData);
-    // setState를 effect에서 직접 호출하지 않고 타이머로 지연
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 0);
+    loadVideo();
 
-    return () => clearTimeout(timer);
-  }, [projectId, initVideo]);
+    return () => {
+      cancelled = true;
+    };
+  }, [initVideo]);
 
   return {
     // 상태
@@ -100,8 +159,8 @@ export function useFeedbackVideo() {
     updateComment,
     toggleReaction,
 
-    // 비디오 URL
-    webcamVideoUrl: video?.videoUrl || '/p1.webm',
+    // 비디오 URL (서버에서 가져온 URL 사용)
+    webcamVideoUrl: video?.videoUrl || '',
   };
 }
 
