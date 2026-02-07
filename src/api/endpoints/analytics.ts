@@ -82,7 +82,7 @@ export async function getSlideRetention(projectId: string): Promise<SlideRetenti
   );
   // 데이터가 없으면 에러 발생 (null 반환 방지)
   if (!response.data.success) {
-    throw new Error('프로젝트 분석 요약을 불러올 수 없습니다.');
+    throw new Error('슬라이드 청중 잔존률을 불러올 수 없습니다.');
   }
   return response.data.success;
 }
@@ -94,7 +94,7 @@ export async function getVideoRetention(videoId: number): Promise<VideoRetention
   );
   // 데이터가 없으면 에러 발생 (null 반환 방지)
   if (!response.data.success) {
-    throw new Error('프로젝트 분석 요약을 불러올 수 없습니다.');
+    throw new Error('영상 시청 잔존률을 불러올 수 없습니다.');
   }
   return response.data.success;
 }
