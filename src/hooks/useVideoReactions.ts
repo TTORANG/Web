@@ -6,11 +6,16 @@
  * 1. Store 즉시 업데이트 (optimistic)
  * 2. API 비동기 호출
  * 3. 실패 시 rollback (toggleReaction 재호출)
+ *
+ * 타임스탬프 잠금 메커니즘:
+ * - 첫 토글 시점의 timestampMs를 2초간 잠금
+ * - 2초 내 동일 emojiType 토글은 같은 timestampMs 사용 (서버 토글 정합성)
+ * - 정지 중에는 currentTime 불변 → 자연스럽게 동일 timestampMs 유지
  */
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 
 import { REACTION_TYPES } from '@/constants/reaction';
-import { FEEDBACK_WINDOW } from '@/constants/video';
+import { FEEDBACK_WINDOW, REACTION_TOGGLE_WINDOW } from '@/constants/video';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Reaction, ReactionType } from '@/types/script';
 import { showToast } from '@/utils/toast';
@@ -18,12 +23,20 @@ import { getOverlappingFeedbacks } from '@/utils/video';
 
 import { useToggleVideoReaction } from './queries/useVideoReactionQueries';
 
+interface LockedTimestamp {
+  timestampMs: number;
+  expiresAt: number; // Date.now() 기준 만료 시각
+}
+
 export function useVideoReactions() {
   const video = useVideoFeedbackStore((s) => s.video);
   const currentTime = useVideoFeedbackStore((s) => s.currentTime);
   const toggleReactionStore = useVideoFeedbackStore((s) => s.toggleReaction);
 
   const { mutate: toggleReactionApi } = useToggleVideoReaction();
+
+  /** emojiType별 잠긴 timestampMs (2초간 동일 값 유지) */
+  const lockedTimestamps = useRef<Map<ReactionType, LockedTimestamp>>(new Map());
 
   const reactions: Reaction[] = useMemo(() => {
     if (!video) {
@@ -68,16 +81,43 @@ export function useVideoReactions() {
     });
   }, [video, currentTime]);
 
+  /**
+   * emojiType별 잠긴 timestampMs를 반환합니다.
+   * - 2초 윈도우 내: 기존 잠긴 값 재사용 (서버가 같은 레코드를 찾도록)
+   * - 윈도우 만료 후: 현재 재생 시점의 정밀한 timestampMs로 새로 잠금
+   */
+  const getStableTimestampMs = (type: ReactionType): number => {
+    const now = Date.now();
+    const locked = lockedTimestamps.current.get(type);
+
+    // 2초 윈도우 내 → 같은 timestampMs 재사용
+    if (locked && now < locked.expiresAt) {
+      return locked.timestampMs;
+    }
+
+    // 새 timestampMs: 현재 재생 시간의 정밀한 밀리초 값 (예: 3.567s → 3567ms)
+    const timestampMs = Math.round(currentTime * 1000);
+
+    lockedTimestamps.current.set(type, {
+      timestampMs,
+      expiresAt: now + REACTION_TOGGLE_WINDOW,
+    });
+
+    return timestampMs;
+  };
+
   const toggleReaction = (type: ReactionType) => {
     if (!video) {
       return;
     }
 
+    const timestampMs = getStableTimestampMs(type);
+
     const requestData = {
       videoId: video.videoId,
       data: {
         emojiType: type,
-        timestampMs: Math.round(currentTime * 1000),
+        timestampMs,
       },
     };
 
