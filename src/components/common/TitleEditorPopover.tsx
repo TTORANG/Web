@@ -85,7 +85,7 @@ export function TitleEditorPopover({
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
-                onSave(editTitle, close);
+                onSave?.(editTitle, close);
               }
             }}
             disabled={isPending}
@@ -94,7 +94,7 @@ export function TitleEditorPopover({
           />
           <button
             type="button"
-            onClick={() => onSave(editTitle, close)}
+            onClick={() => onSave?.(editTitle, close)}
             disabled={isPending}
             className="h-9 rounded-full bg-main px-3 text-sm font-semibold text-white active:bg-main-variant2 focus-visible:outline-2 focus-visible:outline-main disabled:opacity-50 disabled:cursor-not-allowed"
           >

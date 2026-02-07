@@ -64,10 +64,10 @@ MOCK_SLIDES.forEach((slide) => {
       id: op.id,
       content: op.content,
       parentId: op.parentId,
-      userId: op.authorId,
+      userId: op.userId,
       slideId: slide.slideId,
-      createdAt: op.timestamp,
-      updatedAt: op.timestamp,
+      createdAt: op.createdAt,
+      updatedAt: op.createdAt,
     };
     if (op.parentId) {
       const arr = commentReplies.get(op.parentId) ?? [];
@@ -875,13 +875,13 @@ const videoHandlers = [
         }
       });
       fb.comments.forEach((c) => {
-        const user = MOCK_USERS.find((u) => u.id === c.authorId);
+        const user = MOCK_USERS.find((u) => u.id === c.userId);
         timelineComments.push({
           commentId: c.id,
           timestampMs: fb.timestamp * 1000,
           content: c.content,
-          createdAt: c.timestamp,
-          user: { userId: c.authorId, name: user?.name ?? '알 수 없음' },
+          createdAt: c.createdAt,
+          user: { userId: c.userId, name: user?.name ?? '알 수 없음' },
         });
       });
     });

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import IconArrowLeft from '@/assets/icons/icon-arrow-left.svg?react';
 import IconArrowRight from '@/assets/icons/icon-arrow-right.svg?react';
-import { Logo, PresentationTitleEditor, SlideImage } from '@/components/common';
+import { Logo, SlideImage } from '@/components/common';
+import { usePresentation } from '@/hooks/queries/usePresentations';
 import { useSlides } from '@/hooks/queries/useSlides';
 
 import { useRecorder } from '../../hooks/useRecorder';
@@ -32,6 +33,7 @@ export const RecordingSection = ({
 
   const { canvasRef, isRecording, recordedChunks, startRecording, stopRecording } = useRecorder();
 
+  const { data: presentation } = usePresentation(projectId);
   const { data: slidesData } = useSlides(projectId);
   const slidesList = slidesData || [];
   const totalPages = slidesList.length > 0 ? slidesList.length : 1;
@@ -167,7 +169,9 @@ export const RecordingSection = ({
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-6">
             <Logo onClick={onExitClick} />
-            <PresentationTitleEditor readOnly />
+            <span className="hidden md:inline-flex h-7 items-center px-2 text-sm font-semibold text-gray-800">
+              {presentation?.title || '내 발표'}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 animate-pulse rounded-full bg-error" />
