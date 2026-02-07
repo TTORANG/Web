@@ -1,13 +1,20 @@
-import { REACTION_CONFIG } from '@/constants/reaction';
+import { REACTION_CONFIG, createDefaultReactions } from '@/constants/reaction';
+import { useSlideReactionsTotal } from '@/hooks/useReactions';
 import type { Reaction } from '@/types/script';
 
 interface FeedbackDistributionSectionProps {
-  reactions: Reaction[];
+  projectId: string;
 }
 
 export default function FeedbackDistributionSection({
-  reactions,
+  projectId,
 }: FeedbackDistributionSectionProps) {
+  const { data } = useSlideReactionsTotal(projectId);
+  const baseReactions = createDefaultReactions();
+  const reactions: Reaction[] = baseReactions.map((reaction) => ({
+    ...reaction,
+    count: data?.totalReactions[reaction.type] ?? 0,
+  }));
   const total = reactions.reduce((sum, reaction) => sum + reaction.count, 0);
   const max = reactions.reduce((current, reaction) => Math.max(current, reaction.count), 1);
 

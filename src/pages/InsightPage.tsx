@@ -1,7 +1,6 @@
 ﻿import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { useQuery } from '@tanstack/react-query';
 // 1. Recharts 컴포넌트 임포트
 import {
   Area,
@@ -15,8 +14,6 @@ import {
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import type { TooltipContentProps } from 'recharts/types/component/Tooltip';
 
-import { getSlideReactionSummary } from '@/api/endpoints/reactions';
-import { queryKeys } from '@/api/queryClient';
 import {
   DropOffAnalysisSection,
   FeedbackDistributionSection,
@@ -34,8 +31,8 @@ import {
   useVideoAnalytics,
   useVideoRetention,
 } from '@/hooks/useAnalytics';
+import { useSlideReactionSummaries } from '@/hooks/useReactions';
 import type { DropOffSlide, DropOffTime, SummaryStat } from '@/types/insight';
-import type { Reaction } from '@/types/script';
 import type { SlideListItem } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
@@ -131,29 +128,6 @@ export default function InsightPage() {
 
   const slideList = useMemo(() => (Array.isArray(slides) ? slides : []), [slides]);
 
-  const reactions = useMemo(() => {
-    const base = createDefaultReactions();
-    if (!slideList.length) return base;
-
-    const totals = new Map<Reaction['type'], number>();
-    const analyticsSlideIds = new Set((slideAnalytics?.slides ?? []).map((item) => item.slideId));
-    const targetSlides =
-      analyticsSlideIds.size > 0
-        ? slideList.filter((slide) => analyticsSlideIds.has(slide.slideId))
-        : slideList;
-
-    targetSlides.forEach((slide) => {
-      slide.emojiReactions?.forEach((reaction) => {
-        totals.set(reaction.type, (totals.get(reaction.type) ?? 0) + reaction.count);
-      });
-    });
-
-    return base.map((reaction) => ({
-      ...reaction,
-      count: totals.get(reaction.type) ?? 0,
-    }));
-  }, [slideList, slideAnalytics]);
-
   const slideDataMaps = useMemo(() => {
     const slideIndexById = new Map<string, number>();
     const slideById = new Map<string, SlideListItem>();
@@ -192,11 +166,7 @@ export default function InsightPage() {
   }, [slideAnalytics, slideDataMaps]);
 
   const topSlideIds = useMemo(() => topSlides.map((item) => item.slideId), [topSlides]);
-  const { data: topSlideReactionSummaries } = useQuery({
-    queryKey: queryKeys.reactions.summary(topSlideIds.join('|')),
-    queryFn: () => Promise.all(topSlideIds.map((slideId) => getSlideReactionSummary(slideId))),
-    enabled: topSlideIds.length > 0,
-  });
+  const { data: topSlideReactionSummaries } = useSlideReactionSummaries(topSlideIds);
 
   const toPublicUrl = (url?: string) =>
     url?.startsWith('gs://') ? `https://storage.googleapis.com/${url.slice(5)}` : url;
@@ -399,7 +369,7 @@ export default function InsightPage() {
           )}
 
           <div className="flex flex-wrap items-start justify-between gap-6 py-4">
-            <FeedbackDistributionSection reactions={reactions} />
+            <FeedbackDistributionSection projectId={projectIdStr ?? ''} />
 
             <div className="flex min-w-80 flex-1 basis-160 flex-col gap-6">
               <h3 className="text-body-l-bold text-gray-800">가장 많은 피드백을 받은 슬라이드</h3>

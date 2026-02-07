@@ -7,8 +7,9 @@ import type {
 import { MOCK_SLIDES } from './slides';
 
 export const getMockProjectAnalyticsSummary = (
-  _projectId: string,
+  projectId: string,
 ): ReadProjectAnalyticsSummaryDto => {
+  void projectId;
   return {
     videoIds: ['1', '2'], // Mock video IDs
     totalViews: 1250,
@@ -40,7 +41,8 @@ export const getMockSlideAnalytics = (projectId: string): ReadSlideAnalyticsResp
   };
 };
 
-export const getMockVideoExitAnalytics = (_videoId: string): ReadVideoExitAnalyticsResponseDto => {
+export const getMockVideoExitAnalytics = (videoId: string): ReadVideoExitAnalyticsResponseDto => {
+  void videoId;
   // Generate some exit points every 30 seconds
   const exits = [];
   const durationMs = 300 * 1000; // 5 minutes

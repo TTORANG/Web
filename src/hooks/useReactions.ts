@@ -6,6 +6,10 @@
  * @returns reactions - 현재 슬라이드의 리액션 목록
  * @returns toggleReaction - 리액션 토글 함수
  */
+import { useQuery } from '@tanstack/react-query';
+
+import { getSlideReactionSummary, getTotalReactions } from '@/api/endpoints/reactions';
+import { queryKeys } from '@/api/queryClient';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Reaction, ReactionType } from '@/types/script';
 import { showToast } from '@/utils/toast';
@@ -38,4 +42,26 @@ export function useReactions() {
   };
 
   return { reactions, toggleReaction };
+}
+
+/**
+ * 가장 많은 피드백을 받은 슬라이드
+ */
+export function useSlideReactionSummaries(slideIds: string[]) {
+  return useQuery({
+    queryKey: queryKeys.reactions.summary(slideIds.join('|')),
+    queryFn: () => Promise.all(slideIds.map((slideId) => getSlideReactionSummary(slideId))),
+    enabled: slideIds.length > 0,
+  });
+}
+
+/**
+ * 슬라이드 이모지 피드백 분포
+ */
+export function useSlideReactionsTotal(projectId: string) {
+  return useQuery({
+    queryKey: queryKeys.reactions.total(projectId),
+    queryFn: () => getTotalReactions(projectId),
+    enabled: !!projectId,
+  });
 }
