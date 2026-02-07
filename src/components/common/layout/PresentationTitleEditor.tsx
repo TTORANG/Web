@@ -14,10 +14,10 @@ import { showToast } from '@/utils/toast';
 import { TitleEditorPopover } from '../TitleEditorPopover';
 
 interface PresentationTitleEditorProps {
-  readOnly?: boolean;
+  readOnlyContent?: React.ReactNode;
 }
 
-export function PresentationTitleEditor({ readOnly }: PresentationTitleEditorProps) {
+export function PresentationTitleEditor({ readOnlyContent }: PresentationTitleEditorProps) {
   const { projectId } = useParams<{ projectId: string }>();
   const { data: presentation } = usePresentation(projectId ?? '');
   const { mutate: updatePresentation, isPending } = useUpdatePresentation();
@@ -51,7 +51,7 @@ export function PresentationTitleEditor({ readOnly }: PresentationTitleEditorPro
     <TitleEditorPopover
       title={resolvedTitle}
       onSave={handleSave}
-      readOnly={readOnly}
+      readOnlyContent={readOnlyContent}
       ariaLabel="발표 이름 변경"
       isPending={isPending}
     />

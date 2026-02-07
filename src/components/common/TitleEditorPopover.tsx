@@ -1,16 +1,17 @@
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 
 import clsx from 'clsx';
 
 import ArrowDownIcon from '@/assets/icons/icon-arrow-down.svg?react';
+import InfoIcon from '@/assets/icons/icon-info.svg?react';
 
 import { Popover } from './Popover';
 import { TextField } from './TextField';
 
 interface TitleEditorPopoverProps {
   title: string;
-  onSave: (newTitle: string, close: () => void) => void;
-  readOnly?: boolean;
+  onSave?: (newTitle: string, close: () => void) => void;
+  readOnlyContent?: ReactNode;
   isCollapsed?: boolean;
   ariaLabel: string;
   isPending?: boolean;
@@ -19,7 +20,7 @@ interface TitleEditorPopoverProps {
 export function TitleEditorPopover({
   title,
   onSave,
-  readOnly = false,
+  readOnlyContent,
   isCollapsed = false,
   ariaLabel,
   isPending = false,
@@ -30,11 +31,26 @@ export function TitleEditorPopover({
     setEditTitle(title);
   }, [title]);
 
-  if (readOnly) {
+  if (readOnlyContent) {
     return (
-      <span className="hidden md:inline-flex h-7 items-center px-2 text-sm font-semibold text-gray-800">
-        <span className="whitespace-normal break-words">{title}</span>
-      </span>
+      <Popover
+        trigger={
+          <button
+            type="button"
+            aria-label={ariaLabel}
+            className="hidden md:inline-flex h-7 items-center gap-1.5 rounded-md bg-transparent px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main"
+          >
+            <span className="whitespace-normal break-words">{title}</span>
+            <InfoIcon className="h-4 w-4" aria-hidden="true" />
+          </button>
+        }
+        position="bottom"
+        align="start"
+        ariaLabel={ariaLabel}
+        className="w-72 max-w-[90vw] rounded-2xl border border-gray-200 px-6 py-3"
+      >
+        {readOnlyContent}
+      </Popover>
     );
   }
 
