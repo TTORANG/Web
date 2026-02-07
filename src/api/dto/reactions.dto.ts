@@ -2,11 +2,9 @@ import type { ReactionType } from '@/types/script';
 
 /**
  * 슬라이드 리액션 토글 요청 DTO
- *
- * TODO: 백엔드 확정 시 필드명 `type` → `emojiType`으로 변경 필요
  */
 export interface ToggleSlideReactionDto {
-  type: ReactionType;
+  emojiType: ReactionType;
 }
 
 /**
@@ -35,8 +33,6 @@ export interface ToggleVideoReactionResponseDto {
 
 /**
  * 특정 슬라이드에 달린 모든 이모지 리액션을 집계하여 반환 Dto
- *
- * TODO: 백엔드 emojiType 확정 후 키 이름 변경 필요
  */
 export interface ReadReactionCountDto {
   slideId: string;
@@ -48,12 +44,6 @@ export interface ReadReactionCountDto {
  */
 export interface ReadReactionSummaryDto {
   projectId: string;
-  totalReactions: {
-    fire: number;
-    good: number;
-    bad: number;
-    sleepy: number;
-    confused: number;
-  };
+  totalReactions: Record<ReactionType, number>;
   totalCount: number;
 }
