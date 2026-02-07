@@ -30,9 +30,9 @@ export const MOCK_VIDEO: VideoFeedback = {
       comments: [
         {
           id: 'vc-1',
-          authorId: MOCK_USERS[0].id,
+          userId: MOCK_USERS[0].id,
           content: '오프닝이 멋있네요!',
-          timestamp: timeAgo(2, 'minute'),
+          createdAt: timeAgo(2, 'minute'),
           isMine: true,
           ref: { kind: 'video' as const, seconds: 3 },
         },
@@ -52,9 +52,9 @@ export const MOCK_VIDEO: VideoFeedback = {
       comments: [
         {
           id: 'vc-3',
-          authorId: MOCK_USERS[2].id,
+          userId: MOCK_USERS[2].id,
           content: '배경 음악이 좋습니다.',
-          timestamp: timeAgo(5, 'minute'),
+          createdAt: timeAgo(5, 'minute'),
           isMine: false,
           ref: { kind: 'video' as const, seconds: 15 },
         },
@@ -87,9 +87,9 @@ export const MOCK_VIDEO: VideoFeedback = {
       comments: [
         {
           id: 'vc-45-1',
-          authorId: MOCK_USERS[1].id,
+          userId: MOCK_USERS[1].id,
           content: '여기 정말 좋아요!',
-          timestamp: timeAgo(10, 'minute'),
+          createdAt: timeAgo(10, 'minute'),
           isMine: false,
           ref: { kind: 'video' as const, seconds: 45 },
         },
@@ -110,9 +110,9 @@ export const MOCK_VIDEO: VideoFeedback = {
       comments: [
         {
           id: 'vc-90-1',
-          authorId: MOCK_USERS[3].id,
+          userId: MOCK_USERS[3].id,
           content: '이 부분이 좀 어려웠어요.',
-          timestamp: timeAgo(8, 'minute'),
+          createdAt: timeAgo(8, 'minute'),
           isMine: false,
           ref: { kind: 'video' as const, seconds: 90 },
         },
@@ -132,17 +132,17 @@ export const MOCK_VIDEO: VideoFeedback = {
       comments: [
         {
           id: 'vc-150-1',
-          authorId: MOCK_USERS[0].id,
+          userId: MOCK_USERS[0].id,
           content: '하이라이트 부분이네요!',
-          timestamp: timeAgo(15, 'minute'),
+          createdAt: timeAgo(15, 'minute'),
           isMine: true,
           ref: { kind: 'video' as const, seconds: 150 },
         },
         {
           id: 'vc-150-2',
-          authorId: MOCK_USERS[4].id,
+          userId: MOCK_USERS[4].id,
           content: '완전 동의합니다!',
-          timestamp: timeAgo(14, 'minute'),
+          createdAt: timeAgo(14, 'minute'),
           isMine: false,
           parentId: 'vc-150-1',
           isReply: true,
@@ -176,9 +176,9 @@ export const MOCK_VIDEO: VideoFeedback = {
       comments: [
         {
           id: 'vc-270-1',
-          authorId: MOCK_USERS[2].id,
+          userId: MOCK_USERS[2].id,
           content: '이 부분은 개선이 필요해 보여요.',
-          timestamp: timeAgo(20, 'minute'),
+          createdAt: timeAgo(20, 'minute'),
           isMine: false,
           ref: { kind: 'video' as const, seconds: 270 },
         },
@@ -199,9 +199,9 @@ export const MOCK_VIDEO: VideoFeedback = {
       comments: [
         {
           id: 'vc-330-1',
-          authorId: MOCK_USERS[1].id,
+          userId: MOCK_USERS[1].id,
           content: '다시 재미있어졌네요!',
-          timestamp: timeAgo(25, 'minute'),
+          createdAt: timeAgo(25, 'minute'),
           isMine: false,
           ref: { kind: 'video' as const, seconds: 330 },
         },
@@ -234,9 +234,9 @@ export const MOCK_VIDEO: VideoFeedback = {
       comments: [
         {
           id: 'vc-450-1',
-          authorId: MOCK_USERS[3].id,
+          userId: MOCK_USERS[3].id,
           content: '클라이막스 부분이네요!',
-          timestamp: timeAgo(30, 'minute'),
+          createdAt: timeAgo(30, 'minute'),
           isMine: false,
           ref: { kind: 'video' as const, seconds: 450 },
         },
@@ -270,9 +270,9 @@ export const MOCK_VIDEO: VideoFeedback = {
       comments: [
         {
           id: 'vc-560-1',
-          authorId: MOCK_USERS[4].id,
+          userId: MOCK_USERS[4].id,
           content: '엔딩 크레딧도 예쁘네요!',
-          timestamp: timeAgo(35, 'minute'),
+          createdAt: timeAgo(35, 'minute'),
           isMine: false,
           ref: { kind: 'video' as const, seconds: 560 },
         },
@@ -292,9 +292,9 @@ export const MOCK_VIDEO: VideoFeedback = {
       comments: [
         {
           id: 'vc-590-1',
-          authorId: MOCK_USERS[0].id,
+          userId: MOCK_USERS[0].id,
           content: '마무리가 정말 좋았어요!',
-          timestamp: timeAgo(40, 'minute'),
+          createdAt: timeAgo(40, 'minute'),
           isMine: true,
           ref: { kind: 'video' as const, seconds: 590 },
         },

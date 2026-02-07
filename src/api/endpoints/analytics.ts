@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file analytics.ts
  * @description 인사이트 페이지 관련 API 엔드포인트
  */
@@ -6,7 +6,9 @@ import { apiClient } from '@/api';
 import type {
   ProjectAnalyticsSummaryDto,
   SlideAnalyticsResponseDto,
+  SlideRetentionResponseDto,
   VideoExitAnalyticsResponseDto,
+  VideoRetentionResponseDto,
 } from '@/api/dto/analytics.dto';
 import type { ApiResponse } from '@/types/api';
 
@@ -23,7 +25,7 @@ export async function getSlideAnalytics(projectId: string): Promise<SlideAnalyti
 }
 
 // 영상 분석 api 연동
-export async function getVideoAnalytics(videoId: string): Promise<VideoExitAnalyticsResponseDto> {
+export async function getVideoAnalytics(videoId: number): Promise<VideoExitAnalyticsResponseDto> {
   const response = await apiClient.get<ApiResponse<VideoExitAnalyticsResponseDto>>(
     `/videos/${videoId}/analytics/exits`,
   );
@@ -55,7 +57,6 @@ export interface RecordExitRequest {
   lastVideoTimeMs?: number;
 }
 
-// 기존 recordExit은 지우고, 이 함수를 recordExit이라는 이름으로 쓰시는 걸 추천합니다.
 export function recordExit(data: RecordExitRequest) {
   // try-catch 블록을 제거하세요!
 
@@ -72,4 +73,28 @@ export function recordExit(data: RecordExitRequest) {
     body: JSON.stringify(data),
     keepalive: true,
   });
+}
+
+// 슬라이드별 청중 잔존률 api 연동
+export async function getSlideRetention(projectId: string): Promise<SlideRetentionResponseDto> {
+  const response = await apiClient.get<ApiResponse<SlideRetentionResponseDto>>(
+    `/presentations/${projectId}/analytics/slide-retention`,
+  );
+  // 데이터가 없으면 에러 발생 (null 반환 방지)
+  if (!response.data.success) {
+    throw new Error('슬라이드 청중 잔존률을 불러올 수 없습니다.');
+  }
+  return response.data.success;
+}
+
+// 영상별 시청 잔존률 api 연동
+export async function getVideoRetention(videoId: number): Promise<VideoRetentionResponseDto> {
+  const response = await apiClient.get<ApiResponse<VideoRetentionResponseDto>>(
+    `/videos/${videoId}/analytics/retention`,
+  );
+  // 데이터가 없으면 에러 발생 (null 반환 방지)
+  if (!response.data.success) {
+    throw new Error('영상 시청 잔존률을 불러올 수 없습니다.');
+  }
+  return response.data.success;
 }

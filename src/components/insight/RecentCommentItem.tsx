@@ -6,6 +6,7 @@ interface RecentCommentItemProps {
   time: string;
   text: string;
   thumbUrl?: string;
+  thumbFallbackClassName: string;
 }
 
 export default function RecentCommentItem({

@@ -163,7 +163,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
 
           newComment = createComment({
             content: finalContent,
-            authorId: MOCK_CURRENT_USER.id,
+            userId: MOCK_CURRENT_USER.id,
             ref,
           });
 
@@ -185,7 +185,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
     },
 
     addReply: (parentId, content) => {
-      let newReply: Comment | null = null;
+      const newReply: Comment | null = null;
 
       set(
         (state) => {
@@ -198,17 +198,10 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
 
           if (!targetFeedback) return state;
 
-          const trimmed = content.trim();
-          const { comments: updatedComments, newComment } = addReplyToFlat(
-            targetFeedback.comments,
-            parentId,
-            {
-              content: trimmed,
-              authorId: MOCK_CURRENT_USER.id,
-            },
-          );
-
-          newReply = newComment;
+          const updatedComments = addReplyToFlat(targetFeedback.comments, parentId, {
+            content: content.trim(),
+            userId: MOCK_CURRENT_USER.id,
+          });
 
           const updatedFeedbacks = state.video.feedbacks.map((f) =>
             f.timestamp === targetFeedback.timestamp ? { ...f, comments: updatedComments } : f,

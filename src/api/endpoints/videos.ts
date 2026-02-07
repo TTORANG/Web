@@ -82,10 +82,17 @@ export async function createVideoComment(
   videoId: number,
   data: { content: string; timestampMs?: number },
 ): Promise<{ serverId: string; content: string }> {
+  console.log('[createVideoComment] POST 요청:', {
+    url: `/videos/${videoId}/comments`,
+    data,
+  });
+
   const response = await apiClient.post<ApiResponse<CommentResponseDto>>(
     `/videos/${videoId}/comments`,
     data,
   );
+
+  console.log('[createVideoComment] 응답:', response.data);
 
   if (response.data.resultType === 'SUCCESS') {
     // DTO → Model 변환

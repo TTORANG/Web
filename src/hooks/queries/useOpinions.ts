@@ -1,22 +1,38 @@
 /**
- * 의견 관련 TanStack Query 훅
- * @deprecated 이 파일은 사용되지 않습니다. useComments.ts 사용 권장
- *
- * 실제 API 엔드포인트가 존재하지 않아 동작하지 않음
- * 대신 사용: src/hooks/useComments.ts
+ * 의견(댓글) 관련 TanStack Query 훅
  */
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-/* ⚠️ LEGACY CODE - 사용되지 않음
-
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-
-import { updateComment } from '@/api/endpoints/comments';
-import { type CreateOpinionRequest, createOpinion, deleteOpinion } from '@/api/endpoints/opinions';
 import type { CreateOpinionDto } from '@/api';
-import { createSlideComment, deleteComment } from '@/api/endpoints/comments.ts';
+import {
+  createReply,
+  createSlideComment,
+  deleteComment,
+  getReplies,
+  getSlideComments,
+  updateComment,
+} from '@/api/endpoints/comments';
 import { queryKeys } from '@/api/queryClient';
 
-/** 의견 추가 *\/
+/** 슬라이드 댓글 목록 조회 */
+export function useSlideComments(slideId: string, page = 1, limit = 20) {
+  return useQuery({
+    queryKey: queryKeys.comments.list(slideId),
+    queryFn: () => getSlideComments(slideId, page, limit),
+    enabled: !!slideId,
+  });
+}
+
+/** 댓글의 답글 목록 조회 */
+export function useReplies(commentId: string) {
+  return useQuery({
+    queryKey: queryKeys.comments.replies(commentId),
+    queryFn: () => getReplies(commentId),
+    enabled: !!commentId,
+  });
+}
+
+/** 의견 추가 */
 export function useCreateOpinion() {
   const queryClient = useQueryClient();
 
@@ -25,13 +41,43 @@ export function useCreateOpinion() {
       createSlideComment(slideId, data),
 
     onSuccess: (_, { slideId }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(slideId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.slides.lists() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
     },
   });
 }
 
-/** 의견 삭제 *\/
+/** 답글 작성 */
+export function useCreateReply() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ commentId, data }: { commentId: string; data: { content: string } }) =>
+      createReply(commentId, data),
+
+    onSuccess: (_, { commentId }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.comments.replies(commentId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.comments.lists() });
+    },
+  });
+}
+
+/** 댓글 수정 */
+export function useUpdateComment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ commentId, data }: { commentId: string; data: { content: string } }) =>
+      updateComment(commentId, data),
+
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.comments.all });
+    },
+  });
+}
+
+/** 의견 삭제 */
 export function useDeleteOpinion() {
   const queryClient = useQueryClient();
 
@@ -39,6 +85,7 @@ export function useDeleteOpinion() {
     mutationFn: ({ opinionId }: { opinionId: string; slideId: string }) => deleteComment(opinionId),
 
     onSuccess: (_, { slideId }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(slideId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.slides.lists() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
     },

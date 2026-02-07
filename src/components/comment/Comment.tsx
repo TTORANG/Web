@@ -56,7 +56,7 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
     goToRef,
   } = useCommentContext();
 
-  const user = MOCK_USERS.find((u) => u.id === comment.authorId);
+  const user = MOCK_USERS.find((u) => u.id === comment.userId);
   const authorName = user?.name ?? '알 수 없음';
   const authorProfileImage = user?.profileImage;
 
@@ -124,7 +124,7 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
               <div className="flex items-center gap-2">
                 <span className="max-w-50 truncate text-body-s-bold text-black">{authorName}</span>
                 <span className="text-caption text-gray-600">
-                  {formatRelativeTime(comment.timestamp)}
+                  {formatRelativeTime(comment.createdAt)}
                 </span>
               </div>
 

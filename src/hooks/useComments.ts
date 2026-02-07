@@ -24,6 +24,8 @@ import type { Comment } from '@/types/comment';
 import { findRootParentId, flatToTree } from '@/utils/comment';
 import { showToast } from '@/utils/toast';
 
+import { useCreateOpinion, useCreateReply, useDeleteOpinion } from './queries/useOpinions';
+
 const EMPTY_COMMENTS: Comment[] = [];
 
 export function useComments() {
@@ -36,50 +38,9 @@ export function useComments() {
   const updateOpinionStore = useSlideStore((state) => state.updateOpinion);
   const setOpinions = useSlideStore((state) => state.setOpinions);
 
-  // 최상위 댓글 작성 mutation
-  const { mutate: createCommentMutation } = useMutation({
-    mutationFn: ({ slideId, content }: { slideId: string; content: string }) =>
-      createSlideComment(slideId, { content }),
-    onSuccess: (_, { slideId }) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.lists() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
-    },
-  });
-
-  // 답글 작성 mutation (항상 최상위 부모에게)
-  const { mutate: createReplyMutation } = useMutation({
-    mutationFn: ({ commentId, content }: { commentId: string; content: string }) =>
-      createReply(commentId, { content }),
-    onSuccess: () => {
-      if (slideId) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.slides.lists() });
-        void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
-      }
-    },
-  });
-
-  // 댓글 수정 mutation
-  const { mutate: updateCommentMutation } = useMutation({
-    mutationFn: ({ commentId, content }: { commentId: string; content: string }) =>
-      updateCommentApi(commentId, { content }),
-    onSuccess: () => {
-      if (slideId) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.slides.lists() });
-        void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
-      }
-    },
-  });
-
-  // 댓글 삭제 mutation
-  const { mutate: deleteCommentMutation } = useMutation({
-    mutationFn: ({ commentId }: { commentId: string }) => deleteCommentApi(commentId),
-    onSuccess: () => {
-      if (slideId) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.slides.lists() });
-        void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
-      }
-    },
-  });
+  const { mutate: createOpinionApi } = useCreateOpinion();
+  const { mutate: createReplyApi } = useCreateReply();
+  const { mutate: deleteOpinionApi } = useDeleteOpinion();
 
   const findOpinion = (opinionId: string) => flatComments?.find((c) => c.id === opinionId);
 
@@ -87,7 +48,7 @@ export function useComments() {
     if (!flatComments) return EMPTY_COMMENTS;
     const tree = flatToTree(flatComments);
     return [...tree].sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
   }, [flatComments]);
 
@@ -113,33 +74,15 @@ export function useComments() {
   };
 
   const addReply = (parentId: string, content: string) => {
-    // 대댓글의 답글을 클릭하면 최상위 부모에게 답글 달기
-    const rootParentId = findRootParentId(flatComments ?? [], parentId);
-    const target = findOpinion(rootParentId);
-    const targetSlideId = target?.slideId ?? slideId;
-    const targetServerId = target?.serverId;
-
-    if (!targetSlideId) {
-      showToast.error('답글 등록에 실패했습니다.', '슬라이드 정보를 찾을 수 없습니다.');
-      return;
-    }
-
-    // serverId가 없으면 id를 서버 ID로 사용 (서버에서 직접 로드된 댓글인 경우)
-    const resolvedServerId = targetServerId ?? target?.id;
-
-    // 서버에 저장되지 않은 최상위 댓글에는 답글을 달 수 없음
-    if (!resolvedServerId) {
-      showToast.error('답글 등록에 실패했습니다.', '부모 댓글이 저장될 때까지 기다려주세요.');
-      return;
-    }
+    const target = findOpinion(parentId);
+    const targetServerId = target?.serverId ?? parentId;
 
     const previousOpinions = flatComments ?? [];
     // 최상위 부모에게 답글 달기 (로컬 저장)
     addReplyStore(rootParentId, content);
 
-    // API 요청: 항상 최상위 부모의 serverId를 commentId로 사용
-    createReplyMutation(
-      { commentId: resolvedServerId, content },
+    createReplyApi(
+      { commentId: targetServerId, data: { content } },
       {
         onError: () => {
           setOpinions(previousOpinions);

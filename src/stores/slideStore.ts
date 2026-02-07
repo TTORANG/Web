@@ -115,7 +115,10 @@ export const useSlideStore = create<SlideState>()(
             return {
               slide: {
                 ...state.slide,
-                opinions: updatedOpinions,
+                opinions: addReplyToFlat(state.slide.opinions ?? [], parentId, {
+                  content,
+                  userId: MOCK_CURRENT_USER.id,
+                }),
               },
             };
           },
@@ -171,7 +174,7 @@ export const useSlideStore = create<SlideState>()(
 
         const newComment = createComment({
           content: trimmed,
-          authorId: MOCK_CURRENT_USER.id,
+          userId: MOCK_CURRENT_USER.id,
           ref: { kind: 'slide', index: slideIndex },
         });
 
