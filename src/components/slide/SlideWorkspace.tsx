@@ -25,16 +25,22 @@ interface SlideWorkspaceProps {
 
 export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps) {
   const [isScriptCollapsed, setIsScriptCollapsed] = useState(false);
-  const { initSlide, updateScript } = useSlideActions();
+  const { initSlide, updateScript, updateSlide } = useSlideActions();
   const slideId = useSlideId();
   const { data: scriptData } = useScript(slideId);
 
   useEffect(() => {
-    if (slide) {
-      initSlide(slide);
-      updateScript('');
+    if (!slide) return;
+
+    const isSameSlide = slide.slideId === slideId;
+    if (isSameSlide) {
+      updateSlide(slide);
+      return;
     }
-  }, [slide, initSlide, updateScript]);
+
+    initSlide(slide);
+    updateScript('');
+  }, [slide, slideId, initSlide, updateScript, updateSlide]);
 
   useSlideCommentsLoader(slide?.slideId);
 
