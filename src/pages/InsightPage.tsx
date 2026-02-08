@@ -373,7 +373,7 @@ export default function InsightPage() {
 
             <div className="flex min-w-80 flex-1 basis-160 flex-col gap-6">
               <h3 className="text-body-l-bold text-gray-800">가장 많은 피드백을 받은 슬라이드</h3>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap items-start gap-4">
                 {topSlides.map(({ slideId, slide, slideIndex, title }, index) => {
                   const summary = topSlideReactionSummaries?.[index];
                   const baseReactions = createDefaultReactions();
