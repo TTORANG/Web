@@ -1,4 +1,4 @@
-import type { SlideListItem } from './slide';
+import type { SlideDetail } from './slide';
 
 /**
  * 녹화용 슬라이드 데이터
@@ -28,7 +28,7 @@ export interface RecordingProject {
  * SlideListItem 배열을 RecordingSlide 배열로 변환
  */
 export function convertToRecordingSlides(
-  slides: SlideListItem[],
+  slides: SlideDetail[],
   projectId: string,
 ): RecordingSlide[] {
   return slides.map((slide, index) => ({
@@ -46,7 +46,7 @@ export function convertToRecordingSlides(
 export function createRecordingProject(
   projectId: string,
   projectTitle: string,
-  slides: SlideListItem[],
+  slides: SlideDetail[],
 ): RecordingProject {
   return {
     projectId,

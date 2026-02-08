@@ -8,7 +8,7 @@
 import { HttpResponse, delay, http } from 'msw';
 
 import type { Presentation } from '@/types/presentation';
-import type { SlideListItem } from '@/types/slide';
+import type { SlideDetail } from '@/types/slide';
 
 import {
   getMockProjectAnalyticsSummary,
@@ -38,7 +38,7 @@ let idSeq = Date.now();
 const nextId = () => String(++idSeq);
 
 // ── In-memory Stores ─────────────────────────────────────────
-let slides: SlideListItem[] = [...MOCK_SLIDES];
+let slides: SlideDetail[] = [...MOCK_SLIDES];
 let presentations: Presentation[] = [...MOCK_PROJECTS];
 
 // 댓글 저장소

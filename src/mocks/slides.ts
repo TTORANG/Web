@@ -1,4 +1,4 @@
-import type { SlideListItem } from '@/types/slide';
+import type { SlideDetail } from '@/types/slide';
 
 import { MOCK_USERS } from './users';
 import { timeAgo, timeAt } from './utils';
@@ -20,7 +20,7 @@ const PROJECT_SLIDE_COUNTS = {
 };
 
 // 기본 슬라이드 생성 함수
-const createDefaultSlide = (projectId: string, index: number): SlideListItem => ({
+const createDefaultSlide = (projectId: string, index: number): SlideDetail => ({
   slideId: `${projectId}-${index}`,
   projectId,
   title: `슬라이드 ${index + 1}`,
@@ -34,7 +34,7 @@ const createDefaultSlide = (projectId: string, index: number): SlideListItem => 
   startTime: index * 60, // 슬라이드당 60초 간격
 });
 
-const p1Slides: SlideListItem[] = [
+const p1Slides: SlideDetail[] = [
   {
     slideId: 'p1-0',
     projectId: 'p1',
@@ -642,4 +642,4 @@ const generatedSlides = Object.entries(PROJECT_SLIDE_COUNTS).flatMap(([projectId
   );
 });
 
-export const MOCK_SLIDES: SlideListItem[] = [...p1Slides, ...generatedSlides];
+export const MOCK_SLIDES: SlideDetail[] = [...p1Slides, ...generatedSlides];

@@ -4,7 +4,9 @@ import IconArrowLeft from '@/assets/icons/icon-arrow-left.svg?react';
 import IconArrowRight from '@/assets/icons/icon-arrow-right.svg?react';
 import { Logo, SlideImage } from '@/components/common';
 import { usePresentation } from '@/hooks/queries/usePresentations';
+import { useScript } from '@/hooks/queries/useScript';
 import { useSlides } from '@/hooks/queries/useSlides';
+import type { SlideDetail } from '@/types/slide';
 
 import { useRecorder } from '../../hooks/useRecorder';
 import StopButton from './StopButton';
@@ -35,7 +37,7 @@ export const RecordingSection = ({
 
   const { data: presentation } = usePresentation(projectId);
   const { data: slidesData } = useSlides(projectId);
-  const slidesList = slidesData || [];
+  const slidesList = (slidesData || []) as SlideDetail[];
   const totalPages = slidesList.length > 0 ? slidesList.length : 1;
 
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -56,6 +58,9 @@ export const RecordingSection = ({
     },
     [slidesList],
   );
+
+  const currentSlideId = slidesList[currentPage - 1]?.slideId;
+  const { data: scriptData } = useScript(currentSlideId ?? '');
 
   useEffect(() => {
     setSlideImageLoaded(false);
@@ -279,7 +284,7 @@ export const RecordingSection = ({
               <h3 className="text-body-s-bold text-gray-800">발표 대본</h3>
             </div>
             <div className="scrollbar-hide flex-1 overflow-y-auto text-body-m leading-normal text-black whitespace-pre-wrap">
-              {slidesList[currentPage - 1]?.script || '대본이 없습니다.'}
+              {scriptData?.scriptText || '대본이 없습니다.'}
             </div>
           </div>
 

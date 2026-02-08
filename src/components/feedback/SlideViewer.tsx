@@ -8,6 +8,7 @@ import SlideInfoPanel from './slide/SlideInfoPanel';
 
 interface SlideViewerProps {
   slide: SlideListItem | undefined;
+  script?: string;
   slideIndex: number;
   totalSlides: number;
   isFirst: boolean;
@@ -18,6 +19,7 @@ interface SlideViewerProps {
 
 export default function SlideViewer({
   slide,
+  script,
   slideIndex,
   totalSlides,
   isFirst,
@@ -40,7 +42,7 @@ export default function SlideViewer({
       </div>
 
       <SlideInfoPanel
-        slide={slide}
+        script={script}
         slideIndex={slideIndex}
         totalSlides={totalSlides}
         isFirst={isFirst}

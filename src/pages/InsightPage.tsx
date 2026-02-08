@@ -382,7 +382,7 @@ export default function InsightPage() {
                         ...reaction,
                         count: summary[reaction.type] ?? 0,
                       }))
-                    : (slide?.emojiReactions ?? baseReactions);
+                    : baseReactions;
                   const reactionMetrics = summaryReactions.filter((reaction) => reaction.count > 0);
 
                   return (

@@ -13,14 +13,14 @@ import { getExclusiveCounterpart } from '@/constants/reaction';
 import { MOCK_CURRENT_USER } from '@/mocks/users';
 import type { Comment } from '@/types/comment';
 import type { ReactionType } from '@/types/script';
-import type { SlideListItem } from '@/types/slide';
+import type { SlideDetail } from '@/types/slide';
 import { addReplyToFlat, createComment, deleteFromFlat, updateInFlat } from '@/utils/comment';
 
 interface SlideState {
-  slide: SlideListItem | null;
+  slide: SlideDetail | null;
 
-  initSlide: (slide: SlideListItem) => void;
-  updateSlide: (updates: Partial<SlideListItem>) => void;
+  initSlide: (slide: SlideDetail) => void;
+  updateSlide: (updates: Partial<SlideDetail>) => void;
   updateScript: (script: string) => void;
   deleteComment: (id: string) => void;
   updateComment: (id: string, content: string) => void;

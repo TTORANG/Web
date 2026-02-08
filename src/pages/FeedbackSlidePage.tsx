@@ -62,7 +62,7 @@ export default function FeedbackSlidePage() {
       return comments.map((comment) => ({
         ...comment,
         slideId: currentSlide.slideId,
-        ref: { kind: 'slide', index: slideIndex },
+        ref: { kind: 'slide' as const, index: slideIndex },
         slideRef: slideLabel,
       }));
     },
@@ -98,10 +98,7 @@ export default function FeedbackSlidePage() {
 
     initSlide({
       ...currentSlide,
-      emojiReactions:
-        currentSlide.emojiReactions && currentSlide.emojiReactions.length > 0
-          ? currentSlide.emojiReactions
-          : createDefaultReactions(),
+      emojiReactions: createDefaultReactions(),
     });
     updateScript('');
   }, [slideIndex, currentSlide, initSlide, updateScript]);
@@ -137,6 +134,7 @@ export default function FeedbackSlidePage() {
       <div className="hidden md:flex flex-1 px-35">
         <SlideViewer
           slide={currentSlide}
+          script={script}
           slideIndex={slideIndex}
           totalSlides={totalSlides}
           isFirst={isFirst}
