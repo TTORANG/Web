@@ -17,18 +17,6 @@ export interface CreateReplyCommentResponseDto {
 }
 
 /**
- * 답글 목록 조회 DTO
- */
-export interface GetRepliesResponseDto {
-  comments: Array<{
-    id: string;
-    content: string;
-    parentId: string | null;
-    userId: string;
-    createdAt: string;
-  }>;
-}
-/**
  * 슬라이드 댓글 작성
  */
 export interface CreateCommentRequestDto {
@@ -89,7 +77,15 @@ export interface CommentResponseDto {
 /**
  * 답글 목록 조회 응답
  */
-export type GetReplyListResponseDto = CommentResponseDto[];
+export interface GetReplyListResponseDto {
+  comments: CommentWithUserDto[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
 /**
  * 댓글 수정
  */

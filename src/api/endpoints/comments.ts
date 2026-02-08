@@ -86,9 +86,16 @@ export async function createReply(
  * @param commentId - 댓글 ID
  * @returns 답글 목록
  */
-export async function getReplies(commentId: string): Promise<GetReplyListResponseDto> {
+export async function getReplies(
+  commentId: string,
+  page = 1,
+  limit = 20,
+): Promise<GetReplyListResponseDto> {
   const response = await apiClient.get<ApiResponse<GetReplyListResponseDto>>(
     `/comments/${commentId}/replies`,
+    {
+      params: { page, limit },
+    },
   );
 
   if (response.data.resultType === 'SUCCESS') {
