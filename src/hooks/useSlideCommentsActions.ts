@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import type { CreateCommentDto } from '@/api';
+import type { CreateCommentRequestDto } from '@/api';
 import {
   createReply,
   createSlideComment,
@@ -22,8 +22,11 @@ function useCreateCommentMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (variables: { slideId: string; projectId: string; data: CreateCommentDto }) =>
-      createSlideComment(variables.slideId, variables.data),
+    mutationFn: (variables: {
+      slideId: string;
+      projectId: string;
+      data: CreateCommentRequestDto;
+    }) => createSlideComment(variables.slideId, variables.data),
 
     onSuccess: (_, { slideId, projectId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(slideId) });
@@ -77,7 +80,7 @@ function useDeleteCommentMutation() {
 
   return useMutation({
     mutationFn: (variables: { commentId: string; slideId: string; projectId: string }) =>
-      deleteCommentApi(variables.commentId),
+      deleteCommentApi({ commentId: variables.commentId }),
 
     onSuccess: (_, { slideId, projectId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(slideId) });
@@ -118,7 +121,7 @@ export function useSlideCommentsActions() {
   const { mutate: deleteCommentMutate } = useDeleteCommentMutation();
   const { mutate: updateCommentMutate } = useUpdateCommentMutation();
 
-  const findComment = (commentId: string) => flatComments?.find((c) => c.id === commentId);
+  const findComment = (commentId: string) => flatComments?.find((c) => c.commentId === commentId);
 
   const comments = useMemo(() => {
     if (!flatComments) return EMPTY_COMMENTS;

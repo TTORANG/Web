@@ -1,6 +1,7 @@
 import { apiClient } from '@/api/client';
 import type {
   ChunkUploadResponseDto,
+  CreateVideoCommentRequestDto,
   FinishVideoRequestDto,
   FinishVideoResponseDto,
   StartVideoRequestDto,
@@ -32,6 +33,12 @@ export const videosApi = {
   // POST /videos/{videoId}/finish - 녹화 종료 및 영상 처리 시작
   finishVideo: (videoId: number, data: FinishVideoRequestDto) =>
     apiClient.post<ApiResponse<FinishVideoResponseDto>>(`/videos/${videoId}/finish`, data),
+
+  // POST /videos/{videoId}/comments - 영상 타임스탬프 댓글 생성
+  createVideoComment: (videoId: number, data: CreateVideoCommentRequestDto) =>
+    apiClient.post<
+      ApiResponse<{ commentId: string; content: string; timestampMs: number; createdAt: string }>
+    >(`/videos/${videoId}/comments`, data),
 
   // GET /videos/{videoId} - 영상 상세 조회
   getVideoDetail: (videoId: number) => apiClient.get(`/videos/${videoId}`),

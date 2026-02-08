@@ -32,14 +32,12 @@ export type { UpdateProjectDto } from './presentations.dto';
 // export type { UploadFileResponseDto } from './files.dto';
 export type {
   ChunkUploadResponseDto,
-  CreateCommentDto,
   FinishVideoRequestDto,
   FinishVideoResponseDto,
   StartVideoRequestDto,
   StartVideoResponseDto,
 } from './video.dto';
 export type {
-  CommentResponseDto,
   CommentUserDto,
   CommentWithUserDto,
   CreateCommentRequestDto,
@@ -48,7 +46,7 @@ export type {
   CreateReplyCommentResponseDto,
   CreateVideoCommentRequestDto,
   DeleteCommentRequestDto,
-  GetRepliesResponseDto,
+  DeleteCommentResponseDto,
   GetReplyListResponseDto,
   GetSlideCommentsResponseDto,
   UpdateCommentResponseDto,

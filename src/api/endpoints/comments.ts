@@ -4,9 +4,15 @@
  */
 import { apiClient } from '@/api/client';
 import type {
-  CommentResponseDto,
+  CreateCommentRequestDto,
+  CreateCommentResponseDto,
+  CreateReplyCommentRequestDto,
+  CreateReplyCommentResponseDto,
+  DeleteCommentRequestDto,
+  DeleteCommentResponseDto,
   GetReplyListResponseDto,
   GetSlideCommentsResponseDto,
+  UpdateCommentResponseDto,
 } from '@/api/dto';
 import type { ApiResponse } from '@/types/api';
 
@@ -45,9 +51,9 @@ export async function getSlideComments(
  */
 export async function createSlideComment(
   slideId: string,
-  data: { content: string },
-): Promise<CommentResponseDto> {
-  const response = await apiClient.post<ApiResponse<CommentResponseDto>>(
+  data: CreateCommentRequestDto,
+): Promise<CreateCommentResponseDto> {
+  const response = await apiClient.post<ApiResponse<CreateCommentResponseDto>>(
     `/slides/${slideId}/comments`,
     data,
   );
@@ -67,9 +73,9 @@ export async function createSlideComment(
  */
 export async function createReply(
   commentId: string,
-  data: { content: string },
-): Promise<CommentResponseDto> {
-  const response = await apiClient.post<ApiResponse<CommentResponseDto>>(
+  data: CreateReplyCommentRequestDto,
+): Promise<CreateReplyCommentResponseDto> {
+  const response = await apiClient.post<ApiResponse<CreateReplyCommentResponseDto>>(
     `/comments/${commentId}/replies`,
     data,
   );
@@ -114,8 +120,8 @@ export async function getReplies(
 export async function updateComment(
   commentId: string,
   data: { content: string },
-): Promise<CommentResponseDto> {
-  const response = await apiClient.patch<ApiResponse<CommentResponseDto>>(
+): Promise<UpdateCommentResponseDto> {
+  const response = await apiClient.patch<ApiResponse<UpdateCommentResponseDto>>(
     `/comments/${commentId}`,
     data,
   );
@@ -129,12 +135,18 @@ export async function updateComment(
 /**
  * 댓글 삭제
  *
- * @param commentId - 댓글 ID
+ * @param data - 삭제 대상 정보
+ * @returns 삭제 결과
  */
-export async function deleteComment(commentId: string): Promise<void> {
-  const response = await apiClient.delete<ApiResponse<null>>(`/comments/${commentId}`);
+export async function deleteComment(
+  data: DeleteCommentRequestDto,
+): Promise<DeleteCommentResponseDto> {
+  const response = await apiClient.delete<ApiResponse<DeleteCommentResponseDto>>(
+    `/comments/${data.commentId}`,
+  );
 
-  if (response.data.resultType === 'FAILURE') {
-    throw new Error(response.data.error.reason);
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
   }
+  throw new Error(response.data.error.reason);
 }
