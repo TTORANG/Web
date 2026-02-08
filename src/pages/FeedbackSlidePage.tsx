@@ -17,8 +17,9 @@ import SlideNavigation from '@/components/feedback/SlideNavigation';
 import SlideViewer from '@/components/feedback/SlideViewer';
 import SlideTitle from '@/components/slide/script/SlideTitle';
 import { createDefaultReactions } from '@/constants/reaction';
-import { useHotkey, useSlideActions } from '@/hooks';
+import { useHotkey, useSlideActions, useSlideScript } from '@/hooks';
 import { useSlideCommentsQuery } from '@/hooks/queries/useCommentQueries';
+import { useScript } from '@/hooks/queries/useScript';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { useExitTracker } from '@/hooks/useExitTracker';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
@@ -40,11 +41,13 @@ export default function FeedbackSlidePage() {
 
   const { comments, addComment, addReply, deleteComment, updateComment } = useComments();
   const { reactions, toggleReaction } = useReactions();
+  const script = useSlideScript();
   const initSlide = useSlideStore((state) => state.initSlide);
-  const { setComments } = useSlideActions();
+  const { setComments, updateScript } = useSlideActions();
   const { data: fetchedComments, isLoading: isCommentsLoading } = useSlideCommentsQuery(
     currentSlide?.slideId,
   );
+  const { data: scriptData } = useScript(currentSlide?.slideId ?? '');
 
   const [commentDraft, setCommentDraft] = useState('');
 
@@ -89,7 +92,8 @@ export default function FeedbackSlidePage() {
           : createDefaultReactions(),
     });
     setComments([]);
-  }, [slideIndex, currentSlide, initSlide, setComments]);
+    updateScript('');
+  }, [slideIndex, currentSlide, initSlide, setComments, updateScript]);
 
   useEffect(() => {
     if (!currentSlide || !fetchedComments) return;
@@ -103,6 +107,12 @@ export default function FeedbackSlidePage() {
       })),
     );
   }, [currentSlide, fetchedComments, setComments, slideIndex]);
+
+  useEffect(() => {
+    if (scriptData) {
+      updateScript(scriptData.scriptText);
+    }
+  }, [scriptData, updateScript]);
 
   const handleGoToRef = useCallback(
     (ref: NonNullable<Comment['ref']>) => {
@@ -199,10 +209,10 @@ export default function FeedbackSlidePage() {
             <SlideTitle fallbackTitle={`슬라이드 ${slideIndex + 1}`} readOnly />
             <div className="mt-3 bg-gray-200 rounded-lg px-4 py-3 h-48 overflow-y-auto">
               <p
-                className={`text-body-s ${currentSlide?.script ? 'text-black' : 'text-gray-400'}`}
+                className={`text-body-s ${script ? 'text-black' : 'text-gray-400'}`}
                 style={{ whiteSpace: 'pre-line' }}
               >
-                {currentSlide?.script || '대본이 없습니다.'}
+                {script || '대본이 없습니다.'}
               </p>
             </div>
           </div>

@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react';
 import { SLIDE_MAX_WIDTH } from '@/constants/layout';
 import { useSlideActions, useSlideId } from '@/hooks';
 import { useSlideCommentsQuery } from '@/hooks/queries/useCommentQueries';
+import { useScript } from '@/hooks/queries/useScript';
 import type { SlideListItem } from '@/types/slide';
 
 import SlideViewer from './SlideViewer';
@@ -24,22 +25,30 @@ interface SlideWorkspaceProps {
 
 export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps) {
   const [isScriptCollapsed, setIsScriptCollapsed] = useState(false);
-  const { initSlide, setComments } = useSlideActions();
+  const { initSlide, setComments, updateScript } = useSlideActions();
   const slideId = useSlideId();
   const { data: fetchedComments } = useSlideCommentsQuery(slideId);
+  const { data: scriptData } = useScript(slideId);
 
   useEffect(() => {
     if (slide) {
       initSlide(slide);
       setComments([]);
+      updateScript('');
     }
-  }, [slide, initSlide, setComments]);
+  }, [slide, initSlide, setComments, updateScript]);
 
   useEffect(() => {
     if (fetchedComments) {
       setComments(fetchedComments);
     }
   }, [fetchedComments, setComments]);
+
+  useEffect(() => {
+    if (scriptData) {
+      updateScript(scriptData.scriptText);
+    }
+  }, [scriptData, updateScript]);
 
   return (
     <div className="h-full min-h-0 flex flex-col">

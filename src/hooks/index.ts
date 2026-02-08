@@ -11,5 +11,6 @@ export * from './useSlideNavigation';
 export * from './useSlideSelectors';
 export * from './useComments';
 export * from './queries/usePresentations';
+export * from './queries/useScript';
 export * from './queries/useSlides';
 export * from './useRename';
