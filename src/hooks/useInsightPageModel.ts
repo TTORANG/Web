@@ -1,4 +1,4 @@
-// src/hooks/useInsightPageModel.ts
+﻿// src/hooks/useInsightPageModel.ts
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -150,6 +150,7 @@ export function useInsightPageModel(): InsightModel {
           ),
         ),
         slideIndex: Math.max(0, item.slideNum - 1),
+        count: item.exitCount,
       }));
   }, [slideAnalytics]);
 
