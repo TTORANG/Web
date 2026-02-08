@@ -38,5 +38,22 @@ export type { SlideListItem } from './slide';
 // Theme
 export type { ThemeMode } from './theme';
 
-// Upload
+// Upload _
+//export type { UploadState } from './uploadFile';
 export type { UploadStep } from './uploadFile';
+
+// WebSocket
+export type {
+  CommentDeletedPayload,
+  ErrorPayload,
+  JoinedProjectResponse,
+  JoinProjectPayload,
+  LeftProjectResponse,
+  NewCommentPayload,
+  NewReactionPayload,
+  ReactionCountUpdatedPayload,
+  ReactionRemovedPayload,
+  RoomsListResponse,
+  SocketAuthConfig,
+} from './websocket';
+export { ClientEvents, ServerEvents } from './websocket';

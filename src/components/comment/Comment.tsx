@@ -26,6 +26,8 @@ interface CommentProps {
   comment: CommentType;
   /** 답글 들여쓰기 여부 */
   isIndented?: boolean;
+  /** 최상위 부모 댓글 ID (답글의 답글에서도 항상 root로 요청하기 위함) */
+  rootCommentId?: string;
 }
 
 /**
@@ -34,7 +36,9 @@ interface CommentProps {
  * 댓글 내용, 작성자 정보, 답글 버튼, 삭제 버튼을 표시합니다.
  * 대댓글은 재귀적으로 렌더링됩니다.
  */
-function Comment({ comment, isIndented = false }: CommentProps) {
+function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
+  // rootCommentId가 없으면 자기 자신이 최상위 댓글
+  const resolvedRootId = rootCommentId ?? comment.id;
   const {
     replyingToId,
     replyDraft,
@@ -42,17 +46,21 @@ function Comment({ comment, isIndented = false }: CommentProps) {
     toggleReply,
     submitReply,
     cancelReply,
-    deleteComment,
     editingId,
     editDraft,
     setEditDraft,
     startEdit,
     cancelEdit,
     submitEdit,
+    deleteComment,
     goToRef,
   } = useCommentContext();
 
-  const user = MOCK_USERS.find((u) => u.id === comment.userId);
+  // 서버가 userId를 숫자로 반환하는 경우 user-{id} 형식으로 변환하여 매칭
+  const normalizedUserId = comment.userId?.startsWith('user-')
+    ? comment.userId
+    : `user-${comment.userId}`;
+  const user = MOCK_USERS.find((u) => u.id === normalizedUserId || u.id === comment.userId);
   const authorName = user?.name ?? '알 수 없음';
   const authorProfileImage = user?.profileImage;
 
@@ -73,8 +81,9 @@ function Comment({ comment, isIndented = false }: CommentProps) {
   }, [toggleReply, comment.id]);
 
   const handleSubmitReply = useCallback(() => {
-    submitReply(comment.id);
-  }, [submitReply, comment.id]);
+    // 항상 최상위 부모 댓글 ID로 답글 제출 (서버는 root에만 답글 허용)
+    submitReply(resolvedRootId);
+  }, [submitReply, resolvedRootId]);
 
   const handleDelete = useCallback(() => {
     deleteComment?.(comment.id);
@@ -131,8 +140,10 @@ function Comment({ comment, isIndented = false }: CommentProps) {
                     onClick={handleStartEdit}
                     aria-label="댓글 수정"
                     className={clsx(
-                      'flex items-center gap-1 rounded text-caption-bold active:opacity-80 focus-visible:outline-2 focus-visible:outline-main',
-                      isEditing ? 'text-gray-400' : 'text-black',
+                      'flex items-center gap-1 rounded text-caption-bold active:opacity-80 focus-visible:outline-2 focus-visible:outline-gray-400',
+                      isEditing
+                        ? 'text-gray-400'
+                        : 'text-[#FFFFFF] hover:text-[rgba(255,255,255,0.8)]',
                     )}
                   >
                     수정
@@ -143,7 +154,7 @@ function Comment({ comment, isIndented = false }: CommentProps) {
                       type="button"
                       onClick={handleDelete}
                       aria-label="댓글 삭제"
-                      className="flex items-center gap-1 rounded text-caption-bold text-error active:opacity-80 focus-visible:outline-2 focus-visible:outline-error"
+                      className="flex items-center gap-1 rounded text-caption-bold text-error hover:text-red-400 active:opacity-80 focus-visible:outline-2 focus-visible:outline-error"
                     >
                       삭제
                       <RemoveIcon className="h-4 w-4" aria-hidden="true" />
@@ -212,7 +223,7 @@ function Comment({ comment, isIndented = false }: CommentProps) {
         </div>
       </div>
 
-      {isActive && (
+      {replyingToId === comment.id && (
         <CommentInput
           value={replyDraft}
           onChange={setReplyDraft}
@@ -224,10 +235,15 @@ function Comment({ comment, isIndented = false }: CommentProps) {
         />
       )}
 
-      {comment.replies && comment.replies.length > 0 && (
-        <div className="pl-8">
-          {comment.replies.map((reply) => (
-            <Comment key={reply.id} comment={reply} />
+      {comment.replies && Array.isArray(comment.replies) && comment.replies.length > 0 && (
+        <div>
+          {comment.replies.map((reply, index) => (
+            <Comment
+              key={reply.id ?? `reply-${comment.id}-${index}`}
+              comment={reply}
+              isIndented
+              rootCommentId={resolvedRootId}
+            />
           ))}
         </div>
       )}

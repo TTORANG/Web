@@ -31,6 +31,17 @@ export default defineConfig({
       },
     },
   ],
+  // CDN CORS 우회를 위한 proxy 설정 (개발 환경)
+  server: {
+    proxy: {
+      '/cdn-proxy': {
+        target: 'https://cdn.ttorang.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/cdn-proxy/, ''),
+        secure: true,
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

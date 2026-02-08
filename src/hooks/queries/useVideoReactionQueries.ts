@@ -14,11 +14,13 @@ export function useToggleVideoReaction() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ videoId, data }: { videoId: string; data: ToggleVideoReactionRequest }) =>
-      toggleVideoReaction(videoId, data),
+    mutationFn: ({ videoId, data }: { videoId: number; data: ToggleVideoReactionRequest }) =>
+      toggleVideoReaction(videoId.toString(), data),
 
-    onSuccess: (_, { videoId }) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.videos.detail(videoId) });
+    onSuccess: (_, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.videos.detail(variables.videoId.toString()),
+      });
     },
   });
 }

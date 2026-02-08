@@ -16,7 +16,7 @@ import { timeAgo } from './utils';
  * - 상위 10개 세그먼트가 재생바에 하이라이트로 표시됨
  */
 export const MOCK_VIDEO: VideoFeedback = {
-  videoId: 'vid-1',
+  videoId: 1,
   videoUrl: '/p1.webm',
   title: '테스트 영상',
   duration: 596,

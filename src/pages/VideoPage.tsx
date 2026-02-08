@@ -73,8 +73,6 @@ const VideoPage = () => {
     const loadVideos = async () => {
       setIsLoading(true);
       try {
-        console.log('📂 영상 목록 로드 시작 - projectId:', projectId);
-
         const storedData = localStorage.getItem('mockVideos');
         if (!storedData) {
           setVideos([]);
@@ -93,8 +91,7 @@ const VideoPage = () => {
         }));
 
         setVideos(sanitizedVideos);
-      } catch (error) {
-        console.error('영상 목록 로드 실패:', error);
+      } catch {
         setVideos([]);
       } finally {
         setIsLoading(false);
