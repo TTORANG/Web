@@ -23,18 +23,12 @@ export function useVideoComments() {
   const addReplyStore = useVideoFeedbackStore((state) => state.addReply);
   const deleteCommentStore = useVideoFeedbackStore((state) => state.deleteComment);
 
-  // CHANGED: 전체 feedbacks의 comments를 합쳐서 반환
+  // 전체 feedbacks의 comments를 합쳐서 반환
   const flatComments = useMemo(() => {
     if (!video) return EMPTY_COMMENTS;
 
     // 모든 타임스탬프의 댓글을 하나로 합침
-    const merged = video.feedbacks.flatMap((f) => f.comments);
-
-    // 정렬(선택): 최신 댓글이 위로 오게 하고 싶으면 아래처럼
-    // createComment()가 timestamp를 ISO로 넣는 구조라 문자열 비교 가능
-    merged.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-
-    return merged;
+    return video.feedbacks.flatMap((f) => f.comments);
   }, [video]);
 
   // Tree 구조로 변환 (CommentList에서 사용)
