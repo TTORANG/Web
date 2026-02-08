@@ -16,7 +16,7 @@ import { formatVideoTimestamp } from '@/utils/format';
  * 테스트용 하드코딩 비디오 ID
  * DB에서 ready 상태인 9초 영상 (id=26, project_id=136)
  */
-const TEST_VIDEO_ID = 26;
+const TEST_VIDEO_ID = '26';
 
 export function useFeedbackVideo() {
   // projectId는 라우트에서 추출하지만 현재 테스트 모드에서는 사용하지 않음

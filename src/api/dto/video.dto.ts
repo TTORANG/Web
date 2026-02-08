@@ -10,7 +10,7 @@ export interface StartVideoRequestDto {
  * 영상 녹화 시작 응답 DTO (success 데이터)
  */
 export interface StartVideoResponseDto {
-  videoId: number;
+  videoId: string;
 }
 
 /**

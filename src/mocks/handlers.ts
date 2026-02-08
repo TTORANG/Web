@@ -814,7 +814,7 @@ const reactionHandlers = [
 
     // MOCK_VIDEO feedbacks에서 타임라인 마커 생성
     const markers: { timestampMs: number; emojiType: string; count: number }[] = [];
-    if (Number(videoId) === MOCK_VIDEO.videoId) {
+    if (videoId === MOCK_VIDEO.videoId) {
       MOCK_VIDEO.feedbacks.forEach((fb) => {
         const bucket = Math.floor(fb.timestampMs / intervalMs) * intervalMs;
         fb.reactions.forEach((r) => {
@@ -834,7 +834,7 @@ const reactionHandlers = [
     const windowMs = Number(url.searchParams.get('windowMs') ?? '2000');
 
     const result: { emojiType: string; count: number }[] = [];
-    if (Number(videoId) === MOCK_VIDEO.videoId) {
+    if (videoId === MOCK_VIDEO.videoId) {
       const totals: Record<string, number> = {};
       MOCK_VIDEO.feedbacks.forEach((fb) => {
         if (fb.timestampMs >= timestampMs - windowMs && fb.timestampMs <= timestampMs + windowMs) {
@@ -906,8 +906,7 @@ const videoHandlers = [
   http.get(`${BASE_URL}/videos/:videoId`, async ({ params }) => {
     await delay(200);
     const { videoId } = params as { videoId: string };
-    if (Number(videoId) !== MOCK_VIDEO.videoId)
-      return fail(404, 'V001', '영상을 찾을 수 없습니다.');
+    if (videoId !== MOCK_VIDEO.videoId) return fail(404, 'V001', '영상을 찾을 수 없습니다.');
 
     // MOCK_VIDEO feedbacks → Server timeline 포맷으로 변환
     const timelineReactions: { timestampMs: number; emojiType: string; count: number }[] = [];
@@ -962,8 +961,7 @@ const videoHandlers = [
   http.get(`${BASE_URL}/videos/:videoId/slides`, async ({ params }) => {
     await delay(100);
     const { videoId } = params as { videoId: string };
-    if (Number(videoId) !== MOCK_VIDEO.videoId)
-      return fail(404, 'V001', '영상을 찾을 수 없습니다.');
+    if (videoId !== MOCK_VIDEO.videoId) return fail(404, 'V001', '영상을 찾을 수 없습니다.');
     // p1 프로젝트의 처음 5개 슬라이드로 타임라인 생성
     const p1Slides = slides
       .filter((s) => s.projectId === 'p1')

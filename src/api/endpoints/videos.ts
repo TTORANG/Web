@@ -34,7 +34,7 @@ export const videosApi = {
     apiClient.post<ApiResponse<StartVideoResponseDto>>('/videos/start', data),
 
   // POST /videos/{videoId}/chunks/{chunkIndex} - 청크 업로드
-  uploadChunk: (videoId: number, chunkIndex: number, file: Blob) => {
+  uploadChunk: (videoId: string, chunkIndex: number, file: Blob) => {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -50,21 +50,21 @@ export const videosApi = {
   },
 
   // POST /videos/{videoId}/finish - 녹화 종료 및 영상 처리 시작
-  finishVideo: (videoId: number, data: FinishVideoRequestDto) =>
+  finishVideo: (videoId: string, data: FinishVideoRequestDto) =>
     apiClient.post<ApiResponse<FinishVideoResponseDto>>(`/videos/${videoId}/finish`, data),
 
   // TODO: 연결?
   // POST /videos/{videoId}/comments - 영상 타임스탬프 댓글 생성
-  createVideoComment: (videoId: number, data: CreateVideoCommentRequestDto) =>
+  createVideoComment: (videoId: string, data: CreateVideoCommentRequestDto) =>
     apiClient.post<
       ApiResponse<{ commentId: string; content: string; timestampMs: number; createdAt: string }>
     >(`/videos/${videoId}/comments`, data),
 
   // GET /videos/{videoId} - 영상 상세 조회
-  getVideoDetail: (videoId: number) => apiClient.get(`/videos/${videoId}`),
+  getVideoDetail: (videoId: string) => apiClient.get(`/videos/${videoId}`),
 
   // GET /videos/{videoId}/slides - 슬라이드 타임라인 조회
-  getVideoSlides: (videoId: number) => apiClient.get(`/videos/${videoId}/slides`),
+  getVideoSlides: (videoId: string) => apiClient.get(`/videos/${videoId}/slides`),
 };
 
 // ============================================================================
@@ -80,7 +80,7 @@ export const videosApi = {
  * @returns Model - serverId와 content
  */
 export async function createVideoComment(
-  videoId: number,
+  videoId: string,
   data: { content: string; timestampMs?: number },
 ): Promise<{ serverId: string; content: string }> {
   const response = await apiClient.post<ApiResponse<CreateVideoCommentRequestDto>>(

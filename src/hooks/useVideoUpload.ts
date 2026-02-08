@@ -41,7 +41,7 @@ export const useVideoUpload = () => {
     projectId: number,
     title: string,
     slideLogs: SlideLog[],
-  ): Promise<number | null> => {
+  ): Promise<string | null> => {
     setIsUploading(true);
     setError(null);
 
