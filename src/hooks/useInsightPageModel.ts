@@ -1,4 +1,4 @@
-// src/pages/insight/useInsightPageModel.ts
+// src/hooks/useInsightPageModel.ts
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -30,8 +30,8 @@ const emptySummaryStats: SummaryStat[] = summaryStatLabels.map((label) => ({
 const normalizeRate = (rate: number) => (rate <= 1 ? rate * 100 : rate);
 
 export function useInsightPageModel(): InsightModel {
-  const { projectId: projectIdStrRaw } = useParams<{ projectId: string }>();
-  const projectIdStr = projectIdStrRaw ?? '';
+  const { projectId } = useParams<{ projectId: string }>();
+  const projectIdStr = projectId ?? '';
   const projectIdNum = projectIdStr ? Number(projectIdStr) : 0;
 
   const { data: slides } = useSlides(projectIdStr);
@@ -66,13 +66,9 @@ export function useInsightPageModel(): InsightModel {
     ];
   }, [summaryAnalytics]);
 
-  const summaryStats = useMemo(
-    () =>
-      hasVideo
-        ? computedSummaryStats
-        : computedSummaryStats.filter((stat) => stat.label !== summaryStatLabels[3]),
-    [computedSummaryStats, hasVideo],
-  );
+  const summaryStats = hasVideo
+    ? computedSummaryStats
+    : computedSummaryStats.filter((stat) => stat.label !== summaryStatLabels[3]);
 
   // ---- Slides map / thumbs ----
   const slideList = useMemo(() => (Array.isArray(slides) ? slides : []), [slides]);
@@ -89,10 +85,10 @@ export function useInsightPageModel(): InsightModel {
     return { slideIndexById, slideById };
   }, [slideList]);
 
-  const toPublicUrl = (url?: string) =>
-    url?.startsWith('gs://') ? `https://storage.googleapis.com/${url.slice(5)}` : url;
+  const convertGcsToHttpUrl = (gcsUrl?: string) =>
+    gcsUrl?.startsWith('gs://') ? `https://storage.googleapis.com/${gcsUrl.slice(5)}` : gcsUrl;
 
-  const getThumb = (slideIndex: number) => toPublicUrl(slideList[slideIndex]?.imageUrl);
+  const getThumb = (slideIndex: number) => convertGcsToHttpUrl(slideList[slideIndex]?.imageUrl);
 
   // ---- Top slides ----
   const topSlides = useMemo<InsightTopSlide[]>(() => {

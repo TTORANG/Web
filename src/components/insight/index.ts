@@ -4,3 +4,5 @@ export { default as RecentCommentItem } from './RecentCommentItem';
 export { default as SummaryStatsSection } from './SummaryStatsSection';
 export { default as DropOffAnalysisSection } from './DropOffAnalysisSection';
 export { default as FeedbackDistributionSection } from './FeedbackDistributionSection';
+export { RecentCommentsSection } from './RecentCommentsSection';
+export * from './types';

@@ -1,4 +1,4 @@
-// src/pages/insight/sections/RecentCommentsSection.tsx
+// src/components/insight/RecentCommentsSection.tsx
 import type { ReadRecentCommentListResponseDto } from '@/api/dto/analytics.dto';
 import { RecentCommentItem } from '@/components/insight';
 import { formatVideoTimestamp } from '@/utils/format';
@@ -16,7 +16,7 @@ export function RecentCommentsSection({
     <div className="flex w-full flex-col gap-4">
       <div className="relative">
         <div
-          className={`flex flex-col gap-2 ${!hasVideo ? 'blur-[3px] pointer-events-none select-none' : ''}`}
+          className={`flex flex-col gap-2 ${!hasVideo ? 'blur-sm pointer-events-none select-none' : ''}`}
         >
           <h3 className="text-body-l-bold text-gray-800">최근 댓글 피드백</h3>
 

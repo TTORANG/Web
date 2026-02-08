@@ -4,7 +4,7 @@ import { DropOffAnalysisSection } from '@/components/insight';
 import { FeedbackDistributionSection } from '@/components/insight';
 import { TopSlideCard } from '@/components/insight';
 import { RecentCommentsSection } from '@/components/insight/RecentCommentsSection';
-import { RetentionSection } from '@/components/insight/RetentionSection';
+import { RetentionChartCard } from '@/components/insight/charts/RetentionChartCard';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useInsightPageModel } from '@/hooks/useInsightPageModel';
 
@@ -33,7 +33,7 @@ export default function InsightPage() {
             getThumb={m.getThumb}
           />
 
-          <RetentionSection
+          <RetentionChartCard
             title={m.retentionTitle}
             data={m.retentionData}
             isVideo={m.retentionIsVideo}
