@@ -9,7 +9,7 @@ import { apiClient } from '@/api/client';
 import type {
   DeleteProjectResponseDto,
   GetPresentationsRequestDto,
-  UpdateProjectDto,
+  UpdateProjectRequestDto,
   UpdateProjectResponseDto,
 } from '@/api/dto';
 import type { ApiResponse, ConversionStatusResponse } from '@/types/api';
@@ -57,7 +57,7 @@ export async function getPresentation(projectId: string): Promise<Presentation> 
  */
 export async function updatePresentation(
   projectId: string,
-  data: UpdateProjectDto,
+  data: UpdateProjectRequestDto,
 ): Promise<UpdateProjectResponseDto> {
   const response = await apiClient.patch<ApiResponse<UpdateProjectResponseDto>>(
     `/presentations/${projectId}`,

@@ -31,7 +31,7 @@ export type { RestoreScriptRequestDto } from './analytics.dto';
 export type {
   DeleteProjectResponseDto,
   GetPresentationsRequestDto,
-  UpdateProjectDto,
+  UpdateProjectRequestDto,
   UpdateProjectResponseDto,
 } from './presentations.dto';
 // export type { UploadFileResponseDto } from './files.dto';

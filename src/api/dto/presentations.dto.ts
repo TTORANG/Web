@@ -1,7 +1,7 @@
 /**
  * 프로젝트 제목 수정 요청 DTO
  */
-export interface UpdateProjectDto {
+export interface UpdateProjectRequestDto {
   title?: string;
 }
 
