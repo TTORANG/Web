@@ -764,7 +764,14 @@ const reactionHandlers = [
     await delay(100);
     const { slideId } = params as { slideId: string };
     const reactions = slideReactions.get(slideId) ?? {};
-    return ok({ slideId, reactions });
+    const filled = {
+      fire: reactions.fire ?? 0,
+      good: reactions.good ?? 0,
+      bad: reactions.bad ?? 0,
+      sleepy: reactions.sleepy ?? 0,
+      confused: reactions.confused ?? 0,
+    };
+    return ok({ slideId, reactions: filled });
   }),
 
   // 프로젝트 슬라이드 리액션 총합
@@ -772,7 +779,13 @@ const reactionHandlers = [
     await delay(100);
     const { projectId } = params as { projectId: string };
     const projectSlides = slides.filter((s) => s.projectId === projectId);
-    const total: Record<string, number> = {};
+    const total: Record<string, number> = {
+      fire: 0,
+      good: 0,
+      bad: 0,
+      sleepy: 0,
+      confused: 0,
+    };
     let totalCount = 0;
     projectSlides.forEach((s) => {
       const r = slideReactions.get(s.slideId) ?? {};
@@ -788,8 +801,8 @@ const reactionHandlers = [
   http.post(`${BASE_URL}/videos/:videoId/reactions`, async ({ params, request }) => {
     await delay(100);
     const { videoId } = params as { videoId: string };
-    const body = (await request.json()) as { emojiType: string; timestampMs: number };
-    return ok({ reactionId: nextId(), videoId, active: true, ...body });
+    await request.json();
+    return ok({ reactionId: nextId(), videoId, active: true });
   }),
 
   // 영상 리액션 타임라인

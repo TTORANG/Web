@@ -7,7 +7,7 @@ import type { Reaction, ReactionType } from '@/types/script';
 import { showToast } from '@/utils/toast';
 import { getOverlappingFeedbacks } from '@/utils/video';
 
-import { useToggleVideoReaction } from './queries/useVideoReactionQueries';
+import { useToggleVideoReaction, useVideoReactionWindow } from './queries/useVideoReactionQueries';
 
 /**
  * 영상 리액션 관리 훅
@@ -24,50 +24,72 @@ export function useVideoReactions() {
   const toggleReactionStore = useVideoFeedbackStore((s) => s.toggleReaction);
 
   const { mutate: toggleReactionApi } = useToggleVideoReaction();
+  const timestampMs = Math.round(currentTime * 1000);
+  const requestTimestampMs = Math.round(timestampMs / 1000) * 1000;
+  const windowMs = 2000;
+  const { data: windowSummary } = useVideoReactionWindow(
+    video?.videoId,
+    requestTimestampMs,
+    windowMs,
+  );
 
   const reactions: Reaction[] = useMemo(() => {
     if (!video) {
       return REACTION_TYPES.map((type) => ({ type, count: 0, active: false }));
     }
 
-    // 현재 시간과 겹치는 모든 feedbacks 찾기 (±FEEDBACK_WINDOW 범위)
+    // active는 로컬 스토어 기준 (exclusive 규칙 유지)
     const overlappingFeedbacks = getOverlappingFeedbacks(
       video.feedbacks,
       currentTime,
       FEEDBACK_WINDOW,
     );
+    const closestFeedback =
+      overlappingFeedbacks.length > 0
+        ? overlappingFeedbacks.reduce((closest, current) => {
+            return Math.abs(current.timestampMs - currentTime * 1000) <
+              Math.abs(closest.timestampMs - currentTime * 1000)
+              ? current
+              : closest;
+          })
+        : null;
 
-    // 겹치는 feedbacks이 없으면 기본값
-    if (overlappingFeedbacks.length === 0) {
-      return REACTION_TYPES.map((type) => ({ type, count: 0, active: false }));
+    const activeMap: Record<ReactionType, boolean> = REACTION_TYPES.reduce(
+      (acc, type) => {
+        acc[type] = closestFeedback?.reactions.find((r) => r.type === type)?.active ?? false;
+        return acc;
+      },
+      {} as Record<ReactionType, boolean>,
+    );
+
+    const countMap: Record<ReactionType, number> = REACTION_TYPES.reduce(
+      (acc, type) => {
+        acc[type] = 0;
+        return acc;
+      },
+      {} as Record<ReactionType, number>,
+    );
+
+    if (windowSummary) {
+      windowSummary.forEach((item) => {
+        countMap[item.emojiType] = item.count;
+      });
+    } else if (overlappingFeedbacks.length > 0) {
+      // fallback: 로컬 store 기반 합산
+      REACTION_TYPES.forEach((type) => {
+        countMap[type] = overlappingFeedbacks.reduce((sum, feedback) => {
+          const reaction = feedback.reactions.find((r) => r.type === type);
+          return sum + (reaction?.count || 0);
+        }, 0);
+      });
     }
 
-    // 가장 가까운 버킷 (active 상태 기준)
-    const closestFeedback = overlappingFeedbacks.reduce((closest, current) => {
-      return Math.abs(current.timestampMs - currentTime * 1000) <
-        Math.abs(closest.timestampMs - currentTime * 1000)
-        ? current
-        : closest;
-    });
-
-    // 모든 겹치는 feedbacks의 reactions을 합산
-    return REACTION_TYPES.map((type) => {
-      // count: 모든 겹치는 feedbacks의 count 합산
-      const totalCount = overlappingFeedbacks.reduce((sum, feedback) => {
-        const reaction = feedback.reactions.find((r) => r.type === type);
-        return sum + (reaction?.count || 0);
-      }, 0);
-
-      // active: 가장 가까운 버킷의 active 상태만 반영
-      const closestReaction = closestFeedback.reactions.find((r) => r.type === type);
-
-      return {
-        type,
-        count: totalCount,
-        active: closestReaction?.active || false,
-      };
-    });
-  }, [video, currentTime]);
+    return REACTION_TYPES.map((type) => ({
+      type,
+      count: countMap[type],
+      active: activeMap[type],
+    }));
+  }, [video, currentTime, windowSummary]);
 
   const toggleReaction = (type: ReactionType) => {
     if (!video) return;
@@ -77,7 +99,10 @@ export function useVideoReactions() {
 
     // 2. API 비동기 호출
     toggleReactionApi(
-      { videoId: video.videoId, data: { emojiType: type, timestampMs: Math.round(currentTime) } },
+      {
+        videoId: video.videoId,
+        data: { emojiType: type, timestampMs },
+      },
       {
         onError: () => {
           // 3. 실패 시 rollback
