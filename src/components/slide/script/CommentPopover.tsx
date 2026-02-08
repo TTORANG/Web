@@ -3,7 +3,7 @@
  * @description 의견 목록 팝오버
  *
  * 대본에 대한 팀원들의 의견을 보여주고, 답글을 달 수 있습니다.
- * useComments 훅을 통해 API와 동기화합니다.
+ * useSlideCommentsActions 훅을 통해 API와 동기화합니다.
  */
 import { useCallback, useMemo, useState } from 'react';
 
@@ -13,7 +13,7 @@ import Comment from '@/components/comment/Comment';
 import { CommentProvider } from '@/components/comment/CommentContext';
 import { Popover, Skeleton } from '@/components/common';
 import { useSlideComments } from '@/hooks';
-import { useComments } from '@/hooks/useComments';
+import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
 
 interface CommentPopoverProps {
   isLoading?: boolean;
@@ -21,7 +21,12 @@ interface CommentPopoverProps {
 
 export default function CommentPopover({ isLoading }: CommentPopoverProps) {
   const slideComments = useSlideComments();
-  const { comments: treeComments, addReply, deleteComment, updateComment } = useComments();
+  const {
+    comments: treeComments,
+    addReply,
+    deleteComment,
+    updateComment,
+  } = useSlideCommentsActions();
 
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');

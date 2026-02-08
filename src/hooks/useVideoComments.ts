@@ -1,11 +1,3 @@
-/**
- * @file useVideoComments.ts
- * @description 영상 댓글 관리 훅
- *
- * - "현재 타임스탬프의 댓글만" 추출하던 방식 제거
- * - video.feedbacks 전체에서 댓글을 모두 합쳐서 반환
- * - CommentList 재사용을 위해 Tree 변환은 그대로 유지(flatToTree)
- */
 import { useMemo } from 'react';
 
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
@@ -14,6 +6,16 @@ import { flatToTree } from '@/utils/comment';
 
 const EMPTY_COMMENTS: Comment[] = [];
 
+/**
+ * 영상 댓글 관리 훅
+ *
+ * video.feedbacks 전체에서 댓글을 합산하여 트리 구조로 반환합니다.
+ *
+ * @returns comments - 트리 구조 댓글 목록
+ * @returns addComment - 새 댓글 추가 (타임스탬프 지정)
+ * @returns addReply - 답글 추가
+ * @returns deleteComment - 댓글 삭제
+ */
 export function useVideoComments() {
   const video = useVideoFeedbackStore((state) => state.video);
 

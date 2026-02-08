@@ -1,6 +1,3 @@
-/**
- * 댓글 관련 TanStack Query 훅
- */
 import { useQuery } from '@tanstack/react-query';
 
 import type { CommentWithUserDto, GetSlideCommentsResponseDto } from '@/api/dto';
@@ -20,7 +17,13 @@ function mapDtoToComment(dto: CommentWithUserDto, currentUserId?: string): Comme
   };
 }
 
-/** 슬라이드 댓글 목록 조회 */
+/**
+ * 슬라이드 댓글 목록 조회
+ *
+ * DTO를 Comment 타입으로 변환하고, 현재 사용자의 댓글을 isMine으로 표시합니다.
+ *
+ * @param slideId - 슬라이드 ID
+ */
 export function useSlideCommentsQuery(slideId?: string) {
   const userId = useAuthStore((state) => state.user?.id);
 

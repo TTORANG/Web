@@ -1,6 +1,3 @@
-/**
- * 영상 리액션 관련 TanStack Query 훅
- */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import {
@@ -9,7 +6,11 @@ import {
 } from '@/api/endpoints/videoReactions';
 import { queryKeys } from '@/api/queryClient';
 
-/** 영상 리액션 토글 */
+/**
+ * 영상 리액션 토글 Mutation 훅
+ *
+ * 성공 시 해당 영상 상세 캐시를 무효화합니다.
+ */
 export function useToggleVideoReaction() {
   const queryClient = useQueryClient();
 

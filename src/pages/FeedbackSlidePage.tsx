@@ -18,16 +18,16 @@ import SlideViewer from '@/components/feedback/SlideViewer';
 import SlideTitle from '@/components/slide/script/SlideTitle';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useHotkey, useSlideActions, useSlideScript } from '@/hooks';
-import { useSlideCommentsQuery } from '@/hooks/queries/useCommentQueries';
 import { useScript } from '@/hooks/queries/useScript';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { useExitTracker } from '@/hooks/useExitTracker';
+import { useSlideCommentsLoader } from '@/hooks/useSlideCommentsLoader';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
 
-import { useComments } from '../hooks/useComments';
-import { useReactions } from '../hooks/useReactions';
+import { useSlideCommentsActions } from '../hooks/useSlideCommentsActions';
+import { useSlideReactions } from '../hooks/useSlideReactions';
 
 export default function FeedbackSlidePage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -39,14 +39,12 @@ export default function FeedbackSlidePage() {
 
   const currentSlide = slides?.[slideIndex];
 
-  const { comments, addComment, addReply, deleteComment, updateComment } = useComments();
-  const { reactions, toggleReaction } = useReactions();
+  const { comments, addComment, addReply, deleteComment, updateComment } =
+    useSlideCommentsActions();
+  const { reactions, toggleReaction } = useSlideReactions();
   const script = useSlideScript();
   const initSlide = useSlideStore((state) => state.initSlide);
-  const { setComments, updateScript } = useSlideActions();
-  const { data: fetchedComments, isLoading: isCommentsLoading } = useSlideCommentsQuery(
-    currentSlide?.slideId,
-  );
+  const { updateScript } = useSlideActions();
   const { data: scriptData } = useScript(currentSlide?.slideId ?? '');
 
   const [commentDraft, setCommentDraft] = useState('');
@@ -56,6 +54,20 @@ export default function FeedbackSlidePage() {
     addComment(commentDraft, slideIndex);
     setCommentDraft('');
   };
+
+  const mapComments = useCallback(
+    (comments: Comment[]) => {
+      if (!currentSlide) return comments;
+      const slideLabel = `Slide ${slideIndex + 1}`;
+      return comments.map((comment) => ({
+        ...comment,
+        slideId: currentSlide.slideId,
+        ref: { kind: 'slide', index: slideIndex },
+        slideRef: slideLabel,
+      }));
+    },
+    [currentSlide, slideIndex],
+  );
 
   useHotkey({ ArrowLeft: goPrev, ArrowRight: goNext }, { enabled: !isLoading });
 
@@ -91,22 +103,12 @@ export default function FeedbackSlidePage() {
           ? currentSlide.emojiReactions
           : createDefaultReactions(),
     });
-    setComments([]);
     updateScript('');
-  }, [slideIndex, currentSlide, initSlide, setComments, updateScript]);
+  }, [slideIndex, currentSlide, initSlide, updateScript]);
 
-  useEffect(() => {
-    if (!currentSlide || !fetchedComments) return;
-    const slideLabel = `Slide ${slideIndex + 1}`;
-    setComments(
-      fetchedComments.map((comment) => ({
-        ...comment,
-        slideId: currentSlide.slideId,
-        ref: { kind: 'slide', index: slideIndex },
-        slideRef: slideLabel,
-      })),
-    );
-  }, [currentSlide, fetchedComments, setComments, slideIndex]);
+  const { isLoading: isCommentsLoading } = useSlideCommentsLoader(currentSlide?.slideId, {
+    mapComments,
+  });
 
   useEffect(() => {
     if (scriptData) {

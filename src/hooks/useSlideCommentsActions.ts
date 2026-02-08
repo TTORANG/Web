@@ -1,9 +1,3 @@
-/**
- * 댓글 통합 훅
- *
- * TanStack Query(API 호출) + Zustand(Optimistic UI)를 결합합니다.
- * 로컬 store 즉시 업데이트 후 서버 API를 호출하고, 실패 시 롤백합니다.
- */
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -97,7 +91,19 @@ function useDeleteCommentMutation() {
 
 const EMPTY_COMMENTS: Comment[] = [];
 
-export function useComments() {
+/**
+ * 슬라이드 댓글 통합 훅
+ *
+ * TanStack Query(API 호출) + Zustand(Optimistic UI)를 결합합니다.
+ * 로컬 store 즉시 업데이트 후 서버 API를 호출하고, 실패 시 롤백합니다.
+ *
+ * @returns comments - 트리 구조 댓글 목록 (최신순 정렬)
+ * @returns addComment - 댓글 추가 (optimistic)
+ * @returns addReply - 답글 추가 (optimistic)
+ * @returns deleteComment - 댓글 삭제 (optimistic)
+ * @returns updateComment - 댓글 수정 (optimistic)
+ */
+export function useSlideCommentsActions() {
   const { projectId = '' } = useParams<{ projectId: string }>();
   const slideId = useSlideStore((state) => state.slide?.slideId);
   const flatComments = useSlideStore((state) => state.slide?.comments);

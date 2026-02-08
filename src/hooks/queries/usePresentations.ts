@@ -1,9 +1,3 @@
-/**
- * 프로젝트 관련 TanStack Query 훅
- *
- * @file usePresentation.ts
- * @description 프로젝트 조회 훅
- */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { queryKeys } from '@/api';
@@ -17,7 +11,11 @@ import {
 import type { Presentation } from '@/types/presentation';
 import { showToast } from '@/utils/toast';
 
-/** 프로젝트 목록 조회 */
+/**
+ * 프로젝트 목록 조회
+ *
+ * 전체 프로젝트 목록을 가져옵니다.
+ */
 export function usePresentations() {
   return useQuery({
     queryKey: queryKeys.presentations.lists(),
@@ -25,7 +23,11 @@ export function usePresentations() {
   });
 }
 
-/** 특정 프로젝트 조회 */
+/**
+ * 특정 프로젝트 조회
+ *
+ * @param projectId - 프로젝트 ID
+ */
 export function usePresentation(projectId: string) {
   return useQuery({
     queryKey: queryKeys.presentations.detail(projectId),
@@ -34,7 +36,11 @@ export function usePresentation(projectId: string) {
   });
 }
 
-/** 프로젝트 수정 */
+/**
+ * 프로젝트 수정 Mutation 훅
+ *
+ * 성공 시 상세 캐시를 응답으로 직접 업데이트하고, 목록 캐시를 무효화합니다.
+ */
 export function useUpdatePresentation() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -53,7 +59,11 @@ export function useUpdatePresentation() {
   });
 }
 
-/** 프로젝트 삭제 */
+/**
+ * 프로젝트 삭제 Mutation 훅
+ *
+ * 성공 시 목록 캐시에서 즉시 제거하고, 상세 캐시를 삭제합니다.
+ */
 export function useDeletePresentation() {
   const queryClient = useQueryClient();
 

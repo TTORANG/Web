@@ -1,12 +1,3 @@
-/**
- * @file useVideoReactions.ts
- * @description 영상 리액션 관리 훅 (이벤트 window 방식)
- *
- * Optimistic UI 패턴으로 리액션 토글을 처리합니다.
- * 1. Store 즉시 업데이트 (optimistic)
- * 2. API 비동기 호출
- * 3. 실패 시 rollback (toggleReaction 재호출)
- */
 import { useMemo } from 'react';
 
 import { REACTION_TYPES } from '@/constants/reaction';
@@ -18,6 +9,15 @@ import { getOverlappingFeedbacks } from '@/utils/video';
 
 import { useToggleVideoReaction } from './queries/useVideoReactionQueries';
 
+/**
+ * 영상 리액션 관리 훅
+ *
+ * Optimistic UI 패턴으로 리액션 토글을 처리합니다.
+ * Store 즉시 업데이트 → API 호출 → 실패 시 rollback.
+ *
+ * @returns reactions - 현재 시간 구간의 리액션 목록
+ * @returns toggleReaction - 리액션 토글 함수
+ */
 export function useVideoReactions() {
   const video = useVideoFeedbackStore((s) => s.video);
   const currentTime = useVideoFeedbackStore((s) => s.currentTime);

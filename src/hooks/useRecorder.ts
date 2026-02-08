@@ -1,5 +1,16 @@
 import { useCallback, useRef, useState } from 'react';
 
+/**
+ * 캔버스 기반 녹화 훅
+ *
+ * 슬라이드 이미지와 카메라 영상을 캔버스에 합성하여 WebM으로 녹화합니다.
+ *
+ * @returns canvasRef - 합성에 사용할 캔버스 ref
+ * @returns isRecording - 녹화 진행 중 여부
+ * @returns recordedChunks - 녹화된 Blob 청크 배열
+ * @returns startRecording - 녹화 시작 함수
+ * @returns stopRecording - 녹화 중지 함수
+ */
 export const useRecorder = () => {
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);

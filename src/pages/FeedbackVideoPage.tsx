@@ -15,8 +15,8 @@ import ReactionButtons from '@/components/feedback/ReactionButtons';
 import ScriptSection from '@/components/feedback/ScriptSection';
 import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
 import { useExitTracker } from '@/hooks/useExitTracker';
-import { useFeedbackVideo } from '@/hooks/useFeedbackVideo';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
+import { useFeedbackVideo } from '@/pages/feedback/useFeedbackVideo';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 
 export default function FeedbackVideoPage() {
