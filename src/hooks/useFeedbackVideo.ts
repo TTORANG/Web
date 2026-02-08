@@ -86,8 +86,16 @@ export function useFeedbackVideo() {
           '';
 
         // 개발 환경에서 CDN CORS 우회를 위해 proxy 사용
-        if (videoUrl && import.meta.env.DEV && videoUrl.includes('cdn.ttorang.com')) {
-          videoUrl = videoUrl.replace('https://cdn.ttorang.com', '/cdn-proxy');
+        if (videoUrl && import.meta.env.DEV) {
+          try {
+            const url = new URL(videoUrl);
+            // hostname이 정확히 cdn.ttorang.com인 경우만 프록시 사용
+            if (url.hostname === 'cdn.ttorang.com') {
+              videoUrl = `/cdn-proxy${url.pathname}${url.search}`;
+            }
+          } catch {
+            // Invalid URL인 경우 프록시를 사용하지 않음
+          }
         }
 
         const videoData = {
