@@ -174,8 +174,8 @@ export const RecordingSection = ({
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-6">
             <Logo onClick={onExitClick} />
-            <span className="hidden md:inline-flex h-7 items-center px-2 text-sm font-semibold text-gray-800">
-              {presentation?.title || '내 발표'}
+            <span className="hidden md:inline-flex h-7 items-center px-2 text-sm font-semibold text-gray-800 min-w-0">
+              <span className="max-w-60 truncate">{presentation?.title || '내 발표'}</span>
             </span>
           </div>
           <div className="flex items-center gap-2">

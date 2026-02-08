@@ -22,6 +22,7 @@ interface TitleEditorPopoverProps {
   isCollapsed?: boolean;
   ariaLabel: string;
   isPending?: boolean;
+  titleClassName?: string;
 }
 
 export function TitleEditorPopover({
@@ -31,6 +32,7 @@ export function TitleEditorPopover({
   isCollapsed = false,
   ariaLabel,
   isPending = false,
+  titleClassName = 'max-w-60 truncate',
 }: TitleEditorPopoverProps) {
   const [editTitle, setEditTitle] = useState(title);
 
@@ -45,9 +47,9 @@ export function TitleEditorPopover({
           <button
             type="button"
             aria-label={ariaLabel}
-            className="hidden md:inline-flex h-7 items-center gap-1.5 rounded-md bg-transparent px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main"
+            className="hidden md:inline-flex h-7 items-center gap-1.5 rounded-md bg-transparent px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main min-w-0"
           >
-            <span className="whitespace-normal break-words">{title}</span>
+            <span className={titleClassName}>{title}</span>
             <InfoIcon className="h-4 w-4" aria-hidden="true" />
           </button>
         }
@@ -67,9 +69,9 @@ export function TitleEditorPopover({
         <button
           type="button"
           aria-label={ariaLabel}
-          className="hidden md:inline-flex h-7 items-center gap-1.5 rounded-md bg-transparent px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main"
+          className="hidden md:inline-flex h-7 items-center gap-1.5 rounded-md bg-transparent px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main min-w-0"
         >
-          <span className="whitespace-normal break-words">{title}</span>
+          <span className={titleClassName}>{title}</span>
           <ArrowDownIcon
             className={clsx(
               'h-4 w-4 transition-transform duration-300',
