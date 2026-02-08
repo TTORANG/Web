@@ -48,10 +48,13 @@ export function useUpdatePresentation() {
       updatePresentation(projectId, data),
 
     onSuccess: (updatePresentation) => {
-      // Detail 캐시는 API 응답으로 직접 업데이트 (네트워크 절약)
-      queryClient.setQueryData(
+      // Detail 캐시는 기존 데이터에 title/updatedAt만 반영
+      queryClient.setQueryData<Presentation | undefined>(
         queryKeys.presentations.detail(updatePresentation.projectId),
-        updatePresentation,
+        (old) =>
+          old
+            ? { ...old, title: updatePresentation.title, updatedAt: updatePresentation.updatedAt }
+            : old,
       );
       // 목록은 최신 데이터 반영을 위해 무효화
       void queryClient.invalidateQueries({ queryKey: queryKeys.presentations.lists() });
