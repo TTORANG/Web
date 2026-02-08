@@ -15,7 +15,7 @@ export function useToggleVideoReaction() {
 
   return useMutation({
     mutationFn: ({ videoId, data }: { videoId: number; data: ToggleVideoReactionRequest }) =>
-      toggleVideoReaction(videoId, data),
+      toggleVideoReaction(videoId.toString(), data),
 
     onSuccess: (_, variables) => {
       void queryClient.invalidateQueries({
