@@ -14,6 +14,10 @@ export function useSlides(projectId: string) {
     queryKey: queryKeys.slides.list(projectId),
     queryFn: () => getSlides(projectId),
     enabled: !!projectId,
+    // 🔄 서버가 웹소켓 브로드캐스트를 안하므로 임시로 폴링 추가
+    // TODO: 서버에서 broadcastNewComment 호출 후 제거
+    refetchInterval: 3000, // 3초마다 자동 갱신
+    refetchIntervalInBackground: false, // 탭이 백그라운드일 때는 멈춤
   });
 }
 

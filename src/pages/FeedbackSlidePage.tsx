@@ -11,6 +11,7 @@ import { useParams } from 'react-router-dom';
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
 import { Spinner } from '@/components/common';
+import WebSocketDebug from '@/components/common/WebSocketDebug';
 import FeedbackMobileLayout from '@/components/feedback/FeedbackMobileLayout';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
 import SlideNavigation from '@/components/feedback/SlideNavigation';
@@ -21,17 +22,23 @@ import { useHotkey, useSlideActions, useSlideScript } from '@/hooks';
 import { useScript } from '@/hooks/queries/useScript';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { useExitTracker } from '@/hooks/useExitTracker';
+import { useFeedbackWebSocket } from '@/hooks/useFeedbackWebSocket';
+import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
 import { useSlideCommentsLoader } from '@/hooks/useSlideCommentsLoader';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
+import { useSlideReactions } from '@/hooks/useSlideReactions';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
-
-import { useSlideCommentsActions } from '../hooks/useSlideCommentsActions';
-import { useSlideReactions } from '../hooks/useSlideReactions';
 
 export default function FeedbackSlidePage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { data: slides, isLoading } = useSlides(projectId ?? '');
+
+  // 웹소켓 연결
+  const { isConnected, currentRooms, joinProject, leaveProject, getRooms } = useFeedbackWebSocket({
+    projectId: projectId ?? '',
+    enabled: !!projectId,
+  });
 
   const totalSlides = slides?.length ?? 0;
   const navigation = useSlideNavigation(totalSlides);
@@ -103,12 +110,7 @@ export default function FeedbackSlidePage() {
     updateScript('');
   }, [slideIndex, currentSlide, initSlide, updateScript]);
 
-  const {
-    isLoading: isCommentsLoading,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useSlideCommentsLoader(currentSlide?.slideId, {
+  const { isLoading: isCommentsLoading } = useSlideCommentsLoader(currentSlide?.slideId, {
     mapComments,
   });
 
@@ -157,9 +159,6 @@ export default function FeedbackSlidePage() {
               onDeleteComment={deleteComment}
               onUpdateComment={updateComment}
               isLoading={isLoading || isCommentsLoading}
-              onLoadMore={fetchNextPage}
-              hasNextPage={hasNextPage}
-              isFetchingNextPage={isFetchingNextPage}
             />
           </div>
 
@@ -235,9 +234,6 @@ export default function FeedbackSlidePage() {
                 onDeleteComment={deleteComment}
                 onUpdateComment={updateComment}
                 isLoading={isLoading}
-                onLoadMore={fetchNextPage}
-                hasNextPage={hasNextPage}
-                isFetchingNextPage={isFetchingNextPage}
               />
             </div>
             <div className="shrink-0 px-4 py-3">
@@ -252,6 +248,16 @@ export default function FeedbackSlidePage() {
           </>
         }
         commentCount={comments.length}
+      />
+
+      {/* WebSocket 디버그 UI (개발 환경에서만) */}
+      <WebSocketDebug
+        isConnected={isConnected}
+        currentRooms={currentRooms}
+        projectId={projectId}
+        onJoinProject={joinProject}
+        onLeaveProject={leaveProject}
+        onGetRooms={getRooms}
       />
     </div>
   );

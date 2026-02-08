@@ -5,9 +5,9 @@
  * 댓글 리스트 렌더링과 답글 입력 상태를 관리합니다.
  * CommentProvider로 상태를 공유하여 Comment의 props를 최소화합니다.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
-import { Skeleton, Spinner } from '@/components/common';
+import { Skeleton } from '@/components/common';
 import type { Comment as CommentType } from '@/types/comment';
 
 import Comment from './Comment';
@@ -20,9 +20,6 @@ interface CommentListProps {
   onDeleteComment?: (commentId: string) => void;
   onUpdateComment?: (commentId: string, content: string) => void;
   isLoading?: boolean;
-  onLoadMore?: () => void;
-  hasNextPage?: boolean;
-  isFetchingNextPage?: boolean;
 }
 
 const skeletonContentWidths = ['90%', '70%', '85%', '60%'];
@@ -34,9 +31,6 @@ export default function CommentList({
   onDeleteComment,
   onUpdateComment,
   isLoading = false,
-  onLoadMore,
-  hasNextPage = false,
-  isFetchingNextPage = false,
 }: CommentListProps) {
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
@@ -85,32 +79,6 @@ export default function CommentList({
     [editDraft, onUpdateComment],
   );
 
-  // 무한 스크롤을 위한 Intersection Observer
-  const observerTarget = useRef<HTMLDivElement>(null);
-
-  const handleObserver = useCallback(
-    (entries: IntersectionObserverEntry[]) => {
-      const [target] = entries;
-      if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
-        onLoadMore?.();
-      }
-    },
-    [hasNextPage, isFetchingNextPage, onLoadMore],
-  );
-
-  useEffect(() => {
-    const element = observerTarget.current;
-    if (!element) return;
-
-    const observer = new IntersectionObserver(handleObserver, {
-      threshold: 0.5,
-    });
-
-    observer.observe(element);
-
-    return () => observer.disconnect();
-  }, [handleObserver]);
-
   const contextValue = useMemo(
     () => ({
       replyingToId,
@@ -119,13 +87,13 @@ export default function CommentList({
       toggleReply,
       submitReply,
       cancelReply,
-      deleteComment: onDeleteComment,
       editingId,
       editDraft,
       setEditDraft,
       startEdit,
       cancelEdit,
       submitEdit,
+      deleteComment: onDeleteComment,
       goToRef: onGoToRef,
     }),
     [
@@ -185,12 +153,6 @@ export default function CommentList({
         {comments.map((comment) => (
           <Comment key={comment.commentId} comment={comment} />
         ))}
-        {isFetchingNextPage && (
-          <div className="flex justify-center py-3">
-            <Spinner size={20} />
-          </div>
-        )}
-        <div ref={observerTarget} className="h-4 w-full" />
       </div>
     </CommentProvider>
   );

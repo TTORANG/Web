@@ -14,7 +14,7 @@ import { MOCK_CURRENT_USER } from '@/mocks/users';
 import type { Comment } from '@/types/comment';
 import type { Reaction, ReactionType } from '@/types/script';
 import type { VideoFeedback, VideoTimestampFeedback } from '@/types/video';
-import { addReplyToFlat, createComment, deleteFromFlat } from '@/utils/comment';
+import { addReplyToFlat, createComment, deleteFromFlat, updateInFlat } from '@/utils/comment';
 import { extractTimestampFromComment } from '@/utils/format';
 
 // 현재 시간대에 리액션 찾기
@@ -62,9 +62,11 @@ interface VideoFeedbackState {
   toggleReaction: (type: ReactionType) => void;
 
   /** 댓글 관련 메서드들 - feedbacks의 comments 업데이트 */
-  addComment: (content: string, seconds: number) => void;
-  addReply: (parentId: string, content: string) => void;
+  addComment: (content: string, seconds: number) => Comment | null;
+  addReply: (parentId: string, content: string) => Comment | null;
   deleteComment: (commentId: string) => void;
+  updateComment: (commentId: string, content: string) => void;
+  updateCommentServerId: (commentId: string, serverId: string) => void;
 }
 
 function hasCommentId(flat: Comment[], commentId: string) {
@@ -136,7 +138,9 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
         'video/toggleReaction',
       ),
 
-    addComment: (content, seconds) =>
+    addComment: (content, seconds) => {
+      let newComment: Comment | null = null;
+
       set(
         (state) => {
           if (!state.video) return state;
@@ -157,15 +161,17 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
             refSeconds,
           );
 
-          const newComment: Comment = createComment({
+          const createdComment = createComment({
             content: finalContent,
             userId: MOCK_CURRENT_USER.id,
             ref,
           });
 
+          newComment = createdComment;
+
           const updatedFeedbacks = feedbacks.map((f) =>
             f.timestampMs === targetFeedback.timestampMs
-              ? { ...f, comments: [newComment, ...f.comments] }
+              ? { ...f, comments: [createdComment, ...f.comments] }
               : f,
           );
 
@@ -175,9 +181,14 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
         },
         false,
         'video/addComment',
-      ),
+      );
 
-    addReply: (parentId, content) =>
+      return newComment;
+    },
+
+    addReply: (parentId, content) => {
+      let newReply: Comment | null = null;
+
       set(
         (state) => {
           if (!state.video) return state;
@@ -189,10 +200,16 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
 
           if (!targetFeedback) return state;
 
-          const updatedComments = addReplyToFlat(targetFeedback.comments, parentId, {
-            content: content.trim(),
-            userId: MOCK_CURRENT_USER.id,
-          });
+          const { comments: updatedComments, newComment } = addReplyToFlat(
+            targetFeedback.comments,
+            parentId,
+            {
+              content: content.trim(),
+              userId: MOCK_CURRENT_USER.id,
+            },
+          );
+
+          newReply = newComment;
 
           const updatedFeedbacks = state.video.feedbacks.map((f) =>
             f.timestampMs === targetFeedback.timestampMs ? { ...f, comments: updatedComments } : f,
@@ -204,7 +221,10 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
         },
         false,
         'video/addReply',
-      ),
+      );
+
+      return newReply;
+    },
 
     deleteComment: (commentId) =>
       set(
@@ -229,6 +249,59 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
         },
         false,
         'video/deleteComment',
+      ),
+
+    updateComment: (commentId, content) =>
+      set(
+        (state) => {
+          if (!state.video) return state;
+
+          const targetFeedback = state.video.feedbacks.find((f) =>
+            hasCommentId(f.comments, commentId),
+          );
+
+          if (!targetFeedback) return state;
+
+          const updatedComments = updateInFlat(targetFeedback.comments, commentId, content);
+
+          const updatedFeedbacks = state.video.feedbacks.map((f) =>
+            f.timestampMs === targetFeedback.timestampMs ? { ...f, comments: updatedComments } : f,
+          );
+
+          return {
+            video: { ...state.video, feedbacks: updatedFeedbacks },
+          };
+        },
+        false,
+        'video/updateComment',
+      ),
+
+    updateCommentServerId: (commentId, serverId) =>
+      set(
+        (state) => {
+          if (!state.video) return state;
+
+          const targetFeedback = state.video.feedbacks.find((f) =>
+            hasCommentId(f.comments, commentId),
+          );
+
+          if (!targetFeedback) return state;
+
+          // 플랫 구조: 단순히 id가 일치하는 댓글 업데이트
+          const updatedComments = targetFeedback.comments.map((c) =>
+            c.commentId === commentId ? { ...c, serverId } : c,
+          );
+
+          const updatedFeedbacks = state.video.feedbacks.map((f) =>
+            f.timestampMs === targetFeedback.timestampMs ? { ...f, comments: updatedComments } : f,
+          );
+
+          return {
+            video: { ...state.video, feedbacks: updatedFeedbacks },
+          };
+        },
+        false,
+        'video/updateCommentServerId',
       ),
   })),
 );

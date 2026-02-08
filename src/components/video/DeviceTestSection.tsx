@@ -26,8 +26,8 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
         const aInput = allDevices.find((d) => d.kind === 'audioinput');
         if (vInput) setSelectedVideo(vInput.deviceId);
         if (aInput) setSelectedAudio(aInput.deviceId);
-      } catch (err) {
-        console.error('Device Init Error:', err);
+      } catch {
+        // 장치 접근 실패 시 무시 (eslint no-empty)
       }
     };
     initDevices();

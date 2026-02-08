@@ -5,11 +5,13 @@
  * - currentTime(초)에 따라 slideChangeTimes 기준으로 슬라이드 자동 전환
  * - 웹캠 녹화본은 webcamVideoUrl(MOCK_VIDEO.videoUrl)을 사용
  * - "작은 박스(PiP)"를 hover하면 디밍+텍스트, 클릭하면 슬라이드/웹캠 위치가 토글됨
+ * - HLS(.m3u8) 스트리밍 지원 (hls.js)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 
 import clsx from 'clsx';
+import Hls from 'hls.js';
 
 import RefreshIcon from '@/assets/icons/icon-refresh.svg?react';
 import VideoPlaybackBar from '@/components/feedback/video/VideoPlaybackBar';
@@ -101,9 +103,82 @@ export default function SlideWebcamStage({
 }: SlideWebcamStageProps) {
   const stageRootRef = useRef<HTMLDivElement | null>(null);
   const clickTimeoutRef = useRef<number | null>(null);
+  const hlsInstanceRef = useRef<Hls | null>(null);
 
   // 비디오 동기화 훅 (콜백 ref, duration, currentTime, seekTo 처리)
-  const { setVideoRef, videoElement, duration, currentTime } = useVideoSync();
+  const { setVideoRef: setVideoRefSync, videoElement, duration, currentTime } = useVideoSync();
+
+  // HLS를 지원하는 비디오 ref 콜백
+  const setVideoRef = useCallback(
+    (el: HTMLVideoElement | null) => {
+      // 기존 HLS 인스턴스 정리
+      if (hlsInstanceRef.current) {
+        hlsInstanceRef.current.destroy();
+        hlsInstanceRef.current = null;
+      }
+
+      // useVideoSync에 video 요소 전달
+      setVideoRefSync(el);
+
+      if (!el || !webcamVideoUrl) return;
+
+      // HLS(.m3u8) URL인지 확인
+      const isHls = webcamVideoUrl.includes('.m3u8');
+
+      if (isHls && Hls.isSupported()) {
+        // HLS.js를 사용하여 스트리밍
+        const hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: false,
+        });
+
+        hls.loadSource(webcamVideoUrl);
+        hls.attachMedia(el);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          console.log('[SlideWebcamStage] HLS manifest 로드 완료');
+        });
+
+        hls.on(Hls.Events.ERROR, (_event, data) => {
+          if (data.fatal) {
+            console.error('[SlideWebcamStage] HLS 치명적 에러:', data);
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                hls.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                hls.recoverMediaError();
+                break;
+              default:
+                hls.destroy();
+                break;
+            }
+          }
+        });
+
+        hlsInstanceRef.current = hls;
+      } else if (isHls && el.canPlayType('application/vnd.apple.mpegurl')) {
+        // Safari는 네이티브 HLS 지원
+        el.src = webcamVideoUrl;
+      } else if (!isHls) {
+        // 일반 비디오 파일 (mp4, webm 등)
+        el.src = webcamVideoUrl;
+      } else {
+        console.warn('[SlideWebcamStage] HLS를 지원하지 않는 브라우저입니다.');
+      }
+    },
+    [setVideoRefSync, webcamVideoUrl],
+  );
+
+  // 컴포넌트 언마운트 시 HLS 정리
+  useEffect(() => {
+    return () => {
+      if (hlsInstanceRef.current) {
+        hlsInstanceRef.current.destroy();
+        hlsInstanceRef.current = null;
+      }
+    };
+  }, []);
 
   // 레이아웃 상태 (localStorage에 저장)
   const [layout, setLayout] = useState<'slide-main' | 'webcam-main'>(() => {
@@ -174,11 +249,11 @@ export default function SlideWebcamStage({
     }
   }, []);
 
-  // slides가 비어있으면 렌더링하지 않음
-  if (!activeSlide) {
+  // 웹캠 비디오가 없으면 렌더링하지 않음
+  if (!webcamVideoUrl) {
     return (
       <div className="flex-1 min-w-0 flex items-center justify-center bg-gray-900 rounded-xl aspect-video">
-        <span className="text-gray-400">슬라이드가 없습니다</span>
+        <span className="text-gray-400">비디오를 불러오는 중...</span>
       </div>
     );
   }
@@ -193,25 +268,27 @@ export default function SlideWebcamStage({
       <div className="relative w-full aspect-video bg-gray-900 rounded-xl">
         {/* 슬라이드도 "메인/작은 박스" 위치가 토글되도록 class를 바꿈 */}
         {/* 슬라이드 + 웹캠 영역 (PiP 또는 단일) */}
-        {/* 1. 슬라이드 영역 */}
-        <MediaBox
-          isMain={isSlideMain}
-          showPip={showPip}
-          onToggle={toggleLayout}
-          label="슬라이드 확장"
-          className="bg-[#000000]/20"
-        >
-          <img
-            src={activeSlide.imageUrl}
-            alt={`슬라이드 ${activeIndex + 1} - ${activeSlide.title}`}
-            className={clsx(
-              'h-full w-full',
-              // 슬라이드는 메인일 때 전체 보기(contain), 작은 박스일 땐 꽉 차게(cover)
-              isSlideMain ? 'object-contain' : 'object-cover',
-            )}
-            draggable={false}
-          />
-        </MediaBox>
+        {/* 1. 슬라이드 영역 - 슬라이드가 있을 때만 렌더링 */}
+        {activeSlide && (
+          <MediaBox
+            isMain={isSlideMain}
+            showPip={showPip}
+            onToggle={toggleLayout}
+            label="슬라이드 확장"
+            className="bg-[#000000]/20"
+          >
+            <img
+              src={activeSlide.imageUrl}
+              alt={`슬라이드 ${activeIndex + 1} - ${activeSlide.title}`}
+              className={clsx(
+                'h-full w-full',
+                // 슬라이드는 메인일 때 전체 보기(contain), 작은 박스일 땐 꽉 차게(cover)
+                isSlideMain ? 'object-contain' : 'object-cover',
+              )}
+              draggable={false}
+            />
+          </MediaBox>
+        )}
 
         {/* 개발단계 확인용: 슬라이드 제목 배지는 슬라이드가 메인일 때만 보여주기 */}
         {/* {isSlideMain && (
@@ -221,20 +298,15 @@ export default function SlideWebcamStage({
           )} */}
 
         {/* "슬라이드가 PiP일 때"만 hover 디밍 + 클릭 토글이 가능해야 함 */}
-        {/* 2. 웹캠 영역 */}
+        {/* 2. 웹캠 영역 - 슬라이드가 없으면 항상 메인으로 표시 */}
         <MediaBox
-          isMain={!isSlideMain} // 슬라이드가 메인이 아니면 웹캠이 메인
-          showPip={showPip}
+          isMain={!activeSlide || !isSlideMain} // 슬라이드가 없거나 슬라이드가 메인이 아니면 웹캠이 메인
+          showPip={showPip && !!activeSlide} // 슬라이드가 있을 때만 PiP 가능
           onToggle={toggleLayout}
           label="웹캠 확장"
           className="bg-[#000000]/40"
         >
-          <video
-            ref={setVideoRef}
-            src={webcamVideoUrl}
-            className="h-full w-full object-cover"
-            playsInline
-          />
+          <video ref={setVideoRef} className="h-full w-full object-cover" playsInline />
         </MediaBox>
 
         {/* 클릭 핸들러 오버레이 */}

@@ -14,7 +14,13 @@ import { MOCK_CURRENT_USER } from '@/mocks/users';
 import type { Comment } from '@/types/comment';
 import type { ReactionType } from '@/types/script';
 import type { SlideDetail } from '@/types/slide';
-import { addReplyToFlat, createComment, deleteFromFlat, updateInFlat } from '@/utils/comment';
+import {
+  addReplyToFlat,
+  createComment,
+  deleteFromFlat,
+  findRootParentId,
+  updateInFlat,
+} from '@/utils/comment';
 
 interface SlideState {
   slide: SlideDetail | null;
@@ -94,13 +100,18 @@ export const useSlideStore = create<SlideState>()(
           (state) => {
             if (!state.slide) return state;
 
+            // 항상 최상위 부모 댓글에 답글을 달도록 rootParentId를 찾음
+            const rootParentId = findRootParentId(state.slide.comments ?? [], parentId);
+
+            const { comments } = addReplyToFlat(state.slide.comments ?? [], rootParentId, {
+              content,
+              userId: MOCK_CURRENT_USER.id,
+            });
+
             return {
               slide: {
                 ...state.slide,
-                comments: addReplyToFlat(state.slide.comments ?? [], parentId, {
-                  content,
-                  userId: MOCK_CURRENT_USER.id,
-                }),
+                comments,
               },
             };
           },
