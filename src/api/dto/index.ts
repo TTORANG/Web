@@ -22,6 +22,9 @@ export type {
 } from './scripts.dto';
 export type {
   ReadReactionCountDto,
+  ReadVideoReactionSummaryItemDto,
+  ReadVideoReactionTimelineResponseDto,
+  ReadVideoReactionTimelineMarkerDto,
   ToggleSlideReactionDto,
   ToggleSlideReactionResponseDto,
   ToggleVideoReactionDto,
