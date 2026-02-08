@@ -1,3 +1,7 @@
+/**
+ * @file ProgressBar.tsx
+ * @description 퍼센트 프로그레스 바 컴포넌트 (0~100)
+ */
 type ProgressBarProps = {
   value: number; // 0~100
 };

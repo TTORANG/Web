@@ -5,12 +5,10 @@
  * 서버와 통신하는 함수들을 정의합니다.
  * 이 함수들은 직접 호출하지 않고, hooks/queries에서 사용합니다.
  */
-import { apiClient } from '@/api';
+import { apiClient } from '@/api/client';
 import type { UpdateProjectDto } from '@/api/dto';
 import type { ApiResponse, ConversionStatusResponse } from '@/types/api';
 import type {
-  CreatePresentationRequest,
-  CreatePresentationSuccess,
   Presentation,
   PresentationListResponse,
   ProjectUpdateResponse,
@@ -68,26 +66,6 @@ export async function updatePresentation(
 }
 
 /**
- * 프로젝트 생성 (POST)
- *
- * @param data - 생성할 프로젝트 데이터
- * @returns CreatePresentationSuccess - 생성된 프로젝트 정보
- */
-export async function createPresentation(
-  data: CreatePresentationRequest,
-): Promise<CreatePresentationSuccess> {
-  const response = await apiClient.post<ApiResponse<CreatePresentationSuccess>>(
-    `/presentations`,
-    data,
-  );
-
-  if (response.data.resultType === 'SUCCESS') {
-    return response.data.success;
-  }
-  throw new Error(response.data.error.reason);
-}
-
-/**
  * 프로젝트 삭제 (DELETE)
  *
  * @param projectId
@@ -108,7 +86,7 @@ export async function deletePresentation(projectId: string): Promise<void> {
  */
 export async function getConversionStatus(projectId: string): Promise<ConversionStatusResponse> {
   const response = await apiClient.get<ApiResponse<ConversionStatusResponse>>(
-    `/presentations/${projectId}/conversion-status`,
+    `/presentations/${projectId}/status`,
   );
 
   if (response.data.resultType === 'SUCCESS') {

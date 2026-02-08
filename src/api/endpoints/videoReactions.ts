@@ -1,43 +1,34 @@
-import { apiClient } from '@/api';
+/**
+ * @file videoReactions.ts
+ * @description 영상 리액션 관련 API 엔드포인트
+ */
+import { apiClient } from '@/api/client';
+import type {
+  ToggleVideoReactionDto,
+  ToggleVideoReactionResponseDto,
+} from '@/api/dto/reactions.dto';
 import type { ApiResponse } from '@/types/api';
-import type { ReactionType } from '@/types/script';
+
+export type { ToggleVideoReactionDto as ToggleVideoReactionRequest };
 
 /**
- * 비디오 리액션 토글 요청
- * 서버 스펙: POST /videos/{videoId}/reactions
- */
-export interface ToggleVideoReactionRequest {
-  emojiType: ReactionType;
-  timestampMs: number; // 밀리초 단위
-}
-
-/**
- * 비디오 리액션 토글 응답
- */
-export interface ToggleVideoReactionResponse {
-  reactionId: string;
-  videoId: number;
-  active: boolean;
-}
-
-/**
- * 비디오 리액션 토글 (생성/취소)
+ * 영상 리액션 토글
  *
- * @param videoId - 비디오 ID
- * @param data - 리액션 타입 및 타임스탬프
- * @returns 리액션 토글 결과
+ * @param videoId - 영상 ID
+ * @param data - 리액션 데이터 (type + timestamp)
+ * @returns { active: boolean } - 토글 후 활성 상태
  */
 export async function toggleVideoReaction(
-  videoId: number,
-  data: ToggleVideoReactionRequest,
-): Promise<ToggleVideoReactionResponse> {
-  const response = await apiClient.post<ApiResponse<ToggleVideoReactionResponse>>(
+  videoId: string,
+  data: ToggleVideoReactionDto,
+): Promise<ToggleVideoReactionResponseDto> {
+  const { data: response } = await apiClient.post<ApiResponse<ToggleVideoReactionResponseDto>>(
     `/videos/${videoId}/reactions`,
     data,
   );
 
-  if (response.data.resultType === 'SUCCESS') {
-    return response.data.success;
+  if (response.resultType === 'SUCCESS') {
+    return response.success;
   }
-  throw new Error(response.data.error.reason);
+  throw new Error(response.error.reason);
 }

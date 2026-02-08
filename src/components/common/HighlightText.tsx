@@ -1,3 +1,7 @@
+/**
+ * @file HighlightText.tsx
+ * @description 검색어 일치 부분을 하이라이트 처리하는 텍스트 컴포넌트
+ */
 import { useMemo } from 'react';
 
 type Props = {

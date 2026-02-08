@@ -22,6 +22,7 @@ import {
   TopSlideCard,
 } from '@/components/insight';
 import { createDefaultReactions } from '@/constants/reaction';
+import { useSlideReactionSummaries } from '@/hooks/queries/useReaction.ts';
 import { useSlides } from '@/hooks/queries/useSlides';
 import {
   useProjectAnalyticsSummary,
@@ -31,7 +32,6 @@ import {
   useVideoAnalytics,
   useVideoRetention,
 } from '@/hooks/useAnalytics';
-import { useSlideReactionSummaries } from '@/hooks/useReactions';
 import type { DropOffSlide, DropOffTime, SummaryStat } from '@/types/insight';
 import type { SlideListItem } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';

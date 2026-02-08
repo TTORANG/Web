@@ -1,11 +1,4 @@
-/**
- * @file videos.ts
- * @description 비디오 관련 API 엔드포인트
- *
- * 레거시: videosApi 객체 (useVideoUpload 등에서 사용)
- * 신규: 개별 함수 export (useVideoComments에서 사용, 컨벤션 준수)
- */
-import { apiClient } from '@/api';
+import { apiClient } from '@/api/client';
 import type {
   ChunkUploadResponseDto,
   CommentResponseDto,
@@ -18,14 +11,14 @@ import type { ApiResponse } from '@/types/api';
 
 /**
  * DTO → Model 변환: CommentResponseDto를 앱 내부용 Model로 변환
- * 주의: 서버 응답에서 댓글은 'id', 답글은 'commentId' 또는 'replyId'를 사용함
+ * 주의: 서버 응답에서 댓글은 'commentId', 답글은 'replyId'를 사용할 수 있음
  */
-function commentDtoToModel(dto: CommentResponseDto & { commentId?: string; replyId?: string }): {
+function commentDtoToModel(dto: CommentResponseDto & { replyId?: string }): {
   serverId: string;
   content: string;
 } {
   return {
-    serverId: dto.id ?? dto.commentId ?? dto.replyId ?? '',
+    serverId: dto.commentId ?? dto.replyId ?? '',
     content: dto.content,
   };
 }
@@ -105,9 +98,10 @@ export async function createCommentReply(
   commentId: number,
   data: { content: string },
 ): Promise<{ serverId: string; content: string }> {
-  const response = await apiClient.post<
-    ApiResponse<CommentResponseDto & { commentId?: string; replyId?: string }>
-  >(`/comments/${commentId}/replies`, data);
+  const response = await apiClient.post<ApiResponse<CommentResponseDto & { replyId?: string }>>(
+    `/comments/${commentId}/replies`,
+    data,
+  );
 
   if (response.data.resultType === 'SUCCESS') {
     // DTO → Model 변환

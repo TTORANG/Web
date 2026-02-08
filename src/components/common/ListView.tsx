@@ -1,3 +1,7 @@
+/**
+ * @file ListView.tsx
+ * @description 제네릭 리스트 뷰 컴포넌트
+ */
 import type { Key, ReactNode } from 'react';
 
 import clsx from 'clsx';

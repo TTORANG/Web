@@ -30,12 +30,12 @@ interface CommentContextValue {
   editDraft: string;
   /** 수정 입력값 변경 */
   setEditDraft: (text: string) => void;
-  /** 수정 모드 토글 */
-  toggleEdit: (id: string, currentContent: string) => void;
-  /** 수정 제출 */
-  submitEdit: (commentId: string) => void;
+  /** 수정 모드 시작 */
+  startEdit: (id: string, currentContent: string) => void;
   /** 수정 취소 */
   cancelEdit: () => void;
+  /** 수정 제출 */
+  submitEdit: (id: string) => void;
   /** 댓글 삭제 */
   deleteComment?: (id: string) => void;
   /** 참조로 이동 (슬라이드/영상) */

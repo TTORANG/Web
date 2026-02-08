@@ -2,11 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import IconArrowLeft from '@/assets/icons/icon-arrow-left.svg?react';
 import IconArrowRight from '@/assets/icons/icon-arrow-right.svg?react';
-import IconStop from '@/assets/icons/icon-stop.svg?react';
-import { Logo, PresentationTitleEditor, SlideImage } from '@/components/common';
+import { Logo, SlideImage } from '@/components/common';
+import { usePresentation } from '@/hooks/queries/usePresentations';
 import { useSlides } from '@/hooks/queries/useSlides';
 
 import { useRecorder } from '../../hooks/useRecorder';
+import StopButton from './StopButton';
 
 interface SlideData {
   page: number;
@@ -18,14 +19,21 @@ interface RecordingSectionProps {
   projectId: string;
   initialStream: MediaStream;
   onFinish: (videoBlob: Blob, durations: { [key: number]: number }) => void;
+  onExitClick?: () => void;
 }
 
-export const RecordingSection = ({ projectId, initialStream, onFinish }: RecordingSectionProps) => {
+export const RecordingSection = ({
+  projectId,
+  initialStream,
+  onFinish,
+  onExitClick,
+}: RecordingSectionProps) => {
   const slideImgRef = useRef<HTMLImageElement | null>(null);
   const logContainerRef = useRef<HTMLDivElement>(null);
 
   const { canvasRef, isRecording, recordedChunks, startRecording, stopRecording } = useRecorder();
 
+  const { data: presentation } = usePresentation(projectId);
   const { data: slidesData } = useSlides(projectId);
   const slidesList = slidesData || [];
   const totalPages = slidesList.length > 0 ? slidesList.length : 1;
@@ -155,13 +163,15 @@ export const RecordingSection = ({ projectId, initialStream, onFinish }: Recordi
   }, [isFinishing, isRecording, stopRecording, recordedChunks, slideProgress, onFinish]);
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-white">
+    <div className="fixed inset-0 z-60 bg-white">
       {/* Header */}
-      <header className="fixed left-0 top-0 z-[10000] flex h-15 w-full items-center justify-between border-b border-gray-400 bg-gray-200 px-18">
+      <header className="fixed left-0 top-0 z-70 flex h-15 w-full items-center justify-between border-b border-gray-200 bg-white px-18">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-6">
-            <Logo />
-            <PresentationTitleEditor readOnly />
+            <Logo onClick={onExitClick} />
+            <span className="hidden md:inline-flex h-7 items-center px-2 text-sm font-semibold text-gray-800">
+              {presentation?.title || '내 발표'}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 animate-pulse rounded-full bg-error" />
@@ -186,14 +196,11 @@ export const RecordingSection = ({ projectId, initialStream, onFinish }: Recordi
               {formatTime(totalSeconds)}
             </span>
           </div>
-          <button
-            onClick={handleFinish}
+          <StopButton
+            label={isFinishing ? '처리중' : '종료'}
             disabled={!isRecording || isFinishing}
-            className="flex items-center gap-1 rounded-full bg-gray-400 py-1.5 pl-3 pr-2 transition-colors hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <span className="text-caption-bold text-black">{isFinishing ? '처리중' : '종료'}</span>
-            {!isFinishing && <IconStop className="h-4 w-4 text-black" />}
-          </button>
+            onClick={handleFinish}
+          />
         </div>
       </header>
 
@@ -251,7 +258,7 @@ export const RecordingSection = ({ projectId, initialStream, onFinish }: Recordi
         </section>
 
         {/* Sidebar */}
-        <aside className="flex w-96 shrink-0 flex-col gap-6 bg-gray-200 px-4 py-6">
+        <aside className="flex w-96 shrink-0 flex-col gap-6 bg-gray-100 px-4 py-6">
           {/* Next Slide Preview */}
           <div className="flex flex-col gap-2">
             <h3 className="text-body-s-bold text-gray-800">다음 슬라이드</h3>

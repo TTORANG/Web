@@ -57,7 +57,8 @@ export function useVideoReactions() {
 
     // 가장 가까운 버킷 (active 상태 기준)
     const closestFeedback = overlappingFeedbacks.reduce((closest, current) => {
-      return Math.abs(current.timestamp - currentTime) < Math.abs(closest.timestamp - currentTime)
+      return Math.abs(current.timestampMs - currentTime) <
+        Math.abs(closest.timestampMs - currentTime)
         ? current
         : closest;
     });

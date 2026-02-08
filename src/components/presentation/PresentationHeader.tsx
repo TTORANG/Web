@@ -1,7 +1,6 @@
 import clsx from 'clsx';
 
 import ArrowDownIcon from '@/assets/icons/icon-arrow-down.svg?react';
-import ArrowUpIcon from '@/assets/icons/icon-arrow-up.svg?react';
 import FilterIcon from '@/assets/icons/icon-filter.svg?react';
 import SearchIcon from '@/assets/icons/icon-search.svg?react';
 import ViewCardIcon from '@/assets/icons/icon-view-card.svg?react';
@@ -40,7 +39,7 @@ export default function PresentationHeader({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       {/* 검색 부분 */}
-      <div className="flex w-full sm:flex-1 sm:min-w-0 sm:max-w-none items-center gap-2 px-4 py-3 border border-gray-200 rounded-2xl bg-white focus-within:outline focus-within:outline-2 focus-within:outline-main">
+      <div className="flex w-full sm:flex-1 sm:min-w-0 sm:max-w-none items-center gap-2 px-4 py-3 rounded-2xl bg-white border-2 border-gray-200 focus-within:border-main transition-colors duration-200">
         <input
           className="w-full bg-transparent text-body-m text-gray-900 placeholder:text-gray-400 focus:outline-none"
           placeholder="검색어를 입력하세요"
@@ -60,7 +59,7 @@ export default function PresentationHeader({
             <button
               type="button"
               className={clsx(
-                'flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold',
+                'flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold transition-colors duration-200',
                 isOpen ? 'text-main' : 'text-gray-800',
               )}
             >
@@ -86,13 +85,18 @@ export default function PresentationHeader({
           trigger={({ isOpen }) => (
             <button
               className={clsx(
-                'flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold',
+                'flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold transition-colors duration-200',
                 isOpen ? 'text-main' : 'text-gray-800',
               )}
               type="button"
             >
               <span>{sortLabel}</span>
-              {isOpen ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />}
+              <ArrowDownIcon
+                className={clsx(
+                  'h-4 w-4 transition-transform duration-300',
+                  isOpen && 'rotate-180',
+                )}
+              />
             </button>
           )}
           position="bottom"
@@ -111,7 +115,7 @@ export default function PresentationHeader({
           <button
             aria-label="카드 보기"
             className={clsx(
-              'rounded-lg p-2 cursor-pointer',
+              'rounded-lg p-2 cursor-pointer transition-colors duration-200',
               viewMode === 'card' ? 'text-main' : 'text-gray-400',
             )}
             type="button"
@@ -122,7 +126,7 @@ export default function PresentationHeader({
           <button
             aria-label="리스트 보기"
             className={clsx(
-              'rounded-lg p-2 cursor-pointer',
+              'rounded-lg p-2 cursor-pointer transition-colors duration-200',
               viewMode === 'list' ? 'text-main' : 'text-gray-400',
             )}
             type="button"

@@ -10,14 +10,14 @@ import { useCallback, useMemo, useState } from 'react';
 import clsx from 'clsx';
 
 import { Popover } from '@/components/common';
-import { useSlideActions, useSlideOpinions } from '@/hooks';
+import { useSlideActions, useSlideComments } from '@/hooks';
 
 import Comment from './Comment';
 import { CommentProvider } from './CommentContext';
 
 export default function CommentPopover() {
-  const opinions = useSlideOpinions();
-  const { deleteOpinion, updateOpinion, addReply } = useSlideActions();
+  const comments = useSlideComments();
+  const { deleteComment, updateComment, addReply } = useSlideActions();
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -44,29 +44,26 @@ export default function CommentPopover() {
     setReplyDraft('');
   }, []);
 
-  const toggleEdit = useCallback((commentId: string, currentContent: string) => {
-    setEditingId((prev) => (prev === commentId ? null : commentId));
+  const startEdit = useCallback((id: string, currentContent: string) => {
+    setEditingId(id);
     setEditDraft(currentContent);
-    // 수정 모드 진입 시 답글 모드 취소
-    setReplyingToId(null);
-    setReplyDraft('');
   }, []);
-
-  const submitEdit = useCallback(
-    (commentId: string) => {
-      if (editDraft.trim()) {
-        updateOpinion(commentId, editDraft);
-      }
-      setEditDraft('');
-      setEditingId(null);
-    },
-    [editDraft, updateOpinion],
-  );
 
   const cancelEdit = useCallback(() => {
     setEditingId(null);
     setEditDraft('');
   }, []);
+
+  const submitEdit = useCallback(
+    (id: string) => {
+      if (editDraft.trim()) {
+        updateComment(id, editDraft.trim());
+      }
+      setEditingId(null);
+      setEditDraft('');
+    },
+    [editDraft, updateComment],
+  );
 
   const contextValue = useMemo(
     () => ({
@@ -76,13 +73,13 @@ export default function CommentPopover() {
       toggleReply,
       submitReply,
       cancelReply,
+      deleteComment,
       editingId,
       editDraft,
       setEditDraft,
-      toggleEdit,
-      submitEdit,
+      startEdit,
       cancelEdit,
-      deleteComment: deleteOpinion,
+      submitEdit,
       goToRef: () => {}, // 슬라이드 페이지에서는 ref 이동 불필요
     }),
     [
@@ -91,12 +88,12 @@ export default function CommentPopover() {
       toggleReply,
       submitReply,
       cancelReply,
+      deleteComment,
       editingId,
       editDraft,
-      toggleEdit,
-      submitEdit,
+      startEdit,
       cancelEdit,
-      deleteOpinion,
+      submitEdit,
     ],
   );
 
@@ -105,7 +102,7 @@ export default function CommentPopover() {
       trigger={({ isOpen }) => (
         <button
           type="button"
-          aria-label={`의견 ${opinions.length}개 보기`}
+          aria-label={`의견 ${comments.length}개 보기`}
           className={clsx(
             'inline-flex h-7 items-center gap-1 rounded px-2',
             'outline-1 -outline-offset-1',
@@ -128,7 +125,7 @@ export default function CommentPopover() {
               isOpen ? 'text-main-variant1' : 'text-gray-600',
             )}
           >
-            {opinions.length}
+            {comments.length}
           </span>
         </button>
       )}
@@ -145,13 +142,8 @@ export default function CommentPopover() {
       {/* 의견 목록 */}
       <CommentProvider value={contextValue}>
         <div className="h-80 overflow-y-auto">
-          {opinions.map((opinion) => (
-            <Comment
-              key={opinion.id}
-              comment={opinion}
-              isIndented={opinion.isReply}
-              rootCommentId={opinion.parentId ?? opinion.id}
-            />
+          {comments.map((comment) => (
+            <Comment key={comment.id} comment={comment} isIndented={comment.isReply} />
           ))}
         </div>
       </CommentProvider>

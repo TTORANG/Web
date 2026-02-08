@@ -1,7 +1,7 @@
 /**
  * 슬라이드 상태 관리 스토어
  *
- * 슬라이드별 대본, 의견, 히스토리, 이모지 반응을 관리합니다.
+ * 슬라이드별 대본, 댓글, 히스토리, 이모지 반응을 관리합니다.
  * 셀렉터 패턴으로 필요한 데이터만 구독할 수 있습니다.
  *
  * @see {@link ../hooks/useSlideSelectors.ts} 커스텀 셀렉터 훅
@@ -28,12 +28,12 @@ interface SlideState {
   initSlide: (slide: SlideListItem) => void;
   updateSlide: (updates: Partial<SlideListItem>) => void;
   updateScript: (script: string) => void;
-  deleteOpinion: (id: string) => void;
-  updateOpinion: (id: string, content: string) => void;
+  deleteComment: (id: string) => void;
+  updateComment: (id: string, content: string) => void;
   addReply: (parentId: string, content: string) => void;
   toggleReaction: (type: ReactionType) => void;
-  addOpinion: (content: string, slideIndex: number) => void;
-  setOpinions: (opinions: Comment[]) => void;
+  addComment: (content: string, slideIndex: number) => void;
+  setComments: (comments: Comment[]) => void;
 }
 
 export const useSlideStore = create<SlideState>()(
@@ -65,33 +65,33 @@ export const useSlideStore = create<SlideState>()(
         );
       },
 
-      deleteOpinion: (id) => {
+      deleteComment: (id) => {
         set(
           (state) => ({
             slide: state.slide
               ? {
                   ...state.slide,
-                  opinions: deleteFromFlat(state.slide.opinions ?? [], id),
+                  comments: deleteFromFlat(state.slide.comments ?? [], id),
                 }
               : null,
           }),
           false,
-          'slide/deleteOpinion',
+          'slide/deleteComment',
         );
       },
 
-      updateOpinion: (id, content) => {
+      updateComment: (id, content) => {
         set(
           (state) => ({
             slide: state.slide
               ? {
                   ...state.slide,
-                  opinions: updateInFlat(state.slide.opinions ?? [], id, content),
+                  comments: updateInFlat(state.slide.comments ?? [], id, content),
                 }
               : null,
           }),
           false,
-          'slide/updateOpinion',
+          'slide/updateComment',
         );
       },
 
@@ -101,9 +101,9 @@ export const useSlideStore = create<SlideState>()(
             if (!state.slide) return state;
 
             // 항상 최상위 부모 댓글에 답글을 달도록 rootParentId를 찾음
-            const rootParentId = findRootParentId(state.slide.opinions ?? [], parentId);
+            const rootParentId = findRootParentId(state.slide.comments ?? [], parentId);
 
-            const { comments } = addReplyToFlat(state.slide.opinions ?? [], rootParentId, {
+            const { comments } = addReplyToFlat(state.slide.comments ?? [], rootParentId, {
               content,
               userId: MOCK_CURRENT_USER.id,
             });
@@ -111,7 +111,7 @@ export const useSlideStore = create<SlideState>()(
             return {
               slide: {
                 ...state.slide,
-                opinions: comments,
+                comments,
               },
             };
           },
@@ -161,7 +161,7 @@ export const useSlideStore = create<SlideState>()(
         );
       },
 
-      addOpinion: (content, slideIndex) => {
+      addComment: (content, slideIndex) => {
         const trimmed = content.trim();
         if (!trimmed) return;
 
@@ -176,22 +176,22 @@ export const useSlideStore = create<SlideState>()(
             slide: state.slide
               ? {
                   ...state.slide,
-                  opinions: [newComment, ...(state.slide.opinions ?? [])],
+                  comments: [newComment, ...(state.slide.comments ?? [])],
                 }
               : null,
           }),
           false,
-          'slide/addOpinion',
+          'slide/addComment',
         );
       },
 
-      setOpinions: (opinions) => {
+      setComments: (comments) => {
         set(
           (state) => ({
-            slide: state.slide ? { ...state.slide, opinions } : null,
+            slide: state.slide ? { ...state.slide, comments } : null,
           }),
           false,
-          'slide/setOpinions',
+          'slide/setComments',
         );
       },
     }),

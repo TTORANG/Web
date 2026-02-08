@@ -22,23 +22,24 @@ const getOrCreateFeedback = (
   feedbacks: VideoTimestampFeedback[],
   currentTime: number,
 ): { target: VideoTimestampFeedback; feedbacks: VideoTimestampFeedback[] } => {
-  const targetFeedback = feedbacks.find(
-    (f) => Math.abs(f.timestamp - currentTime) <= FEEDBACK_WINDOW,
-  );
+  const currentTimeMs = currentTime * 1000;
+  const windowMs = FEEDBACK_WINDOW * 1000;
+
+  const targetFeedback = feedbacks.find((f) => Math.abs(f.timestampMs - currentTimeMs) <= windowMs);
 
   if (targetFeedback) {
     return { target: targetFeedback, feedbacks };
   }
 
   const newFeedback: VideoTimestampFeedback = {
-    timestamp: Math.round(currentTime),
+    timestampMs: Math.round(currentTimeMs),
     comments: [],
     reactions: createDefaultReactions(),
   };
 
   return {
     target: newFeedback,
-    feedbacks: [...feedbacks, newFeedback].sort((a, b) => a.timestamp - b.timestamp),
+    feedbacks: [...feedbacks, newFeedback].sort((a, b) => a.timestampMs - b.timestampMs),
   };
 };
 
@@ -127,7 +128,9 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
           });
 
           const updatedFeedbacks = feedbacks.map((f) =>
-            f.timestamp === targetFeedback.timestamp ? { ...f, reactions: updatedReactions } : f,
+            f.timestampMs === targetFeedback.timestampMs
+              ? { ...f, reactions: updatedReactions }
+              : f,
           );
 
           return {
@@ -161,15 +164,17 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
             refSeconds,
           );
 
-          newComment = createComment({
+          const createdComment = createComment({
             content: finalContent,
             userId: MOCK_CURRENT_USER.id,
             ref,
           });
 
+          newComment = createdComment;
+
           const updatedFeedbacks = feedbacks.map((f) =>
-            f.timestamp === targetFeedback.timestamp
-              ? { ...f, comments: [newComment!, ...f.comments] }
+            f.timestampMs === targetFeedback.timestampMs
+              ? { ...f, comments: [createdComment, ...f.comments] }
               : f,
           );
 
@@ -210,7 +215,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
           newReply = newComment;
 
           const updatedFeedbacks = state.video.feedbacks.map((f) =>
-            f.timestamp === targetFeedback.timestamp ? { ...f, comments: updatedComments } : f,
+            f.timestampMs === targetFeedback.timestampMs ? { ...f, comments: updatedComments } : f,
           );
 
           return {
@@ -238,7 +243,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
           const updatedComments = deleteFromFlat(targetFeedback.comments, commentId);
 
           const updatedFeedbacks = state.video.feedbacks.map((f) =>
-            f.timestamp === targetFeedback.timestamp ? { ...f, comments: updatedComments } : f,
+            f.timestampMs === targetFeedback.timestampMs ? { ...f, comments: updatedComments } : f,
           );
 
           return {
@@ -263,7 +268,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
           const updatedComments = updateInFlat(targetFeedback.comments, commentId, content);
 
           const updatedFeedbacks = state.video.feedbacks.map((f) =>
-            f.timestamp === targetFeedback.timestamp ? { ...f, comments: updatedComments } : f,
+            f.timestampMs === targetFeedback.timestampMs ? { ...f, comments: updatedComments } : f,
           );
 
           return {
@@ -291,7 +296,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
           );
 
           const updatedFeedbacks = state.video.feedbacks.map((f) =>
-            f.timestamp === targetFeedback.timestamp ? { ...f, comments: updatedComments } : f,
+            f.timestampMs === targetFeedback.timestampMs ? { ...f, comments: updatedComments } : f,
           );
 
           return {

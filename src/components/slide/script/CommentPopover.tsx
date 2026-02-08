@@ -12,7 +12,7 @@ import clsx from 'clsx';
 import Comment from '@/components/comment/Comment';
 import { CommentProvider } from '@/components/comment/CommentContext';
 import { Popover, Skeleton } from '@/components/common';
-import { useSlideOpinions } from '@/hooks';
+import { useSlideComments } from '@/hooks';
 import { useComments } from '@/hooks/useComments';
 
 interface CommentPopoverProps {
@@ -20,8 +20,8 @@ interface CommentPopoverProps {
 }
 
 export default function CommentPopover({ isLoading }: CommentPopoverProps) {
-  const opinions = useSlideOpinions();
-  const { comments: treeOpinions, addReply, deleteComment, updateComment } = useComments();
+  const slideComments = useSlideComments();
+  const { comments: treeComments, addReply, deleteComment, updateComment } = useComments();
 
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
@@ -49,29 +49,26 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
     setReplyDraft('');
   }, []);
 
-  const toggleEdit = useCallback((commentId: string, currentContent: string) => {
-    setEditingId((prev) => (prev === commentId ? null : commentId));
+  const startEdit = useCallback((id: string, currentContent: string) => {
+    setEditingId(id);
     setEditDraft(currentContent);
-    // 수정 모드 진입 시 답글 모드 취소
-    setReplyingToId(null);
-    setReplyDraft('');
   }, []);
-
-  const submitEdit = useCallback(
-    (commentId: string) => {
-      if (editDraft.trim()) {
-        updateComment(commentId, editDraft);
-      }
-      setEditDraft('');
-      setEditingId(null);
-    },
-    [editDraft, updateComment],
-  );
 
   const cancelEdit = useCallback(() => {
     setEditingId(null);
     setEditDraft('');
   }, []);
+
+  const submitEdit = useCallback(
+    (id: string) => {
+      if (editDraft.trim()) {
+        updateComment(id, editDraft.trim());
+      }
+      setEditingId(null);
+      setEditDraft('');
+    },
+    [editDraft, updateComment],
+  );
 
   const contextValue = useMemo(
     () => ({
@@ -81,13 +78,13 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
       toggleReply,
       submitReply,
       cancelReply,
+      deleteComment,
       editingId,
       editDraft,
       setEditDraft,
-      toggleEdit,
-      submitEdit,
+      startEdit,
       cancelEdit,
-      deleteComment,
+      submitEdit,
       goToRef: () => {}, // 슬라이드 페이지에서는 ref 이동 불필요
     }),
     [
@@ -96,12 +93,12 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
       toggleReply,
       submitReply,
       cancelReply,
+      deleteComment,
       editingId,
       editDraft,
-      toggleEdit,
-      submitEdit,
+      startEdit,
       cancelEdit,
-      deleteComment,
+      submitEdit,
     ],
   );
 
@@ -110,7 +107,7 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
       trigger={({ isOpen }) => (
         <button
           type="button"
-          aria-label={`의견 ${opinions.length}개 보기`}
+          aria-label={`의견 ${slideComments.length}개 보기`}
           className={clsx(
             'inline-flex h-7 items-center gap-1 rounded px-2',
             'outline-1 -outline-offset-1 focus-visible:outline-2 focus-visible:outline-main',
@@ -136,7 +133,7 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
             {isLoading ? (
               <Skeleton width="100%" height={16} className="rounded" />
             ) : (
-              opinions.length
+              slideComments.length
             )}
           </span>
         </button>
@@ -154,8 +151,8 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
       {/* 의견 목록 */}
       <CommentProvider value={contextValue}>
         <div className="h-80 overflow-y-auto">
-          {treeOpinions.map((opinion) => (
-            <Comment key={opinion.id} comment={opinion} rootCommentId={opinion.id} />
+          {treeComments.map((comment) => (
+            <Comment key={comment.id} comment={comment} />
           ))}
         </div>
       </CommentProvider>

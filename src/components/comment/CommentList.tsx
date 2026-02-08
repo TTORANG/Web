@@ -58,29 +58,26 @@ export default function CommentList({
     setReplyDraft('');
   }, []);
 
-  const toggleEdit = useCallback((commentId: string, currentContent: string) => {
-    setEditingId((prev) => (prev === commentId ? null : commentId));
+  const startEdit = useCallback((id: string, currentContent: string) => {
+    setEditingId(id);
     setEditDraft(currentContent);
-    // 수정 모드 진입 시 답글 모드 취소
-    setReplyingToId(null);
-    setReplyDraft('');
   }, []);
-
-  const submitEdit = useCallback(
-    (commentId: string) => {
-      if (editDraft.trim() && onUpdateComment) {
-        onUpdateComment(commentId, editDraft);
-      }
-      setEditDraft('');
-      setEditingId(null);
-    },
-    [editDraft, onUpdateComment],
-  );
 
   const cancelEdit = useCallback(() => {
     setEditingId(null);
     setEditDraft('');
   }, []);
+
+  const submitEdit = useCallback(
+    (id: string) => {
+      if (editDraft.trim() && onUpdateComment) {
+        onUpdateComment(id, editDraft.trim());
+      }
+      setEditingId(null);
+      setEditDraft('');
+    },
+    [editDraft, onUpdateComment],
+  );
 
   const contextValue = useMemo(
     () => ({
@@ -93,9 +90,9 @@ export default function CommentList({
       editingId,
       editDraft,
       setEditDraft,
-      toggleEdit,
-      submitEdit,
+      startEdit,
       cancelEdit,
+      submitEdit,
       deleteComment: onDeleteComment,
       goToRef: onGoToRef,
     }),
@@ -105,12 +102,12 @@ export default function CommentList({
       toggleReply,
       submitReply,
       cancelReply,
+      onDeleteComment,
       editingId,
       editDraft,
-      toggleEdit,
-      submitEdit,
+      startEdit,
       cancelEdit,
-      onDeleteComment,
+      submitEdit,
       onGoToRef,
     ],
   );

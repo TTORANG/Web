@@ -1,3 +1,7 @@
+/**
+ * @file Skeleton.tsx
+ * @description 로딩 스켈레톤 UI 컴포넌트 (Base, Circle, Text)
+ */
 import { type CSSProperties } from 'react';
 
 import clsx from 'clsx';
