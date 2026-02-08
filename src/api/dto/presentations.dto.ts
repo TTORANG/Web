@@ -13,3 +13,14 @@ export interface UpdateProjectResponseDto {
   title: string;
   updatedAt: string;
 }
+
+/**
+ * 프로젝트 목록 조회 요청 DTO
+ */
+export interface GetPresentationsRequestDto {
+  page?: number;
+  limit?: number;
+  search?: string;
+  maxDuration?: number;
+  sort?: string;
+}

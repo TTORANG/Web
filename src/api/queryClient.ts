@@ -68,7 +68,13 @@ export const queryKeys = {
   presentations: {
     all: ['presentations'] as const,
     lists: () => [...queryKeys.presentations.all, 'list'] as const,
-    list: () => [...queryKeys.presentations.lists()] as const,
+    list: (params?: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      maxDuration?: number;
+      sort?: string;
+    }) => [...queryKeys.presentations.lists(), params ?? {}] as const,
     details: () => [...queryKeys.presentations.all, 'detail'] as const,
     detail: (projectId: string) => [...queryKeys.presentations.details(), projectId] as const,
   },

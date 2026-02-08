@@ -28,7 +28,11 @@ export type {
   ToggleVideoReactionResponseDto,
 } from './reactions.dto';
 export type { RestoreScriptRequestDto } from './analytics.dto';
-export type { UpdateProjectDto, UpdateProjectResponseDto } from './presentations.dto';
+export type {
+  GetPresentationsRequestDto,
+  UpdateProjectDto,
+  UpdateProjectResponseDto,
+} from './presentations.dto';
 // export type { UploadFileResponseDto } from './files.dto';
 export type {
   ChunkUploadResponseDto,

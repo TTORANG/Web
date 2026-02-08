@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { queryKeys } from '@/api';
-import type { UpdateProjectDto } from '@/api/dto';
+import type { GetPresentationsRequestDto, UpdateProjectDto } from '@/api/dto';
 import { getPresentations } from '@/api/endpoints/presentations';
 import {
   deletePresentation,
@@ -18,8 +18,18 @@ import { showToast } from '@/utils/toast';
  */
 export function usePresentations() {
   return useQuery({
-    queryKey: queryKeys.presentations.lists(),
-    queryFn: getPresentations,
+    queryKey: queryKeys.presentations.list(),
+    queryFn: () => getPresentations(),
+  });
+}
+
+/**
+ * 프로젝트 목록 조회 (필터/검색/정렬 지원)
+ */
+export function usePresentationsWithFilters(params: GetPresentationsRequestDto) {
+  return useQuery({
+    queryKey: queryKeys.presentations.list(params),
+    queryFn: () => getPresentations(params),
   });
 }
 

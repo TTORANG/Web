@@ -6,7 +6,11 @@
  * 이 함수들은 직접 호출하지 않고, hooks/queries에서 사용합니다.
  */
 import { apiClient } from '@/api/client';
-import type { UpdateProjectDto, UpdateProjectResponseDto } from '@/api/dto';
+import type {
+  GetPresentationsRequestDto,
+  UpdateProjectDto,
+  UpdateProjectResponseDto,
+} from '@/api/dto';
 import type { ApiResponse, ConversionStatusResponse } from '@/types/api';
 import type { Presentation, PresentationListResponse } from '@/types/presentation';
 
@@ -15,11 +19,15 @@ import type { Presentation, PresentationListResponse } from '@/types/presentatio
  *
  * @returns Presentation[]
  */
-export async function getPresentations(): Promise<Presentation[]> {
-  const response = await apiClient.get<ApiResponse<PresentationListResponse>>(`/presentations`);
+export async function getPresentations(
+  params?: GetPresentationsRequestDto,
+): Promise<PresentationListResponse> {
+  const response = await apiClient.get<ApiResponse<PresentationListResponse>>(`/presentations`, {
+    params,
+  });
 
   if (response.data.resultType === 'SUCCESS') {
-    return response.data.success.presentations;
+    return response.data.success;
   }
   throw new Error(response.data.error.reason);
 }

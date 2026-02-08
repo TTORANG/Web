@@ -209,10 +209,14 @@ const projectHandlers = [
     const limit = Number(url.searchParams.get('limit') ?? '20');
     const search = url.searchParams.get('search') ?? '';
     const sort = url.searchParams.get('sort') ?? 'latest';
+    const maxDuration = Number(url.searchParams.get('maxDuration') ?? '0');
 
     let filtered = [...presentations];
     if (search.length >= 2) {
       filtered = filtered.filter((p) => p.title.includes(search));
+    }
+    if (Number.isFinite(maxDuration) && maxDuration > 0) {
+      filtered = filtered.filter((p) => p.durationSeconds <= maxDuration);
     }
 
     if (sort === 'latest') filtered.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
