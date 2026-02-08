@@ -25,9 +25,9 @@ export function usePresentationDeletion(projectId: string) {
 
   const confirmDelete = () => {
     mutate(projectId, {
-      onSuccess: () => {
+      onSuccess: (data) => {
         closeDeleteModal();
-        showToast.success('삭제 완료', '발표가 삭제되었습니다.');
+        showToast.success('삭제 완료', data.message);
       },
     });
   };

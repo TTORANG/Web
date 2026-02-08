@@ -24,3 +24,10 @@ export interface GetPresentationsRequestDto {
   maxDuration?: number;
   sort?: string;
 }
+
+/**
+ * 프로젝트 삭제 응답 DTO
+ */
+export interface DeleteProjectResponseDto {
+  message: string;
+}

@@ -7,6 +7,7 @@
  */
 import { apiClient } from '@/api/client';
 import type {
+  DeleteProjectResponseDto,
   GetPresentationsRequestDto,
   UpdateProjectDto,
   UpdateProjectResponseDto,
@@ -74,12 +75,15 @@ export async function updatePresentation(
  *
  * @param projectId
  */
-export async function deletePresentation(projectId: string): Promise<void> {
-  const response = await apiClient.delete<ApiResponse<null>>(`/presentations/${projectId}`);
+export async function deletePresentation(projectId: string): Promise<DeleteProjectResponseDto> {
+  const response = await apiClient.delete<ApiResponse<DeleteProjectResponseDto>>(
+    `/presentations/${projectId}`,
+  );
 
-  if (response.data.resultType === 'FAILURE') {
-    throw new Error(response.data.error.reason);
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
   }
+  throw new Error(response.data.error.reason);
 }
 
 /**

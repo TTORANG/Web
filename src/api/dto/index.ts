@@ -29,6 +29,7 @@ export type {
 } from './reactions.dto';
 export type { RestoreScriptRequestDto } from './analytics.dto';
 export type {
+  DeleteProjectResponseDto,
   GetPresentationsRequestDto,
   UpdateProjectDto,
   UpdateProjectResponseDto,

@@ -85,8 +85,9 @@ export function useDeletePresentation() {
     mutationFn: (projectId: string) => deletePresentation(projectId),
     onSuccess: (_, projectId) => {
       // 1) 목록 캐시에서 삭제된 프로젝트를 제거하여 즉시 UI에 반영합니다.
-      queryClient.setQueryData<Presentation[]>(queryKeys.presentations.lists(), (oldData) =>
-        oldData?.filter((project) => project.projectId !== projectId),
+      queryClient.setQueriesData<Presentation[]>(
+        { queryKey: queryKeys.presentations.lists() },
+        (oldData) => oldData?.filter((project) => project.projectId !== projectId),
       );
       // 상세 정보 캐시는 API 응답으로 받은 데이터로 직접 업데이트합니다.
       void queryClient.removeQueries({ queryKey: queryKeys.presentations.detail(projectId) });
