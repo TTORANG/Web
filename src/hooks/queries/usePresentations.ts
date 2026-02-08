@@ -8,7 +8,7 @@ import {
   getPresentation,
   updatePresentation,
 } from '@/api/endpoints/presentations';
-import type { Presentation } from '@/types/presentation';
+import type { Presentation, PresentationListResponse } from '@/types/presentation';
 import { showToast } from '@/utils/toast';
 
 /**
@@ -85,9 +85,25 @@ export function useDeletePresentation() {
     mutationFn: (projectId: string) => deletePresentation(projectId),
     onSuccess: (_, projectId) => {
       // 1) 목록 캐시에서 삭제된 프로젝트를 제거하여 즉시 UI에 반영합니다.
-      queryClient.setQueriesData<Presentation[]>(
+      queryClient.setQueriesData<PresentationListResponse>(
         { queryKey: queryKeys.presentations.lists() },
-        (oldData) => oldData?.filter((project) => project.projectId !== projectId),
+        (oldData) => {
+          if (!oldData) return oldData;
+          const nextPresentations = oldData.presentations.filter(
+            (project) => project.projectId !== projectId,
+          );
+          if (nextPresentations.length === oldData.presentations.length) return oldData;
+
+          const nextTotal = Math.max(0, oldData.total - 1);
+          const nextTotalPages = Math.max(1, Math.ceil(nextTotal / Math.max(1, oldData.limit)));
+
+          return {
+            ...oldData,
+            presentations: nextPresentations,
+            total: nextTotal,
+            totalPages: nextTotalPages,
+          };
+        },
       );
       // 상세 정보 캐시는 API 응답으로 받은 데이터로 직접 업데이트합니다.
       void queryClient.removeQueries({ queryKey: queryKeys.presentations.detail(projectId) });
