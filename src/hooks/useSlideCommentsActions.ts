@@ -125,10 +125,7 @@ export function useSlideCommentsActions() {
 
   const comments = useMemo(() => {
     if (!flatComments) return EMPTY_COMMENTS;
-    const tree = flatToTree(flatComments);
-    return [...tree].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
+    return flatToTree(flatComments);
   }, [flatComments]);
 
   const addComment = (content: string, currentSlideIndex: number) => {
