@@ -31,6 +31,7 @@ export default function InsightPage() {
             dropOffSlides={m.dropOffSlides}
             dropOffTimes={m.dropOffTimes}
             getThumb={m.getThumb}
+            showVideoDropOff={m.hasVideo}
           />
 
           <RetentionChartCard
