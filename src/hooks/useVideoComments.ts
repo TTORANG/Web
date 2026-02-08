@@ -67,7 +67,7 @@ export function useVideoComments() {
 
       // 서버 ID 저장 (Model에서 serverId 추출)
       if (model && tempComment) {
-        updateCommentServerId(tempComment.id, model.serverId);
+        updateCommentServerId(tempComment.commentId, model.serverId);
       }
     } catch {
       showToast.error('댓글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
@@ -83,7 +83,7 @@ export function useVideoComments() {
     try {
       // parentId로 부모 댓글 찾기 (serverId 필요)
       const allComments = video?.feedbacks.flatMap((f) => f.comments) || [];
-      const parentComment = allComments.find((c) => c.id === parentId);
+      const parentComment = allComments.find((c) => c.commentId === parentId);
 
       if (!parentComment || !parentComment.serverId) {
         showToast.error('답글 등록에 실패했습니다.', '부모 댓글을 찾을 수 없습니다.');
@@ -100,7 +100,7 @@ export function useVideoComments() {
 
       // 서버 ID 저장 (Model에서 serverId 추출)
       if (model && tempReply) {
-        updateCommentServerId(tempReply.id, model.serverId);
+        updateCommentServerId(tempReply.commentId, model.serverId);
       }
     } catch (_error) {
       showToast.error('답글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
@@ -117,7 +117,7 @@ export function useVideoComments() {
 
     // 플랫 구조: 모든 댓글(답글 포함)이 같은 배열에 있음
     const allComments = video.feedbacks.flatMap((f) => f.comments);
-    const targetComment = allComments.find((c) => c.id === commentId);
+    const targetComment = allComments.find((c) => c.commentId === commentId);
 
     if (!targetComment) {
       showToast.error('댓글을 찾을 수 없습니다.');
@@ -154,7 +154,7 @@ export function useVideoComments() {
     if (!video) return;
 
     const allComments = video.feedbacks.flatMap((f) => f.comments);
-    const targetComment = allComments.find((c) => c.id === commentId);
+    const targetComment = allComments.find((c) => c.commentId === commentId);
 
     if (!targetComment) {
       showToast.error('댓글을 찾을 수 없습니다.');
