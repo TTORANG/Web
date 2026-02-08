@@ -4,29 +4,25 @@
  *
  * Optimistic UI 패턴으로 리액션 토글을 처리합니다.
  * 1. Store 즉시 업데이트 (optimistic)
- * 2. API 비동기 호출
+ * 2. API 호출은 debounce 처리 (500ms, 연타 방지)
  * 3. 실패 시 rollback (toggleReaction 재호출)
  *
- * 타임스탬프 잠금 메커니즘:
- * - 첫 토글 시점의 timestampMs를 2초간 잠금
- * - 2초 내 동일 emojiType 토글은 같은 timestampMs 사용 (서버 토글 정합성)
- * - 정지 중에는 currentTime 불변 → 자연스럽게 동일 timestampMs 유지
+ * 타임스탬프 처리:
+ * - 프론트엔드: 정확한 리액션 시간(timestampMs)을 서버에 전송
+ * - 백엔드: timestampMs를 FLOOR 연산으로 segmentation (N ms 단위 그룹화)
+ * - Debounce: 500ms 내 연타 시 마지막 클릭만 API 호출
  */
-import { useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 
 import { REACTION_TYPES } from '@/constants/reaction';
-import { FEEDBACK_WINDOW, REACTION_TOGGLE_WINDOW } from '@/constants/video';
+import { FEEDBACK_WINDOW } from '@/constants/video';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Reaction, ReactionType } from '@/types/script';
 import { showToast } from '@/utils/toast';
 import { getOverlappingFeedbacks } from '@/utils/video';
 
 import { useToggleVideoReaction } from './queries/useVideoReactionQueries';
-
-interface LockedTimestamp {
-  timestampMs: number;
-  expiresAt: number; // Date.now() 기준 만료 시각
-}
+import { useDebouncedCallback } from './useDebounce';
 
 export function useVideoReactions() {
   const video = useVideoFeedbackStore((s) => s.video);
@@ -34,9 +30,6 @@ export function useVideoReactions() {
   const toggleReactionStore = useVideoFeedbackStore((s) => s.toggleReaction);
 
   const { mutate: toggleReactionApi } = useToggleVideoReaction();
-
-  /** emojiType별 잠긴 timestampMs (2초간 동일 값 유지) */
-  const lockedTimestamps = useRef<Map<ReactionType, LockedTimestamp>>(new Map());
 
   const reactions: Reaction[] = useMemo(() => {
     if (!video) {
@@ -83,56 +76,48 @@ export function useVideoReactions() {
   }, [video, currentTime]);
 
   /**
-   * emojiType별 잠긴 timestampMs를 반환합니다.
-   * - 2초 윈도우 내: 기존 잠긴 값 재사용 (서버가 같은 레코드를 찾도록)
-   * - 윈도우 만료 후: 현재 재생 시점의 정밀한 timestampMs로 새로 잠금
+   * API 호출 함수 (debounce 적용됨)
+   * - 500ms 내 같은 리액션 연타 시 마지막 클릭만 서버에 전송
+   * - 정확한 timestampMs를 서버에 전송 (segmentation은 백엔드에서 처리)
    */
-  const getStableTimestampMs = (type: ReactionType): number => {
-    const now = Date.now();
-    const locked = lockedTimestamps.current.get(type);
+  const callToggleReactionApi = useDebouncedCallback(
+    (type: ReactionType, timestampMs: number) => {
+      if (!video) return;
 
-    // 2초 윈도우 내 → 같은 timestampMs 재사용
-    if (locked && now < locked.expiresAt) {
-      return locked.timestampMs;
-    }
-
-    // 새 timestampMs: 현재 재생 시간의 정밀한 밀리초 값 (예: 3.567s → 3567ms)
-    const timestampMs = Math.round(currentTime * 1000);
-
-    lockedTimestamps.current.set(type, {
-      timestampMs,
-      expiresAt: now + REACTION_TOGGLE_WINDOW,
-    });
-
-    return timestampMs;
-  };
+      toggleReactionApi(
+        {
+          videoId: video.videoId,
+          data: {
+            emojiType: type,
+            timestampMs,
+          },
+        },
+        {
+          onSuccess: () => {},
+          onError: () => {
+            showToast.error('반응을 반영하지 못했습니다.');
+            // 롤백: Store 상태 되돌리기
+            toggleReactionStore(type);
+          },
+        },
+      );
+    },
+    500, // 500ms debounce
+  );
 
   const toggleReaction = (type: ReactionType) => {
     if (!video) {
       return;
     }
 
-    const timestampMs = getStableTimestampMs(type);
+    // 정확한 타임스탬프: 현재 재생 시간의 밀리초 값 (예: 3.567s → 3567ms)
+    const timestampMs = Math.round(currentTime * 1000);
 
-    const requestData = {
-      videoId: video.videoId,
-      data: {
-        emojiType: type,
-        timestampMs,
-      },
-    };
-
-    // 1. Store 즉시 업데이트 (optimistic)
+    // 1. Store 즉시 업데이트 (Optimistic UI - 사용자는 즉시 반응 봄)
     toggleReactionStore(type);
 
-    // 2. API 비동기 호출
-    toggleReactionApi(requestData, {
-      onSuccess: () => {},
-      onError: () => {
-        showToast.error('반응을 반영하지 못했습니다.');
-        toggleReactionStore(type);
-      },
-    });
+    // 2. API 호출은 debounce 처리 (500ms 내 연타하면 마지막만 전송)
+    callToggleReactionApi(type, timestampMs);
   };
 
   return { reactions, toggleReaction };
