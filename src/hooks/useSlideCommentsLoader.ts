@@ -4,7 +4,7 @@
  * - slideId 변경 시 댓글 초기화
  * - getSlideComments 호출 결과를 store에 주입
  */
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import type { Comment } from '@/types/comment';
 
@@ -17,7 +17,8 @@ type UseSlideCommentsLoaderOptions = {
 
 export function useSlideCommentsLoader(slideId?: string, options?: UseSlideCommentsLoaderOptions) {
   const { setComments } = useSlideActions();
-  const { data: fetchedComments, isLoading } = useSlideCommentsQuery(slideId);
+  const { data: fetchedComments, isLoading, dataUpdatedAt } = useSlideCommentsQuery(slideId);
+  const lastAppliedRef = useRef(0);
 
   useEffect(() => {
     setComments([]);
@@ -25,9 +26,11 @@ export function useSlideCommentsLoader(slideId?: string, options?: UseSlideComme
 
   useEffect(() => {
     if (!fetchedComments) return;
+    if (dataUpdatedAt && lastAppliedRef.current === dataUpdatedAt) return;
+    if (dataUpdatedAt) lastAppliedRef.current = dataUpdatedAt;
     const mapped = options?.mapComments ? options.mapComments(fetchedComments) : fetchedComments;
     setComments(mapped);
-  }, [fetchedComments, options, options?.mapComments, setComments]);
+  }, [dataUpdatedAt, fetchedComments, options?.mapComments, setComments]);
 
   return { isLoading };
 }
