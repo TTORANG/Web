@@ -67,8 +67,8 @@ interface VideoFeedbackState {
   deleteComment: (commentId: string) => void;
 }
 
-function hasCommentId(flat: Comment[], id: string) {
-  return flat.some((c) => c.id === id);
+function hasCommentId(flat: Comment[], commentId: string) {
+  return flat.some((c) => c.commentId === commentId);
 }
 
 // function getAllComments(feedbacks: any[]): Comment[] {

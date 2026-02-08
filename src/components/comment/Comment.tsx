@@ -56,29 +56,29 @@ function Comment({ comment, isIndented = false }: CommentProps) {
   const authorName = user?.name ?? '알 수 없음';
   const authorProfileImage = user?.profileImage;
 
-  const isActive = replyingToId === comment.id;
-  const isEditing = editingId === comment.id;
+  const isActive = replyingToId === comment.commentId;
+  const isEditing = editingId === comment.commentId;
 
   const handleStartEdit = useCallback(() => {
-    if (editingId === comment.id) return;
-    startEdit(comment.id, comment.content);
-  }, [startEdit, editingId, comment.id, comment.content]);
+    if (editingId === comment.commentId) return;
+    startEdit(comment.commentId, comment.content);
+  }, [startEdit, editingId, comment.commentId, comment.content]);
 
   const handleSubmitEdit = useCallback(() => {
-    submitEdit(comment.id);
-  }, [submitEdit, comment.id]);
+    submitEdit(comment.commentId);
+  }, [submitEdit, comment.commentId]);
 
   const handleToggleReply = useCallback(() => {
-    toggleReply(comment.id);
-  }, [toggleReply, comment.id]);
+    toggleReply(comment.commentId);
+  }, [toggleReply, comment.commentId]);
 
   const handleSubmitReply = useCallback(() => {
-    submitReply(comment.id);
-  }, [submitReply, comment.id]);
+    submitReply(comment.commentId);
+  }, [submitReply, comment.commentId]);
 
   const handleDelete = useCallback(() => {
-    deleteComment?.(comment.id);
-  }, [deleteComment, comment.id]);
+    deleteComment?.(comment.commentId);
+  }, [deleteComment, comment.commentId]);
 
   const handleGoToRef = useCallback(() => {
     if (comment.ref) {
@@ -227,7 +227,7 @@ function Comment({ comment, isIndented = false }: CommentProps) {
       {comment.replies && comment.replies.length > 0 && (
         <div className="pl-8">
           {comment.replies.map((reply) => (
-            <Comment key={reply.id} comment={reply} />
+            <Comment key={reply.commentId} comment={reply} />
           ))}
         </div>
       )}

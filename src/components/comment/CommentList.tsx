@@ -183,7 +183,7 @@ export default function CommentList({
     <CommentProvider value={contextValue}>
       <div className="mt-2 flex-1 space-y-2 overflow-y-auto">
         {comments.map((comment) => (
-          <Comment key={comment.id} comment={comment} />
+          <Comment key={comment.commentId} comment={comment} />
         ))}
         {isFetchingNextPage && (
           <div className="flex justify-center py-3">

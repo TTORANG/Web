@@ -8,7 +8,7 @@ import type { Comment } from '@/types/comment';
 
 function mapDtoToComment(dto: CommentWithUserDto, currentUserId?: string): Comment {
   return {
-    id: dto.commentId,
+    commentId: dto.commentId,
     serverId: dto.commentId,
     userId: dto.user.userId,
     content: dto.content,
@@ -28,7 +28,13 @@ function mapDtoToComment(dto: CommentWithUserDto, currentUserId?: string): Comme
 export function useSlideCommentsQuery(slideId?: string) {
   const userId = useAuthStore((state) => state.user?.id);
 
-  return useInfiniteQuery<GetSlideCommentsResponseDto, Error, Comment[], string[], number>({
+  return useInfiniteQuery<
+    GetSlideCommentsResponseDto,
+    Error,
+    Comment[],
+    ReturnType<typeof queryKeys.comments.list>,
+    number
+  >({
     queryKey: queryKeys.comments.list(slideId ?? ''),
     queryFn: ({ pageParam }) => getSlideComments(slideId!, pageParam),
     initialPageParam: 1,

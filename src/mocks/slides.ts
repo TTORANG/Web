@@ -51,14 +51,14 @@ const p1Slides: SlideDetail[] = [
     `,
     comments: [
       {
-        id: '1',
+        commentId: '1',
         userId: MOCK_USERS[1].id,
         content: '도입부가 인상적이에요!',
         createdAt: timeAgo(2, 'minute'),
         isMine: false,
       },
       {
-        id: '2',
+        commentId: '2',
         userId: MOCK_USERS[0].id,
         content: '감사합니다~',
         createdAt: timeAgo(1, 'minute'),
@@ -67,7 +67,7 @@ const p1Slides: SlideDetail[] = [
         parentId: '1',
       },
       {
-        id: '3',
+        commentId: '3',
         userId: MOCK_USERS[2].id,
         content: '첫 문장을 질문으로 시작하면 어떨까요?',
         createdAt: timeAgo(30, 'second'),
@@ -109,14 +109,14 @@ const p1Slides: SlideDetail[] = [
     script: '',
     comments: [
       {
-        id: '1',
+        commentId: '1',
         userId: MOCK_USERS[1].id,
         content: '문제 정의가 명확하네요',
         createdAt: timeAgo(10, 'minute'),
         isMine: false,
       },
       {
-        id: '2',
+        commentId: '2',
         userId: MOCK_USERS[2].id,
         content: '동의합니다!',
         createdAt: timeAgo(9, 'minute'),
@@ -125,14 +125,14 @@ const p1Slides: SlideDetail[] = [
         parentId: '1',
       },
       {
-        id: '3',
+        commentId: '3',
         userId: MOCK_USERS[3].id,
         content: '추가로 이런 문제도 있어요',
         createdAt: timeAgo(8, 'minute'),
         isMine: false,
       },
       {
-        id: '4',
+        commentId: '4',
         userId: MOCK_USERS[0].id,
         content: '좋은 의견이에요',
         createdAt: timeAgo(7, 'minute'),
@@ -141,28 +141,28 @@ const p1Slides: SlideDetail[] = [
         parentId: '3',
       },
       {
-        id: '5',
+        commentId: '5',
         userId: MOCK_USERS[4].id,
         content: '사용자 인터뷰 결과도 추가하면 좋겠어요',
         createdAt: timeAgo(6, 'minute'),
         isMine: false,
       },
       {
-        id: '6',
+        commentId: '6',
         userId: MOCK_USERS[1].id,
         content: '데이터로 뒷받침하면 더 설득력 있을 것 같아요',
         createdAt: timeAgo(5, 'minute'),
         isMine: false,
       },
       {
-        id: '7',
+        commentId: '7',
         userId: MOCK_USERS[2].id,
         content: '경쟁사 분석도 넣어보는 건 어떨까요?',
         createdAt: timeAgo(4, 'minute'),
         isMine: false,
       },
       {
-        id: '8',
+        commentId: '8',
         userId: MOCK_USERS[0].id,
         content: '네, 반영해볼게요!',
         createdAt: timeAgo(3, 'minute'),
@@ -258,7 +258,7 @@ const p1Slides: SlideDetail[] = [
     script: '그럼 왜 네이버 지도 서비스였을까 궁금하실 텐데요.',
     comments: [
       {
-        id: '1',
+        commentId: '1',
         userId: MOCK_USERS[3].id,
         content: '목표가 명확해요!',
         createdAt: timeAgo(1, 'hour'),
@@ -326,7 +326,7 @@ const p1Slides: SlideDetail[] = [
     `,
     comments: [
       {
-        id: '1',
+        commentId: '1',
         userId: MOCK_USERS[4].id,
         content: '기능 정의가 잘 되어있네요',
         createdAt: timeAgo(2, 'hour'),
@@ -388,14 +388,14 @@ const p1Slides: SlideDetail[] = [
     `,
     comments: [
       {
-        id: '1',
+        commentId: '1',
         userId: MOCK_USERS[0].id,
         content: 'Zustand로 상태 관리하면 좋을 것 같아요',
         createdAt: timeAgo(3, 'hour'),
         isMine: true,
       },
       {
-        id: '2',
+        commentId: '2',
         userId: MOCK_USERS[0].id,
         content: 'Context보다 성능이 좋습니다',
         createdAt: timeAgo(2, 'hour'),
@@ -404,7 +404,7 @@ const p1Slides: SlideDetail[] = [
         parentId: '1',
       },
       {
-        id: '3',
+        commentId: '3',
         userId: MOCK_USERS[0].id,
         content: 'Selector 패턴으로 최적화 가능해요',
         createdAt: timeAgo(1, 'hour'),
@@ -438,21 +438,21 @@ const p1Slides: SlideDetail[] = [
     `,
     comments: [
       {
-        id: '1',
+        commentId: '1',
         userId: MOCK_USERS[1].id,
         content: '기대 효과가 구체적이에요',
         createdAt: timeAgo(4, 'hour'),
         isMine: false,
       },
       {
-        id: '2',
+        commentId: '2',
         userId: MOCK_USERS[2].id,
         content: '수치화된 목표가 있으면 더 좋겠어요',
         createdAt: timeAgo(3, 'hour'),
         isMine: false,
       },
       {
-        id: '3',
+        commentId: '3',
         userId: MOCK_USERS[3].id,
         content: '비즈니스 임팩트도 추가해주세요',
         createdAt: timeAgo(2, 'hour'),

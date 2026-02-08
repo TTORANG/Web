@@ -157,7 +157,7 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
       <CommentProvider value={contextValue}>
         <div className="h-80 overflow-y-auto">
           {treeComments.map((comment) => (
-            <Comment key={comment.id} comment={comment} />
+            <Comment key={comment.commentId} comment={comment} />
           ))}
         </div>
       </CommentProvider>
