@@ -3,6 +3,7 @@
  *
  * - slideId 변경 시 댓글 초기화
  * - getSlideComments 호출 결과를 store에 주입
+ * - 무한 스크롤 핸들러(fetchNextPage, hasNextPage, isFetchingNextPage) 반환
  */
 import { useEffect, useRef } from 'react';
 
@@ -17,7 +18,14 @@ type UseSlideCommentsLoaderOptions = {
 
 export function useSlideCommentsLoader(slideId?: string, options?: UseSlideCommentsLoaderOptions) {
   const { setComments } = useSlideActions();
-  const { data: fetchedComments, isLoading, dataUpdatedAt } = useSlideCommentsQuery(slideId);
+  const {
+    data: fetchedComments,
+    isLoading,
+    dataUpdatedAt,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useSlideCommentsQuery(slideId);
   const lastAppliedRef = useRef(0);
 
   useEffect(() => {
@@ -32,5 +40,5 @@ export function useSlideCommentsLoader(slideId?: string, options?: UseSlideComme
     setComments(mapped);
   }, [dataUpdatedAt, fetchedComments, options?.mapComments, setComments]);
 
-  return { isLoading };
+  return { isLoading, fetchNextPage, hasNextPage, isFetchingNextPage };
 }

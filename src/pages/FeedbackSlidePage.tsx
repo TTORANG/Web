@@ -103,7 +103,12 @@ export default function FeedbackSlidePage() {
     updateScript('');
   }, [slideIndex, currentSlide, initSlide, updateScript]);
 
-  const { isLoading: isCommentsLoading } = useSlideCommentsLoader(currentSlide?.slideId, {
+  const {
+    isLoading: isCommentsLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useSlideCommentsLoader(currentSlide?.slideId, {
     mapComments,
   });
 
@@ -152,6 +157,9 @@ export default function FeedbackSlidePage() {
               onDeleteComment={deleteComment}
               onUpdateComment={updateComment}
               isLoading={isLoading || isCommentsLoading}
+              onLoadMore={fetchNextPage}
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
             />
           </div>
 
@@ -227,6 +235,9 @@ export default function FeedbackSlidePage() {
                 onDeleteComment={deleteComment}
                 onUpdateComment={updateComment}
                 isLoading={isLoading}
+                onLoadMore={fetchNextPage}
+                hasNextPage={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
               />
             </div>
             <div className="shrink-0 px-4 py-3">
