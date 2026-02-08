@@ -40,7 +40,7 @@ export function useFeedbackVideo() {
   const slideChangeTimes = useMemo(() => {
     if (projectSlides.length === 0) return [];
 
-    const videoDuration = MOCK_VIDEO.duration;
+    const videoDuration = MOCK_VIDEO.duration; // MOCK_VIDEOS → MOCK_VIDEO
     const slideCount = projectSlides.length;
 
     return projectSlides.map(
@@ -69,7 +69,7 @@ export function useFeedbackVideo() {
   // 비디오 초기화
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      initVideo(MOCK_VIDEO);
+      initVideo(MOCK_VIDEO); // MOCK_VIDEOS → MOCK_VIDEO
       setIsLoading(false);
     }, 500);
 

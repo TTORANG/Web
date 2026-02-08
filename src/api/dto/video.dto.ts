@@ -10,12 +10,7 @@ export interface VideoDto {
   thumbnailUrl: string;
   createdAt: string;
 }
-/**
- * 내 영상 목록 조회 응답 DTO
- */
-export interface GetMyVideosResponseDto {
-  videos: VideoDto[];
-}
+
 /**
  * 영상 녹화 세션 생성 요청 DTO
  */
@@ -58,4 +53,12 @@ export interface FinishVideoResponseDto {
     slideId: string;
     totalDurationMs: number;
   }>;
+}
+/**
+ * 프로젝트별 영상 목록 조회 응답 DTO
+ * GET /presentations/:projectId/videos
+ */
+export interface GetProjectVideosResponseDto {
+  videos: VideoDto[];
+  total: number;
 }

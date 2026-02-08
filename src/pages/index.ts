@@ -7,3 +7,4 @@ export { default as VideoPage } from './VideoPage';
 export { default as VideoRecordPage } from './VideoRecordPage';
 export { default as FdSlidePage } from './FeedbackSlidePage';
 export { default as FdVideoPage } from './FeedbackVideoPage';
+export { default as VideoListPage } from './VideoListPage';

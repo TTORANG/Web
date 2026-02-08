@@ -20,7 +20,7 @@ import DeletePresentationModal from './DeletePresentationModal';
 
 type Props = (Presentation | VideoPresentation) & {
   highlightQuery?: string;
-  mode?: 'slide' | 'video';
+  mode?: 'slide' | 'videos';
 };
 
 function isVideoPresentation(item: Presentation | VideoPresentation): item is VideoPresentation {

@@ -22,13 +22,8 @@ import DeletePresentationModal from './DeletePresentationModal';
 
 type Props = (Presentation | VideoPresentation) & {
   highlightQuery?: string;
-  mode?: 'slide' | 'video'; // 슬라이드 모드인지 영상 모드인지 구분
+  mode?: 'slide' | 'videos';
 };
-
-// 타입 가드 함수
-function isVideoPresentation(item: Presentation | VideoPresentation): item is VideoPresentation {
-  return 'reactionCount' in item && 'viewCount' in item;
-}
 
 function PresentationCardSkeleton() {
   return (
@@ -56,10 +51,6 @@ function PresentationCardSkeleton() {
               <RecentIcon />
               <div className="h-3 w-6 rounded bg-gray-200 animate-pulse" />
             </div>
-            <div className="flex items-center gap-1">
-              <PageCountIcon />
-              <div className="h-3 w-8 rounded bg-gray-200 animate-pulse" />
-            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -82,18 +73,20 @@ function PresentationCardSkeleton() {
   );
 }
 
-function PresentationCard({
-  projectId,
-  title,
-  highlightQuery = '',
-  updatedAt,
-  durationSeconds,
-  slideCount,
-  feedbackCount,
-  thumbnailUrl,
-  mode = 'slide',
-  ...props
-}: Props) {
+function PresentationCard(props: Props) {
+  const {
+    projectId,
+    title,
+    highlightQuery = '',
+    updatedAt,
+    durationSeconds,
+    slideCount,
+    feedbackCount,
+    thumbnailUrl,
+    mode = 'slide',
+    ...rest
+  } = props;
+
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
     usePresentationDeletion(projectId);
@@ -110,10 +103,10 @@ function PresentationCard({
     cancelRenaming,
   } = useRename({ projectId, initialTitle: title });
 
-  const isVideo = 'reactionCount' in props && 'viewCount' in props;
-  const commentCount = isVideo ? (props as VideoPresentation).commentCount : feedbackCount;
-  const reactionCount = isVideo ? (props as VideoPresentation).reactionCount : 0;
-  const viewCount = isVideo ? (props as VideoPresentation).viewCount : 0;
+  const isVideo = 'reactionCount' in rest && 'viewCount' in rest;
+  const totalCommentCount = isVideo ? (rest as VideoPresentation).commentCount : feedbackCount;
+  const reactionCount = isVideo ? (rest as VideoPresentation).reactionCount : 0;
+  const viewCount = isVideo ? (rest as VideoPresentation).viewCount : 0;
 
   const handleCardClick = () => {
     if (isRenaming) return;
@@ -224,34 +217,29 @@ function PresentationCard({
           </div>
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-x-1 gap-y-2 text-caption text-gray-600">
-            {/* 왼쪽: 소요 시간, 슬라이드 수 */}
+            {/* 왼쪽: 소요 시간 */}
             <div className="flex items-center gap-3 shrink-0">
               <div className="flex items-center gap-1">
-                <RecentIcon />
+                <RecentIcon className="w-4 h-4" />
                 <span>{Math.ceil(durationSeconds / 60)}분</span>
               </div>
-              {mode === 'slide' && (
-                <div className="flex items-center gap-1">
-                  <PageCountIcon />
-                  <span>{slideCount} 슬라이드</span>
-                </div>
-              )}
             </div>
 
             {/* 오른쪽: 댓글, 리액션, 조회수 */}
             <div className="flex items-center gap-2 shrink-0">
               <div className="flex items-center gap-1">
-                <CommentCountIcon />
-                <span>{commentCount ?? 0}</span>
+                <CommentCountIcon className="w-4 h-4" />
+                <span>{totalCommentCount ?? 0}</span>
               </div>
+
               {isVideo && (
                 <>
                   <div className="flex items-center gap-1">
-                    <ReactionCountIcon />
+                    <ReactionCountIcon className="w-4 h-4" />
                     <span>{reactionCount}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <ViewCountIcon />
+                    <ViewCountIcon className="w-4 h-4" />
                     <span>{viewCount}</span>
                   </div>
                 </>

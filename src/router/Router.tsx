@@ -21,6 +21,7 @@ import {
   VideoPage,
   VideoRecordPage,
 } from '@/pages';
+import VideoListPage from '@/pages/VideoListPage';
 
 export const router = createBrowserRouter([
   {
@@ -58,8 +59,8 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="slide" replace /> },
       { path: 'slide', element: <SlidePage /> },
-      { path: 'video', element: <VideoPage /> },
       { path: 'insight', element: <InsightPage /> },
+      { path: 'videos', element: <VideoListPage /> },
     ],
   },
   {

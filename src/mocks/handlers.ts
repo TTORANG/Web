@@ -16,7 +16,7 @@ import {
 import { MOCK_PROJECTS } from './projects';
 import { MOCK_SLIDES } from './slides';
 import { MOCK_USERS } from './users';
-import { MOCK_VIDEO } from './videos';
+import { MOCK_VIDEOS } from './videos';
 
 const envBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 const BASE_URL = envBaseUrl.replace(/\/$/, '');
@@ -26,9 +26,8 @@ let slides: Slide[] = [...MOCK_SLIDES];
 let presentations: Presentation[] = [...MOCK_PROJECTS];
 
 // 영상 피드백 데이터 저장소
-const videoFeedbacks: Map<string, VideoFeedback> = new Map([
-  [MOCK_VIDEO.videoId, structuredClone(MOCK_VIDEO)],
-]);
+const videoFeedbacks: Map<string, VideoFeedback> = new Map();
+// MOCK_VIDEOS.map((video) => [video.id.toString(), structuredClone(video)]),
 
 // 슬라이드별 스크립트 버전 저장소 (slides의 history로 초기화)
 const scriptVersions: Map<
@@ -1174,28 +1173,32 @@ export const handlers = [
   }),
 
   /**
-   * 내 영상 목록 조회
-   * GET /me/videos
+   * 프로젝트별 녹화 영상 목록 조회
+   * GET /presentations/:projectId/videos
    */
-  http.get(`${BASE_URL}/me/videos`, async ({ request }) => {
+  http.get(`${BASE_URL}/presentations/:projectId/videos`, async ({ params, request }) => {
     await delay(200);
-
+    const { projectId } = params;
     const url = new URL(request.url);
     const search = url.searchParams.get('search') || '';
     const filter = url.searchParams.get('filter') || 'all';
     const sort = url.searchParams.get('sort') || 'recent';
 
-    console.log('[MSW] GET /me/videos', { search, filter, sort });
+    console.log(`[MSW] GET /presentations/${projectId}/videos`, { search, filter, sort });
 
+    // localStorage에서 읽기 (기존 코드 그대로)
     const storedData = localStorage.getItem('mockVideos');
     if (!storedData) {
-      return HttpResponse.json(wrapResponse({ videos: [] }));
+      return HttpResponse.json(wrapResponse({ videos: [], total: 0 }));
     }
 
-    const mockVideos: MockVideo[] = JSON.parse(storedData) as MockVideo[];
+    const localVideos: MockVideo[] = JSON.parse(storedData) as MockVideo[];
 
-    // MockVideo를 VideoDto 형식으로 변환
-    let videos: VideoDto[] = mockVideos.map((video) => ({
+    // 해당 프로젝트의 영상만 필터링
+    const projectVideos = localVideos.filter((video) => video.projectId === projectId);
+
+    // VideoDto 형식으로 변환
+    let videos: VideoDto[] = projectVideos.map((video) => ({
       videoId: String(video.id),
       title: video.title,
       status: 'ready' as const,
@@ -1231,6 +1234,6 @@ export const handlers = [
       videos.sort((a, b) => a.title.localeCompare(b.title, 'ko'));
     }
 
-    return HttpResponse.json(wrapResponse({ videos }));
+    return HttpResponse.json(wrapResponse({ videos, total: videos.length }));
   }),
 ];

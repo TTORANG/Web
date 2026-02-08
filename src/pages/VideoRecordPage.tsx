@@ -84,7 +84,7 @@ export default function VideoRecordPage() {
           console.warn('localStorage 저장 실패 (무시):', err);
         }
 
-        navigate(`/${projectId}/video`, {
+        navigate(`/${projectId}/videos`, {
           state: { uploadSuccess: true, videoId },
           replace: true,
         });

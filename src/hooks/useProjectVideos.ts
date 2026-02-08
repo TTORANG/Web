@@ -4,17 +4,18 @@ import { videosApi } from '@/api/endpoints/videos';
 import type { FilterMode, SortMode } from '@/types/home';
 import type { VideoPresentation } from '@/types/video';
 
-export interface UseMyVideosParams {
+export interface UseProjectVideosParams {
+  projectId: string;
   search?: string;
   filter?: FilterMode;
   sort?: SortMode;
 }
 
-export function useMyVideos({ search, filter, sort }: UseMyVideosParams = {}) {
+export function useProjectVideos({ projectId, search, filter, sort }: UseProjectVideosParams) {
   return useQuery({
-    queryKey: ['videos', 'me', search, filter, sort],
+    queryKey: ['videos', projectId, search, filter, sort],
     queryFn: async () => {
-      const response = await videosApi.getMyVideos({
+      const response = await videosApi.getProjectVideos(projectId, {
         search,
         filter: filter && filter !== 'all' ? filter : undefined,
         sort: sort || undefined,
@@ -33,20 +34,20 @@ export function useMyVideos({ search, filter, sort }: UseMyVideosParams = {}) {
 
       return {
         videos: data.videos.map((video) => ({
-          projectId: video.videoId,
+          projectId: video.videoId, // videoId를 projectId로 사용
           title: video.title,
           thumbnailUrl: video.thumbnailUrl,
-          slideCount: 0, // 슬라이드 수는 API에서 제공하지 않으므로 0으로 설정
-          commentCount: video.rootCommentCount + video.replyCount,
-          feedbackCount: video.rootCommentCount + video.replyCount,
-          durationSeconds: video.durationSeconds,
+          slideCount: 0,
+          feedbackCount: (video.rootCommentCount || 0) + (video.replyCount || 0), // null 체크 추가
+          commentCount: (video.rootCommentCount || 0) + (video.replyCount || 0),
+          durationSeconds: video.durationSeconds || 0,
           createdAt: video.createdAt,
           updatedAt: video.createdAt,
-          reactionCount: video.reactionCount,
-          viewCount: video.viewCount,
+          reactionCount: video.reactionCount || 0,
+          viewCount: video.viewCount || 0,
           status: video.status,
         })) as VideoPresentation[],
-        total: data.videos.length,
+        total: data.total,
       };
     },
   });

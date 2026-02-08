@@ -3,3 +3,4 @@ export { DeviceTestSection } from './DeviceTestSection';
 export { VolumeIndicator } from './VolumeIndicator';
 export { RecordingEmptySection } from './RecordingEmptySection';
 export { RecordingSection } from './RecordingSection';
+export { default as VideoListPage } from '../../pages/VideoListPage';
