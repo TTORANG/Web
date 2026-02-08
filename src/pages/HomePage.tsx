@@ -1,13 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import IntroSection from '@/components/home/IntroSection';
 import PresentationsSection from '@/components/home/PresentationsSection';
+import { usePresentations, usePresentationsWithFilters } from '@/hooks/queries/usePresentations';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useHomeFilter, useHomeQuery, useHomeSort } from '@/hooks/useHomeSelectors';
-import { usePresentationList } from '@/hooks/usePresentationList';
 import { useUploadFile } from '@/hooks/useUploadFile';
-import { MOCK_PROJECTS } from '@/mocks/projects';
-import type { Presentation } from '@/types/presentation';
 import { showToast } from '@/utils/toast';
 
 const ACCEPTED_FILES_TYPES = '.pptx,.pdf';
@@ -27,50 +25,50 @@ export default function HomePage() {
       //navigate(`/presentations/${projectId}`);
     }
   };
-  const [isLoading, setIsLoading] = useState(true);
-
   const query = useHomeQuery();
   const sort = useHomeSort();
   const filter = useHomeFilter();
 
   const debouncedQuery = useDebounce(query, 300);
-
-  // TODO :  나중에 mock_projects 말고 서버데이터로 바꿔주기..
-  const allPresentations = MOCK_PROJECTS;
-
-  const filterFn = useMemo<((p: Presentation) => boolean) | undefined>(() => {
+  const maxDuration = useMemo(() => {
     if (filter === null || filter === 'all') return undefined;
-
-    return (p: Presentation) => {
-      switch (filter) {
-        case '3m':
-          return p.durationSeconds <= 180;
-        case '5m':
-          return p.durationSeconds <= 300;
-        default:
-          return true;
-      }
-    };
+    if (filter === '3m') return 180;
+    if (filter === '5m') return 300;
+    return undefined;
   }, [filter]);
 
-  // 1) 필터만 적용한 목록
-  const filteredPresentations = useMemo(() => {
-    return filterFn ? allPresentations.filter(filterFn) : allPresentations;
-  }, [allPresentations, filterFn]);
+  const sortParam = useMemo(() => {
+    if (!sort || sort === 'recent') return 'latest';
+    if (sort === 'commentCount') return 'feedback';
+    if (sort === 'name') return 'name';
+    return undefined;
+  }, [sort]);
 
-  const totalCount = allPresentations.length;
-  const filteredCount = filteredPresentations.length;
+  const params = useMemo(
+    () => ({
+      page: 1,
+      limit: 100,
+      search: debouncedQuery.trim() ? debouncedQuery.trim() : undefined,
+      maxDuration,
+      sort: sortParam,
+    }),
+    [debouncedQuery, maxDuration, sortParam],
+  );
 
-  // 2) 검색/정렬은 '필터된 목록' 기준으로만 적용
-  const presentations = usePresentationList(filteredPresentations, { query: debouncedQuery, sort });
+  const needsBaseTotal = useMemo(
+    () => Boolean(debouncedQuery.trim() || maxDuration),
+    [debouncedQuery, maxDuration],
+  );
+  const { data: baseData, isLoading: isBaseLoading } = usePresentations({
+    enabled: needsBaseTotal,
+  });
+  const { data: filteredData, isLoading: isFilteredLoading } = usePresentationsWithFilters(params);
 
+  const isLoading = (needsBaseTotal ? isBaseLoading : false) || isFilteredLoading;
+  const presentations = filteredData?.presentations ?? [];
+  const totalCount = needsBaseTotal ? (baseData?.total ?? 0) : (filteredData?.total ?? 0);
+  const filteredCount = filteredData?.total ?? 0;
   const isEmpty = !isLoading && totalCount === 0;
-
-  // TODO : 실제 데이터 패칭 훅의 isLoading으로 교체
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <main className="mx-auto min-h-screen max-w-4xl px-6 py-8">

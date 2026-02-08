@@ -16,10 +16,11 @@ import { showToast } from '@/utils/toast';
  *
  * 전체 프로젝트 목록을 가져옵니다.
  */
-export function usePresentations() {
+export function usePresentations(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.presentations.list(),
     queryFn: () => getPresentations(),
+    enabled: options?.enabled ?? true,
   });
 }
 
