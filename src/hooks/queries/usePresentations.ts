@@ -5,7 +5,6 @@
  * @description 프로젝트 조회 훅
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { isAxiosError } from 'axios';
 
 import { queryKeys } from '@/api';
 import type { UpdateProjectDto } from '@/api/dto';
@@ -15,7 +14,6 @@ import {
   getPresentation,
   updatePresentation,
 } from '@/api/endpoints/presentations';
-import { MAX_RETRIES } from '@/api/queryClient';
 import type { Presentation } from '@/types/presentation';
 import { showToast } from '@/utils/toast';
 
@@ -33,12 +31,6 @@ export function usePresentation(projectId: string) {
     queryKey: queryKeys.presentations.detail(projectId),
     queryFn: () => getPresentation(projectId),
     enabled: !!projectId,
-    retry: (failureCount, error) => {
-      if (isAxiosError(error) && error.response?.status === 404) {
-        return false;
-      }
-      return failureCount < MAX_RETRIES;
-    },
   });
 }
 
