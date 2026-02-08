@@ -103,7 +103,7 @@ export async function createVideoComment(
  * @returns Model - serverId와 content
  */
 export async function createCommentReply(
-  commentId: number,
+  commentId: string,
   data: { content: string },
 ): Promise<{ serverId: string; content: string }> {
   const response = await apiClient.post<

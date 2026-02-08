@@ -90,13 +90,11 @@ export function useVideoComments() {
         return;
       }
 
-      // 서버 API 호출 (serverId를 number로 변환)
-      const parentServerIdNum = parseInt(parentComment.serverId, 10);
-      if (isNaN(parentServerIdNum)) {
+      if (parentComment.serverId) {
         showToast.error('답글 등록에 실패했습니다.', '잘못된 댓글 ID입니다.');
         return;
       }
-      const model = await createCommentReply(parentServerIdNum, { content });
+      const model = await createCommentReply(parentComment.serverId, { content });
 
       // 서버 ID 저장 (Model에서 serverId 추출)
       if (model && tempReply) {
