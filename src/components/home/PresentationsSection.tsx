@@ -14,8 +14,8 @@ import PresentationCard from '../presentation/PresentationCard';
 import PresentationHeader from '../presentation/PresentationHeader';
 import PresentationList from '../presentation/PresentationList';
 
-const SKELETON_CARD_COUNT = 9;
-const SKELETON_LIST_COUNT = 6;
+const SKELETON_CARD_COUNT = 3;
+const SKELETON_LIST_COUNT = 3;
 
 type Props = {
   isLoading: boolean;

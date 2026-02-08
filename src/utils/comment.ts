@@ -35,15 +35,15 @@ export function addReplyToFlat(
   comments: Comment[],
   parentId: string,
   input: Omit<CreateCommentInput, 'parentId'>,
-): Comment[] {
+): { comments: Comment[]; newComment: Comment } {
   const newReply = createComment({ ...input, parentId });
 
   const parentIndex = comments.findIndex((c) => c.id === parentId);
-  if (parentIndex === -1) return comments;
+  if (parentIndex === -1) return { comments, newComment: newReply };
 
   const result = [...comments];
   result.splice(parentIndex + 1, 0, newReply);
-  return result;
+  return { comments: result, newComment: newReply };
 }
 
 /**
@@ -78,6 +78,13 @@ export function addReplyToTree(
  */
 export function deleteFromFlat(comments: Comment[], targetId: string): Comment[] {
   return comments.filter((c) => c.id !== targetId && c.parentId !== targetId);
+}
+
+/**
+ * 플랫 배열에서 댓글 수정
+ */
+export function updateInFlat(comments: Comment[], targetId: string, content: string): Comment[] {
+  return comments.map((c) => (c.id === targetId ? { ...c, content: content.trim() } : c));
 }
 
 /**
@@ -148,4 +155,25 @@ export function treeToFlat(comments: Comment[]): Comment[] {
 
   flatten(comments);
   return result;
+}
+
+/**
+ * 플랫 배열에서 최상위 부모 댓글 ID 찾기
+ *
+ * 대댓글의 답글을 클릭하면 최상위 부모에게 답글이 달리도록 하기 위함
+ *
+ * @param comments - 플랫 구조 댓글 배열
+ * @param commentId - 현재 댓글 ID
+ * @returns 최상위 부모 댓글 ID (parentId가 없는 댓글)
+ */
+export function findRootParentId(comments: Comment[], commentId: string): string {
+  const comment = comments.find((c) => c.id === commentId);
+
+  // 댓글을 찾지 못하거나 이미 최상위 댓글이면 자기 자신 반환
+  if (!comment || !comment.parentId) {
+    return commentId;
+  }
+
+  // 재귀적으로 부모의 부모를 찾아감
+  return findRootParentId(comments, comment.parentId);
 }

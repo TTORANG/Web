@@ -57,15 +57,15 @@ export default function FeedbackMobileLayout({
     }`;
 
   return (
-    <div className="flex md:hidden flex-1 flex-col overflow-hidden">
+    <div className="flex md:hidden flex-1 min-h-0 flex-col">
       {/* 미디어 영역 */}
       <div className="shrink-0 w-full bg-gray-400">{mediaSlot}</div>
 
       {/* 콘텐츠 영역 */}
-      <div className="flex-1 min-h-0 flex flex-col bg-gray-100 overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col bg-gray-100">
         <div className="px-5 shrink-0">
           {navigationSlot ? <div className="py-4">{navigationSlot}</div> : <div className="h-4" />}
-          <div className="py-2">{reactionSlot}</div>
+          <div className="relative z-10 py-2">{reactionSlot}</div>
         </div>
 
         {/* 탭 메뉴 */}

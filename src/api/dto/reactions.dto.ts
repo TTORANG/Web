@@ -4,7 +4,29 @@ import type { ReactionType } from '@/types/script';
  * 슬라이드 리액션 토글 요청 DTO
  */
 export interface ToggleSlideReactionDto {
-  type: ReactionType;
+  emojiType: ReactionType;
+}
+
+/**
+ * 슬라이드 리액션 토글 응답 DTO
+ */
+export interface ToggleSlideReactionResponseDto {
+  active: boolean;
+}
+
+/**
+ * 영상 리액션 토글 요청 DTO
+ */
+export interface ToggleVideoReactionDto {
+  emojiType: ReactionType;
+  timestampMs: number;
+}
+
+/**
+ * 영상 리액션 토글 응답 DTO
+ */
+export interface ToggleVideoReactionResponseDto {
+  active: boolean;
 }
 
 /**
@@ -12,13 +34,7 @@ export interface ToggleSlideReactionDto {
  */
 export interface ReadReactionCountDto {
   slideId: string;
-  reactions: {
-    fire: number;
-    good: number;
-    bad: number;
-    sleepy: number;
-    confused: number;
-  };
+  reactions: Record<ReactionType, number>;
 }
 
 /**
@@ -26,12 +42,6 @@ export interface ReadReactionCountDto {
  */
 export interface ReadReactionSummaryDto {
   projectId: string;
-  totalReactions: {
-    fire: number;
-    good: number;
-    bad: number;
-    sleepy: number;
-    confused: number;
-  };
+  totalReactions: Record<ReactionType, number>;
   totalCount: number;
 }

@@ -1,4 +1,4 @@
-import { type FormEvent, useRef, useState } from 'react';
+import { useState } from 'react';
 
 import { useUpdatePresentation } from '@/hooks/queries/usePresentations';
 import { showToast } from '@/utils/toast';
@@ -9,24 +9,22 @@ interface UseRenameOptions {
 }
 
 interface UseRenameReturn {
-  /** 이름 변경 모드 여부 */
-  isRenaming: boolean;
+  /** 이름 변경 모달 열림 여부 */
+  isRenameModalOpen: boolean;
   /** 업데이트 진행 중 여부 */
-  isUpdating: boolean;
+  isPending: boolean;
   /** 현재 표시할 제목 (수정 성공 시 새 제목 반영) */
   displayTitle: string;
   /** 입력 중인 새 제목 */
   newTitle: string;
   /** 새 제목 변경 핸들러 */
   setNewTitle: (title: string) => void;
-  /** 입력 필드 ref */
-  inputRef: React.RefObject<HTMLInputElement | null>;
-  /** 이름 변경 시작 */
-  startRenaming: () => void;
-  /** 폼 제출 핸들러 */
-  handleSubmit: (e: FormEvent) => void;
-  /** 이름 변경 취소 */
-  cancelRenaming: () => void;
+  /** 이름 변경 모달 열기 */
+  openRenameModal: () => void;
+  /** 이름 변경 모달 닫기 */
+  closeRenameModal: () => void;
+  /** 이름 변경 확인 */
+  confirmRename: () => void;
 }
 
 /**
@@ -36,22 +34,24 @@ interface UseRenameReturn {
  * @returns 이름 변경에 필요한 상태와 핸들러
  */
 export function useRename({ projectId, initialTitle }: UseRenameOptions): UseRenameReturn {
-  const { mutate: updatePresentation, isPending: isUpdating } = useUpdatePresentation();
+  const { mutate: updatePresentation, isPending } = useUpdatePresentation();
 
-  const [isRenaming, setIsRenaming] = useState(false);
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState(initialTitle);
   // 로컬에서 성공적으로 변경된 제목을 추적 (즉시 UI 반영용)
   const [confirmedTitle, setConfirmedTitle] = useState(initialTitle);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  const startRenaming = () => {
-    setIsRenaming(true);
+  const openRenameModal = () => {
     setNewTitle(confirmedTitle);
-    setTimeout(() => inputRef.current?.select(), 50);
+    setIsRenameModalOpen(true);
   };
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
+  const closeRenameModal = () => {
+    setIsRenameModalOpen(false);
+    setNewTitle(confirmedTitle);
+  };
+
+  const confirmRename = () => {
     const trimmedTitle = newTitle.trim();
 
     if (!trimmedTitle) {
@@ -60,7 +60,7 @@ export function useRename({ projectId, initialTitle }: UseRenameOptions): UseRen
     }
 
     if (trimmedTitle === confirmedTitle) {
-      setIsRenaming(false);
+      setIsRenameModalOpen(false);
       return;
     }
 
@@ -69,8 +69,8 @@ export function useRename({ projectId, initialTitle }: UseRenameOptions): UseRen
       {
         onSuccess: () => {
           showToast.success('제목이 변경되었습니다');
-          setConfirmedTitle(trimmedTitle); // 로컬 상태 즉시 업데이트
-          setIsRenaming(false);
+          setConfirmedTitle(trimmedTitle);
+          setIsRenameModalOpen(false);
         },
         onError: () => {
           showToast.error('제목 변경에 실패했습니다');
@@ -79,20 +79,14 @@ export function useRename({ projectId, initialTitle }: UseRenameOptions): UseRen
     );
   };
 
-  const cancelRenaming = () => {
-    setIsRenaming(false);
-    setNewTitle(confirmedTitle);
-  };
-
   return {
-    isRenaming,
-    isUpdating,
+    isRenameModalOpen,
+    isPending,
     displayTitle: confirmedTitle,
     newTitle,
     setNewTitle,
-    inputRef,
-    startRenaming,
-    handleSubmit,
-    cancelRenaming,
+    openRenameModal,
+    closeRenameModal,
+    confirmRename,
   };
 }

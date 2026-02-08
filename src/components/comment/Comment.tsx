@@ -11,6 +11,7 @@ import React, { useCallback } from 'react';
 import clsx from 'clsx';
 
 import FileIcon from '@/assets/icons/icon-document.svg?react';
+import EditIcon from '@/assets/icons/icon-edit.svg?react';
 import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
 import { MOCK_USERS } from '@/mocks/users';
@@ -25,6 +26,8 @@ interface CommentProps {
   comment: CommentType;
   /** 답글 들여쓰기 여부 */
   isIndented?: boolean;
+  /** 최상위 부모 댓글 ID (답글의 답글에서도 항상 root로 요청하기 위함) */
+  rootCommentId?: string;
 }
 
 /**
@@ -33,7 +36,9 @@ interface CommentProps {
  * 댓글 내용, 작성자 정보, 답글 버튼, 삭제 버튼을 표시합니다.
  * 대댓글은 재귀적으로 렌더링됩니다.
  */
-function Comment({ comment, isIndented = false }: CommentProps) {
+function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
+  // rootCommentId가 없으면 자기 자신이 최상위 댓글
+  const resolvedRootId = rootCommentId ?? comment.id;
   const {
     replyingToId,
     replyDraft,
@@ -41,23 +46,44 @@ function Comment({ comment, isIndented = false }: CommentProps) {
     toggleReply,
     submitReply,
     cancelReply,
+    editingId,
+    editDraft,
+    setEditDraft,
+    startEdit,
+    cancelEdit,
+    submitEdit,
     deleteComment,
     goToRef,
   } = useCommentContext();
 
-  const user = MOCK_USERS.find((u) => u.id === comment.userId);
+  // 서버가 userId를 숫자로 반환하는 경우 user-{id} 형식으로 변환하여 매칭
+  const normalizedUserId = comment.userId?.startsWith('user-')
+    ? comment.userId
+    : `user-${comment.userId}`;
+  const user = MOCK_USERS.find((u) => u.id === normalizedUserId || u.id === comment.userId);
   const authorName = user?.name ?? '알 수 없음';
   const authorProfileImage = user?.profileImage;
 
   const isActive = replyingToId === comment.id;
+  const isEditing = editingId === comment.id;
+
+  const handleStartEdit = useCallback(() => {
+    if (editingId === comment.id) return;
+    startEdit(comment.id, comment.content);
+  }, [startEdit, editingId, comment.id, comment.content]);
+
+  const handleSubmitEdit = useCallback(() => {
+    submitEdit(comment.id);
+  }, [submitEdit, comment.id]);
 
   const handleToggleReply = useCallback(() => {
     toggleReply(comment.id);
   }, [toggleReply, comment.id]);
 
   const handleSubmitReply = useCallback(() => {
-    submitReply(comment.id);
-  }, [submitReply, comment.id]);
+    // 항상 최상위 부모 댓글 ID로 답글 제출 (서버는 root에만 답글 허용)
+    submitReply(resolvedRootId);
+  }, [submitReply, resolvedRootId]);
 
   const handleDelete = useCallback(() => {
     deleteComment?.(comment.id);
@@ -82,7 +108,7 @@ function Comment({ comment, isIndented = false }: CommentProps) {
         className={clsx(
           'flex gap-3 py-3 pr-4 transition-colors',
           isIndented ? 'pl-15' : 'pl-4',
-          isActive ? 'bg-gray-200' : 'bg-gray-100',
+          isEditing ? 'bg-gray-100' : isActive ? 'bg-gray-200' : 'bg-gray-100',
         )}
       >
         <div className="w-8 shrink-0">
@@ -107,42 +133,74 @@ function Comment({ comment, isIndented = false }: CommentProps) {
                 </span>
               </div>
 
-              {comment.isMine && deleteComment && (
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  aria-label="댓글 삭제"
-                  className="flex items-center gap-1 rounded text-caption-bold text-error active:opacity-80 focus-visible:outline-2 focus-visible:outline-error"
-                >
-                  삭제
-                  <RemoveIcon className="h-4 w-4" aria-hidden="true" />
-                </button>
+              {comment.isMine && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleStartEdit}
+                    aria-label="댓글 수정"
+                    className={clsx(
+                      'flex items-center gap-1 rounded text-caption-bold active:opacity-80 focus-visible:outline-2 focus-visible:outline-gray-400',
+                      isEditing
+                        ? 'text-gray-400'
+                        : 'text-[#FFFFFF] hover:text-[rgba(255,255,255,0.8)]',
+                    )}
+                  >
+                    수정
+                    <EditIcon className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                  {deleteComment && (
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      aria-label="댓글 삭제"
+                      className="flex items-center gap-1 rounded text-caption-bold text-error hover:text-red-400 active:opacity-80 focus-visible:outline-2 focus-visible:outline-error"
+                    >
+                      삭제
+                      <RemoveIcon className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
               )}
             </div>
 
-            <div className="text-body-s text-black">
-              {comment.ref && (
-                <button
-                  type="button"
-                  onClick={handleGoToRef}
-                  className={clsx(
-                    'mr-2 inline-flex items-center align-middle rounded text-body-s-bold hover:underline focus-visible:outline-2 focus-visible:outline-main',
-                    comment.ref.kind === 'slide' ? 'text-main-variant1' : 'text-main',
-                  )}
-                  aria-label={
-                    comment.ref.kind === 'slide' ? `${refLabel}로 이동` : `영상 ${refLabel}로 이동`
-                  }
-                >
-                  {comment.ref.kind === 'slide' && (
-                    <FileIcon className="text-main-variant1" aria-hidden="true" />
-                  )}
-                  {comment.ref.kind === 'slide' ? <>&nbsp;</> : null}
-                  {refLabel}
-                </button>
-              )}
+            {isEditing ? (
+              <CommentInput
+                value={editDraft}
+                onChange={setEditDraft}
+                onSubmit={handleSubmitEdit}
+                onCancel={cancelEdit}
+                submitLabel="저장"
+                autoFocus
+                textareaClassName="text-body-s text-black"
+              />
+            ) : (
+              <div className="text-body-s text-black">
+                {comment.ref && (
+                  <button
+                    type="button"
+                    onClick={handleGoToRef}
+                    className={clsx(
+                      'mr-2 inline-flex items-center align-middle rounded text-body-s-bold hover:underline focus-visible:outline-2 focus-visible:outline-main',
+                      comment.ref.kind === 'slide' ? 'text-main-variant1' : 'text-main',
+                    )}
+                    aria-label={
+                      comment.ref.kind === 'slide'
+                        ? `${refLabel}로 이동`
+                        : `영상 ${refLabel}로 이동`
+                    }
+                  >
+                    {comment.ref.kind === 'slide' && (
+                      <FileIcon className="text-main-variant1" aria-hidden="true" />
+                    )}
+                    {comment.ref.kind === 'slide' ? <>&nbsp;</> : null}
+                    {refLabel}
+                  </button>
+                )}
 
-              <span className="align-middle">{comment.content}</span>
-            </div>
+                <span className="align-middle">{comment.content}</span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center">
@@ -165,7 +223,7 @@ function Comment({ comment, isIndented = false }: CommentProps) {
         </div>
       </div>
 
-      {isActive && (
+      {replyingToId === comment.id && (
         <CommentInput
           value={replyDraft}
           onChange={setReplyDraft}
@@ -177,10 +235,15 @@ function Comment({ comment, isIndented = false }: CommentProps) {
         />
       )}
 
-      {comment.replies && comment.replies.length > 0 && (
-        <div className="pl-8">
-          {comment.replies.map((reply) => (
-            <Comment key={reply.id} comment={reply} />
+      {comment.replies && Array.isArray(comment.replies) && comment.replies.length > 0 && (
+        <div>
+          {comment.replies.map((reply, index) => (
+            <Comment
+              key={reply.id ?? `reply-${comment.id}-${index}`}
+              comment={reply}
+              isIndented
+              rootCommentId={resolvedRootId}
+            />
           ))}
         </div>
       )}

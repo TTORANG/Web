@@ -159,4 +159,15 @@
   [data-sonner-toast][data-type='error'] [data-close-button] {
     color: var(--color-gray-800) !important;
   }
+
+  /* Loading 토스트 */
+  [data-sonner-toast][data-type='loading'] {
+    background-color: var(--color-gray-100) !important;
+    color: var(--color-gray-800) !important;
+    padding: 8px 12px !important;
+  }
+
+  [data-sonner-toast][data-type='loading'] [data-close-button] {
+    color: var(--color-gray-800) !important;
+  }
 }

@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { apiClient } from '@/api';
+import { apiClient } from '@/api/client';
 
 /**
  * React Query 전역 에러 테스트용 컴포넌트

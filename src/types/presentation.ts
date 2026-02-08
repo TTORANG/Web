@@ -5,18 +5,6 @@
  * 각 프레젠테이션은 페이지 수, 발표 시간, 댓글 및 이모지 반응 수, 조회수를 포함합니다.
  */
 
-export interface CreatePresentationRequest {
-  title: string;
-  uploadFileId: string;
-}
-
-export interface CreatePresentationSuccess {
-  message: string;
-  projectId: string;
-  title: string;
-  createdAt: string;
-}
-
 export interface Presentation {
   projectId: string;
   title: string;

@@ -8,12 +8,12 @@
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Skeleton } from '@/components/common';
-import type { Slide } from '@/types/slide';
+import type { SlideListItem } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
 
 interface ScriptSectionProps {
-  slides: Slide[];
+  slides: SlideListItem[];
   slideChangeTimes: number[];
   currentTime: number;
   onSeek?: (time: number) => void;
@@ -134,7 +134,7 @@ export default function ScriptSection({
 
         return (
           <div
-            key={`${slide.id}-${index}`}
+            key={`${slide.slideId}-${index}`}
             ref={(el) => {
               scriptItemsRef.current[index] = el;
             }}

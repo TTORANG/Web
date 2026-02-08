@@ -10,12 +10,14 @@ import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
+import WebSocketDebug from '@/components/common/WebSocketDebug';
 import FeedbackMobileLayout from '@/components/feedback/FeedbackMobileLayout';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
 import ScriptSection from '@/components/feedback/ScriptSection';
 import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
 import { useExitTracker } from '@/hooks/useExitTracker';
 import { useFeedbackVideo } from '@/hooks/useFeedbackVideo';
+import { useFeedbackWebSocket } from '@/hooks/useFeedbackWebSocket';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 
@@ -41,6 +43,7 @@ export default function FeedbackVideoPage() {
     handleGoToTimeRef,
     addReply,
     deleteComment,
+    updateComment,
     toggleReaction,
   } = ctx;
 
@@ -124,6 +127,12 @@ export default function FeedbackVideoPage() {
     };
   }, [isDesktop]);
 
+  // 웹소켓 연결
+  const { isConnected, currentRooms, joinProject, leaveProject, getRooms } = useFeedbackWebSocket({
+    projectId: projectId ?? '',
+    enabled: !!projectId,
+  });
+
   return (
     <div className="flex h-full w-full">
       {/* 데스크톱 뷰 */}
@@ -149,6 +158,7 @@ export default function FeedbackVideoPage() {
               onAddReply={addReply}
               onGoToRef={handleGoToTimeRef}
               onDeleteComment={deleteComment}
+              onUpdateComment={updateComment}
               isLoading={isLoading}
             />
           </div>
@@ -197,6 +207,7 @@ export default function FeedbackVideoPage() {
                 onAddReply={addReply}
                 onGoToRef={handleGoToTimeRef}
                 onDeleteComment={deleteComment}
+                onUpdateComment={updateComment}
               />
             </div>
             <div className="shrink-0 px-4 py-3">
@@ -225,6 +236,16 @@ export default function FeedbackVideoPage() {
           showLayoutToggle={!isDesktop}
         />
       </div>
+
+      {/* WebSocket 디버그 UI (개발 환경에서만) */}
+      <WebSocketDebug
+        isConnected={isConnected}
+        currentRooms={currentRooms}
+        projectId={projectId}
+        onJoinProject={joinProject}
+        onLeaveProject={leaveProject}
+        onGetRooms={getRooms}
+      />
     </div>
   );
 }
