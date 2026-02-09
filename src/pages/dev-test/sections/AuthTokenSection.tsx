@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { sessionApi } from '@/api/endpoints/session';
 import { TextField } from '@/components/common';
 import { useAuthStore } from '@/stores/authStore';
+import { parseJwtPayload } from '@/utils/jwt';
 import { showToast } from '@/utils/toast';
 
 type JwtDecodeResult = { ok: true; payload: unknown } | { ok: false; reason: string };
@@ -12,22 +13,12 @@ const decodeJwtPayload = (token: string | null): JwtDecodeResult => {
     return { ok: false, reason: '토큰 없음' };
   }
 
-  const parts = token.split('.');
-  if (parts.length < 2) {
-    return { ok: false, reason: 'JWT 형식이 아닙니다.' };
-  }
-
-  try {
-    const base64Url = parts[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
-    const binary = window.atob(padded);
-    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
-    const json = new TextDecoder().decode(bytes);
-    return { ok: true, payload: JSON.parse(json) };
-  } catch {
+  const payload = parseJwtPayload<unknown>(token);
+  if (!payload) {
     return { ok: false, reason: 'payload 파싱 실패' };
   }
+
+  return { ok: true, payload };
 };
 
 export function AuthTokenSection() {
