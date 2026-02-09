@@ -1,8 +1,10 @@
 import { useState } from 'react';
 
-import type { FinishVideoResponseDto, StartVideoResponseDto } from '@/api/dto';
+import type { CreateStartVideoResponseDto } from '@/api/dto';
+import type { CreateFinishVideoResponseDto } from '@/api/dto/video.dto';
 import { videosApi } from '@/api/endpoints/videos';
 import type { ApiResponse } from '@/types/api';
+import type { MockVideo } from '@/types/video';
 
 interface UploadProgress {
   uploadedChunks: number;
@@ -54,13 +56,13 @@ export const useVideoUpload = () => {
       });
 
       const startResponse = await videosApi.startVideo({ projectId, title });
-      const startData: ApiResponse<StartVideoResponseDto> = startResponse.data;
+      const startData: ApiResponse<CreateStartVideoResponseDto> = startResponse.data;
 
       if (startData.resultType === 'FAILURE' || !startData.success?.videoId) {
         throw new Error(startData.error?.reason || 'Video ID를 받지 못했습니다.');
       }
 
-      const videoId = startData.success.videoId;
+      const videoId = Number(startData.success.videoId);
       const CHUNK_SIZE = 1024 * 1024; // 1MB
       const totalChunks = Math.ceil(videoBlob.size / CHUNK_SIZE);
       const chunks: Blob[] = [];
@@ -79,7 +81,7 @@ export const useVideoUpload = () => {
       });
 
       for (let i = 0; i < chunks.length; i++) {
-        const uploadResponse = await videosApi.uploadChunk(videoId, i, chunks[i]);
+        const uploadResponse = await videosApi.uploadChunk(videoId.toString(), i, chunks[i]);
 
         if (uploadResponse.data.resultType === 'FAILURE') {
           throw new Error(uploadResponse.data.error?.reason || `청크 ${i} 업로드에 실패했습니다.`);
@@ -103,11 +105,36 @@ export const useVideoUpload = () => {
         currentStep: 'finishing',
       });
 
-      const finishResponse = await videosApi.finishVideo(videoId, { slideLogs });
-      const finishData: ApiResponse<FinishVideoResponseDto> = finishResponse.data;
+      const finishResponse = await videosApi.finishVideo(videoId.toString(), { slideLogs });
+      const finishData: ApiResponse<CreateFinishVideoResponseDto> = finishResponse.data;
 
       if (finishData.resultType === 'FAILURE') {
         throw new Error(finishData.error?.reason || '영상 처리에 실패했습니다.');
+      }
+
+      if (import.meta.env.DEV) {
+        try {
+          const storedData = localStorage.getItem('mockVideos');
+          const mockVideos: MockVideo[] = storedData ? JSON.parse(storedData) : [];
+
+          const newVideo: MockVideo = {
+            id: videoId,
+            projectId: projectId.toString(),
+            title,
+            createdAt: new Date().toISOString(),
+            durationSeconds: Math.round(videoBlob.size / 1024 / 100),
+            slideCount: slideLogs.length,
+            rootCommentCount: 0,
+            replyCount: 0,
+            reactionCount: 0,
+            viewCount: 0,
+          };
+
+          mockVideos.unshift(newVideo);
+          localStorage.setItem('mockVideos', JSON.stringify(mockVideos));
+        } catch (err) {
+          console.warn('Failed to update localStorage:', err);
+        }
       }
 
       setProgress({
@@ -117,7 +144,7 @@ export const useVideoUpload = () => {
         currentStep: 'done',
       });
 
-      return videoId;
+      return videoId.toString();
     } catch (err: unknown) {
       let errorMessage = '업로드 중 오류가 발생했습니다.';
 

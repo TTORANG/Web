@@ -1,15 +1,16 @@
 import { apiClient } from '@/api/client';
+import type { CreateCommentResponseDto, CreateReplyCommentResponseDto } from '@/api/dto';
 import type {
-  ChunkUploadResponseDto,
-  CreateCommentResponseDto,
-  CreateReplyCommentResponseDto,
-  FinishVideoRequestDto,
-  FinishVideoResponseDto,
-  GetVideoDetailResponseDto,
-  GetVideoSlidesResponseDto,
-  StartVideoRequestDto,
-  StartVideoResponseDto,
-} from '@/api/dto';
+  CreateChunkUploadResponseDto,
+  CreateCommentRequestDto,
+  CreateFinishVideoRequestDto,
+  CreateFinishVideoResponseDto,
+  CreateStartVideoRequestDto,
+  CreateStartVideoResponseDto,
+  ReadProjectVideosResponseDto,
+  ReadVideoDetailResponseDto,
+  ReadVideoSlidesResponseDto,
+} from '@/api/dto/video.dto';
 import type { ApiResponse } from '@/types/api';
 
 // ============================================================================
@@ -18,16 +19,16 @@ import type { ApiResponse } from '@/types/api';
 // ============================================================================
 export const videosApi = {
   // POST /videos/start - 영상 녹화 세션 생성
-  startVideo: (data: StartVideoRequestDto) =>
-    apiClient.post<ApiResponse<StartVideoResponseDto>>('/videos/start', data),
+  startVideo: (data: CreateStartVideoRequestDto) =>
+    apiClient.post<ApiResponse<CreateStartVideoResponseDto>>('/videos/start', data),
 
   // POST /videos/{videoId}/chunks/{chunkIndex} - 청크 업로드
   uploadChunk: (videoId: string, chunkIndex: number, file: Blob) => {
     const formData = new FormData();
     formData.append('file', file);
 
-    return apiClient.post<ApiResponse<ChunkUploadResponseDto>>(
-      `/videos/${videoId}/chunks/${chunkIndex}`,
+    return apiClient.post<ApiResponse<CreateChunkUploadResponseDto>>(
+      `/videos/${encodeURIComponent(videoId)}/chunks/${chunkIndex}`,
       formData,
       {
         headers: {
@@ -38,16 +39,45 @@ export const videosApi = {
   },
 
   // POST /videos/{videoId}/finish - 녹화 종료 및 영상 처리 시작
-  finishVideo: (videoId: string, data: FinishVideoRequestDto) =>
-    apiClient.post<ApiResponse<FinishVideoResponseDto>>(`/videos/${videoId}/finish`, data),
+  finishVideo: (videoId: string, data: CreateFinishVideoRequestDto) =>
+    apiClient.post<ApiResponse<CreateFinishVideoResponseDto>>(
+      `/videos/${encodeURIComponent(videoId)}/finish`,
+      data,
+    ),
 
   // GET /videos/{videoId} - 영상 상세 조회
   getVideoDetail: (videoId: string) =>
-    apiClient.get<ApiResponse<GetVideoDetailResponseDto>>(`/videos/${videoId}`),
+    apiClient.get<ApiResponse<ReadVideoDetailResponseDto>>(
+      `/videos/${encodeURIComponent(videoId)}`,
+    ),
 
   // GET /videos/{videoId}/slides - 슬라이드 타임라인 조회
   getVideoSlides: (videoId: string) =>
-    apiClient.get<ApiResponse<GetVideoSlidesResponseDto>>(`/videos/${videoId}/slides`),
+    apiClient.get<ApiResponse<ReadVideoSlidesResponseDto>>(
+      `/videos/${encodeURIComponent(videoId)}/slides`,
+    ),
+
+  /**
+   * GET /presentations/:projectId/videos - 프로젝트별 영상 목록 조회
+   */
+  getProjectVideos: (
+    projectId: string,
+    params?: {
+      search?: string;
+      filter?: string;
+      sort?: string;
+    },
+  ) => {
+    const searchParams = new URLSearchParams();
+    if (params?.search) searchParams.set('search', params.search);
+    if (params?.filter) searchParams.set('filter', params.filter);
+    if (params?.sort) searchParams.set('sort', params.sort);
+
+    const queryString = searchParams.toString();
+    const url = `/presentations/${encodeURIComponent(projectId)}/videos${queryString ? `?${queryString}` : ''}`;
+
+    return apiClient.get<ApiResponse<ReadProjectVideosResponseDto>>(url);
+  },
 };
 
 // ============================================================================
@@ -64,10 +94,10 @@ export const videosApi = {
  */
 export async function createVideoComment(
   videoId: string,
-  data: { content: string; timestampMs?: number },
+  data: CreateCommentRequestDto & { timestampMs?: number },
 ): Promise<{ serverId: string; content: string }> {
   const response = await apiClient.post<ApiResponse<CreateCommentResponseDto>>(
-    `/videos/${videoId}/comments`,
+    `/videos/${encodeURIComponent(videoId)}/comments`,
     data,
   );
 
@@ -89,10 +119,10 @@ export async function createVideoComment(
  */
 export async function createCommentReply(
   commentId: string,
-  data: { content: string },
+  data: CreateCommentRequestDto,
 ): Promise<{ serverId: string; content: string }> {
   const response = await apiClient.post<ApiResponse<CreateReplyCommentResponseDto>>(
-    `/comments/${commentId}/replies`,
+    `/comments/${encodeURIComponent(commentId)}/replies`,
     data,
   );
 
@@ -111,7 +141,9 @@ export async function createCommentReply(
  * @param commentId - 댓글 ID
  */
 export async function deleteVideoComment(commentId: string): Promise<void> {
-  const response = await apiClient.delete<ApiResponse<null>>(`/comments/${commentId}`);
+  const response = await apiClient.delete<ApiResponse<null>>(
+    `/comments/${encodeURIComponent(commentId)}`,
+  );
 
   if (response.data.resultType === 'FAILURE') {
     throw new Error(response.data.error.reason);
