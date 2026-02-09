@@ -10,6 +10,7 @@ import { useVideoComments } from '@/hooks/useVideoComments';
 import { useVideoReactions } from '@/hooks/useVideoReactions';
 import { MOCK_VIDEO } from '@/mocks/videos';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
+import type { SlideListItem } from '@/types';
 import type { Comment } from '@/types/comment';
 import { formatVideoTimestamp } from '@/utils/format';
 
@@ -18,12 +19,6 @@ import { formatVideoTimestamp } from '@/utils/format';
  * DB에서 ready 상태인 9초 영상 (id=26, project_id=136)
  */
 const TEST_VIDEO_ID = '26';
-
-// 슬라이드 타입 정의 추가
-interface ProjectSlide {
-  startTime?: number;
-  // ... 필요한 다른 필드들
-}
 
 export function useFeedbackVideo() {
   // projectId는 라우트에서 추출하지만 현재 테스트 모드에서는 사용하지 않음
@@ -45,7 +40,7 @@ export function useFeedbackVideo() {
   const [commentDraft, setCommentDraft] = useState('');
 
   // TODO: 실제 API로 프로젝트 슬라이드 조회
-  const projectSlides = useMemo<ProjectSlide[]>(() => [], []);
+  const projectSlides = useMemo<SlideListItem[]>(() => [], []);
 
   // TODO: 슬라이드 전환 시간 계산
   const slideChangeTimes = useMemo(() => {

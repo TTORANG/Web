@@ -6,7 +6,6 @@ import { Logo, SlideImage } from '@/components/common';
 import { usePresentation } from '@/hooks/queries/usePresentations';
 import { useScript } from '@/hooks/queries/useScript';
 import { useSlides } from '@/hooks/queries/useSlides';
-import type { SlideDetail } from '@/types/slide';
 
 import { useRecorder } from '../../hooks/useRecorder';
 import StopButton from './StopButton';
