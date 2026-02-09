@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import IconArrowLeft from '@/assets/icons/icon-arrow-left.svg?react';
 import IconArrowRight from '@/assets/icons/icon-arrow-right.svg?react';
@@ -6,7 +6,6 @@ import { Logo, SlideImage } from '@/components/common';
 import { usePresentation } from '@/hooks/queries/usePresentations';
 import { useScript } from '@/hooks/queries/useScript';
 import { useSlides } from '@/hooks/queries/useSlides';
-import type { SlideDetail } from '@/types/slide';
 
 import { useRecorder } from '../../hooks/useRecorder';
 import StopButton from './StopButton';
@@ -37,7 +36,10 @@ export const RecordingSection = ({
 
   const { data: presentation } = usePresentation(projectId);
   const { data: slidesData } = useSlides(projectId);
-  const slidesList = (slidesData || []) as SlideDetail[];
+  const slidesList = useMemo(
+    () => slidesData?.map((slide) => ({ id: slide.slideId, url: slide.imageUrl })) ?? [],
+    [slidesData],
+  );
   const totalPages = slidesList.length > 0 ? slidesList.length : 1;
 
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -54,12 +56,12 @@ export const RecordingSection = ({
   const getSlideImgUrl = useCallback(
     (p: number) => {
       const slide = slidesList[p - 1];
-      return slide ? slide.imageUrl : '';
+      return slide ? slide.url : '';
     },
     [slidesList],
   );
 
-  const currentSlideId = slidesList[currentPage - 1]?.slideId;
+  const currentSlideId = slidesList[currentPage - 1]?.id;
   const { data: scriptData } = useScript(currentSlideId ?? '');
 
   useEffect(() => {
