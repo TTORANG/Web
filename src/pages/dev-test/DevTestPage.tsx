@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 
+import { AuthTokenSection } from './sections/AuthTokenSection';
 import { CommonUITestSection } from './sections/CommonUITestSection';
 import { DropdownTestSection } from './sections/DropdownTestSection';
 import { ErrorTestSection } from './sections/ErrorTestSection';
@@ -23,6 +24,7 @@ export default function DevTestPage() {
         </Link>
       </div>
 
+      <AuthTokenSection />
       <ThemeTestSection />
       <CommonUITestSection />
       <ModalTestSection />

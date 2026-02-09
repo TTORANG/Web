@@ -1,15 +1,9 @@
-/**
- * 댓글 통합 훅
- *
- * TanStack Query(API 호출) + Zustand(Optimistic UI)를 결합합니다.
- * 로컬 store 즉시 업데이트 후 서버 API를 호출하고, 실패 시 롤백합니다.
- */
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import type { CreateCommentDto } from '@/api';
+import type { CreateCommentRequestDto } from '@/api';
 import {
   createReply,
   createSlideComment,
@@ -28,8 +22,11 @@ function useCreateCommentMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (variables: { slideId: string; projectId: string; data: CreateCommentDto }) =>
-      createSlideComment(variables.slideId, variables.data),
+    mutationFn: (variables: {
+      slideId: string;
+      projectId: string;
+      data: CreateCommentRequestDto;
+    }) => createSlideComment(variables.slideId, variables.data),
 
     onSuccess: (_, { slideId, projectId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(slideId) });
@@ -83,7 +80,7 @@ function useDeleteCommentMutation() {
 
   return useMutation({
     mutationFn: (variables: { commentId: string; slideId: string; projectId: string }) =>
-      deleteCommentApi(variables.commentId),
+      deleteCommentApi({ commentId: variables.commentId }),
 
     onSuccess: (_, { slideId, projectId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(slideId) });
@@ -97,7 +94,19 @@ function useDeleteCommentMutation() {
 
 const EMPTY_COMMENTS: Comment[] = [];
 
-export function useComments() {
+/**
+ * 슬라이드 댓글 통합 훅
+ *
+ * TanStack Query(API 호출) + Zustand(Optimistic UI)를 결합합니다.
+ * 로컬 store 즉시 업데이트 후 서버 API를 호출하고, 실패 시 롤백합니다.
+ *
+ * @returns comments - 트리 구조 댓글 목록 (최신순 정렬)
+ * @returns addComment - 댓글 추가 (optimistic)
+ * @returns addReply - 답글 추가 (optimistic)
+ * @returns deleteComment - 댓글 삭제 (optimistic)
+ * @returns updateComment - 댓글 수정 (optimistic)
+ */
+export function useSlideCommentsActions() {
   const { projectId = '' } = useParams<{ projectId: string }>();
   const slideId = useSlideStore((state) => state.slide?.slideId);
   const flatComments = useSlideStore((state) => state.slide?.comments);
@@ -112,14 +121,11 @@ export function useComments() {
   const { mutate: deleteCommentMutate } = useDeleteCommentMutation();
   const { mutate: updateCommentMutate } = useUpdateCommentMutation();
 
-  const findComment = (commentId: string) => flatComments?.find((c) => c.id === commentId);
+  const findComment = (commentId: string) => flatComments?.find((c) => c.commentId === commentId);
 
   const comments = useMemo(() => {
     if (!flatComments) return EMPTY_COMMENTS;
-    const tree = flatToTree(flatComments);
-    return [...tree].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
+    return flatToTree(flatComments);
   }, [flatComments]);
 
   const addComment = (content: string, currentSlideIndex: number) => {

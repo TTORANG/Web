@@ -1,14 +1,3 @@
-/**
- * 프로젝트 목록 필터/정렬 훅
- *
- * 검색, 정렬, 커스텀 필터를 적용한 프로젝트 목록을 반환합니다.
- *
- * @param presentations - 원본 프로젝트 배열
- * @param options.query - 검색어 (제목 기준)
- * @param options.sort - 정렬 모드 (null | 'recent' | 'commentCount' | 'name')
- * @param options.filterFn - 커스텀 필터 함수
- * @returns 필터링/정렬된 프로젝트 배열
- */
 import { useMemo } from 'react';
 
 import type { SortMode } from '@/types/home';
@@ -25,6 +14,17 @@ function normalizeForSearch(value: string) {
   return value.replace(/\s+/g, '').toLowerCase();
 }
 
+/**
+ * 프로젝트 목록 필터/정렬 훅
+ *
+ * 검색, 정렬, 커스텀 필터를 적용한 프로젝트 목록을 반환합니다.
+ *
+ * @param presentations - 원본 프로젝트 배열
+ * @param options.query - 검색어 (제목 기준)
+ * @param options.sort - 정렬 모드 ('recent' | 'commentCount' | 'name')
+ * @param options.filterFn - 커스텀 필터 함수
+ * @returns 필터링/정렬된 프로젝트 배열
+ */
 export function usePresentationList(presentations: Presentation[], options?: Options) {
   return useMemo(() => {
     const query = options?.query ?? '';

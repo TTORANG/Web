@@ -4,6 +4,8 @@
  */
 import { apiClient } from '@/api/client';
 import type {
+  ReadVideoReactionSummaryItemDto,
+  ReadVideoReactionTimelineResponseDto,
   ToggleVideoReactionDto,
   ToggleVideoReactionResponseDto,
 } from '@/api/dto/reactions.dto';
@@ -31,4 +33,48 @@ export async function toggleVideoReaction(
     return response.success;
   }
   throw new Error(response.error.reason);
+}
+
+/**
+ * 영상 리액션 (특정 시점) 조회
+ *
+ * @param videoId - 영상 ID
+ * @param params - timestampMs (필수), windowMs (선택)
+ * @returns 이모지 타입별 집계 배열
+ */
+export async function getVideoReactions(
+  videoId: string,
+  params: { timestampMs: number; windowMs?: number },
+): Promise<ReadVideoReactionSummaryItemDto[]> {
+  const { data } = await apiClient.get<ApiResponse<ReadVideoReactionSummaryItemDto[]>>(
+    `/videos/${videoId}/reactions`,
+    { params },
+  );
+
+  if (data.resultType === 'SUCCESS') {
+    return data.success;
+  }
+  throw new Error(data.error.reason);
+}
+
+/**
+ * 영상 리액션 타임라인 조회
+ *
+ * @param videoId - 영상 ID
+ * @param params - intervalMs (선택)
+ * @returns 타임라인 마커
+ */
+export async function getVideoReactionTimeline(
+  videoId: string,
+  params?: { intervalMs?: number },
+): Promise<ReadVideoReactionTimelineResponseDto> {
+  const { data } = await apiClient.get<ApiResponse<ReadVideoReactionTimelineResponseDto>>(
+    `/videos/${videoId}/reactions/timeline`,
+    { params },
+  );
+
+  if (data.resultType === 'SUCCESS') {
+    return data.success;
+  }
+  throw new Error(data.error.reason);
 }

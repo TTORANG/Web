@@ -1,14 +1,3 @@
-/**
- * 파일 업로드 훅
- *
- * 진행률 추적과 에러 처리를 포함한 파일 업로드 기능을 제공합니다.
- *
- * @returns progress - 업로드 진행률 (0-100)
- * @returns isUploading - 업로드 상태 ('preparing' | 'uploading' | 'finishing' | 'done')
- * @returns error - 에러 메시지
- * @returns uploadFiles - 파일 업로드 함수
- * @returns reset - 상태 초기화 함수
- */
 import { useCallback, useRef, useState } from 'react';
 
 import type { AxiosProgressEvent } from 'axios';
@@ -32,6 +21,18 @@ const initialProgress: UploadProgress = {
   currentStep: 'preparing',
 };
 
+/**
+ * 파일 업로드 훅
+ *
+ * 진행률 추적과 에러 처리를 포함한 파일 업로드 기능을 제공합니다.
+ *
+ * @returns uploadFile - 파일 업로드 함수
+ * @returns cancelUpload - 업로드 취소 함수
+ * @returns resetUpload - 상태 초기화 함수
+ * @returns isUploading - 업로드 진행 중 여부
+ * @returns progress - 업로드 진행 상태 (퍼센트, 단계)
+ * @returns error - 에러 메시지
+ */
 export function useUploadFile() {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState<UploadProgress>(initialProgress);

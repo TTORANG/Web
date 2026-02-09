@@ -68,7 +68,13 @@ export const queryKeys = {
   presentations: {
     all: ['presentations'] as const,
     lists: () => [...queryKeys.presentations.all, 'list'] as const,
-    list: () => [...queryKeys.presentations.lists()] as const,
+    list: (params?: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      maxDuration?: number;
+      sort?: string;
+    }) => [...queryKeys.presentations.lists(), params ?? {}] as const,
     details: () => [...queryKeys.presentations.all, 'detail'] as const,
     detail: (projectId: string) => [...queryKeys.presentations.details(), projectId] as const,
   },
@@ -106,6 +112,13 @@ export const queryKeys = {
     summary: (slideId: string) => [...queryKeys.reactions.summaries(), slideId] as const,
     totals: () => [...queryKeys.reactions.all, 'total'] as const,
     total: (projectId: string) => [...queryKeys.reactions.totals(), projectId] as const,
+    video: {
+      all: (videoId: string) => [...queryKeys.reactions.all, 'video', videoId] as const,
+      window: (videoId: string, timestampMs: number, windowMs = 2000) =>
+        [...queryKeys.reactions.video.all(videoId), 'window', timestampMs, windowMs] as const,
+      timeline: (videoId: string, intervalMs = 5000) =>
+        [...queryKeys.reactions.video.all(videoId), 'timeline', intervalMs] as const,
+    },
   },
 } as const;
 

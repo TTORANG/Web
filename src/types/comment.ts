@@ -1,5 +1,5 @@
 export interface Comment {
-  id: string;
+  commentId: string;
   /** API 의견 ID (피드백 화면에서 prefixed id를 쓰는 경우 원본 ID) */
   serverId?: string;
   /** 의견이 속한 슬라이드 ID (피드백 화면에서 필요) */

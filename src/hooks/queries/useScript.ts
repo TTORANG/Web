@@ -1,7 +1,3 @@
-/**
- * @file useScript.ts
- * @description 대본 관련 React Query 훅
- */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type { RestoreScriptRequestDto, UpdateScriptRequestDto } from '@/api/dto';

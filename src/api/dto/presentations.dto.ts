@@ -1,3 +1,5 @@
+import type { PresentationListResponse } from '@/types/presentation';
+
 /**
  * 새 프로젝트 생성 요청 DTO (POST)
  */
@@ -22,35 +24,25 @@ export interface CreatePresentationResponseDto {
  * - name : 이름순(가나다)
  * - feedback : 피드백(댓글) 많은 순
  */
+// TODO: type/home.ts와 중복 해결?
 export type PresentationSort = 'latest' | 'name' | 'feedback';
 
 /**
  * 프로젝트 목록 조회 및 검색 요청 DTO (GET)
  */
-export interface SearchPresentationListRequestDto {
+export interface GetPresentationListRequestDto {
   page?: number;
   limit?: number;
   search?: string;
-  maxDuraton?: number;
+  maxDuration?: number;
   sort?: PresentationSort;
 }
 
 /**
  * 프로젝트 목록 조회 응답 DTO
  */
-export interface SearchPresentationListResponseDto {
-  presentations: Array<{
-    projectId: string;
-    title: string;
-    thumbnailUrl: string;
-    slideCount: number;
-    reactionCount: number;
-    viewCount: number;
-    feedbackCount: number;
-    durationSeconds: number;
-    createdAt: string;
-    updatedAt: string;
-  }>;
+export interface GetPresentationListResponseDto {
+  presentations: Array<PresentationListResponse>;
   total: number;
   page: number;
   limit: number;
