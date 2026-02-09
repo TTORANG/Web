@@ -1,7 +1,9 @@
 import { useState } from 'react';
 
+import { sessionApi } from '@/api/endpoints/session';
 import { TextField } from '@/components/common';
 import { useAuthStore } from '@/stores/authStore';
+import { parseJwtPayload } from '@/utils/jwt';
 import { showToast } from '@/utils/toast';
 
 type JwtDecodeResult = { ok: true; payload: unknown } | { ok: false; reason: string };
@@ -11,22 +13,12 @@ const decodeJwtPayload = (token: string | null): JwtDecodeResult => {
     return { ok: false, reason: '토큰 없음' };
   }
 
-  const parts = token.split('.');
-  if (parts.length < 2) {
-    return { ok: false, reason: 'JWT 형식이 아닙니다.' };
-  }
-
-  try {
-    const base64Url = parts[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
-    const binary = window.atob(padded);
-    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
-    const json = new TextDecoder().decode(bytes);
-    return { ok: true, payload: JSON.parse(json) };
-  } catch {
+  const payload = parseJwtPayload<unknown>(token);
+  if (!payload) {
     return { ok: false, reason: 'payload 파싱 실패' };
   }
+
+  return { ok: true, payload };
 };
 
 export function AuthTokenSection() {
@@ -37,6 +29,8 @@ export function AuthTokenSection() {
 
   const [nextAccessToken, setNextAccessToken] = useState('');
   const [nextRefreshToken, setNextRefreshToken] = useState('');
+  const [isCreatingAnonymousSession, setIsCreatingAnonymousSession] = useState(false);
+  const [sessionResult, setSessionResult] = useState<string | null>(null);
 
   const accessPayload = decodeJwtPayload(accessToken);
   const refreshPayload = decodeJwtPayload(refreshToken);
@@ -61,6 +55,27 @@ export function AuthTokenSection() {
     showToast.success('토큰을 삭제했습니다.');
   };
 
+  const handleCreateAnonymousSession = async () => {
+    setIsCreatingAnonymousSession(true);
+
+    try {
+      const result = await sessionApi.createAnonymousSession();
+      setSessionResult(JSON.stringify(result, null, 2));
+
+      if (result.resultType === 'SUCCESS') {
+        showToast.success('익명 세션 생성 성공');
+      } else {
+        showToast.error('익명 세션 생성 실패', result.error.reason);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '익명 세션 생성 요청 실패';
+      setSessionResult(errorMessage);
+      showToast.error('익명 세션 생성 요청 실패', errorMessage);
+    } finally {
+      setIsCreatingAnonymousSession(false);
+    }
+  };
+
   return (
     <section className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
       <h2 className="mb-4 text-lg font-bold text-black">🔐 Auth Token Test</h2>
@@ -71,6 +86,7 @@ export function AuthTokenSection() {
           <li>현재 access token / refresh token 상태를 확인합니다.</li>
           <li>access token만 입력해도 저장할 수 있습니다.</li>
           <li>refresh token 미입력 시 기존 값을 유지합니다.</li>
+          <li>익명 세션 생성 API를 직접 호출해서 응답을 확인할 수 있습니다.</li>
         </ul>
       </div>
 
@@ -131,7 +147,21 @@ export function AuthTokenSection() {
         >
           토큰 삭제
         </button>
+        <button
+          onClick={handleCreateAnonymousSession}
+          disabled={isCreatingAnonymousSession}
+          className="rounded-lg bg-gray-800 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-gray-900 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isCreatingAnonymousSession ? '익명 세션 생성 중...' : '익명 세션 생성 API 호출'}
+        </button>
       </div>
+
+      {sessionResult && (
+        <div className="mt-4 rounded-lg border border-gray-200 bg-gray-100 p-4">
+          <p className="text-xs font-semibold text-gray-600">익명 세션 응답</p>
+          <pre className="mt-2 overflow-x-auto text-xs text-black">{sessionResult}</pre>
+        </div>
+      )}
     </section>
   );
 }

@@ -4,6 +4,7 @@
  */
 
 export type {
+  JwtPayloadDto,
   SocialLoginSuccessResponseDto,
   SocialLoginTokensResponseDto,
   SocialLoginUserResponseDto,
@@ -41,14 +42,13 @@ export type {
 } from './presentations.dto';
 // export type { UploadFileResponseDto } from './files.dto';
 export type {
-  ChunkUploadResponseDto,
-  FinishVideoRequestDto,
-  FinishVideoResponseDto,
-  GetProjectVideosResponseDto,
-  GetVideoDetailResponseDto,
-  GetVideoSlidesResponseDto,
-  StartVideoRequestDto,
-  StartVideoResponseDto,
+  CreateStartVideoRequestDto,
+  CreateStartVideoResponseDto,
+  ReadProjectVideosResponseDto,
+  ReadVideoDetailResponseDto,
+  UpdateVideoRequestDto,
+  UpdateVideoResponseDto,
+  DeleteVideoResponseDto,
   VideoDetailDto,
   VideoListItemDto,
   VideoSlideTimelineItemDto,

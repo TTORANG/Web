@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:local": "VITE_API_MOCKING=true vite",
+    "dev:local": " cross-env VITE_API_MOCKING=true vite",
     "build": "tsc -b && vite build",
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
@@ -51,6 +51,7 @@
     "@typescript-eslint/eslint-plugin": "^8.50.1",
     "@typescript-eslint/parser": "^8.50.1",
     "@vitejs/plugin-react-swc": "^4.2.2",
+    "cross-env": "^10.1.0",
     "eslint": "^8",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-check-file": "^2.8.0",

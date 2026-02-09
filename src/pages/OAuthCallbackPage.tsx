@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import type { JwtPayloadDto } from '@/api/dto';
 import { Spinner } from '@/components/common';
 import { useAuthStore } from '@/stores/authStore';
-import type { AuthProvider } from '@/types/auth';
+import { parseJwtPayload } from '@/utils/jwt';
 
 export default function OAuthCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -12,17 +13,11 @@ export default function OAuthCallbackPage() {
   const isProcessing = useRef(false);
 
   useEffect(() => {
-    // 백엔드에서 리다이렉트 시 전달받은 토큰들
     const accessToken = searchParams.get('accessToken');
-    const refreshToken = searchParams.get('refreshToken');
-    const userId = searchParams.get('userId');
-    const userName = searchParams.get('userName');
-    const userEmail = searchParams.get('userEmail');
-    const sessionId = searchParams.get('sessionId');
-    const provider = searchParams.get('provider') as AuthProvider | null;
+    const sessionIdParam = searchParams.get('sessionId');
 
-    // 필수 파라미터가 없으면 홈으로
-    if (!accessToken || !refreshToken || !userId) {
+    // 필수 파라미터가 없으면 팝업 닫기 또는 홈으로
+    if (!accessToken) {
       if (window.opener) {
         window.close();
       } else {
@@ -34,23 +29,34 @@ export default function OAuthCallbackPage() {
     if (isProcessing.current) return;
     isProcessing.current = true;
 
-    // 로그인 처리
+    // JWT 디코딩으로 유저 정보 추출
+    const payload = parseJwtPayload<JwtPayloadDto>(accessToken);
+    const userId = payload?.id ?? '';
+    const userEmail = payload?.email ?? '';
+    const sessionId = sessionIdParam ?? payload?.sessionId ?? '';
+
     login(
       {
         id: userId,
-        email: userEmail || '',
-        name: userName || '',
-        sessionId: sessionId || '',
-        provider: provider || 'google',
+        email: userEmail,
+        name: userEmail.split('@')[0] || userEmail,
+        sessionId,
       },
       accessToken,
-      refreshToken,
     );
 
     closeLoginModal();
 
     // 팝업인 경우 닫기, 아니면 홈으로 이동
     if (window.opener) {
+      window.opener.postMessage(
+        {
+          type: 'oauth:callback',
+          accessToken,
+          sessionId,
+        },
+        window.location.origin,
+      );
       window.close();
     } else {
       navigate('/', { replace: true });

@@ -7,6 +7,7 @@ import type { Reaction } from './script';
  * API 응답 타입: 슬라이드 목록 조회
  */
 export interface SlideListItem {
+  script: string;
   slideId: string;
   projectId: string;
   title: string;
@@ -22,8 +23,6 @@ export interface SlideListItem {
  * 프론트엔드 확장 타입: 슬라이드 상세/편집 화면용
  */
 export interface SlideDetail extends SlideListItem {
-  /** 대본 */
-  script?: string;
   /** 댓글 목록 */
   comments?: Comment[];
   /** 수정 기록 */

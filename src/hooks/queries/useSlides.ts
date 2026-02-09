@@ -1,3 +1,6 @@
+﻿/**
+ * 슬라이드 관련 TanStack Query 훅
+ */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type { UpdateSlideTitleRequestDto } from '@/api/dto';
