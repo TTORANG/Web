@@ -70,7 +70,7 @@ export const useVideoUpload = () => {
       });
 
       for (let i = 0; i < chunks.length; i++) {
-        const uploadResponse = await videosApi.uploadChunk(videoId, i, chunks[i]);
+        const uploadResponse = await videosApi.uploadChunk(videoId.toString(), i, chunks[i]);
 
         if (uploadResponse.data.resultType === 'FAILURE') {
           throw new Error(uploadResponse.data.error?.reason || `청크 ${i} 업로드에 실패했습니다.`);
