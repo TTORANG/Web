@@ -11,6 +11,7 @@ export type DropOffSlide = {
   desc: string;
   percent: number;
   slideIndex: number;
+  count: number;
 };
 
 export type DropOffTime = {
