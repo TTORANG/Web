@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { queryKeys } from '@/api';
-import type { GetPresentationsRequestDto, UpdateProjectRequestDto } from '@/api/dto';
+import type { GetPresentationsRequestDto, UpdatePresentationRequestDto } from '@/api/dto';
 import { getPresentations } from '@/api/endpoints/presentations';
 import {
   deletePresentation,
@@ -55,7 +55,7 @@ export function usePresentation(projectId: string) {
 export function useUpdatePresentation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ projectId, data }: { projectId: string; data: UpdateProjectRequestDto }) =>
+    mutationFn: ({ projectId, data }: { projectId: string; data: UpdatePresentationRequestDto }) =>
       updatePresentation(projectId, data),
 
     onSuccess: (updatePresentation) => {
