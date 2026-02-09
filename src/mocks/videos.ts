@@ -2,15 +2,18 @@ import type {
   VideoDetailDto,
   VideoListItemDto,
   VideoSlideTimelineItemDto,
-  VideoTimelineCommentDto,
   VideoTimelineDto,
-  VideoTimelineReactionDto,
 } from '@/api/dto';
 
 // ============================================================================
 // Mock 영상 목록 데이터
 // ============================================================================
-
+export const MOCK_VIDEO = {
+  videoId: '1',
+  videoUrl: '/p1.webm',
+  title: '테스트 영상',
+  duration: 596,
+};
 export const mockVideoList: VideoListItemDto[] = [
   {
     videoId: '1',

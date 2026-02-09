@@ -181,6 +181,7 @@ function PresentationCard(props: Props) {
               <div className="flex items-center gap-1">
                 <RecentIcon className="w-4 h-4" />
                 <span>{Math.ceil(durationSeconds / 60)}분</span>
+                <span className="ml-1">{slideCount}페이지</span>
               </div>
             </div>
 

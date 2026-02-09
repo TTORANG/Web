@@ -19,6 +19,12 @@ import { formatVideoTimestamp } from '@/utils/format';
  */
 const TEST_VIDEO_ID = '26';
 
+// 슬라이드 타입 정의 추가
+interface ProjectSlide {
+  startTime?: number;
+  // ... 필요한 다른 필드들
+}
+
 export function useFeedbackVideo() {
   // projectId는 라우트에서 추출하지만 현재 테스트 모드에서는 사용하지 않음
   useParams<{ projectId: string }>();
@@ -39,19 +45,20 @@ export function useFeedbackVideo() {
   const [commentDraft, setCommentDraft] = useState('');
 
   // TODO: 실제 API로 프로젝트 슬라이드 조회
-  const projectSlides = useMemo(() => [], []);
+  const projectSlides = useMemo<ProjectSlide[]>(() => [], []);
 
   // TODO: 슬라이드 전환 시간 계산
   const slideChangeTimes = useMemo(() => {
     if (projectSlides.length === 0) return [];
 
-    const videoDuration = MOCK_VIDEO.duration; // MOCK_VIDEOS → MOCK_VIDEO
+    const videoDuration = MOCK_VIDEO.duration;
     const slideCount = projectSlides.length;
 
     return projectSlides.map(
       (slide, i) => slide.startTime ?? Math.floor(i * (videoDuration / slideCount)),
     );
   }, [projectSlides]);
+
   // 타임스탬프 프리픽스 (댓글 입력 시 자동 삽입)
   const timestampPrefix = useMemo(() => `${formatVideoTimestamp(currentTime)} `, [currentTime]);
 

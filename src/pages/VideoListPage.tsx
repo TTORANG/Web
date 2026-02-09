@@ -11,20 +11,6 @@ import type { FilterMode, SortMode, ViewMode } from '@/types/home';
 
 const SKELETON_CARD_COUNT = 6;
 const SKELETON_LIST_COUNT = 4;
-interface Video {
-  id: number;
-  projectId: string;
-  title: string;
-  createdAt: string;
-  durationSeconds: number;
-  slideCount: number;
-  size: number;
-  videoData?: string;
-  videoUrl?: string;
-  thumbnailUrl?: string;
-  status: 'processing' | 'ready' | 'failed';
-  durations?: { [key: number]: number };
-}
 
 export default function VideoListPage() {
   const navigate = useNavigate();

@@ -13,7 +13,6 @@ import type {
   CreateCommentRequestDto,
   CreateFinishVideoRequestDto,
   CreateFinishVideoResponseDto,
-  CreateStartVideoRequestDto,
   CreateStartVideoResponseDto,
   ReadProjectVideosResponseDto,
   ReadVideoDetailResponseDto,
