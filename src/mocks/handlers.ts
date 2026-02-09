@@ -748,7 +748,7 @@ const commentHandlers = [
       content: body.content,
       timestampMs: body.timestampMs,
       userId: MOCK_CURRENT_USER.id,
-      userName: MOCK_CURRENT_USER.name,
+      userName: MOCK_CURRENT_USER.name ?? '사용자',
       createdAt: now,
     };
     const arr = videoComments.get(videoId) ?? [];
