@@ -1,13 +1,18 @@
 ﻿/**
  * 슬라이드 관련 TanStack Query 훅
  */
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type { UpdateSlideTitleRequestDto } from '@/api/dto';
 import { getSlides, updateSlide } from '@/api/endpoints/slides';
 import { queryKeys } from '@/api/queryClient';
 
-/** 슬라이드 목록 조회 */
+/**
+ * 슬라이드 목록 조회
+ *
+ * @param projectId - 프로젝트 ID
+ */
 export function useSlides(projectId: string) {
   return useQuery({
     queryKey: queryKeys.slides.list(projectId),
@@ -20,7 +25,11 @@ export function useSlides(projectId: string) {
   });
 }
 
-/** 슬라이드 수정 */
+/**
+ * 슬라이드 수정 Mutation 훅
+ *
+ * 성공 시 슬라이드 상세/목록 캐시를 무효화합니다.
+ */
 export function useUpdateSlide() {
   const queryClient = useQueryClient();
 

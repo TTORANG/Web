@@ -16,7 +16,7 @@ import { formatVideoTimestamp } from '@/utils/format';
  * 테스트용 하드코딩 비디오 ID
  * DB에서 ready 상태인 9초 영상 (id=26, project_id=136)
  */
-const TEST_VIDEO_ID = 26;
+const TEST_VIDEO_ID = '26';
 
 export function useFeedbackVideo() {
   // projectId는 라우트에서 추출하지만 현재 테스트 모드에서는 사용하지 않음
@@ -72,24 +72,18 @@ export function useFeedbackVideo() {
         if (cancelled) return;
 
         // 서버 응답 구조: { resultType: "SUCCESS", success: { video: {...}, timeline: {...} } }
-        const successData = response.data?.success;
-        const serverVideo = successData?.video ?? successData;
+        if (response.data.resultType !== 'SUCCESS') {
+          throw new Error(response.data.error.reason);
+        }
+        const { video: serverVideo } = response.data.success;
 
-        // 서버 응답에서 비디오 URL 추출 (hlsMasterUrl이 실제 필드명)
-        let videoUrl =
-          serverVideo?.hlsMasterUrl ||
-          serverVideo?.streamFileUrl ||
-          serverVideo?.videoUrl ||
-          serverVideo?.streamUrl ||
-          serverVideo?.url ||
-          serverVideo?.playbackUrl ||
-          '';
+        // 서버 응답에서 비디오 URL 추출
+        let videoUrl = serverVideo.hlsMasterUrl || '';
 
         // 개발 환경에서 CDN CORS 우회를 위해 proxy 사용
         if (videoUrl && import.meta.env.DEV) {
           try {
             const url = new URL(videoUrl);
-            // hostname이 정확히 cdn.ttorang.com인 경우만 프록시 사용
             if (url.hostname === 'cdn.ttorang.com') {
               videoUrl = `/cdn-proxy${url.pathname}${url.search}`;
             }
@@ -101,20 +95,12 @@ export function useFeedbackVideo() {
         const videoData = {
           videoId: TEST_VIDEO_ID,
           videoUrl,
-          title: serverVideo?.title || '테스트 영상',
-          duration: serverVideo?.durationSeconds || serverVideo?.duration || 9,
+          title: serverVideo.title || '테스트 영상',
+          duration: serverVideo.durationSeconds || 9,
           comments: [],
           reactionEvents: [],
           feedbacks: [],
         };
-
-        console.log('[useFeedbackVideo] 서버 비디오 로드:', {
-          videoId: TEST_VIDEO_ID,
-          videoUrl,
-          title: videoData.title,
-          duration: videoData.duration,
-          fullResponse: response.data,
-        });
 
         initVideo(videoData);
       } catch (error) {

@@ -1,12 +1,3 @@
-/**
- * @file useVideoSync.ts
- * @description 비디오 요소와 store 간 동기화를 담당하는 훅
- *
- * - videoRef 관리
- * - duration 상태 관리
- * - timeupdate 이벤트 → store.currentTime 동기화
- * - store.seekTo 요청 → video.currentTime 동기화
- */
 import { useCallback, useEffect, useState } from 'react';
 
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
@@ -29,6 +20,19 @@ interface UseVideoSyncReturn {
   handleTimeUpdate: () => void;
 }
 
+/**
+ * 비디오-스토어 동기화 훅
+ *
+ * 비디오 요소의 timeupdate를 store.currentTime에,
+ * store.seekTo 요청을 video.currentTime에 양방향 동기화합니다.
+ *
+ * @param options.useNativeControls - 네이티브 controls 사용 여부 (기본: false)
+ * @returns setVideoRef - 비디오 요소에 연결할 콜백 ref
+ * @returns videoElement - 비디오 요소 (직접 접근 필요 시)
+ * @returns duration - 비디오 총 길이 (초)
+ * @returns currentTime - 현재 재생 시간
+ * @returns handleTimeUpdate - 네이티브 controls용 onTimeUpdate 핸들러
+ */
 export function useVideoSync(options: UseVideoSyncOptions = {}): UseVideoSyncReturn {
   const { useNativeControls = false } = options;
 

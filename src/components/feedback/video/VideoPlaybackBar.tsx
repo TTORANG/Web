@@ -13,9 +13,45 @@ import playIcon from '@/assets/playbackBar-icons/play-icon.webp';
 import fullscreenIcon from '@/assets/playbackBar-icons/sizeupdown-icon.webp';
 import ProgressBar from '@/components/feedback/ProgressBar';
 import VolumeControl from '@/components/feedback/video/VolumeControl';
+import { useVideoReactionTimeline } from '@/hooks/queries/useVideoReactionQueries';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
+import type { ReactionType } from '@/types/script';
 import type { SlideListItem } from '@/types/slide';
+import type { SegmentHighlight } from '@/types/video';
 import { computeSegmentHighlightsFromFeedbacks } from '@/utils/video';
+
+const DEFAULT_TIMELINE_INTERVAL_MS = 5000;
+const MAX_HIGHLIGHTS = 10;
+
+const buildHighlightsFromTimeline = (
+  timeline: {
+    intervalMs: number;
+    markers: Array<{ timestampMs: number; emojiType: ReactionType; count: number }>;
+  },
+  duration: number,
+  topN: number,
+): SegmentHighlight[] => {
+  const intervalSec = timeline.intervalMs / 1000;
+  const highlights = timeline.markers
+    .map((marker) => {
+      const startTime = marker.timestampMs / 1000;
+      const endTime = Math.min(startTime + intervalSec, duration);
+      return {
+        startTime,
+        endTime,
+        topReactionType: marker.emojiType,
+        count: marker.count,
+        totalCount: marker.count,
+      } as SegmentHighlight;
+    })
+    .filter((item) => item.totalCount > 0);
+
+  return highlights
+    .slice()
+    .sort((a, b) => b.totalCount - a.totalCount)
+    .slice(0, topN)
+    .sort((a, b) => a.startTime - b.startTime);
+};
 
 interface VideoPlaybackBarProps {
   videoElement: HTMLVideoElement | null;
@@ -40,6 +76,7 @@ export default function VideoPlaybackBar({
   const currentTime = useVideoFeedbackStore((s) => s.currentTime);
   const updateCurrentTime = useVideoFeedbackStore((s) => s.updateCurrentTime);
   const video = useVideoFeedbackStore((s) => s.video);
+  const { data: timeline } = useVideoReactionTimeline(video?.videoId, DEFAULT_TIMELINE_INTERVAL_MS);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
@@ -47,8 +84,11 @@ export default function VideoPlaybackBar({
   // 5초 버킷별 세그먼트 하이라이트 계산 (최다 리액션 기반)
   const segmentHighlights = useMemo(() => {
     if (!video) return [];
-    return computeSegmentHighlightsFromFeedbacks(video.feedbacks, video.duration);
-  }, [video]);
+    if (timeline) {
+      return buildHighlightsFromTimeline(timeline, video.duration, MAX_HIGHLIGHTS);
+    }
+    return computeSegmentHighlightsFromFeedbacks(video.feedbacks, video.duration, MAX_HIGHLIGHTS);
+  }, [video, timeline]);
 
   // 비디오 play/pause 이벤트 구독
   useEffect(() => {
