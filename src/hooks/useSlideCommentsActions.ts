@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import type { CreateCommentRequestDto } from '@/api';
 import {
@@ -10,6 +10,7 @@ import {
   deleteComment as deleteCommentApi,
   updateComment as updateCommentApi,
 } from '@/api/endpoints/comments';
+import { queryKeys } from '@/api/queryClient';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
 import { flatToTree } from '@/utils/comment';
@@ -18,16 +19,26 @@ import { showToast } from '@/utils/toast';
 // ── 내부 전용 TanStack Query 훅 ─────────────────────────────
 
 function useCreateCommentMutation() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (variables: {
       slideId: string;
       projectId: string;
       data: CreateCommentRequestDto;
     }) => createSlideComment(variables.slideId, variables.data),
+
+    onSuccess: (_, { slideId, projectId }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(slideId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.list(projectId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
+    },
   });
 }
 
 function useCreateReplyMutation() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (variables: {
       commentId: string;
@@ -35,10 +46,19 @@ function useCreateReplyMutation() {
       projectId: string;
       data: { content: string };
     }) => createReply(variables.commentId, variables.data),
+
+    onSuccess: (_, { commentId, slideId, projectId }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.comments.replies(commentId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(slideId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.list(projectId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
+    },
   });
 }
 
 function useUpdateCommentMutation() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (variables: {
       commentId: string;
@@ -46,13 +66,27 @@ function useUpdateCommentMutation() {
       projectId: string;
       data: { content: string };
     }) => updateCommentApi(variables.commentId, variables.data),
+
+    onSuccess: (_, { slideId, projectId }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(slideId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.list(projectId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
+    },
   });
 }
 
 function useDeleteCommentMutation() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (variables: { commentId: string; slideId: string; projectId: string }) =>
       deleteCommentApi({ commentId: variables.commentId }),
+
+    onSuccess: (_, { slideId, projectId }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(slideId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.list(projectId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
+    },
   });
 }
 
