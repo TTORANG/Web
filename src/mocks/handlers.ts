@@ -148,6 +148,15 @@ slides.forEach((s) => {
 //  AUTH — /auth/:provider/callback, /auth/logout, /users/:userId
 // ═══════════════════════════════════════════════════════════════
 
+/**
+ * Mock JWT 생성 (payload만 유효, 서명은 더미)
+ */
+function createMockJwt(payload: Record<string, string>): string {
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const body = btoa(JSON.stringify(payload));
+  return `${header}.${body}.mock-signature`;
+}
+
 const authCallbackHandler = async ({ request }: { request: Request }) => {
   await delay(200);
   const url = new URL(request.url);
@@ -155,17 +164,22 @@ const authCallbackHandler = async ({ request }: { request: Request }) => {
   if (!code) return fail(400, 'A001', '인증 코드가 없습니다.');
 
   const user = MOCK_CURRENT_USER;
-  return ok({
-    message: '소셜 로그인 성공!',
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      sessionId: user.sessionId,
-    },
-    tokens: {
-      accessToken: `mock-access-token-${user.id}`,
-      refreshToken: `mock-refresh-token-${user.id}`,
+  const accessToken = createMockJwt({
+    id: user.id,
+    email: user.email,
+    sessionId: user.sessionId,
+  });
+
+  // 새 플로우: accessToken + sessionId를 URL 파라미터로, refreshToken은 HttpOnly 쿠키로 전달
+  const callbackUrl = new URL('/auth/callback', url.origin);
+  callbackUrl.searchParams.set('accessToken', accessToken);
+  callbackUrl.searchParams.set('sessionId', user.sessionId);
+
+  return new HttpResponse(null, {
+    status: 302,
+    headers: {
+      Location: callbackUrl.toString(),
+      'Set-Cookie': `refreshToken=mock-refresh-token-${user.id}; HttpOnly; Path=/; SameSite=Lax`,
     },
   });
 };
@@ -734,7 +748,7 @@ const commentHandlers = [
       content: body.content,
       timestampMs: body.timestampMs,
       userId: MOCK_CURRENT_USER.id,
-      userName: MOCK_CURRENT_USER.name,
+      userName: MOCK_CURRENT_USER.name ?? '사용자',
       createdAt: now,
     };
     const arr = videoComments.get(videoId) ?? [];

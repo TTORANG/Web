@@ -4,6 +4,7 @@
  */
 
 export type {
+  JwtPayloadDto,
   SocialLoginSuccessResponseDto,
   SocialLoginTokensResponseDto,
   SocialLoginUserResponseDto,
