@@ -1,311 +1,484 @@
-/**
- * 웹캠 녹화 영상 피드백용 목데이터
- * - 영상별 댓글, 리액션 관리
- * - MOCK_USERS 기반으로 작성자 지정
- * - feedbacks의 reactions를 기반으로 재생바 하이라이트 생성
- */
-import type { VideoFeedback } from '@/types/video';
+import type {
+  VideoDetailDto,
+  VideoListItemDto,
+  VideoSlideTimelineItemDto,
+  VideoTimelineDto,
+} from '@/api/dto';
 
-import { MOCK_USERS } from './users';
-import { timeAgo } from './utils';
-
-/**
- * 테스트용 웹캠 영상
- * - duration: 596초 (9:56)
- * - 영상 전체에 걸쳐 다양한 시간대에 feedbacks 분포
- * - 상위 10개 세그먼트가 재생바에 하이라이트로 표시됨
- */
-export const MOCK_VIDEO: VideoFeedback = {
+// ============================================================================
+// Mock 영상 목록 데이터
+// ============================================================================
+export const MOCK_VIDEO = {
   videoId: '1',
   videoUrl: '/p1.webm',
   title: '테스트 영상',
   duration: 596,
-  comments: [],
-  reactionEvents: [],
-  feedbacks: [
-    // ===== 앞부분 (0~60초) =====
-    // 3초 - fire 우세 (총합: 15)
-    {
-      timestampMs: 3_000,
-      comments: [
-        {
-          commentId: 'vc-1',
-          userId: MOCK_USERS[0].id,
-          content: '오프닝이 멋있네요!',
-          createdAt: timeAgo(2, 'minute'),
-          isMine: true,
-          ref: { kind: 'video' as const, seconds: 3 },
+};
+export const mockVideoList: VideoListItemDto[] = [
+  {
+    videoId: '1',
+    title: '테스트 영상',
+    status: 'ready',
+    durationSeconds: 596,
+    thumbnailUrl: 'https://picsum.photos/seed/video1/640/360',
+    createdAt: '2026-02-03T13:20:00.000Z',
+    viewCount: 0,
+    reactionCount: 0,
+    replyCount: 0,
+    rootCommentCount: 0,
+  },
+  {
+    videoId: '2',
+    title: '내 발표 리허설',
+    status: 'ready',
+    durationSeconds: 95,
+    thumbnailUrl: 'https://picsum.photos/seed/video2/640/360',
+    createdAt: '2026-02-03T10:30:00.000Z',
+    viewCount: 0,
+    reactionCount: 0,
+    replyCount: 0,
+    rootCommentCount: 0,
+  },
+  {
+    videoId: '3',
+    title: 'Q4 마케팅 전략 발표',
+    status: 'ready',
+    durationSeconds: 420,
+    thumbnailUrl: 'https://picsum.photos/seed/video3/640/360',
+    createdAt: '2026-02-02T15:45:00.000Z',
+    viewCount: 0,
+    reactionCount: 0,
+    replyCount: 0,
+    rootCommentCount: 0,
+  },
+  {
+    videoId: '4',
+    title: '신제품 소개',
+    status: 'ready',
+    durationSeconds: 180,
+    thumbnailUrl: 'https://picsum.photos/seed/video4/640/360',
+    createdAt: '2026-02-01T09:00:00.000Z',
+    viewCount: 0,
+    reactionCount: 0,
+    replyCount: 0,
+    rootCommentCount: 0,
+  },
+  {
+    videoId: '5',
+    title: '프로젝트 최종 발표',
+    status: 'ready',
+    durationSeconds: 300,
+    thumbnailUrl: 'https://picsum.photos/seed/video5/640/360',
+    createdAt: '2026-01-31T14:20:00.000Z',
+    viewCount: 0,
+    reactionCount: 0,
+    replyCount: 0,
+    rootCommentCount: 0,
+  },
+  {
+    videoId: '6',
+    title: '주간 업무 보고',
+    status: 'ready',
+    durationSeconds: 240,
+    thumbnailUrl: 'https://picsum.photos/seed/video6/640/360',
+    createdAt: '2026-01-30T11:00:00.000Z',
+    viewCount: 0,
+    reactionCount: 0,
+    replyCount: 0,
+    rootCommentCount: 0,
+  },
+  {
+    videoId: '7',
+    title: '고객 피드백 분석',
+    status: 'processing',
+    durationSeconds: 360,
+    thumbnailUrl: null,
+    createdAt: '2026-01-29T16:30:00.000Z',
+    viewCount: 0,
+    reactionCount: 0,
+    replyCount: 0,
+    rootCommentCount: 0,
+  },
+  {
+    videoId: '8',
+    title: '2026 전략 수립',
+    status: 'ready',
+    durationSeconds: 480,
+    thumbnailUrl: 'https://picsum.photos/seed/video8/640/360',
+    createdAt: '2026-01-28T13:15:00.000Z',
+    viewCount: 0,
+    reactionCount: 0,
+    replyCount: 0,
+    rootCommentCount: 0,
+  },
+  {
+    videoId: '9',
+    title: '팀 빌딩 아이디어',
+    status: 'ready',
+    durationSeconds: 150,
+    thumbnailUrl: 'https://picsum.photos/seed/video9/640/360',
+    createdAt: '2026-01-27T10:45:00.000Z',
+    viewCount: 0,
+    reactionCount: 0,
+    replyCount: 0,
+    rootCommentCount: 0,
+  },
+  {
+    videoId: '10',
+    title: '디자인 시스템 소개',
+    status: 'failed',
+    durationSeconds: 270,
+    thumbnailUrl: null,
+    createdAt: '2026-01-26T14:00:00.000Z',
+    viewCount: 0,
+    reactionCount: 0,
+    replyCount: 0,
+    rootCommentCount: 0,
+  },
+];
+
+// ============================================================================
+// Mock 영상 상세 데이터
+// ============================================================================
+
+export const mockVideoDetails: Record<string, VideoDetailDto> = {
+  '1': {
+    videoId: '1',
+    title: '테스트 영상',
+    status: 'ready',
+    durationSeconds: 596,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    hlsMasterUrl: '/p1.webm',
+    thumbnailUrl: 'https://picsum.photos/seed/video1/640/360',
+    createdAt: '2026-02-03T13:20:00.000Z',
+  },
+  '2': {
+    videoId: '2',
+    title: '내 발표 리허설',
+    status: 'ready',
+    durationSeconds: 95,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    hlsMasterUrl: 'https://example.com/videos/2/master.m3u8',
+    thumbnailUrl: 'https://picsum.photos/seed/video2/640/360',
+    createdAt: '2026-02-03T10:30:00.000Z',
+  },
+  '3': {
+    videoId: '3',
+    title: 'Q4 마케팅 전략 발표',
+    status: 'ready',
+    durationSeconds: 420,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    hlsMasterUrl: 'https://example.com/videos/3/master.m3u8',
+    thumbnailUrl: 'https://picsum.photos/seed/video3/640/360',
+    createdAt: '2026-02-02T15:45:00.000Z',
+  },
+};
+
+// ============================================================================
+// Mock 타임라인 데이터
+// ============================================================================
+
+export const mockTimelines: Record<string, VideoTimelineDto> = {
+  '1': {
+    reactions: [
+      {
+        timestampMs: 3000,
+        emojiType: 'fire',
+        count: 8,
+      },
+      {
+        timestampMs: 15000,
+        emojiType: 'good',
+        count: 7,
+      },
+      {
+        timestampMs: 28000,
+        emojiType: 'sleepy',
+        count: 5,
+      },
+      {
+        timestampMs: 45000,
+        emojiType: 'fire',
+        count: 12,
+      },
+      {
+        timestampMs: 90000,
+        emojiType: 'confused',
+        count: 6,
+      },
+      {
+        timestampMs: 150000,
+        emojiType: 'fire',
+        count: 15,
+      },
+      {
+        timestampMs: 210000,
+        emojiType: 'good',
+        count: 9,
+      },
+      {
+        timestampMs: 270000,
+        emojiType: 'bad',
+        count: 4,
+      },
+      {
+        timestampMs: 330000,
+        emojiType: 'fire',
+        count: 10,
+      },
+      {
+        timestampMs: 390000,
+        emojiType: 'good',
+        count: 8,
+      },
+      {
+        timestampMs: 450000,
+        emojiType: 'fire',
+        count: 9,
+      },
+      {
+        timestampMs: 520000,
+        emojiType: 'sleepy',
+        count: 3,
+      },
+      {
+        timestampMs: 560000,
+        emojiType: 'confused',
+        count: 100,
+      },
+      {
+        timestampMs: 590000,
+        emojiType: 'fire',
+        count: 12,
+      },
+    ],
+    comments: [
+      {
+        commentId: 'vc-1',
+        timestampMs: 3000,
+        content: '오프닝이 멋있네요!',
+        createdAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+        user: {
+          userId: 'user1',
+          name: '김예원',
         },
-      ],
-      reactions: [
-        { type: 'fire' as const, count: 8, active: true },
-        { type: 'sleepy' as const, count: 0, active: false },
-        { type: 'good' as const, count: 5, active: false },
-        { type: 'bad' as const, count: 1, active: false },
-        { type: 'confused' as const, count: 1, active: false },
-      ],
-    },
-
-    // 15초 - good 우세 (총합: 12)
-    {
-      timestampMs: 15_000,
-      comments: [
-        {
-          commentId: 'vc-3',
-          userId: MOCK_USERS[2].id,
-          content: '배경 음악이 좋습니다.',
-          createdAt: timeAgo(5, 'minute'),
-          isMine: false,
-          ref: { kind: 'video' as const, seconds: 15 },
+      },
+      {
+        commentId: 'vc-3',
+        timestampMs: 15000,
+        content: '배경 음악이 좋습니다.',
+        createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+        user: {
+          userId: 'user2',
+          name: '이철수',
         },
-      ],
-      reactions: [
-        { type: 'fire' as const, count: 2, active: false },
-        { type: 'sleepy' as const, count: 1, active: false },
-        { type: 'good' as const, count: 7, active: false },
-        { type: 'bad' as const, count: 1, active: false },
-        { type: 'confused' as const, count: 1, active: false },
-      ],
-    },
-
-    // 28초 - sleepy 우세 (총합: 8)
-    {
-      timestampMs: 28_000,
-      comments: [],
-      reactions: [
-        { type: 'fire' as const, count: 1, active: false },
-        { type: 'sleepy' as const, count: 5, active: false },
-        { type: 'good' as const, count: 1, active: false },
-        { type: 'bad' as const, count: 0, active: false },
-        { type: 'confused' as const, count: 1, active: false },
-      ],
-    },
-
-    // 45초 - fire 우세 (총합: 20) - 인기 구간!
-    {
-      timestampMs: 45_000,
-      comments: [
-        {
-          commentId: 'vc-45-1',
-          userId: MOCK_USERS[1].id,
-          content: '여기 정말 좋아요!',
-          createdAt: timeAgo(10, 'minute'),
-          isMine: false,
-          ref: { kind: 'video' as const, seconds: 45 },
+      },
+      {
+        commentId: 'vc-45-1',
+        timestampMs: 45000,
+        content: '여기 정말 좋아요!',
+        createdAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+        user: {
+          userId: 'user3',
+          name: '박영희',
         },
-      ],
-      reactions: [
-        { type: 'fire' as const, count: 12, active: true },
-        { type: 'sleepy' as const, count: 0, active: false },
-        { type: 'good' as const, count: 6, active: true },
-        { type: 'bad' as const, count: 1, active: false },
-        { type: 'confused' as const, count: 1, active: false },
-      ],
-    },
-
-    // ===== 중간부분 (60~300초) =====
-    // 90초 - confused 우세 (총합: 10)
-    {
-      timestampMs: 90_000,
-      comments: [
-        {
-          commentId: 'vc-90-1',
-          userId: MOCK_USERS[3].id,
-          content: '이 부분이 좀 어려웠어요.',
-          createdAt: timeAgo(8, 'minute'),
-          isMine: false,
-          ref: { kind: 'video' as const, seconds: 90 },
+      },
+      {
+        commentId: 'vc-90-1',
+        timestampMs: 90000,
+        content: '이 부분이 좀 어려웠어요.',
+        createdAt: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
+        user: {
+          userId: 'user4',
+          name: '최민수',
         },
-      ],
-      reactions: [
-        { type: 'fire' as const, count: 1, active: false },
-        { type: 'sleepy' as const, count: 2, active: false },
-        { type: 'good' as const, count: 1, active: false },
-        { type: 'bad' as const, count: 0, active: false },
-        { type: 'confused' as const, count: 6, active: false },
-      ],
-    },
-
-    // 150초 - fire 우세 (총합: 25) - 가장 인기 구간!
-    {
-      timestampMs: 150_000,
-      comments: [
-        {
-          commentId: 'vc-150-1',
-          userId: MOCK_USERS[0].id,
-          content: '하이라이트 부분이네요!',
-          createdAt: timeAgo(15, 'minute'),
-          isMine: true,
-          ref: { kind: 'video' as const, seconds: 150 },
+      },
+      {
+        commentId: 'vc-150-1',
+        timestampMs: 150000,
+        content: '하이라이트 부분이네요!',
+        createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+        user: {
+          userId: 'user1',
+          name: '김예원',
         },
-        {
-          commentId: 'vc-150-2',
-          userId: MOCK_USERS[4].id,
-          content: '완전 동의합니다!',
-          createdAt: timeAgo(14, 'minute'),
-          isMine: false,
-          parentId: 'vc-150-1',
-          isReply: true,
+        replies: [
+          {
+            replyId: 'vc-150-2',
+            content: '완전 동의합니다!',
+            createdAt: new Date(Date.now() - 14 * 60 * 1000).toISOString(),
+            user: {
+              userId: 'user5',
+              name: '정지훈',
+            },
+          },
+        ],
+      },
+      {
+        commentId: 'vc-270-1',
+        timestampMs: 270000,
+        content: '이 부분은 개선이 필요해 보여요.',
+        createdAt: new Date(Date.now() - 20 * 60 * 1000).toISOString(),
+        user: {
+          userId: 'user2',
+          name: '이철수',
         },
-      ],
-      reactions: [
-        { type: 'fire' as const, count: 15, active: true },
-        { type: 'sleepy' as const, count: 0, active: false },
-        { type: 'good' as const, count: 8, active: false },
-        { type: 'bad' as const, count: 1, active: false },
-        { type: 'confused' as const, count: 1, active: false },
-      ],
-    },
-
-    // 210초 - good 우세 (총합: 14)
-    {
-      timestampMs: 210_000,
-      comments: [],
-      reactions: [
-        { type: 'fire' as const, count: 3, active: false },
-        { type: 'sleepy' as const, count: 1, active: false },
-        { type: 'good' as const, count: 9, active: false },
-        { type: 'bad' as const, count: 0, active: false },
-        { type: 'confused' as const, count: 1, active: false },
-      ],
-    },
-
-    // 270초 - bad 우세 (총합: 7)
-    {
-      timestampMs: 270_000,
-      comments: [
-        {
-          commentId: 'vc-270-1',
-          userId: MOCK_USERS[2].id,
-          content: '이 부분은 개선이 필요해 보여요.',
-          createdAt: timeAgo(20, 'minute'),
-          isMine: false,
-          ref: { kind: 'video' as const, seconds: 270 },
+      },
+      {
+        commentId: 'vc-330-1',
+        timestampMs: 330000,
+        content: '다시 재미있어졌네요!',
+        createdAt: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+        user: {
+          userId: 'user3',
+          name: '박영희',
         },
-      ],
-      reactions: [
-        { type: 'fire' as const, count: 0, active: false },
-        { type: 'sleepy' as const, count: 1, active: false },
-        { type: 'good' as const, count: 1, active: false },
-        { type: 'bad' as const, count: 4, active: false },
-        { type: 'confused' as const, count: 1, active: false },
-      ],
-    },
-
-    // ===== 후반부 (300~500초) =====
-    // 330초 - fire 우세 (총합: 18)
-    {
-      timestampMs: 330_000,
-      comments: [
-        {
-          commentId: 'vc-330-1',
-          userId: MOCK_USERS[1].id,
-          content: '다시 재미있어졌네요!',
-          createdAt: timeAgo(25, 'minute'),
-          isMine: false,
-          ref: { kind: 'video' as const, seconds: 330 },
+      },
+      {
+        commentId: 'vc-450-1',
+        timestampMs: 450000,
+        content: '클라이막스 부분이네요!',
+        createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+        user: {
+          userId: 'user4',
+          name: '최민수',
         },
-      ],
-      reactions: [
-        { type: 'fire' as const, count: 10, active: false },
-        { type: 'sleepy' as const, count: 1, active: false },
-        { type: 'good' as const, count: 5, active: false },
-        { type: 'bad' as const, count: 1, active: false },
-        { type: 'confused' as const, count: 1, active: false },
-      ],
-    },
-
-    // 390초 - good 우세 (총합: 11)
-    {
-      timestampMs: 390_000,
-      comments: [],
-      reactions: [
-        { type: 'fire' as const, count: 2, active: false },
-        { type: 'sleepy' as const, count: 0, active: false },
-        { type: 'good' as const, count: 8, active: false },
-        { type: 'bad' as const, count: 0, active: false },
-        { type: 'confused' as const, count: 1, active: false },
-      ],
-    },
-
-    // 450초 - fire 우세 (총합: 16)
-    {
-      timestampMs: 450_000,
-      comments: [
-        {
-          commentId: 'vc-450-1',
-          userId: MOCK_USERS[3].id,
-          content: '클라이막스 부분이네요!',
-          createdAt: timeAgo(30, 'minute'),
-          isMine: false,
-          ref: { kind: 'video' as const, seconds: 450 },
+      },
+      {
+        commentId: 'vc-560-1',
+        timestampMs: 560000,
+        content: '엔딩 크레딧도 예쁘네요!',
+        createdAt: new Date(Date.now() - 35 * 60 * 1000).toISOString(),
+        user: {
+          userId: 'user5',
+          name: '정지훈',
         },
-      ],
-      reactions: [
-        { type: 'fire' as const, count: 9, active: false },
-        { type: 'sleepy' as const, count: 0, active: false },
-        { type: 'good' as const, count: 5, active: false },
-        { type: 'bad' as const, count: 1, active: false },
-        { type: 'confused' as const, count: 1, active: false },
-      ],
-    },
-
-    // ===== 엔딩부분 (500~596초) =====
-    // 520초 - sleepy 우세 (총합: 6)
-    {
-      timestampMs: 520_000,
-      comments: [],
-      reactions: [
-        { type: 'fire' as const, count: 1, active: false },
-        { type: 'sleepy' as const, count: 3, active: false },
-        { type: 'good' as const, count: 1, active: false },
-        { type: 'bad' as const, count: 0, active: false },
-        { type: 'confused' as const, count: 1, active: false },
-      ],
-    },
-
-    // 560초 - good 우세 (총합: 13) - 엔딩 크레딧 호평
-    {
-      timestampMs: 560_000,
-      comments: [
-        {
-          commentId: 'vc-560-1',
-          userId: MOCK_USERS[4].id,
-          content: '엔딩 크레딧도 예쁘네요!',
-          createdAt: timeAgo(35, 'minute'),
-          isMine: false,
-          ref: { kind: 'video' as const, seconds: 560 },
+      },
+      {
+        commentId: 'vc-590-1',
+        timestampMs: 590000,
+        content: '마무리가 정말 좋았어요!',
+        createdAt: new Date(Date.now() - 40 * 60 * 1000).toISOString(),
+        user: {
+          userId: 'user1',
+          name: '김예원',
         },
-      ],
-      reactions: [
-        { type: 'fire' as const, count: 3, active: false },
-        { type: 'sleepy' as const, count: 1, active: false },
-        { type: 'good' as const, count: 7, active: false },
-        { type: 'bad' as const, count: 1, active: false },
-        { type: 'confused' as const, count: 100, active: false },
-      ],
-    },
-
-    // 590초 - fire 우세 (총합: 22) - 마지막 장면 인기!
-    {
-      timestampMs: 590_000,
-      comments: [
-        {
-          commentId: 'vc-590-1',
-          userId: MOCK_USERS[0].id,
-          content: '마무리가 정말 좋았어요!',
-          createdAt: timeAgo(40, 'minute'),
-          isMine: true,
-          ref: { kind: 'video' as const, seconds: 590 },
+      },
+    ],
+  },
+  '2': {
+    reactions: [],
+    comments: [],
+  },
+  '3': {
+    reactions: [
+      {
+        timestampMs: 60000,
+        emojiType: 'good',
+        count: 10,
+      },
+    ],
+    comments: [
+      {
+        commentId: 'c3',
+        timestampMs: 120000,
+        content: 'Q4 전략 잘 봤습니다',
+        createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+        user: {
+          userId: 'user6',
+          name: '강민지',
         },
-      ],
-      reactions: [
-        { type: 'fire' as const, count: 12, active: false },
-        { type: 'sleepy' as const, count: 0, active: false },
-        { type: 'good' as const, count: 8, active: false },
-        { type: 'bad' as const, count: 1, active: false },
-        { type: 'confused' as const, count: 1, active: false },
-      ],
-    },
+      },
+    ],
+  },
+};
+
+// ============================================================================
+// Mock 슬라이드 타임라인 데이터
+// ============================================================================
+
+export const mockSlideTimelines: Record<string, VideoSlideTimelineItemDto[]> = {
+  '1': [
+    { slideId: '1', timestampMs: 0 },
+    { slideId: '2', timestampMs: 60000 },
+    { slideId: '3', timestampMs: 120000 },
+    { slideId: '4', timestampMs: 180000 },
+    { slideId: '5', timestampMs: 240000 },
+    { slideId: '6', timestampMs: 300000 },
+    { slideId: '7', timestampMs: 360000 },
+    { slideId: '8', timestampMs: 420000 },
+    { slideId: '9', timestampMs: 480000 },
+    { slideId: '10', timestampMs: 540000 },
+  ],
+  '2': [
+    { slideId: '1', timestampMs: 0 },
+    { slideId: '2', timestampMs: 19000 },
+    { slideId: '3', timestampMs: 38000 },
+    { slideId: '4', timestampMs: 57000 },
+    { slideId: '5', timestampMs: 76000 },
+  ],
+  '3': [
+    { slideId: '1', timestampMs: 0 },
+    { slideId: '2', timestampMs: 28000 },
+    { slideId: '3', timestampMs: 56000 },
+    { slideId: '4', timestampMs: 84000 },
+    { slideId: '5', timestampMs: 112000 },
+    { slideId: '6', timestampMs: 140000 },
+    { slideId: '7', timestampMs: 168000 },
+    { slideId: '8', timestampMs: 196000 },
+    { slideId: '9', timestampMs: 224000 },
+    { slideId: '10', timestampMs: 252000 },
+    { slideId: '11', timestampMs: 280000 },
+    { slideId: '12', timestampMs: 308000 },
+    { slideId: '13', timestampMs: 336000 },
+    { slideId: '14', timestampMs: 364000 },
+    { slideId: '15', timestampMs: 392000 },
   ],
 };
+
+// ============================================================================
+// Helper 함수
+// ============================================================================
+
+/**
+ * 검색어로 영상 필터링
+ */
+export function filterVideosBySearch(
+  videos: VideoListItemDto[],
+  search: string,
+): VideoListItemDto[] {
+  if (!search) return videos;
+  const lowerSearch = search.toLowerCase();
+  return videos.filter((v) => v.title.toLowerCase().includes(lowerSearch));
+}
+
+/**
+ * 상태로 영상 필터링
+ */
+export function filterVideosByStatus(
+  videos: VideoListItemDto[],
+  status: string,
+): VideoListItemDto[] {
+  if (!status || status === 'all') return videos;
+  return videos.filter((v) => v.status === status);
+}
+
+/**
+ * 정렬
+ */
+export function sortVideos(videos: VideoListItemDto[], sort: string): VideoListItemDto[] {
+  const sorted = [...videos];
+
+  if (sort === 'oldest') {
+    return sorted.reverse();
+  }
+
+  // 기본: 최신순 (이미 최신순으로 정렬되어 있음)
+  return sorted;
+}

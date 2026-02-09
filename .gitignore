@@ -17,6 +17,7 @@ bun.lock
 .env.local
 .env.development
 .env.*.local
+.env.production
 .env.development
 *.local
 !.env.local.example
@@ -32,4 +33,4 @@ bun.lock
 *.njsproj
 *.sln
 *.sw?
-pnpm-lock.yaml
+!pnpm-lock.yaml

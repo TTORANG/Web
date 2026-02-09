@@ -40,7 +40,7 @@ export const apiClient = axios.create({
   timeout: API_TIMEOUT_MS,
 
   // 쿠키 설정
-  withCredentials: false,
+  withCredentials: true,
 
   headers: {
     'Content-Type': 'application/json',

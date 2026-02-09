@@ -12,6 +12,7 @@ import { useVideoComments } from '@/hooks/useVideoComments';
 import { useVideoReactions } from '@/hooks/useVideoReactions';
 import { useAuthStore } from '@/stores/authStore';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
+import type { SlideListItem } from '@/types';
 import type { Comment } from '@/types/comment';
 import type { SharedProjectSlide } from '@/types/share';
 import type { SlideDetail } from '@/types/slide';

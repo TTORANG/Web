@@ -115,7 +115,7 @@ export function useVideoComments() {
       if (model && tempReply) {
         updateCommentServerId(tempReply.commentId, model.serverId);
       }
-    } catch (_error) {
+    } catch {
       showToast.error('답글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
     }
   };
@@ -153,7 +153,7 @@ export function useVideoComments() {
 
       await deleteVideoComment(targetComment.serverId);
       showToast.success('댓글이 삭제되었습니다.');
-    } catch (_error) {
+    } catch {
       showToast.error('댓글 삭제에 실패했습니다.', '잠시 후 다시 시도해주세요.');
     }
   };

@@ -1,4 +1,4 @@
-export type TabKey = 'slide' | 'video' | 'insight';
+export type TabKey = 'slide' | 'videos' | 'insight';
 
 export interface TabItem {
   key: TabKey;
