@@ -156,11 +156,11 @@ export default function ProgressBar({
       className="group relative h-1 w-full cursor-pointer rounded-full bg-[rgba(26,26,26,0.66)] transition-all duration-150 hover:h-1.5 hover:ring-2 hover:ring-[#4F5BFF]/30 select-none before:content-[''] before:absolute before:-inset-y-3 before:inset-x-0"
     >
       {/* 프로그레스바 위 흰색 마커 */}
-      {segmentHighlights?.map((segment) => {
+      {segmentHighlights?.map((segment, index) => {
         const percent = max > 0 ? (segment.startTime / max) * 100 : 0;
         return (
           <div
-            key={`marker-${segment.startTime}`}
+            key={`marker-${segment.startTime}-${index}`}
             className="absolute top-1/2 -translate-y-1/2 z-10 h-1.5 w-0.5 rounded-full bg-[#FFFFFF]/70"
             style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
           />
@@ -168,11 +168,11 @@ export default function ProgressBar({
       })}
 
       {/* 세그먼트 하이라이트 (5초 버킷별 대표 리액션) */}
-      {segmentHighlights?.map((segment) => {
+      {segmentHighlights?.map((segment, index) => {
         const percent = max > 0 ? (segment.startTime / max) * 100 : 0;
         return (
           <div
-            key={`segment-${segment.startTime}`}
+            key={`segment-${segment.startTime}-${segment.topReactionType}-${index}`}
             className="absolute -top-7 z-10 flex flex-col gap-1 items-center cursor-pointer"
             style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
             title={`${REACTION_CONFIG[segment.topReactionType].label} (${segment.count})`}

@@ -1,11 +1,3 @@
-/**
- * @file useVideoComments.ts
- * @description 영상 댓글 관리 훅
- *
- * - "현재 타임스탬프의 댓글만" 추출하던 방식 제거
- * - video.feedbacks 전체에서 댓글을 모두 합쳐서 반환
- * - CommentList 재사용을 위해 Tree 변환은 그대로 유지(flatToTree)
- */
 import { useMemo } from 'react';
 
 import { updateComment as updateCommentApi } from '@/api/endpoints/comments';
@@ -18,6 +10,16 @@ import { showToast } from '@/utils/toast';
 
 const EMPTY_COMMENTS: Comment[] = [];
 
+/**
+ * 영상 댓글 관리 훅
+ *
+ * video.feedbacks 전체에서 댓글을 합산하여 트리 구조로 반환합니다.
+ *
+ * @returns comments - 트리 구조 댓글 목록
+ * @returns addComment - 새 댓글 추가 (타임스탬프 지정)
+ * @returns addReply - 답글 추가
+ * @returns deleteComment - 댓글 삭제
+ */
 export function useVideoComments() {
   const video = useVideoFeedbackStore((state) => state.video);
   const videoId = video?.videoId;
@@ -28,7 +30,7 @@ export function useVideoComments() {
   const updateCommentStore = useVideoFeedbackStore((state) => state.updateComment);
   const updateCommentServerId = useVideoFeedbackStore((state) => state.updateCommentServerId);
 
-  // CHANGED: 전체 feedbacks의 comments를 합쳐서 반환
+  // 전체 feedbacks의 comments를 합쳐서 반환
   const flatComments = useMemo(() => {
     if (!video) return EMPTY_COMMENTS;
 
@@ -76,7 +78,7 @@ export function useVideoComments() {
 
       // 서버 ID 저장 (Model에서 serverId 추출)
       if (model && tempComment) {
-        updateCommentServerId(tempComment.id, model.serverId);
+        updateCommentServerId(tempComment.commentId, model.serverId);
       }
     } catch {
       showToast.error('댓글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
@@ -92,7 +94,7 @@ export function useVideoComments() {
     try {
       // parentId로 부모 댓글 찾기 (serverId 필요)
       const allComments = video?.feedbacks.flatMap((f) => f.comments) || [];
-      const parentComment = allComments.find((c) => c.id === parentId);
+      const parentComment = allComments.find((c) => c.commentId === parentId);
 
       if (!parentComment || !parentComment.serverId) {
         showToast.error('답글 등록에 실패했습니다.', '부모 댓글을 찾을 수 없습니다.');
@@ -103,17 +105,15 @@ export function useVideoComments() {
       const extracted = extractTimestampFromComment(content);
       const contentToSend = extracted ? extracted.content : content;
 
-      // 서버 API 호출 (serverId를 number로 변환)
-      const parentServerIdNum = parseInt(parentComment.serverId, 10);
-      if (isNaN(parentServerIdNum)) {
+      if (parentComment.serverId) {
         showToast.error('답글 등록에 실패했습니다.', '잘못된 댓글 ID입니다.');
         return;
       }
-      const model = await createCommentReply(parentServerIdNum, { content: contentToSend });
+      const model = await createCommentReply(parentComment.serverId, { content: contentToSend });
 
       // 서버 ID 저장 (Model에서 serverId 추출)
       if (model && tempReply) {
-        updateCommentServerId(tempReply.id, model.serverId);
+        updateCommentServerId(tempReply.commentId, model.serverId);
       }
     } catch (_error) {
       showToast.error('답글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
@@ -130,7 +130,7 @@ export function useVideoComments() {
 
     // 플랫 구조: 모든 댓글(답글 포함)이 같은 배열에 있음
     const allComments = video.feedbacks.flatMap((f) => f.comments);
-    const targetComment = allComments.find((c) => c.id === commentId);
+    const targetComment = allComments.find((c) => c.commentId === commentId);
 
     if (!targetComment) {
       showToast.error('댓글을 찾을 수 없습니다.');
@@ -147,13 +147,11 @@ export function useVideoComments() {
     deleteCommentStore(commentId);
 
     try {
-      // 서버 API 호출 (serverId를 number로 변환)
-      const commentIdNum = parseInt(targetComment.serverId, 10);
-      if (isNaN(commentIdNum)) {
+      if (targetComment.serverId) {
         throw new Error('Invalid comment server ID');
       }
 
-      await deleteVideoComment(commentIdNum);
+      await deleteVideoComment(targetComment.serverId);
       showToast.success('댓글이 삭제되었습니다.');
     } catch (_error) {
       showToast.error('댓글 삭제에 실패했습니다.', '잠시 후 다시 시도해주세요.');
@@ -167,7 +165,7 @@ export function useVideoComments() {
     if (!video) return;
 
     const allComments = video.feedbacks.flatMap((f) => f.comments);
-    const targetComment = allComments.find((c) => c.id === commentId);
+    const targetComment = allComments.find((c) => c.commentId === commentId);
 
     if (!targetComment) {
       showToast.error('댓글을 찾을 수 없습니다.');

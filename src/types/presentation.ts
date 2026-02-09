@@ -29,13 +29,3 @@ export interface PresentationListResponse {
   limit: number;
   totalPages: number;
 }
-
-/**
- * API 응답 타입: 프로젝트 수정 응답
- */
-export interface ProjectUpdateResponse {
-  projectId: string;
-  title: string;
-  userName: string;
-  updatedAt: string;
-}

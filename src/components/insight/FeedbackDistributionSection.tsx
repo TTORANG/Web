@@ -1,5 +1,5 @@
 import { REACTION_CONFIG, createDefaultReactions } from '@/constants/reaction';
-import { useSlideReactionsTotal } from '@/hooks/useReactions';
+import { useSlideReactionsTotal } from '@/hooks/useSlideReactions';
 import type { Reaction } from '@/types/script';
 
 interface FeedbackDistributionSectionProps {

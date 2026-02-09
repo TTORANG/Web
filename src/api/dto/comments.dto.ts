@@ -1,49 +1,4 @@
 /**
- * 답글작성
- */
-export interface CreateReplyCommentRequestDto {
-  commentId: string;
-}
-
-/**
- * 답글작성 response DTO
- */
-export interface CreateReplyCommentResponseDto {
-  id: string;
-  content: string;
-  parentId: string;
-  userId: string;
-  createdAt: string;
-}
-
-/**
- * 답글 목록 조회 DTO
- */
-export interface GetRepliesResponseDto {
-  comments: Array<{
-    id: string;
-    content: string;
-    parentId: string | null;
-    userId: string;
-    createdAt: string;
-  }>;
-}
-/**
- * 슬라이드 댓글 작성
- */
-export interface CreateCommentRequestDto {
-  slideId: string;
-}
-/**
- * 슬라이드 댓글 작성 response DTO
- */
-export interface CreateCommentResponseDto {
-  id: string;
-  content: string;
-  userId: string;
-  createdAt: string;
-}
-/**
  * 댓글 작성자 정보
  */
 export interface CommentUserDto {
@@ -76,37 +31,86 @@ export interface GetSlideCommentsResponseDto {
 }
 
 /**
- * 댓글 생성/수정 응답
+ * 답글 목록 조회 응답
  */
-export interface CommentResponseDto {
+export interface GetReplyListResponseDto {
+  comments: CommentWithUserDto[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+/**
+ * 슬라이드 댓글 생성 요청
+ */
+export interface CreateCommentRequestDto {
+  content: string;
+}
+
+/**
+ * 슬라이드 댓글 생성 응답
+ */
+export interface CreateCommentResponseDto {
   commentId: string;
   content: string;
-  parentId?: string;
   userId: string;
   createdAt: string;
 }
 
 /**
- * 답글 목록 조회 응답
+ * 답글 생성 요청
  */
-export type GetReplyListResponseDto = CommentResponseDto[];
+export interface CreateReplyCommentRequestDto {
+  content: string;
+}
+
 /**
- * 댓글 수정
+ * 답글 생성 응답
  */
-export interface UpdateCommentResponseDto {
-  commentId: string;
+export interface CreateReplyCommentResponseDto {
+  parentCommentId: string;
+  replyId: string;
   content: string;
   userId: string;
   createdAt: string;
 }
+
 /**
- * 댓글 및, 답글 삭제
+ * 댓글/답글 수정 응답
+ */
+export interface UpdateCommentResponseDto {
+  updatedTargetType: 'comment' | 'reply';
+  commentId?: string;
+  replyId?: string;
+  parentCommentId?: string;
+  content: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * 댓글/답글 삭제 요청
  */
 export interface DeleteCommentRequestDto {
   commentId: string;
 }
+
 /**
- * 영상 타임스탬프 댓글 생성
+ * 댓글/답글 삭제 응답
+ */
+export interface DeleteCommentResponseDto {
+  deletedTargetType: 'comment' | 'reply';
+  commentId?: string;
+  replyId?: string;
+  parentCommentId?: string;
+}
+
+/**
+ * 영상 타임스탬프 댓글 생성 요청
  */
 export interface CreateVideoCommentRequestDto {
   content: string;

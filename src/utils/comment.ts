@@ -14,7 +14,7 @@ export function createComment(input: CreateCommentInput): Comment {
   const isReply = Boolean(input.parentId);
 
   return {
-    id: generateCommentId(),
+    commentId: generateCommentId(),
     userId: input.userId ?? 'unknown',
     content: input.content.trim(),
     createdAt: new Date().toISOString(),
@@ -38,7 +38,7 @@ export function addReplyToFlat(
 ): { comments: Comment[]; newComment: Comment } {
   const newReply = createComment({ ...input, parentId });
 
-  const parentIndex = comments.findIndex((c) => c.id === parentId);
+  const parentIndex = comments.findIndex((c) => c.commentId === parentId);
   if (parentIndex === -1) return { comments, newComment: newReply };
 
   const result = [...comments];
@@ -47,62 +47,17 @@ export function addReplyToFlat(
 }
 
 /**
- * 중첩 배열에 답글 추가 (부모의 replies 배열에 추가)
- *
- * FeedbackSlidePage(Comment) 방식: 중첩 배열 구조
+ * 플랫 배열에서 특정 댓글의 content를 업데이트
  */
-export function addReplyToTree(
-  comments: Comment[],
-  parentId: string,
-  input: Omit<CreateCommentInput, 'parentId'>,
-): Comment[] {
-  const newReply = createComment({ ...input, parentId });
-
-  const addToTree = (list: Comment[]): Comment[] => {
-    return list.map((node) => {
-      if (node.id === parentId) {
-        return { ...node, replies: [...(node.replies ?? []), newReply] };
-      }
-      if (node.replies && node.replies.length > 0) {
-        return { ...node, replies: addToTree(node.replies) };
-      }
-      return node;
-    });
-  };
-
-  return addToTree(comments);
+export function updateInFlat(comments: Comment[], targetId: string, content: string): Comment[] {
+  return comments.map((c) => (c.commentId === targetId ? { ...c, content } : c));
 }
 
 /**
  * 플랫 배열에서 댓글 삭제 (부모 삭제 시 자식도 함께 삭제)
  */
 export function deleteFromFlat(comments: Comment[], targetId: string): Comment[] {
-  return comments.filter((c) => c.id !== targetId && c.parentId !== targetId);
-}
-
-/**
- * 플랫 배열에서 댓글 수정
- */
-export function updateInFlat(comments: Comment[], targetId: string, content: string): Comment[] {
-  return comments.map((c) => (c.id === targetId ? { ...c, content: content.trim() } : c));
-}
-
-/**
- * 중첩 배열에서 댓글 삭제
- */
-export function deleteFromTree(comments: Comment[], targetId: string): Comment[] {
-  const removeFromTree = (list: Comment[]): Comment[] => {
-    return list
-      .filter((node) => node.id !== targetId)
-      .map((node) => {
-        if (node.replies && node.replies.length > 0) {
-          return { ...node, replies: removeFromTree(node.replies) };
-        }
-        return node;
-      });
-  };
-
-  return removeFromTree(comments);
+  return comments.filter((c) => c.commentId !== targetId && c.parentId !== targetId);
 }
 
 /**
@@ -116,12 +71,12 @@ export function flatToTree(comments: Comment[]): Comment[] {
 
   // 1. 모든 댓글을 맵에 저장 (replies 초기화)
   for (const comment of comments) {
-    map.set(comment.id, { ...comment, replies: [] });
+    map.set(comment.commentId, { ...comment, replies: [] });
   }
 
   // 2. 부모-자식 관계 연결
   for (const comment of comments) {
-    const node = map.get(comment.id)!;
+    const node = map.get(comment.commentId)!;
     if (comment.parentId) {
       const parent = map.get(comment.parentId);
       if (parent) {
@@ -148,7 +103,7 @@ export function treeToFlat(comments: Comment[]): Comment[] {
       const { replies, ...rest } = comment;
       result.push({ ...rest, parentId, isReply: Boolean(parentId) });
       if (replies && replies.length > 0) {
-        flatten(replies, comment.id);
+        flatten(replies, comment.commentId);
       }
     }
   };
@@ -167,7 +122,7 @@ export function treeToFlat(comments: Comment[]): Comment[] {
  * @returns 최상위 부모 댓글 ID (parentId가 없는 댓글)
  */
 export function findRootParentId(comments: Comment[], commentId: string): string {
-  const comment = comments.find((c) => c.id === commentId);
+  const comment = comments.find((c) => c.commentId === commentId);
 
   // 댓글을 찾지 못하거나 이미 최상위 댓글이면 자기 자신 반환
   if (!comment || !comment.parentId) {
