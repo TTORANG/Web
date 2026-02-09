@@ -1,10 +1,18 @@
 import { useCallback, useEffect, useRef } from 'react';
 
 import { type RecordExitRequest, recordExit as recordExitApi } from '@/api/endpoints/analytics';
-import { useRecordExit } from '@/hooks/useAnalytics';
+import { useRecordExit } from '@/hooks/queries/useAnalytics';
 
 type ExitMode = 'unload' | 'unmount';
 
+/**
+ * 페이지 이탈 추적 훅
+ *
+ * pagehide / visibilitychange 이벤트와 컴포넌트 언마운트 시
+ * 이탈 데이터를 서버에 전송합니다. 중복 전송을 방지합니다.
+ *
+ * @param buildExitPayload - 이탈 시 전송할 페이로드를 생성하는 콜백 (null 반환 시 전송 생략)
+ */
 export function useExitTracker(buildExitPayload: () => RecordExitRequest | null) {
   const { mutate } = useRecordExit();
   const exitSentRef = useRef(false);

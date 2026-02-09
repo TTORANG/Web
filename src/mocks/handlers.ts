@@ -8,7 +8,7 @@
 import { HttpResponse, delay, http } from 'msw';
 
 import type { Presentation } from '@/types/presentation';
-import type { SlideListItem } from '@/types/slide';
+import type { SlideDetail } from '@/types/slide';
 
 import {
   getMockProjectAnalyticsSummary,
@@ -38,12 +38,12 @@ let idSeq = Date.now();
 const nextId = () => String(++idSeq);
 
 // ── In-memory Stores ─────────────────────────────────────────
-let slides: SlideListItem[] = [...MOCK_SLIDES];
+let slides: SlideDetail[] = [...MOCK_SLIDES];
 let presentations: Presentation[] = [...MOCK_PROJECTS];
 
 // 댓글 저장소
 interface StoredComment {
-  id: string;
+  commentId: string;
   content: string;
   parentId?: string;
   userId: string;
@@ -61,7 +61,7 @@ MOCK_SLIDES.forEach((slide) => {
   const roots: StoredComment[] = [];
   for (const op of opinions) {
     const stored: StoredComment = {
-      id: op.id,
+      commentId: op.commentId,
       content: op.content,
       parentId: op.parentId,
       userId: op.userId,
@@ -91,7 +91,7 @@ slides.forEach((s) => {
 
 // 영상 댓글 저장소
 interface StoredVideoComment {
-  id: string;
+  commentId: string;
   content: string;
   timestampMs: number;
   userId: string;
@@ -209,10 +209,14 @@ const projectHandlers = [
     const limit = Number(url.searchParams.get('limit') ?? '20');
     const search = url.searchParams.get('search') ?? '';
     const sort = url.searchParams.get('sort') ?? 'latest';
+    const maxDuration = Number(url.searchParams.get('maxDuration') ?? '0');
 
     let filtered = [...presentations];
     if (search.length >= 2) {
       filtered = filtered.filter((p) => p.title.includes(search));
+    }
+    if (Number.isFinite(maxDuration) && maxDuration > 0) {
+      filtered = filtered.filter((p) => p.durationSeconds <= maxDuration);
     }
 
     if (sort === 'latest') filtered.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
@@ -485,7 +489,9 @@ const commentHandlers = [
     const page = Number(url.searchParams.get('page') ?? '1');
     const limit = Number(url.searchParams.get('limit') ?? '20');
 
-    const all = slideComments.get(slideId) ?? [];
+    const all = [...(slideComments.get(slideId) ?? [])].sort((a, b) =>
+      a.createdAt.localeCompare(b.createdAt),
+    );
     const total = all.length;
     const start = (page - 1) * limit;
     const paged = all.slice(start, start + limit);
@@ -494,7 +500,7 @@ const commentHandlers = [
       comments: paged.map((c) => {
         const user = MOCK_USERS.find((u) => u.id === c.userId) ?? MOCK_CURRENT_USER;
         return {
-          commentId: c.id,
+          commentId: c.commentId,
           content: c.content,
           user: { userId: c.userId, nickName: user.name },
           createdAt: c.createdAt,
@@ -510,10 +516,10 @@ const commentHandlers = [
     await delay(200);
     const { slideId } = params as { slideId: string };
     const body = (await request.json()) as { content: string };
-    const id = nextId();
+    const commentId = nextId();
     const now = new Date().toISOString();
     const comment: StoredComment = {
-      id,
+      commentId,
       content: body.content,
       userId: MOCK_CURRENT_USER.id,
       slideId,
@@ -525,7 +531,7 @@ const commentHandlers = [
     slideComments.set(slideId, arr);
 
     return ok({
-      commentId: id,
+      commentId: commentId,
       content: body.content,
       userId: MOCK_CURRENT_USER.id,
       createdAt: now,
@@ -535,20 +541,20 @@ const commentHandlers = [
   // 답글 작성
   http.post(`${BASE_URL}/comments/:commentId/replies`, async ({ params, request }) => {
     await delay(200);
-    const { commentId } = params as { commentId: string };
+    const { commentId: parentId } = params as { commentId: string };
     const body = (await request.json()) as { content: string };
 
     // 부모 댓글의 slideId 탐색 (slideComments → commentReplies 순)
     let parentSlideId = '';
     for (const [sid, comments] of slideComments) {
-      if (comments.some((c) => c.id === commentId)) {
+      if (comments.some((c) => c.commentId === parentId)) {
         parentSlideId = sid;
         break;
       }
     }
     if (!parentSlideId) {
       for (const replies of commentReplies.values()) {
-        const found = replies.find((r) => r.id === commentId);
+        const found = replies.find((r) => r.commentId === parentId);
         if (found) {
           parentSlideId = found.slideId;
           break;
@@ -558,44 +564,58 @@ const commentHandlers = [
     // 옵티미스틱 UI에서 생성된 UUID로 요청할 수 있으므로, 못 찾아도 허용
     if (!parentSlideId) parentSlideId = 'unknown';
 
-    const id = nextId();
+    const newCommentId = nextId();
     const now = new Date().toISOString();
     const reply: StoredComment = {
-      id,
+      commentId: newCommentId,
       content: body.content,
-      parentId: commentId,
+      parentId: parentId,
       userId: MOCK_CURRENT_USER.id,
       slideId: parentSlideId,
       createdAt: now,
       updatedAt: now,
     };
-    const arr = commentReplies.get(commentId) ?? [];
+    const arr = commentReplies.get(parentId) ?? [];
     arr.push(reply);
-    commentReplies.set(commentId, arr);
+    commentReplies.set(parentId, arr);
 
     return ok({
-      commentId: id,
+      parentCommentId: parentId,
+      replyId: newCommentId,
       content: body.content,
-      parentId: commentId,
       userId: MOCK_CURRENT_USER.id,
       createdAt: now,
     });
   }),
 
   // 답글 목록
-  http.get(`${BASE_URL}/comments/:commentId/replies`, async ({ params }) => {
+  http.get(`${BASE_URL}/comments/:commentId/replies`, async ({ params, request }) => {
     await delay(100);
     const { commentId } = params as { commentId: string };
-    const replies = commentReplies.get(commentId) ?? [];
-    return ok(
-      replies.map((r) => ({
-        commentId: r.id,
-        content: r.content,
-        parentId: r.parentId ?? null,
-        userId: r.userId,
-        createdAt: r.createdAt,
-      })),
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get('page') ?? '1');
+    const limit = Number(url.searchParams.get('limit') ?? '20');
+
+    const all = [...(commentReplies.get(commentId) ?? [])].sort((a, b) =>
+      a.createdAt.localeCompare(b.createdAt),
     );
+    const total = all.length;
+    const start = (page - 1) * limit;
+    const paged = all.slice(start, start + limit);
+
+    return ok({
+      comments: paged.map((r) => {
+        const user = MOCK_USERS.find((u) => u.id === r.userId) ?? MOCK_CURRENT_USER;
+        return {
+          commentId: r.commentId,
+          content: r.content,
+          user: { userId: r.userId, nickName: user.name },
+          createdAt: r.createdAt,
+          updatedAt: r.updatedAt,
+        };
+      }),
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
   }),
 
   // 댓글 수정
@@ -606,25 +626,47 @@ const commentHandlers = [
 
     // slideComments에서 검색
     for (const comments of slideComments.values()) {
-      const c = comments.find((c) => c.id === commentId);
+      const c = comments.find((c) => c.commentId === commentId);
       if (c) {
         c.content = body.content;
         c.updatedAt = new Date().toISOString();
-        return ok({ commentId, content: c.content, userId: c.userId, createdAt: c.createdAt });
+        return ok({
+          updatedTargetType: 'comment',
+          commentId,
+          content: c.content,
+          userId: c.userId,
+          createdAt: c.createdAt,
+          updatedAt: c.updatedAt,
+        });
       }
     }
     // commentReplies에서 검색
     for (const replies of commentReplies.values()) {
-      const r = replies.find((r) => r.id === commentId);
+      const r = replies.find((r) => r.commentId === commentId);
       if (r) {
         r.content = body.content;
         r.updatedAt = new Date().toISOString();
-        return ok({ commentId, content: r.content, userId: r.userId, createdAt: r.createdAt });
+        return ok({
+          updatedTargetType: 'reply',
+          replyId: commentId,
+          parentCommentId: r.parentId,
+          content: r.content,
+          userId: r.userId,
+          createdAt: r.createdAt,
+          updatedAt: r.updatedAt,
+        });
       }
     }
     // 옵티미스틱 UI에서 생성된 UUID로 요청할 수 있으므로, 못 찾아도 성공 처리
     const now = new Date().toISOString();
-    return ok({ commentId, content: body.content, userId: MOCK_CURRENT_USER.id, createdAt: now });
+    return ok({
+      updatedTargetType: 'comment',
+      commentId,
+      content: body.content,
+      userId: MOCK_CURRENT_USER.id,
+      createdAt: now,
+      updatedAt: now,
+    });
   }),
 
   // 댓글 삭제
@@ -634,25 +676,25 @@ const commentHandlers = [
 
     // slideComments에서 삭제
     for (const [sid, comments] of slideComments) {
-      const idx = comments.findIndex((c) => c.id === commentId);
+      const idx = comments.findIndex((c) => c.commentId === commentId);
       if (idx !== -1) {
         comments.splice(idx, 1);
         slideComments.set(sid, comments);
         commentReplies.delete(commentId);
-        return ok(null);
+        return ok({ deletedTargetType: 'comment', commentId });
       }
     }
     // commentReplies에서 삭제
     for (const [pid, replies] of commentReplies) {
-      const idx = replies.findIndex((r) => r.id === commentId);
+      const idx = replies.findIndex((r) => r.commentId === commentId);
       if (idx !== -1) {
         replies.splice(idx, 1);
         commentReplies.set(pid, replies);
-        return ok(null);
+        return ok({ deletedTargetType: 'reply', replyId: commentId, parentCommentId: pid });
       }
     }
     // 옵티미스틱 UI에서 생성된 UUID로 요청할 수 있으므로, 못 찾아도 성공 처리
-    return ok(null);
+    return ok({ deletedTargetType: 'comment', commentId });
   }),
 
   // 영상 댓글 작성
@@ -660,10 +702,10 @@ const commentHandlers = [
     await delay(200);
     const { videoId } = params as { videoId: string };
     const body = (await request.json()) as { content: string; timestampMs: number };
-    const id = nextId();
+    const commentId = nextId();
     const now = new Date().toISOString();
     const comment: StoredVideoComment = {
-      id,
+      commentId,
       content: body.content,
       timestampMs: body.timestampMs,
       userId: MOCK_CURRENT_USER.id,
@@ -673,7 +715,7 @@ const commentHandlers = [
     const arr = videoComments.get(videoId) ?? [];
     arr.push(comment);
     videoComments.set(videoId, arr);
-    return ok({ id, content: body.content, timestampMs: body.timestampMs, createdAt: now });
+    return ok({ commentId, content: body.content, timestampMs: body.timestampMs, createdAt: now });
   }),
 
   // 영상 댓글 조회 (타임스탬프 기준)
@@ -689,7 +731,7 @@ const commentHandlers = [
     );
     return ok({
       comments: filtered.map((c) => ({
-        commentId: c.id,
+        commentId: c.commentId,
         content: c.content,
         timestampMs: c.timestampMs,
         user: { userId: c.userId, nickName: c.userName },
@@ -722,7 +764,14 @@ const reactionHandlers = [
     await delay(100);
     const { slideId } = params as { slideId: string };
     const reactions = slideReactions.get(slideId) ?? {};
-    return ok({ slideId, reactions });
+    const filled = {
+      fire: reactions.fire ?? 0,
+      good: reactions.good ?? 0,
+      bad: reactions.bad ?? 0,
+      sleepy: reactions.sleepy ?? 0,
+      confused: reactions.confused ?? 0,
+    };
+    return ok({ slideId, reactions: filled });
   }),
 
   // 프로젝트 슬라이드 리액션 총합
@@ -730,7 +779,13 @@ const reactionHandlers = [
     await delay(100);
     const { projectId } = params as { projectId: string };
     const projectSlides = slides.filter((s) => s.projectId === projectId);
-    const total: Record<string, number> = {};
+    const total: Record<string, number> = {
+      fire: 0,
+      good: 0,
+      bad: 0,
+      sleepy: 0,
+      confused: 0,
+    };
     let totalCount = 0;
     projectSlides.forEach((s) => {
       const r = slideReactions.get(s.slideId) ?? {};
@@ -746,8 +801,8 @@ const reactionHandlers = [
   http.post(`${BASE_URL}/videos/:videoId/reactions`, async ({ params, request }) => {
     await delay(100);
     const { videoId } = params as { videoId: string };
-    const body = (await request.json()) as { emojiType: string; timestampMs: number };
-    return ok({ reactionId: nextId(), videoId, active: true, ...body });
+    await request.json();
+    return ok({ reactionId: nextId(), videoId, active: true });
   }),
 
   // 영상 리액션 타임라인
@@ -759,7 +814,7 @@ const reactionHandlers = [
 
     // MOCK_VIDEO feedbacks에서 타임라인 마커 생성
     const markers: { timestampMs: number; emojiType: string; count: number }[] = [];
-    if (Number(videoId) === MOCK_VIDEO.videoId) {
+    if (videoId === MOCK_VIDEO.videoId) {
       MOCK_VIDEO.feedbacks.forEach((fb) => {
         const bucket = Math.floor(fb.timestampMs / intervalMs) * intervalMs;
         fb.reactions.forEach((r) => {
@@ -779,7 +834,7 @@ const reactionHandlers = [
     const windowMs = Number(url.searchParams.get('windowMs') ?? '2000');
 
     const result: { emojiType: string; count: number }[] = [];
-    if (Number(videoId) === MOCK_VIDEO.videoId) {
+    if (videoId === MOCK_VIDEO.videoId) {
       const totals: Record<string, number> = {};
       MOCK_VIDEO.feedbacks.forEach((fb) => {
         if (fb.timestampMs >= timestampMs - windowMs && fb.timestampMs <= timestampMs + windowMs) {
@@ -851,8 +906,7 @@ const videoHandlers = [
   http.get(`${BASE_URL}/videos/:videoId`, async ({ params }) => {
     await delay(200);
     const { videoId } = params as { videoId: string };
-    if (Number(videoId) !== MOCK_VIDEO.videoId)
-      return fail(404, 'V001', '영상을 찾을 수 없습니다.');
+    if (videoId !== MOCK_VIDEO.videoId) return fail(404, 'V001', '영상을 찾을 수 없습니다.');
 
     // MOCK_VIDEO feedbacks → Server timeline 포맷으로 변환
     const timelineReactions: { timestampMs: number; emojiType: string; count: number }[] = [];
@@ -877,7 +931,7 @@ const videoHandlers = [
       fb.comments.forEach((c) => {
         const user = MOCK_USERS.find((u) => u.id === c.userId);
         timelineComments.push({
-          commentId: c.id,
+          commentId: c.commentId,
           timestampMs: fb.timestampMs,
           content: c.content,
           createdAt: c.createdAt,
@@ -907,8 +961,7 @@ const videoHandlers = [
   http.get(`${BASE_URL}/videos/:videoId/slides`, async ({ params }) => {
     await delay(100);
     const { videoId } = params as { videoId: string };
-    if (Number(videoId) !== MOCK_VIDEO.videoId)
-      return fail(404, 'V001', '영상을 찾을 수 없습니다.');
+    if (videoId !== MOCK_VIDEO.videoId) return fail(404, 'V001', '영상을 찾을 수 없습니다.');
     // p1 프로젝트의 처음 5개 슬라이드로 타임라인 생성
     const p1Slides = slides
       .filter((s) => s.projectId === 'p1')

@@ -13,7 +13,9 @@ import {
 import { queryKeys } from '@/api/queryClient';
 
 /**
- * 이탈 기록 (mutation) unload 시 이탈 기록 (fetch keepalive)
+ * 이탈 기록 Mutation 훅
+ *
+ * 페이지 이탈 시 분석 데이터를 서버에 전송합니다.
  */
 export function useRecordExit() {
   return useMutation({
@@ -22,7 +24,9 @@ export function useRecordExit() {
 }
 
 /**
- * 슬라이드별 분석
+ * 슬라이드별 분석 데이터 조회
+ *
+ * @param projectId - 프로젝트 ID
  */
 export function useSlideAnalytics(projectId: number) {
   return useQuery({
@@ -33,8 +37,9 @@ export function useSlideAnalytics(projectId: number) {
 }
 
 /**
- * 영상 타임라인 분석(= video analytics)
- * - 기존 useVideoExitAnalytics / getVideoExitAnalytics 대신
+ * 영상 타임라인 분석 데이터 조회
+ *
+ * @param videoId - 영상 ID
  */
 export function useVideoAnalytics(videoId: number) {
   return useQuery({
@@ -45,8 +50,9 @@ export function useVideoAnalytics(videoId: number) {
 }
 
 /**
- * 프로젝트 요약 분석 (상단 카드 4개 + videoIds)
- * - 기존 useSummaryAnalytics / getSummaryAnalytics 대신
+ * 프로젝트 요약 분석 조회 (상단 카드 4개 + videoIds)
+ *
+ * @param projectId - 프로젝트 ID
  */
 export function useProjectAnalyticsSummary(projectId: number) {
   return useQuery({
@@ -57,7 +63,9 @@ export function useProjectAnalyticsSummary(projectId: number) {
 }
 
 /**
- * 슬라이드별 청중 잔존률
+ * 슬라이드별 청중 잔존률 조회
+ *
+ * @param projectId - 프로젝트 ID
  */
 export function useSlideRetention(projectId: number) {
   return useQuery({
@@ -68,7 +76,9 @@ export function useSlideRetention(projectId: number) {
 }
 
 /**
- * 영상별 시청 잔존률
+ * 영상별 시청 잔존률 조회
+ *
+ * @param videoId - 영상 ID
  */
 export function useVideoRetention(videoId: number) {
   return useQuery({
@@ -79,7 +89,9 @@ export function useVideoRetention(videoId: number) {
 }
 
 /**
- * 최근 댓글 피드백
+ * 최근 댓글 피드백 조회
+ *
+ * @param projectId - 프로젝트 ID
  */
 export function useRecentComments(projectId: number) {
   return useQuery({

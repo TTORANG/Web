@@ -11,7 +11,8 @@ import { useEffect, useState } from 'react';
 
 import { SLIDE_MAX_WIDTH } from '@/constants/layout';
 import { useSlideActions, useSlideId } from '@/hooks';
-import { useSlideCommentsQuery } from '@/hooks/queries/useCommentQueries';
+import { useScript } from '@/hooks/queries/useScript';
+import { useSlideCommentsLoader } from '@/hooks/useSlideCommentsLoader';
 import type { SlideListItem } from '@/types/slide';
 
 import SlideViewer from './SlideViewer';
@@ -24,22 +25,30 @@ interface SlideWorkspaceProps {
 
 export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps) {
   const [isScriptCollapsed, setIsScriptCollapsed] = useState(false);
-  const { initSlide, setComments } = useSlideActions();
+  const { initSlide, updateScript, updateSlide } = useSlideActions();
   const slideId = useSlideId();
-  const { data: fetchedComments } = useSlideCommentsQuery(slideId);
+  const { data: scriptData } = useScript(slideId);
 
   useEffect(() => {
-    if (slide) {
-      initSlide(slide);
-      setComments([]);
+    if (!slide) return;
+
+    const isSameSlide = slide.slideId === slideId;
+    if (isSameSlide) {
+      updateSlide(slide);
+      return;
     }
-  }, [slide, initSlide, setComments]);
+
+    initSlide(slide);
+    updateScript('');
+  }, [slide, slideId, initSlide, updateScript, updateSlide]);
+
+  useSlideCommentsLoader(slide?.slideId);
 
   useEffect(() => {
-    if (fetchedComments) {
-      setComments(fetchedComments);
+    if (scriptData) {
+      updateScript(scriptData.scriptText);
     }
-  }, [fetchedComments, setComments]);
+  }, [scriptData, updateScript]);
 
   return (
     <div className="h-full min-h-0 flex flex-col">
