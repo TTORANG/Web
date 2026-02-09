@@ -5,7 +5,7 @@
  * 슬라이드 뷰어, 댓글 목록, 리액션 버튼을 포함합니다.
  * 좌우 화살표 키로 슬라이드 이동이 가능합니다.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
@@ -50,6 +50,10 @@ export default function FeedbackSlidePage() {
   const { reactions, toggleReaction } = useSlideReactions();
   const script = useSlideStore((state) => state.slide?.script ?? '');
   const initSlide = useSlideStore((state) => state.initSlide);
+
+  const reactionHistory = useSlideStore((state) => state.reactionHistory);
+  const reactionCounts = useSlideStore((state) => state.reactionCounts);
+
   const { updateScript } = useSlideActions();
   const { data: scriptData } = useScript(currentSlide?.slideId ?? '');
 
@@ -98,15 +102,36 @@ export default function FeedbackSlidePage() {
 
   useExitTracker(buildExitPayload);
 
+  const prevSlideIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (!currentSlide) return;
 
-    initSlide({
-      ...currentSlide,
-      emojiReactions: createDefaultReactions(),
-    });
-    updateScript('');
-  }, [slideIndex, currentSlide, initSlide, updateScript]);
+    // 3. 진짜 슬라이드가 바뀌었을 때만 초기화 실행 (ID 비교)
+    if (prevSlideIdRef.current !== currentSlide.slideId) {
+      prevSlideIdRef.current = currentSlide.slideId;
+
+      // "이 슬라이드 ID에 대해 저장된 내 리액션 기록이 있나?"
+      const mySavedReactions = reactionHistory[currentSlide.slideId] || [];
+      // 이 슬라이드의 저장된 숫자 꺼내기
+      const mySavedCounts = reactionCounts[currentSlide.slideId] || {};
+
+      // 기본 리액션 목록을 만들고, 히스토리에 있는 건 active: true로 켜준다.
+      const initialReactions = createDefaultReactions().map((reaction) => ({
+        ...reaction,
+        active: mySavedReactions.includes(reaction.type), // 기록이 있으면 true!
+        // 저장된 숫자가 있으면 그거 쓰고, 없으면 기본값(서버값)
+        count: mySavedCounts[reaction.type] ?? reaction.count,
+      }));
+
+      initSlide({
+        ...currentSlide,
+        emojiReactions: initialReactions, // 새 슬라이드 진입 시에만 초기화
+      });
+      updateScript('');
+    }
+    // 4. 같은 슬라이드라면 initSlide를 호출하지 않음 -> 스토어의 active 상태 보존됨
+  }, [currentSlide, initSlide, updateScript, reactionHistory, reactionCounts]);
 
   const { isLoading: isCommentsLoading } = useSlideCommentsLoader(currentSlide?.slideId, {
     mapComments,

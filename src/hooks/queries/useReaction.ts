@@ -18,6 +18,24 @@ export function useSlideReactionSummaries(slideIds: string[]) {
 }
 
 /**
+ * 단일 슬라이드 리액션 집계 조회
+ *
+ * @param slideId - 조회할 슬라이드 ID
+ */
+export function useSlideReactionSummary(slideId?: string) {
+  return useQuery({
+    queryKey: queryKeys.reactions.summary(slideId ?? ''),
+    queryFn: () => {
+      if (!slideId) {
+        return Promise.resolve(null);
+      }
+      return getSlideReactionSummary(slideId);
+    },
+    enabled: !!slideId,
+  });
+}
+
+/**
  * 슬라이드 리액션 토글 Mutation 훅
  *
  * 성공 시 해당 슬라이드의 리액션 집계 캐시를 무효화합니다.
