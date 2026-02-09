@@ -8,7 +8,7 @@
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Skeleton } from '@/components/common';
-import type { SlideListItem } from '@/types/slide';
+import type { SlideListItem } from '@/types';
 import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
 

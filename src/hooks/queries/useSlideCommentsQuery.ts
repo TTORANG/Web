@@ -1,9 +1,6 @@
-/**
- * 댓글 관련 TanStack Query 훅
- */
 import { useQuery } from '@tanstack/react-query';
 
-import type { CommentWithUserDto, GetSlideCommentsResponseDto } from '@/api/dto';
+import type { CommentWithUserDto } from '@/api/dto';
 import { getSlideComments } from '@/api/endpoints/comments';
 import { queryKeys } from '@/api/queryClient';
 import { useAuthStore } from '@/stores/authStore';
@@ -11,7 +8,7 @@ import type { Comment } from '@/types/comment';
 
 function mapDtoToComment(dto: CommentWithUserDto, currentUserId?: string): Comment {
   return {
-    id: dto.commentId,
+    commentId: dto.commentId,
     serverId: dto.commentId,
     userId: dto.user.userId,
     content: dto.content,
@@ -20,14 +17,20 @@ function mapDtoToComment(dto: CommentWithUserDto, currentUserId?: string): Comme
   };
 }
 
-/** 슬라이드 댓글 목록 조회 */
+/**
+ * 슬라이드 댓글 목록 조회
+ *
+ * DTO를 Comment 타입으로 변환하고, 현재 사용자의 댓글을 isMine으로 표시합니다.
+ *
+ * @param slideId - 슬라이드 ID
+ */
 export function useSlideCommentsQuery(slideId?: string) {
   const userId = useAuthStore((state) => state.user?.id);
 
-  return useQuery<GetSlideCommentsResponseDto, Error, Comment[]>({
+  return useQuery({
     queryKey: queryKeys.comments.list(slideId ?? ''),
-    queryFn: () => getSlideComments(slideId!),
-    enabled: !!slideId,
+    queryFn: () => getSlideComments(slideId!, 1, 100),
     select: (data) => data.comments.map((dto) => mapDtoToComment(dto, userId)),
+    enabled: !!slideId,
   });
 }

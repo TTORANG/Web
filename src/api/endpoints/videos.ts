@@ -1,27 +1,17 @@
 import { apiClient } from '@/api/client';
+import type { CreateCommentResponseDto, CreateReplyCommentResponseDto } from '@/api/dto';
 import type {
-  ChunkUploadResponseDto,
-  CommentResponseDto,
-  FinishVideoRequestDto,
-  FinishVideoResponseDto,
-  StartVideoRequestDto,
-  StartVideoResponseDto,
-} from '@/api/dto';
+  CreateChunkUploadResponseDto,
+  CreateCommentRequestDto,
+  CreateFinishVideoRequestDto,
+  CreateFinishVideoResponseDto,
+  CreateStartVideoRequestDto,
+  CreateStartVideoResponseDto,
+  ReadProjectVideosResponseDto,
+  ReadVideoDetailResponseDto,
+  ReadVideoSlidesResponseDto,
+} from '@/api/dto/video.dto';
 import type { ApiResponse } from '@/types/api';
-
-/**
- * DTO → Model 변환: CommentResponseDto를 앱 내부용 Model로 변환
- * 주의: 서버 응답에서 댓글은 'commentId', 답글은 'replyId'를 사용할 수 있음
- */
-function commentDtoToModel(dto: CommentResponseDto & { replyId?: string }): {
-  serverId: string;
-  content: string;
-} {
-  return {
-    serverId: dto.commentId ?? dto.replyId ?? '',
-    content: dto.content,
-  };
-}
 
 // ============================================================================
 // 레거시 videosApi 객체 (하위 호환성 유지)
@@ -29,16 +19,16 @@ function commentDtoToModel(dto: CommentResponseDto & { replyId?: string }): {
 // ============================================================================
 export const videosApi = {
   // POST /videos/start - 영상 녹화 세션 생성
-  startVideo: (data: StartVideoRequestDto) =>
-    apiClient.post<ApiResponse<StartVideoResponseDto>>('/videos/start', data),
+  startVideo: (data: CreateStartVideoRequestDto) =>
+    apiClient.post<ApiResponse<CreateStartVideoResponseDto>>('/videos/start', data),
 
   // POST /videos/{videoId}/chunks/{chunkIndex} - 청크 업로드
-  uploadChunk: (videoId: number, chunkIndex: number, file: Blob) => {
+  uploadChunk: (videoId: string, chunkIndex: number, file: Blob) => {
     const formData = new FormData();
     formData.append('file', file);
 
-    return apiClient.post<ApiResponse<ChunkUploadResponseDto>>(
-      `/videos/${videoId}/chunks/${chunkIndex}`,
+    return apiClient.post<ApiResponse<CreateChunkUploadResponseDto>>(
+      `/videos/${encodeURIComponent(videoId)}/chunks/${chunkIndex}`,
       formData,
       {
         headers: {
@@ -49,14 +39,45 @@ export const videosApi = {
   },
 
   // POST /videos/{videoId}/finish - 녹화 종료 및 영상 처리 시작
-  finishVideo: (videoId: number, data: FinishVideoRequestDto) =>
-    apiClient.post<ApiResponse<FinishVideoResponseDto>>(`/videos/${videoId}/finish`, data),
+  finishVideo: (videoId: string, data: CreateFinishVideoRequestDto) =>
+    apiClient.post<ApiResponse<CreateFinishVideoResponseDto>>(
+      `/videos/${encodeURIComponent(videoId)}/finish`,
+      data,
+    ),
 
   // GET /videos/{videoId} - 영상 상세 조회
-  getVideoDetail: (videoId: number) => apiClient.get(`/videos/${videoId}`),
+  getVideoDetail: (videoId: string) =>
+    apiClient.get<ApiResponse<ReadVideoDetailResponseDto>>(
+      `/videos/${encodeURIComponent(videoId)}`,
+    ),
 
   // GET /videos/{videoId}/slides - 슬라이드 타임라인 조회
-  getVideoSlides: (videoId: number) => apiClient.get(`/videos/${videoId}/slides`),
+  getVideoSlides: (videoId: string) =>
+    apiClient.get<ApiResponse<ReadVideoSlidesResponseDto>>(
+      `/videos/${encodeURIComponent(videoId)}/slides`,
+    ),
+
+  /**
+   * GET /presentations/:projectId/videos - 프로젝트별 영상 목록 조회
+   */
+  getProjectVideos: (
+    projectId: string,
+    params?: {
+      search?: string;
+      filter?: string;
+      sort?: string;
+    },
+  ) => {
+    const searchParams = new URLSearchParams();
+    if (params?.search) searchParams.set('search', params.search);
+    if (params?.filter) searchParams.set('filter', params.filter);
+    if (params?.sort) searchParams.set('sort', params.sort);
+
+    const queryString = searchParams.toString();
+    const url = `/presentations/${encodeURIComponent(projectId)}/videos${queryString ? `?${queryString}` : ''}`;
+
+    return apiClient.get<ApiResponse<ReadProjectVideosResponseDto>>(url);
+  },
 };
 
 // ============================================================================
@@ -72,17 +93,19 @@ export const videosApi = {
  * @returns Model - serverId와 content
  */
 export async function createVideoComment(
-  videoId: number,
-  data: { content: string; timestampMs?: number },
+  videoId: string,
+  data: CreateCommentRequestDto & { timestampMs?: number },
 ): Promise<{ serverId: string; content: string }> {
-  const response = await apiClient.post<ApiResponse<CommentResponseDto>>(
-    `/videos/${videoId}/comments`,
+  const response = await apiClient.post<ApiResponse<CreateCommentResponseDto>>(
+    `/videos/${encodeURIComponent(videoId)}/comments`,
     data,
   );
 
   if (response.data.resultType === 'SUCCESS') {
-    // DTO → Model 변환
-    return commentDtoToModel(response.data.success);
+    return {
+      serverId: response.data.success.commentId,
+      content: response.data.success.content,
+    };
   }
   throw new Error(response.data.error.reason);
 }
@@ -95,17 +118,19 @@ export async function createVideoComment(
  * @returns Model - serverId와 content
  */
 export async function createCommentReply(
-  commentId: number,
-  data: { content: string },
+  commentId: string,
+  data: CreateCommentRequestDto,
 ): Promise<{ serverId: string; content: string }> {
-  const response = await apiClient.post<ApiResponse<CommentResponseDto & { replyId?: string }>>(
-    `/comments/${commentId}/replies`,
+  const response = await apiClient.post<ApiResponse<CreateReplyCommentResponseDto>>(
+    `/comments/${encodeURIComponent(commentId)}/replies`,
     data,
   );
 
   if (response.data.resultType === 'SUCCESS') {
-    // DTO → Model 변환
-    return commentDtoToModel(response.data.success);
+    return {
+      serverId: response.data.success.replyId,
+      content: response.data.success.content,
+    };
   }
   throw new Error(response.data.error.reason);
 }
@@ -115,8 +140,10 @@ export async function createCommentReply(
  *
  * @param commentId - 댓글 ID
  */
-export async function deleteVideoComment(commentId: number): Promise<void> {
-  const response = await apiClient.delete<ApiResponse<null>>(`/comments/${commentId}`);
+export async function deleteVideoComment(commentId: string): Promise<void> {
+  const response = await apiClient.delete<ApiResponse<null>>(
+    `/comments/${encodeURIComponent(commentId)}`,
+  );
 
   if (response.data.resultType === 'FAILURE') {
     throw new Error(response.data.error.reason);

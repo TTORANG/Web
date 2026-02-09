@@ -1,9 +1,3 @@
-/**
- * 공유 링크 관련 TanStack Query 훅
- *
- * @file useShares.ts
- * @description 공유 가능 영상 조회 및 공유 링크 생성 훅
- */
 import { useInfiniteQuery, useMutation } from '@tanstack/react-query';
 
 import { queryKeys } from '@/api';

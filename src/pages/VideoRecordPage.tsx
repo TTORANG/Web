@@ -108,7 +108,7 @@ export default function VideoRecordPage() {
           showToast.error('영상 저장 실패', '로컬 저장소에 영상을 저장하지 못했습니다.');
         }
 
-        navigate(`/${projectId}/video`, {
+        navigate(`/${projectId}/videos`, {
           state: { uploadSuccess: true, videoId },
           replace: true,
         });

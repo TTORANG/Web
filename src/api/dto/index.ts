@@ -4,6 +4,7 @@
  */
 
 export type {
+  JwtPayloadDto,
   SocialLoginSuccessResponseDto,
   SocialLoginTokensResponseDto,
   SocialLoginUserResponseDto,
@@ -22,24 +23,40 @@ export type {
 } from './scripts.dto';
 export type {
   ReadReactionCountDto,
+  ReadVideoReactionSummaryItemDto,
+  ReadVideoReactionTimelineResponseDto,
+  ReadVideoReactionTimelineMarkerDto,
   ToggleSlideReactionDto,
   ToggleSlideReactionResponseDto,
   ToggleVideoReactionDto,
   ToggleVideoReactionResponseDto,
 } from './reactions.dto';
 export type { RestoreScriptRequestDto } from './analytics.dto';
-export type { UpdateProjectDto } from './presentations.dto';
+export type {
+  DeleteProjectResponseDto,
+  GetPresentationsRequestDto,
+  UpdateProjectRequestDto,
+  UpdateProjectResponseDto,
+} from './presentations.dto';
 // export type { UploadFileResponseDto } from './files.dto';
 export type {
-  ChunkUploadResponseDto,
-  CreateCommentDto,
-  FinishVideoRequestDto,
-  FinishVideoResponseDto,
-  StartVideoRequestDto,
-  StartVideoResponseDto,
+  CreateStartVideoRequestDto,
+  CreateStartVideoResponseDto,
+  ReadProjectVideosResponseDto,
+  ReadVideoDetailResponseDto,
+  UpdateVideoRequestDto,
+  UpdateVideoResponseDto,
+  DeleteVideoResponseDto,
+  VideoDetailDto,
+  VideoListItemDto,
+  VideoSlideTimelineItemDto,
+  VideoStatus,
+  VideoTimelineCommentDto,
+  VideoTimelineCommentUserDto,
+  VideoTimelineDto,
+  VideoTimelineReactionDto,
 } from './video.dto';
 export type {
-  CommentResponseDto,
   CommentUserDto,
   CommentWithUserDto,
   CreateCommentRequestDto,
@@ -48,7 +65,7 @@ export type {
   CreateReplyCommentResponseDto,
   CreateVideoCommentRequestDto,
   DeleteCommentRequestDto,
-  GetRepliesResponseDto,
+  DeleteCommentResponseDto,
   GetReplyListResponseDto,
   GetSlideCommentsResponseDto,
   UpdateCommentResponseDto,

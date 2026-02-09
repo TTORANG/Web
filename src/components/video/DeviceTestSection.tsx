@@ -60,12 +60,12 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
   return (
     <div className="flex h-full w-full flex-col items-center justify-between py-4">
       <div className="flex w-full flex-col items-center gap-8">
-        <h1 className="text-[1.5rem] font-semibold text-black tracking-tight">
+        <h2 className="text-[1.5rem] font-semibold text-black tracking-tight">
           웹캠, 마이크를 테스트해주세요.
-        </h1>
+        </h2>
 
         <div className="flex w-full items-center justify-center min-h-0">
-          <div className="relative w-full max-w-160 aspect-video overflow-hidden rounded-xl bg-gray-600">
+          <div className="relative w-full max-w-140 aspect-video overflow-hidden rounded-xl bg-gray-600">
             <video
               ref={videoRef}
               autoPlay
@@ -117,7 +117,7 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
         </div>
       </div>
 
-      <div className="mt-8 w-full max-w-110 text-white">
+      <div className="mt-4 mb-8 w-full max-w-110 text-white">
         <ActionButton
           text="영상 녹화하기"
           onClick={() => {

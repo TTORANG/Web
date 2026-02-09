@@ -15,7 +15,7 @@ interface AuthState {
   refreshToken: string | null;
   isLoginModalOpen: boolean;
 
-  login: (user: User, accessToken: string, refreshToken: string) => void;
+  login: (user: User, accessToken: string) => void;
   anonymous: (accessToken: string, refreshToken: string) => void;
   logout: () => void;
   updateUser: (user: Partial<User>) => void;
@@ -32,12 +32,12 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: null,
         isLoginModalOpen: false,
 
-        login: (user, accessToken, refreshToken) => {
+        login: (user, accessToken) => {
           set(
             {
               user,
               accessToken,
-              refreshToken,
+              refreshToken: null,
             },
             false,
             'auth/login',

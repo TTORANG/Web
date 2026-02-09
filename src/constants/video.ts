@@ -7,7 +7,7 @@
  * 리액션/댓글의 타임스탬프 그룹화 윈도우 (초)
  * - 현재 시간 ± FEEDBACK_WINDOW 범위의 피드백을 하나의 그룹으로 처리
  */
-export const FEEDBACK_WINDOW = 5;
+export const FEEDBACK_WINDOW = 2;
 
 /**
  * 리액션 토글 타임스탬프 잠금 윈도우 (ms)

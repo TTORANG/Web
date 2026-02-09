@@ -16,9 +16,9 @@ import ReactionButtons from '@/components/feedback/ReactionButtons';
 import ScriptSection from '@/components/feedback/ScriptSection';
 import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
 import { useExitTracker } from '@/hooks/useExitTracker';
-import { useFeedbackVideo } from '@/hooks/useFeedbackVideo';
 import { useFeedbackWebSocket } from '@/hooks/useFeedbackWebSocket';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
+import { useFeedbackVideo } from '@/pages/feedback/useFeedbackVideo';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 
 export default function FeedbackVideoPage() {
@@ -26,6 +26,7 @@ export default function FeedbackVideoPage() {
   const isDesktop = useIsDesktop();
   const ctx = useFeedbackVideo();
   const videoId = useVideoFeedbackStore((s) => s.video?.videoId);
+
   const {
     isLoading,
     currentTime,

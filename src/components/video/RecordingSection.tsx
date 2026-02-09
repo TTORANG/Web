@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import IconArrowLeft from '@/assets/icons/icon-arrow-left.svg?react';
 import IconArrowRight from '@/assets/icons/icon-arrow-right.svg?react';
 import { Logo, SlideImage } from '@/components/common';
 import { usePresentation } from '@/hooks/queries/usePresentations';
+import { useScript } from '@/hooks/queries/useScript';
 import { useSlides } from '@/hooks/queries/useSlides';
 
 import { useRecorder } from '../../hooks/useRecorder';
@@ -35,7 +36,10 @@ export const RecordingSection = ({
 
   const { data: presentation } = usePresentation(projectId);
   const { data: slidesData } = useSlides(projectId);
-  const slidesList = slidesData || [];
+  const slidesList = useMemo(
+    () => slidesData?.map((slide) => ({ id: slide.slideId, url: slide.imageUrl })) ?? [],
+    [slidesData],
+  );
   const totalPages = slidesList.length > 0 ? slidesList.length : 1;
 
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -52,10 +56,13 @@ export const RecordingSection = ({
   const getSlideImgUrl = useCallback(
     (p: number) => {
       const slide = slidesList[p - 1];
-      return slide ? slide.imageUrl : '';
+      return slide ? slide.url : '';
     },
     [slidesList],
   );
+
+  const currentSlideId = slidesList[currentPage - 1]?.id;
+  const { data: scriptData } = useScript(currentSlideId ?? '');
 
   useEffect(() => {
     setSlideImageLoaded(false);
@@ -169,8 +176,8 @@ export const RecordingSection = ({
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-6">
             <Logo onClick={onExitClick} />
-            <span className="hidden md:inline-flex h-7 items-center px-2 text-sm font-semibold text-gray-800">
-              {presentation?.title || '내 발표'}
+            <span className="hidden md:inline-flex h-7 items-center px-2 text-sm font-semibold text-gray-800 min-w-0">
+              <span className="max-w-60 truncate">{presentation?.title || '내 발표'}</span>
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -279,7 +286,7 @@ export const RecordingSection = ({
               <h3 className="text-body-s-bold text-gray-800">발표 대본</h3>
             </div>
             <div className="scrollbar-hide flex-1 overflow-y-auto text-body-m leading-normal text-black whitespace-pre-wrap">
-              {slidesList[currentPage - 1]?.script || '대본이 없습니다.'}
+              {scriptData?.scriptText || '대본이 없습니다.'}
             </div>
           </div>
 

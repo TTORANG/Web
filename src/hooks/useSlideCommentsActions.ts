@@ -1,15 +1,9 @@
-/**
- * 댓글 통합 훅
- *
- * TanStack Query(API 호출) + Zustand(Optimistic UI)를 결합합니다.
- * 로컬 store 즉시 업데이트 후 서버 API를 호출하고, 실패 시 롤백합니다.
- */
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import type { CreateCommentDto } from '@/api';
+import type { CreateCommentRequestDto } from '@/api';
 import {
   createReply,
   createSlideComment,
@@ -25,23 +19,16 @@ import { showToast } from '@/utils/toast';
 // ── 내부 전용 TanStack Query 훅 ─────────────────────────────
 
 function useCreateCommentMutation() {
-  const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: (variables: { slideId: string; projectId: string; data: CreateCommentDto }) =>
-      createSlideComment(variables.slideId, variables.data),
-
-    onSuccess: (_, { slideId, projectId }) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(slideId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.list(projectId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
-    },
+    mutationFn: (variables: {
+      slideId: string;
+      projectId: string;
+      data: CreateCommentRequestDto;
+    }) => createSlideComment(variables.slideId, variables.data),
   });
 }
 
 function useCreateReplyMutation() {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (variables: {
       commentId: string;
@@ -49,19 +36,10 @@ function useCreateReplyMutation() {
       projectId: string;
       data: { content: string };
     }) => createReply(variables.commentId, variables.data),
-
-    onSuccess: (_, { commentId, slideId, projectId }) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.comments.replies(commentId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(slideId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.list(projectId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
-    },
   });
 }
 
 function useUpdateCommentMutation() {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (variables: {
       commentId: string;
@@ -69,27 +47,13 @@ function useUpdateCommentMutation() {
       projectId: string;
       data: { content: string };
     }) => updateCommentApi(variables.commentId, variables.data),
-
-    onSuccess: (_, { slideId, projectId }) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(slideId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.list(projectId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
-    },
   });
 }
 
 function useDeleteCommentMutation() {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (variables: { commentId: string; slideId: string; projectId: string }) =>
-      deleteCommentApi(variables.commentId),
-
-    onSuccess: (_, { slideId, projectId }) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(slideId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.list(projectId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.detail(slideId) });
-    },
+      deleteCommentApi({ commentId: variables.commentId }),
   });
 }
 
@@ -97,9 +61,22 @@ function useDeleteCommentMutation() {
 
 const EMPTY_COMMENTS: Comment[] = [];
 
-export function useComments() {
+/**
+ * 슬라이드 댓글 통합 훅
+ *
+ * TanStack Query(API 호출) + Zustand(Optimistic UI)를 결합합니다.
+ * 로컬 store 즉시 업데이트 후 서버 API를 호출하고, 실패 시 롤백합니다.
+ *
+ * @returns comments - 트리 구조 댓글 목록 (최신순 정렬)
+ * @returns addComment - 댓글 추가 (optimistic)
+ * @returns addReply - 답글 추가 (optimistic)
+ * @returns deleteComment - 댓글 삭제 (optimistic)
+ * @returns updateComment - 댓글 수정 (optimistic)
+ */
+export function useSlideCommentsActions() {
   const { projectId = '' } = useParams<{ projectId: string }>();
   const slideId = useSlideStore((state) => state.slide?.slideId);
+  const queryClient = useQueryClient();
   const flatComments = useSlideStore((state) => state.slide?.comments);
   const addCommentStore = useSlideStore((state) => state.addComment);
   const addReplyStore = useSlideStore((state) => state.addReply);
@@ -112,14 +89,11 @@ export function useComments() {
   const { mutate: deleteCommentMutate } = useDeleteCommentMutation();
   const { mutate: updateCommentMutate } = useUpdateCommentMutation();
 
-  const findComment = (commentId: string) => flatComments?.find((c) => c.id === commentId);
+  const findComment = (commentId: string) => flatComments?.find((c) => c.commentId === commentId);
 
   const comments = useMemo(() => {
     if (!flatComments) return EMPTY_COMMENTS;
-    const tree = flatToTree(flatComments);
-    return [...tree].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
+    return flatToTree(flatComments);
   }, [flatComments]);
 
   const addComment = (content: string, currentSlideIndex: number) => {
@@ -132,8 +106,9 @@ export function useComments() {
       { slideId, projectId, data: { content } },
       {
         onSuccess: () => {
-          // 서버가 웹소켓을 보내지 않으므로 수동으로 쿼리 무효화
-          // TODO: 서버에서 broadcastNewComment 호출 후 제거
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.comments.list(slideId),
+          });
         },
         onError: () => {
           setComments(previousComments);
@@ -156,6 +131,11 @@ export function useComments() {
     createReplyMutate(
       { commentId: targetServerId, slideId: targetSlideId, projectId, data: { content } },
       {
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.comments.list(targetSlideId),
+          });
+        },
         onError: () => {
           setComments(previousComments);
           showToast.error('답글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
@@ -186,6 +166,11 @@ export function useComments() {
     deleteCommentMutate(
       { commentId: targetServerId, slideId: targetSlideId, projectId },
       {
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.comments.list(targetSlideId),
+          });
+        },
         onError: () => {
           setComments(previousComments);
           showToast.error('댓글 삭제에 실패했습니다.', '잠시 후 다시 시도해주세요.');
@@ -216,6 +201,11 @@ export function useComments() {
     updateCommentMutate(
       { commentId: targetServerId, slideId: targetSlideId, projectId, data: { content } },
       {
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.comments.list(targetSlideId),
+          });
+        },
         onError: () => {
           setComments(previousComments);
           showToast.error('댓글 수정에 실패했습니다.', '잠시 후 다시 시도해주세요.');

@@ -7,6 +7,7 @@
  * - "작은 박스(PiP)"를 hover하면 디밍+텍스트, 클릭하면 슬라이드/웹캠 위치가 토글됨
  * - HLS(.m3u8) 스트리밍 지원 (hls.js)
  */
+/* eslint-disable no-console */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 

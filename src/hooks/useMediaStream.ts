@@ -1,3 +1,11 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+declare global {
+  interface Window {
+    webkitAudioContext: typeof AudioContext;
+  }
+}
+
 /**
  * 미디어 스트림 훅
  *
@@ -11,14 +19,6 @@
  * @returns isLoading - 스트림 로딩 중 여부
  * @returns restartStream - 스트림 재시작 함수
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
-
-declare global {
-  interface Window {
-    webkitAudioContext: typeof AudioContext;
-  }
-}
-
 export const useMediaStream = (videoDeviceId?: string, audioDeviceId?: string) => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [volume, setVolume] = useState<number>(0);
@@ -91,7 +91,9 @@ export const useMediaStream = (videoDeviceId?: string, audioDeviceId?: string) =
 
         updateVolume();
       } catch (err) {
-        console.error('오디오 분석 설정 실패:', err);
+        if (import.meta.env.DEV) {
+          console.error('오디오 분석 설정 실패:', err);
+        }
       }
     },
     [cleanupAudioAnalysis],

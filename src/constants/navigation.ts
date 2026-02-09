@@ -3,7 +3,7 @@ import type { TabItem, TabKey } from '@/types/navigation';
 /** 탭 정의 */
 export const TABS: readonly TabItem[] = [
   { key: 'slide', label: '슬라이드' },
-  { key: 'video', label: '영상' },
+  { key: 'videos', label: '영상' },
   { key: 'insight', label: '인사이트' },
 ] as const;
 
@@ -16,7 +16,8 @@ const LAST_SLIDE_KEY_PREFIX = 'lastSlideId:';
 
 /**
  * 프로젝트별 마지막으로 본 슬라이드 ID를 로컬 스토리지에 저장합니다.
- * @param projectId - 프로젝트 ID
+ *
+ *  @param projectId - 프로젝트 ID
  * @param slideId - 슬라이드 ID
  */
 export const setLastSlideId = (projectId: string, slideId: string): void => {
@@ -50,8 +51,8 @@ export const getTabPath = (projectId: string, tab: Tab, slideId?: string): strin
   switch (tab) {
     case 'slide':
       return `/${projectId}/slide?slideId=${slideId ?? getLastSlideId(projectId)}`;
-    case 'video':
-      return `/${projectId}/video`;
+    case 'videos':
+      return `/${projectId}/videos`;
     case 'insight':
       return `/${projectId}/insight`;
   }
@@ -60,7 +61,7 @@ export const getTabPath = (projectId: string, tab: Tab, slideId?: string): strin
 /**
  * URL 경로에서 현재 활성화된 탭을 추출합니다.
  * @param pathname - 현재 URL 경로
- * @returns 'slide' | 'video' | 'insight'
+ * @returns 'slide' | 'videos' | 'insight'
  */
 export const getTabFromPathname = (pathname: string): Tab => {
   const segments = pathname.split('/').filter(Boolean);
@@ -70,7 +71,7 @@ export const getTabFromPathname = (pathname: string): Tab => {
 
   const tabSegment = segments[1];
 
-  if (tabSegment === 'video') return 'video';
+  if (tabSegment === 'videos') return 'videos';
   if (tabSegment === 'insight') return 'insight';
   return 'slide';
 };
