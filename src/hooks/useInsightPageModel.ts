@@ -9,8 +9,6 @@ import type {
   VideoRetentionDto,
 } from '@/api/dto/analytics.dto';
 import type { ChartDataPoint, InsightModel, InsightTopSlide } from '@/components/insight/types';
-import { useSlideReactionSummaries } from '@/hooks/queries/useReaction.ts';
-import { useSlides } from '@/hooks/queries/useSlides';
 import {
   useProjectAnalyticsSummary,
   useRecentComments,
@@ -18,7 +16,9 @@ import {
   useSlideRetention,
   useVideoAnalytics,
   useVideoRetention,
-} from '@/hooks/useAnalytics.ts';
+} from '@/hooks/queries/useAnalytics';
+import { useSlideReactionSummaries } from '@/hooks/queries/useReaction.ts';
+import { useSlides } from '@/hooks/queries/useSlides';
 import type { DropOffSlide, DropOffTime, SummaryStat } from '@/types/insight';
 import type { SlideListItem } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';
