@@ -2,6 +2,12 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
+import type {
+  SlideAnalyticsDto,
+  SlideRetentionDto,
+  VideoExitAnalyticsDto,
+  VideoRetentionDto,
+} from '@/api/dto/analytics.dto';
 import type { ChartDataPoint, InsightModel, InsightTopSlide } from '@/components/insight/types';
 import { useSlideReactionSummaries } from '@/hooks/queries/useReaction.ts';
 import { useSlides } from '@/hooks/queries/useSlides';
@@ -12,7 +18,7 @@ import {
   useSlideRetention,
   useVideoAnalytics,
   useVideoRetention,
-} from '@/hooks/useAnalytics';
+} from '@/hooks/useAnalytics.ts';
 import type { DropOffSlide, DropOffTime, SummaryStat } from '@/types/insight';
 import type { SlideListItem } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';
@@ -92,7 +98,7 @@ export function useInsightPageModel(): InsightModel {
 
   // ---- Top slides ----
   const topSlides = useMemo<InsightTopSlide[]>(() => {
-    const analyticsSlides = slideAnalytics?.slides ?? [];
+    const analyticsSlides: SlideAnalyticsDto[] = slideAnalytics?.slides ?? [];
     if (!analyticsSlides.length) return [];
 
     const { slideIndexById, slideById } = slideDataMaps;
@@ -131,7 +137,7 @@ export function useInsightPageModel(): InsightModel {
   }, [slides]);
 
   const dropOffSlides: DropOffSlide[] = useMemo(() => {
-    const items = slideAnalytics?.slides ?? [];
+    const items: SlideAnalyticsDto[] = slideAnalytics?.slides ?? [];
     return items
       .slice()
       .sort((a, b) => b.exitCount - a.exitCount)
@@ -155,7 +161,7 @@ export function useInsightPageModel(): InsightModel {
   }, [slideAnalytics]);
 
   const dropOffTimes: DropOffTime[] = useMemo(() => {
-    const items = videoExitAnalytics?.exits ?? [];
+    const items: VideoExitAnalyticsDto[] = videoExitAnalytics?.exits ?? [];
     return items
       .slice()
       .sort((a, b) => b.exitCount - a.exitCount)
@@ -182,7 +188,7 @@ export function useInsightPageModel(): InsightModel {
 
   const videoChartData = useMemo<ChartDataPoint[]>(() => {
     if (!videoRetentionRes?.videoRetention) return [];
-    return videoRetentionRes.videoRetention.map((item) => ({
+    return videoRetentionRes.videoRetention.map((item: VideoRetentionDto) => ({
       label: formatVideoTimestamp(item.timestampMs / 1000), // x축: 00:00
       value: Math.round(normalizeRate(item.retentionRate)), // y축: 0~100%
       tooltipTitle: formatVideoTimestamp(item.timestampMs / 1000),
@@ -193,7 +199,7 @@ export function useInsightPageModel(): InsightModel {
 
   const slideChartData = useMemo<ChartDataPoint[]>(() => {
     if (!slideRetentionRes?.slideRetention) return [];
-    return slideRetentionRes.slideRetention.map((item) => ({
+    return slideRetentionRes.slideRetention.map((item: SlideRetentionDto) => ({
       label: `S${item.slideNum}`, // x축: S1, S2
       value: Math.round(normalizeRate(item.retentionRate)),
       tooltipTitle: item.title || `슬라이드 ${item.slideNum}`, // 툴팁: 제목
