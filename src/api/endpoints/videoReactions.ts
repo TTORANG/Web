@@ -1,6 +1,6 @@
 /**
  * @file videoReactions.ts
- * @description 영상 리액션 관련 API 엔드포인트
+ * @description Video reaction related APIs.
  */
 import { apiClient } from '@/api/client';
 import type {
@@ -14,11 +14,7 @@ import type { ApiResponse } from '@/types/api';
 export type { ToggleVideoReactionDto as ToggleVideoReactionRequest };
 
 /**
- * 영상 리액션 토글
- *
- * @param videoId - 영상 ID
- * @param data - 리액션 데이터 (type + timestamp)
- * @returns { active: boolean } - 토글 후 활성 상태
+ * Toggle a reaction at a specific video timestamp.
  */
 export async function toggleVideoReaction(
   videoId: string,
@@ -32,15 +28,12 @@ export async function toggleVideoReaction(
   if (response.resultType === 'SUCCESS') {
     return response.success;
   }
+
   throw new Error(response.error.reason);
 }
 
 /**
- * 영상 리액션 (특정 시점) 조회
- *
- * @param videoId - 영상 ID
- * @param params - timestampMs (필수), windowMs (선택)
- * @returns 이모지 타입별 집계 배열
+ * Read reaction counts around a timestamp window.
  */
 export async function getVideoReactions(
   videoId: string,
@@ -54,15 +47,12 @@ export async function getVideoReactions(
   if (data.resultType === 'SUCCESS') {
     return data.success;
   }
+
   throw new Error(data.error.reason);
 }
 
 /**
- * 영상 리액션 타임라인 조회
- *
- * @param videoId - 영상 ID
- * @param params - intervalMs (선택)
- * @returns 타임라인 마커
+ * Read video reaction timeline markers.
  */
 export async function getVideoReactionTimeline(
   videoId: string,
@@ -76,5 +66,6 @@ export async function getVideoReactionTimeline(
   if (data.resultType === 'SUCCESS') {
     return data.success;
   }
+
   throw new Error(data.error.reason);
 }

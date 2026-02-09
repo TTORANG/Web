@@ -1,59 +1,175 @@
 /**
  * @file useFeedbackVideo.ts
- * @description FeedbackVideoPage의 비즈니스 로직을 담당하는 커스텀 훅
+ * @description FeedbackVideoPage business logic
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 
+import { getSharedContent } from '@/api/endpoints/shares';
+import { getSlides } from '@/api/endpoints/slides';
 import { videosApi } from '@/api/endpoints/videos';
 import { useVideoComments } from '@/hooks/useVideoComments';
 import { useVideoReactions } from '@/hooks/useVideoReactions';
+import { useAuthStore } from '@/stores/authStore';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Comment } from '@/types/comment';
+import type { SharedProjectSlide } from '@/types/share';
+import type { SlideDetail } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';
 
-/**
- * 테스트용 하드코딩 비디오 ID
- * DB에서 ready 상태인 9초 영상 (id=26, project_id=136)
- */
-const TEST_VIDEO_ID = '26';
+const DEFAULT_VIDEO_ID = '34';
+const FALLBACK_SLIDE_DURATION_SECONDS = 10;
+const FALLBACK_VIDEO_DURATION_SECONDS = 9;
+const SHARED_PROJECT_ID = 'shared';
+
+function toPublicUrl(url?: string | null): string {
+  if (!url) return '';
+  return url.startsWith('gs://') ? `https://storage.googleapis.com/${url.slice(5)}` : url;
+}
+
+function toPlayableVideoUrl(url?: string | null): string {
+  const publicUrl = toPublicUrl(url);
+  if (!publicUrl) return '';
+
+  if (!import.meta.env.DEV) {
+    return publicUrl;
+  }
+
+  try {
+    const parsed = new URL(publicUrl);
+    if (parsed.hostname === 'cdn.ttorang.com') {
+      return `/cdn-proxy${parsed.pathname}${parsed.search}`;
+    }
+  } catch {
+    // ignore invalid URL
+  }
+
+  return publicUrl;
+}
+
+function toNumber(value: string | number | undefined, fallback: number): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
+}
+
+function normalizeSharedSlides(rawSlides: SharedProjectSlide[], projectId: string): SlideDetail[] {
+  const now = new Date().toISOString();
+
+  return rawSlides
+    .map((slide, index) => {
+      const slideNum = toNumber(slide.slideNum, index + 1);
+      return {
+        slideId: slide.slideId,
+        projectId: projectId || SHARED_PROJECT_ID,
+        title: `슬라이드 ${slideNum}`,
+        slideNum,
+        imageUrl: toPublicUrl(slide.imageUrl),
+        createdAt: now,
+        updatedAt: now,
+        script: slide.scriptText ?? '',
+      };
+    })
+    .sort((a, b) => a.slideNum - b.slideNum);
+}
+
+function normalizeProjectSlides(rawSlides: SlideDetail[], projectId: string): SlideDetail[] {
+  return rawSlides
+    .slice()
+    .sort((a, b) => a.slideNum - b.slideNum)
+    .map((slide) => ({
+      ...slide,
+      projectId: slide.projectId || projectId,
+      imageUrl: toPublicUrl(slide.imageUrl),
+    }));
+}
+
+function mapSlidesByTimeline(
+  sourceSlides: SlideDetail[],
+  timeline: Array<{ slideId: string; timestampMs: number }>,
+): { slides: SlideDetail[]; slideChangeTimes: number[] } {
+  if (!timeline.length) {
+    const slides = sourceSlides.map((slide, index) => ({
+      ...slide,
+      startTime:
+        typeof slide.startTime === 'number' && Number.isFinite(slide.startTime)
+          ? slide.startTime
+          : index * FALLBACK_SLIDE_DURATION_SECONDS,
+    }));
+    return { slides, slideChangeTimes: slides.map((slide) => slide.startTime ?? 0) };
+  }
+
+  const sortedTimeline = timeline
+    .slice()
+    .sort((a, b) => a.timestampMs - b.timestampMs)
+    .filter((item) => item.slideId);
+  const slideMap = new Map(sourceSlides.map((slide) => [String(slide.slideId), slide]));
+  const now = new Date().toISOString();
+  const fallbackProjectId = sourceSlides[0]?.projectId ?? SHARED_PROJECT_ID;
+
+  const slides = sortedTimeline.map((item, index) => {
+    const matchedSlide = slideMap.get(String(item.slideId)) ?? sourceSlides[index];
+
+    if (matchedSlide) {
+      return {
+        ...matchedSlide,
+        startTime: Math.max(0, item.timestampMs / 1000),
+      };
+    }
+
+    return {
+      slideId: String(item.slideId),
+      projectId: fallbackProjectId,
+      title: `슬라이드 ${index + 1}`,
+      slideNum: index + 1,
+      imageUrl: '',
+      createdAt: now,
+      updatedAt: now,
+      script: '',
+      startTime: Math.max(0, item.timestampMs / 1000),
+    } satisfies SlideDetail;
+  });
+
+  return {
+    slides,
+    slideChangeTimes: slides.map((slide) => slide.startTime ?? 0),
+  };
+}
 
 export function useFeedbackVideo() {
-  // projectId는 라우트에서 추출하지만 현재 테스트 모드에서는 사용하지 않음
-  useParams<{ projectId: string }>();
-  const [isLoading, setIsLoading] = useState(true);
+  const { projectId = '', shareToken: routeShareToken = '' } = useParams<{
+    projectId?: string;
+    shareToken?: string;
+  }>();
+  const [searchParams] = useSearchParams();
+  const queryShareToken = searchParams.get('shareToken') ?? '';
+  const shareToken = routeShareToken || queryShareToken;
 
-  // Store selectors
+  const [isLoading, setIsLoading] = useState(true);
+  const [projectSlides, setProjectSlides] = useState<SlideDetail[]>([]);
+  const [slideChangeTimes, setSlideChangeTimes] = useState<number[]>([]);
+
   const video = useVideoFeedbackStore((s) => s.video);
   const initVideo = useVideoFeedbackStore((s) => s.initVideo);
   const currentTime = useVideoFeedbackStore((s) => s.currentTime);
   const updateCurrentTime = useVideoFeedbackStore((s) => s.updateCurrentTime);
   const requestSeek = useVideoFeedbackStore((s) => s.requestSeek);
 
-  // Comments & Reactions
   const { comments, addComment, addReply, deleteComment, updateComment } = useVideoComments();
   const { reactions, toggleReaction } = useVideoReactions();
-
-  // Comment draft state
   const [commentDraft, setCommentDraft] = useState('');
 
-  // TODO: 실제 API로 프로젝트 슬라이드 조회
-  const projectSlides = useMemo(() => [], []);
-
-  // TODO: 슬라이드 전환 시간 계산
-  const slideChangeTimes = useMemo(() => [], []);
-
-  // 타임스탬프 프리픽스 (댓글 입력 시 자동 삽입)
   const timestampPrefix = useMemo(() => `${formatVideoTimestamp(currentTime)} `, [currentTime]);
 
-  // 댓글 추가 핸들러
   const handleAddComment = useCallback(() => {
     if (!commentDraft.trim()) return;
     addComment(commentDraft, currentTime);
     setCommentDraft('');
-  }, [commentDraft, addComment, currentTime]);
+  }, [addComment, commentDraft, currentTime]);
 
-  // 타임스탬프 참조로 이동
   const handleGoToTimeRef = useCallback(
     (ref: NonNullable<Comment['ref']>) => {
       if (ref.kind === 'video') requestSeek(ref.seconds);
@@ -61,62 +177,150 @@ export function useFeedbackVideo() {
     [requestSeek],
   );
 
-  // 비디오 초기화 - 서버 API로 실제 비디오 데이터를 가져옴
   useEffect(() => {
     let cancelled = false;
 
-    const loadVideo = async () => {
+    const loadFromShareToken = async () => {
+      const sharedContent = await getSharedContent(shareToken);
+      if (cancelled) return;
+
+      const sharedSlides = normalizeSharedSlides(
+        sharedContent.projectContent?.slides ?? [],
+        projectId,
+      );
+
+      const accessToken = sharedContent.sessionInfo?.tokens?.accessToken;
+      const refreshToken = sharedContent.sessionInfo?.tokens?.refreshToken;
+      if (accessToken && refreshToken) {
+        useAuthStore.getState().anonymous(accessToken, refreshToken);
+      }
+
+      const videoId = sharedContent.projectContent?.video?.videoId ?? '';
+      const normalizedVideoId = String(videoId || DEFAULT_VIDEO_ID);
+      let videoUrl = toPlayableVideoUrl(sharedContent.projectContent?.video?.videoUrl);
+      let videoTitle = sharedContent.projectContent?.title ?? '공유 영상';
+      let duration = FALLBACK_VIDEO_DURATION_SECONDS;
+      let timelineSlides: Array<{ slideId: string; timestampMs: number }> = [];
+
+      if (normalizedVideoId) {
+        const [detailResult, timelineResult] = await Promise.allSettled([
+          videosApi.getVideoDetail(normalizedVideoId),
+          videosApi.getVideoSlides(normalizedVideoId),
+        ]);
+        if (cancelled) return;
+
+        if (
+          detailResult.status === 'fulfilled' &&
+          detailResult.value.data.resultType === 'SUCCESS'
+        ) {
+          const serverVideo = detailResult.value.data.success.video;
+          videoTitle = serverVideo?.title || videoTitle;
+          duration = serverVideo?.durationSeconds || duration;
+          videoUrl = videoUrl || toPlayableVideoUrl(serverVideo?.hlsMasterUrl);
+        }
+
+        if (
+          timelineResult.status === 'fulfilled' &&
+          timelineResult.value.data.resultType === 'SUCCESS'
+        ) {
+          timelineSlides = timelineResult.value.data.success.slides.map((slide) => ({
+            slideId: String(slide.slideId),
+            timestampMs: slide.timestampMs,
+          }));
+        }
+      }
+
+      const mapped = mapSlidesByTimeline(sharedSlides, timelineSlides);
+
+      initVideo({
+        videoId: normalizedVideoId,
+        videoUrl: videoUrl || '',
+        title: videoTitle,
+        duration,
+        comments: [],
+        reactionEvents: [],
+        feedbacks: [],
+      });
+
+      setProjectSlides(mapped.slides);
+      setSlideChangeTimes(mapped.slideChangeTimes);
+    };
+
+    const loadFallback = async () => {
+      const videoId = DEFAULT_VIDEO_ID;
+
+      const [detailResult, timelineResult, slidesResult] = await Promise.allSettled([
+        videosApi.getVideoDetail(videoId),
+        videosApi.getVideoSlides(videoId),
+        projectId ? getSlides(projectId) : Promise.resolve([]),
+      ]);
+      if (cancelled) return;
+
+      let sourceSlides: SlideDetail[] = [];
+      if (slidesResult.status === 'fulfilled') {
+        sourceSlides = normalizeProjectSlides(slidesResult.value as SlideDetail[], projectId);
+      }
+
+      let videoUrl = '';
+      let videoTitle = '테스트 영상';
+      let duration = FALLBACK_VIDEO_DURATION_SECONDS;
+      let timelineSlides: Array<{ slideId: string; timestampMs: number }> = [];
+
+      if (detailResult.status === 'fulfilled' && detailResult.value.data.resultType === 'SUCCESS') {
+        const serverVideo = detailResult.value.data.success.video;
+        videoUrl = toPlayableVideoUrl(serverVideo?.hlsMasterUrl);
+        videoTitle = serverVideo?.title || videoTitle;
+        duration = serverVideo?.durationSeconds || duration;
+      }
+
+      if (
+        timelineResult.status === 'fulfilled' &&
+        timelineResult.value.data.resultType === 'SUCCESS'
+      ) {
+        timelineSlides = timelineResult.value.data.success.slides.map((slide) => ({
+          slideId: String(slide.slideId),
+          timestampMs: slide.timestampMs,
+        }));
+      }
+
+      const mapped = mapSlidesByTimeline(sourceSlides, timelineSlides);
+
+      initVideo({
+        videoId,
+        videoUrl,
+        title: videoTitle,
+        duration,
+        comments: [],
+        reactionEvents: [],
+        feedbacks: [],
+      });
+
+      setProjectSlides(mapped.slides);
+      setSlideChangeTimes(mapped.slideChangeTimes);
+    };
+
+    const load = async () => {
       try {
-        // 서버에서 비디오 상세 정보 조회
-        const response = await videosApi.getVideoDetail(TEST_VIDEO_ID);
-        if (cancelled) return;
-
-        // 서버 응답 구조: { resultType: "SUCCESS", success: { video: {...}, timeline: {...} } }
-        if (response.data.resultType !== 'SUCCESS') {
-          throw new Error(response.data.error.reason);
+        if (shareToken) {
+          await loadFromShareToken();
+        } else {
+          await loadFallback();
         }
-        const { video: serverVideo } = response.data.success;
-
-        // 서버 응답에서 비디오 URL 추출
-        let videoUrl = serverVideo.hlsMasterUrl || '';
-
-        // 개발 환경에서 CDN CORS 우회를 위해 proxy 사용
-        if (videoUrl && import.meta.env.DEV) {
-          try {
-            const url = new URL(videoUrl);
-            if (url.hostname === 'cdn.ttorang.com') {
-              videoUrl = `/cdn-proxy${url.pathname}${url.search}`;
-            }
-          } catch {
-            // Invalid URL인 경우 프록시를 사용하지 않음
-          }
-        }
-
-        const videoData = {
-          videoId: TEST_VIDEO_ID,
-          videoUrl,
-          title: serverVideo.title || '테스트 영상',
-          duration: serverVideo.durationSeconds || 9,
-          comments: [],
-          reactionEvents: [],
-          feedbacks: [],
-        };
-
-        initVideo(videoData);
       } catch (error) {
-        console.error('[useFeedbackVideo] 비디오 로드 실패, 폴백 사용:', error);
+        console.error('[useFeedbackVideo] load failed:', error);
         if (cancelled) return;
 
-        // 서버 요청 실패 시 폴백: videoId만 실제 값 사용
         initVideo({
-          videoId: TEST_VIDEO_ID,
+          videoId: DEFAULT_VIDEO_ID,
           videoUrl: '',
           title: '테스트 영상',
-          duration: 9,
+          duration: FALLBACK_VIDEO_DURATION_SECONDS,
           comments: [],
           reactionEvents: [],
           feedbacks: [],
         });
+        setProjectSlides([]);
+        setSlideChangeTimes([]);
       } finally {
         if (!cancelled) {
           setTimeout(() => setIsLoading(false), 0);
@@ -124,15 +328,14 @@ export function useFeedbackVideo() {
       }
     };
 
-    loadVideo();
+    void load();
 
     return () => {
       cancelled = true;
     };
-  }, [initVideo]);
+  }, [initVideo, projectId, shareToken]);
 
   return {
-    // 상태
     isLoading,
     currentTime,
     projectSlides,
@@ -142,7 +345,6 @@ export function useFeedbackVideo() {
     commentDraft,
     timestampPrefix,
 
-    // 액션
     updateCurrentTime,
     requestSeek,
     setCommentDraft,
@@ -153,7 +355,6 @@ export function useFeedbackVideo() {
     updateComment,
     toggleReaction,
 
-    // 비디오 URL (서버에서 가져온 URL 사용)
     webcamVideoUrl: video?.videoUrl || '',
   };
 }

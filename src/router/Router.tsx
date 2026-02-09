@@ -81,4 +81,13 @@ export const router = createBrowserRouter([
     ),
     children: [{ index: true, element: <FdVideoPage /> }],
   },
+
+  // shareToken 넣으면, 받아온정보바탕으로
+  {
+    path: '/share/:shareToken',
+    element: (
+      <Layout theme="dark" left={<FeedbackHeaderLeft />} center={<FeedbackHeaderCenter />} />
+    ),
+    children: [{ index: true, element: <FdVideoPage /> }],
+  },
 ]);
