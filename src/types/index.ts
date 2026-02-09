@@ -30,6 +30,10 @@ export type {
   SharedContentSummary,
   CreateShareLinkData,
   CreateShareLinkResponse,
+  SharedProjectSlide,
+  SharedProjectVideo,
+  ReadSharedContentData,
+  ReadSharedContentResponse,
 } from './share';
 
 // Slide
