@@ -207,6 +207,7 @@ export default function FeedbackVideoPage() {
                 onAddReply={addReply}
                 onGoToRef={handleGoToTimeRef}
                 onDeleteComment={deleteComment}
+                onUpdateComment={updateComment}
               />
             </div>
             <div className="shrink-0 px-4 py-3">
