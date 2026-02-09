@@ -885,7 +885,7 @@ const videoHandlers = [
   // POST /videos/start - 영상 녹화 세션 생성
   http.post(`${BASE_URL}/videos/start`, async ({ request }) => {
     await delay(200);
-    const body = (await request.json()) as CreateStartVideoRequestDto;
+    await request.json();
     const videoId = String(Date.now());
 
     return HttpResponse.json<ApiResponse<CreateStartVideoResponseDto>>({
@@ -935,9 +935,8 @@ const videoHandlers = [
   }),
 
   // GET /presentations/:projectId/videos - 프로젝트별 영상 목록 조회
-  http.get(`${BASE_URL}/presentations/:projectId/videos`, async ({ params, request }) => {
+  http.get(`${BASE_URL}/presentations/:projectId/videos`, async ({ request }) => {
     await delay(200);
-    const { projectId } = params;
     const url = new URL(request.url);
     const search = url.searchParams.get('search') || '';
     const filter = url.searchParams.get('filter') || '';
@@ -1022,9 +1021,8 @@ const videoHandlers = [
   }),
 
   // POST /videos/:videoId/comments - 댓글 작성
-  http.post(`${BASE_URL}/videos/:videoId/comments`, async ({ params, request }) => {
+  http.post(`${BASE_URL}/videos/:videoId/comments`, async ({ request }) => {
     await delay(200);
-    const { videoId } = params;
     const body = (await request.json()) as CreateCommentRequestDto & { timestampMs?: number };
 
     return HttpResponse.json<ApiResponse<CreateCommentResponseDto>>({
@@ -1059,10 +1057,8 @@ const videoHandlers = [
   }),
 
   // DELETE /comments/:commentId - 댓글 삭제
-  http.delete(`${BASE_URL}/comments/:commentId`, async ({ params }) => {
+  http.delete(`${BASE_URL}/comments/:commentId`, async () => {
     await delay(150);
-    const { commentId } = params;
-
     return HttpResponse.json<ApiResponse<null>>({
       resultType: 'SUCCESS',
       success: null,

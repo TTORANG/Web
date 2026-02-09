@@ -73,17 +73,6 @@ export default function VideoListPage() {
   const handleStartRecording = () => {
     navigate(`/${projectId}/video/record`);
   };
-  const handleVideoClick = (video: Video) => {
-    if (video.status === 'ready') {
-      // 모달 대신 페이지로 이동
-      navigate(`}/video/${video.id}`);
-    } else if (video.status === 'processing') {
-      alert('영상이 처리 중입니다. 잠시 후 다시 시도해주세요.');
-    } else {
-      alert('영상 처리에 실패했습니다.');
-    }
-  };
-
   if (!projectId) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">

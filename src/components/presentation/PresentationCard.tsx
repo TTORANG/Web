@@ -80,12 +80,10 @@ function PresentationCard(props: Props) {
     highlightQuery = '',
     updatedAt,
     durationSeconds,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     slideCount,
     feedbackCount,
     thumbnailUrl,
     mode = 'slide',
-    ...rest
   } = props;
 
   const navigate = useNavigate();
