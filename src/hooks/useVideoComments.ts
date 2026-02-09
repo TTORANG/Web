@@ -13,6 +13,7 @@ import { createCommentReply, createVideoComment, deleteVideoComment } from '@/ap
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Comment } from '@/types/comment';
 import { flatToTree } from '@/utils/comment';
+import { extractTimestampFromComment } from '@/utils/format';
 import { showToast } from '@/utils/toast';
 
 const EMPTY_COMMENTS: Comment[] = [];
@@ -63,9 +64,13 @@ export function useVideoComments() {
     const tempComment = addCommentStore(content, seconds);
 
     try {
+      // content에서 타임스탬프 제거 (있으면)
+      const extracted = extractTimestampFromComment(content);
+      const contentToSend = extracted ? extracted.content : content;
+
       // 서버 API 호출 (초를 밀리초로 변환)
       const model = await createVideoComment(videoId, {
-        content,
+        content: contentToSend,
         timestampMs: Math.floor(seconds * 1000),
       });
 
@@ -94,13 +99,17 @@ export function useVideoComments() {
         return;
       }
 
+      // content에서 타임스탬프 제거 (있으면)
+      const extracted = extractTimestampFromComment(content);
+      const contentToSend = extracted ? extracted.content : content;
+
       // 서버 API 호출 (serverId를 number로 변환)
       const parentServerIdNum = parseInt(parentComment.serverId, 10);
       if (isNaN(parentServerIdNum)) {
         showToast.error('답글 등록에 실패했습니다.', '잘못된 댓글 ID입니다.');
         return;
       }
-      const model = await createCommentReply(parentServerIdNum, { content });
+      const model = await createCommentReply(parentServerIdNum, { content: contentToSend });
 
       // 서버 ID 저장 (Model에서 serverId 추출)
       if (model && tempReply) {
@@ -174,12 +183,16 @@ export function useVideoComments() {
     updateCommentStore(commentId, content);
 
     try {
+      // content에서 타임스탬프 제거 (있으면)
+      const extracted = extractTimestampFromComment(content);
+      const contentToSend = extracted ? extracted.content : content;
+
       // 서버 API 호출 (serverId를 number로 변환)
       const commentIdNum = parseInt(targetComment.serverId, 10);
       if (isNaN(commentIdNum)) {
         throw new Error('Invalid comment server ID');
       }
-      await updateCommentApi(String(commentIdNum), { content });
+      await updateCommentApi(String(commentIdNum), { content: contentToSend });
       showToast.success('댓글이 수정되었습니다.');
     } catch {
       showToast.error('댓글 수정에 실패했습니다.', '잠시 후 다시 시도해주세요.');
