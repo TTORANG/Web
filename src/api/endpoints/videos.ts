@@ -1,6 +1,7 @@
 import { apiClient } from '@/api/client';
 import type {
   ChunkUploadResponseDto,
+  CommentResponseDto,
   FinishVideoRequestDto,
   FinishVideoResponseDto,
   StartVideoRequestDto,
@@ -10,6 +11,24 @@ import type { ApiResponse } from '@/types/api';
 
 import type { GetProjectVideosResponseDto } from '../dto/video.dto';
 
+/**
+ * DTO → Model 변환: CommentResponseDto를 앱 내부용 Model로 변환
+ * 주의: 서버 응답에서 댓글은 'commentId', 답글은 'replyId'를 사용할 수 있음
+ */
+function commentDtoToModel(dto: CommentResponseDto & { replyId?: string }): {
+  serverId: string;
+  content: string;
+} {
+  return {
+    serverId: dto.commentId ?? dto.replyId ?? '',
+    content: dto.content,
+  };
+}
+
+// ============================================================================
+// 레거시 videosApi 객체 (하위 호환성 유지)
+// useVideoUpload 등 기존 코드에서 사용 중
+// ============================================================================
 export const videosApi = {
   // POST /videos/start - 영상 녹화 세션 생성
   startVideo: (data: StartVideoRequestDto) =>
@@ -62,3 +81,67 @@ export const videosApi = {
     return apiClient.get<ApiResponse<GetProjectVideosResponseDto>>(url);
   },
 };
+
+// ============================================================================
+// 신규 개별 함수 export (컨벤션 준수)
+// useVideoComments에서 사용
+// ============================================================================
+
+/**
+ * 비디오에 댓글 작성 (POST)
+ *
+ * @param videoId - 비디오 ID
+ * @param data - 댓글 내용 및 타임스탬프
+ * @returns Model - serverId와 content
+ */
+export async function createVideoComment(
+  videoId: number,
+  data: { content: string; timestampMs?: number },
+): Promise<{ serverId: string; content: string }> {
+  const response = await apiClient.post<ApiResponse<CommentResponseDto>>(
+    `/videos/${videoId}/comments`,
+    data,
+  );
+
+  if (response.data.resultType === 'SUCCESS') {
+    // DTO → Model 변환
+    return commentDtoToModel(response.data.success);
+  }
+  throw new Error(response.data.error.reason);
+}
+
+/**
+ * 댓글에 답글 작성 (POST)
+ *
+ * @param commentId - 부모 댓글 ID
+ * @param data - 답글 내용
+ * @returns Model - serverId와 content
+ */
+export async function createCommentReply(
+  commentId: number,
+  data: { content: string },
+): Promise<{ serverId: string; content: string }> {
+  const response = await apiClient.post<ApiResponse<CommentResponseDto & { replyId?: string }>>(
+    `/comments/${commentId}/replies`,
+    data,
+  );
+
+  if (response.data.resultType === 'SUCCESS') {
+    // DTO → Model 변환
+    return commentDtoToModel(response.data.success);
+  }
+  throw new Error(response.data.error.reason);
+}
+
+/**
+ * 댓글 삭제 (DELETE)
+ *
+ * @param commentId - 댓글 ID
+ */
+export async function deleteVideoComment(commentId: number): Promise<void> {
+  const response = await apiClient.delete<ApiResponse<null>>(`/comments/${commentId}`);
+
+  if (response.data.resultType === 'FAILURE') {
+    throw new Error(response.data.error.reason);
+  }
+}

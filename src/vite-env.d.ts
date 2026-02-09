@@ -3,6 +3,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_API_URL: string;
+  readonly VITE_WS_URL: string;
   readonly VITE_APP_TITLE: string;
   readonly VITE_API_MOCKING: string;
   readonly VITE_KAKAO_JS_KEY: string;

@@ -131,6 +131,10 @@ export function useComments() {
     createCommentMutate(
       { slideId, projectId, data: { content } },
       {
+        onSuccess: () => {
+          // 서버가 웹소켓을 보내지 않으므로 수동으로 쿼리 무효화
+          // TODO: 서버에서 broadcastNewComment 호출 후 제거
+        },
         onError: () => {
           setComments(previousComments);
           showToast.error('댓글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
@@ -145,6 +149,7 @@ export function useComments() {
     const targetServerId = target?.serverId ?? parentId;
     if (!targetSlideId) return;
 
+    // 최상위 부모에게 답글 달기 (slideStore의 addReply가 rootParentId를 찾음)
     const previousComments = flatComments ?? [];
     addReplyStore(parentId, content);
 
@@ -162,8 +167,18 @@ export function useComments() {
   const deleteComment = (commentId: string) => {
     const target = findComment(commentId);
     const targetSlideId = target?.slideId ?? slideId;
-    const targetServerId = target?.serverId ?? commentId;
-    if (!targetSlideId) return;
+    const targetServerId = target?.serverId;
+
+    if (!targetSlideId) {
+      showToast.error('댓글 삭제에 실패했습니다.', '슬라이드 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    // 서버에 저장되지 않은 댓글은 로컬에서만 삭제
+    if (!targetServerId) {
+      deleteCommentStore(commentId);
+      return;
+    }
 
     const previousComments = flatComments ?? [];
     deleteCommentStore(commentId);
@@ -182,8 +197,18 @@ export function useComments() {
   const updateComment = (commentId: string, content: string) => {
     const target = findComment(commentId);
     const targetSlideId = target?.slideId ?? slideId;
-    const targetServerId = target?.serverId ?? commentId;
-    if (!targetSlideId) return;
+    const targetServerId = target?.serverId;
+
+    if (!targetSlideId) {
+      showToast.error('댓글 수정에 실패했습니다.', '슬라이드 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    // 서버에 저장되지 않은 댓글은 로컬에서만 수정
+    if (!targetServerId) {
+      updateCommentStore(commentId, content);
+      return;
+    }
 
     const previousComments = flatComments ?? [];
     updateCommentStore(commentId, content);

@@ -59,7 +59,7 @@ export interface VideoTimestampFeedback {
  * 전체 영상의 모든 타임스탬프 피드백을 관리합니다.
  */
 export interface VideoFeedback {
-  videoId: string;
+  videoId: number; // 서버 API와 일관성 유지
   videoUrl: string;
   title: string;
   duration: number; // 초 단위

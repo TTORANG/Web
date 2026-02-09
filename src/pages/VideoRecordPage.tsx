@@ -104,8 +104,8 @@ export default function VideoRecordPage() {
           const existingVideos = JSON.parse(localStorage.getItem('mockVideos') || '[]');
           existingVideos.unshift(videoData);
           localStorage.setItem('mockVideos', JSON.stringify(existingVideos));
-        } catch (err) {
-          console.warn('localStorage 저장 실패 (무시):', err);
+        } catch {
+          showToast.error('영상 저장 실패', '로컬 저장소에 영상을 저장하지 못했습니다.');
         }
 
         navigate(`/${projectId}/videos`, {

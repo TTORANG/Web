@@ -11,6 +11,7 @@ import { useParams } from 'react-router-dom';
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
 import { Spinner } from '@/components/common';
+import WebSocketDebug from '@/components/common/WebSocketDebug';
 import FeedbackMobileLayout from '@/components/feedback/FeedbackMobileLayout';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
 import SlideNavigation from '@/components/feedback/SlideNavigation';
@@ -26,11 +27,18 @@ import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
 
 import { useComments } from '../hooks/useComments';
+import { useFeedbackWebSocket } from '../hooks/useFeedbackWebSocket';
 import { useReactions } from '../hooks/useReactions';
 
 export default function FeedbackSlidePage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { data: slides, isLoading } = useSlides(projectId ?? '');
+
+  // 웹소켓 연결
+  const { isConnected, currentRooms, joinProject, leaveProject, getRooms } = useFeedbackWebSocket({
+    projectId: projectId ?? '',
+    enabled: !!projectId,
+  });
 
   const totalSlides = slides?.length ?? 0;
   const navigation = useSlideNavigation(totalSlides);
@@ -231,6 +239,16 @@ export default function FeedbackSlidePage() {
           </>
         }
         commentCount={comments.length}
+      />
+
+      {/* WebSocket 디버그 UI (개발 환경에서만) */}
+      <WebSocketDebug
+        isConnected={isConnected}
+        currentRooms={currentRooms}
+        projectId={projectId}
+        onJoinProject={joinProject}
+        onLeaveProject={leaveProject}
+        onGetRooms={getRooms}
       />
     </div>
   );
