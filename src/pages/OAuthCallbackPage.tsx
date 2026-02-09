@@ -49,6 +49,14 @@ export default function OAuthCallbackPage() {
 
     // 팝업인 경우 닫기, 아니면 홈으로 이동
     if (window.opener) {
+      window.opener.postMessage(
+        {
+          type: 'oauth:callback',
+          accessToken,
+          sessionId,
+        },
+        window.location.origin,
+      );
       window.close();
     } else {
       navigate('/', { replace: true });
