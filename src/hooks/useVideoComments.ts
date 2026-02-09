@@ -5,6 +5,7 @@ import { createCommentReply, createVideoComment, deleteVideoComment } from '@/ap
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Comment } from '@/types/comment';
 import { flatToTree } from '@/utils/comment';
+import { extractTimestampFromComment } from '@/utils/format';
 import { showToast } from '@/utils/toast';
 
 const EMPTY_COMMENTS: Comment[] = [];
@@ -34,7 +35,13 @@ export function useVideoComments() {
     if (!video) return EMPTY_COMMENTS;
 
     // 모든 타임스탬프의 댓글을 하나로 합침
-    return video.feedbacks.flatMap((f) => f.comments);
+    const merged = video.feedbacks.flatMap((f) => f.comments);
+
+    // 정렬(선택): 최신 댓글이 위로 오게 하고 싶으면 아래처럼
+    // createComment()가 timestamp를 ISO로 넣는 구조라 문자열 비교 가능
+    merged.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+
+    return merged;
   }, [video]);
 
   // Tree 구조로 변환 (CommentList에서 사용)
@@ -59,9 +66,13 @@ export function useVideoComments() {
     const tempComment = addCommentStore(content, seconds);
 
     try {
+      // content에서 타임스탬프 제거 (있으면)
+      const extracted = extractTimestampFromComment(content);
+      const contentToSend = extracted ? extracted.content : content;
+
       // 서버 API 호출 (초를 밀리초로 변환)
       const model = await createVideoComment(videoId, {
-        content,
+        content: contentToSend,
         timestampMs: Math.floor(seconds * 1000),
       });
 
@@ -90,11 +101,15 @@ export function useVideoComments() {
         return;
       }
 
+      // content에서 타임스탬프 제거 (있으면)
+      const extracted = extractTimestampFromComment(content);
+      const contentToSend = extracted ? extracted.content : content;
+
       if (parentComment.serverId) {
         showToast.error('답글 등록에 실패했습니다.', '잘못된 댓글 ID입니다.');
         return;
       }
-      const model = await createCommentReply(parentComment.serverId, { content });
+      const model = await createCommentReply(parentComment.serverId, { content: contentToSend });
 
       // 서버 ID 저장 (Model에서 serverId 추출)
       if (model && tempReply) {
@@ -168,12 +183,16 @@ export function useVideoComments() {
     updateCommentStore(commentId, content);
 
     try {
+      // content에서 타임스탬프 제거 (있으면)
+      const extracted = extractTimestampFromComment(content);
+      const contentToSend = extracted ? extracted.content : content;
+
       // 서버 API 호출 (serverId를 number로 변환)
       const commentIdNum = parseInt(targetComment.serverId, 10);
       if (isNaN(commentIdNum)) {
         throw new Error('Invalid comment server ID');
       }
-      await updateCommentApi(String(commentIdNum), { content });
+      await updateCommentApi(String(commentIdNum), { content: contentToSend });
       showToast.success('댓글이 수정되었습니다.');
     } catch {
       showToast.error('댓글 수정에 실패했습니다.', '잠시 후 다시 시도해주세요.');

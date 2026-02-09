@@ -1,7 +1,7 @@
 import { apiClient } from '@/api/client';
 import type {
   ChunkUploadResponseDto,
-  CreateVideoCommentRequestDto,
+  CommentResponseDto,
   FinishVideoRequestDto,
   FinishVideoResponseDto,
   StartVideoRequestDto,
@@ -13,17 +13,16 @@ import type { ApiResponse } from '@/types/api';
  * DTO → Model 변환: CommentResponseDto를 앱 내부용 Model로 변환
  * 주의: 서버 응답에서 댓글은 'commentId', 답글은 'replyId'를 사용할 수 있음
  */
-function commentDtoToModel(dto: CreateVideoCommentRequestDto & { replyId?: string }): {
+function commentDtoToModel(dto: CommentResponseDto): {
   serverId: string;
   content: string;
 } {
   return {
-    serverId: dto.replyId ?? dto.replyId ?? '',
+    serverId: dto.commentId,
     content: dto.content,
   };
 }
 
-// TODO: 레거시?
 // ============================================================================
 // 레거시 videosApi 객체 (하위 호환성 유지)
 // useVideoUpload 등 기존 코드에서 사용 중
@@ -53,13 +52,6 @@ export const videosApi = {
   finishVideo: (videoId: string, data: FinishVideoRequestDto) =>
     apiClient.post<ApiResponse<FinishVideoResponseDto>>(`/videos/${videoId}/finish`, data),
 
-  // TODO: 연결?
-  // POST /videos/{videoId}/comments - 영상 타임스탬프 댓글 생성
-  createVideoComment: (videoId: string, data: CreateVideoCommentRequestDto) =>
-    apiClient.post<
-      ApiResponse<{ commentId: string; content: string; timestampMs: number; createdAt: string }>
-    >(`/videos/${videoId}/comments`, data),
-
   // GET /videos/{videoId} - 영상 상세 조회
   getVideoDetail: (videoId: string) => apiClient.get(`/videos/${videoId}`),
 
@@ -83,7 +75,7 @@ export async function createVideoComment(
   videoId: string,
   data: { content: string; timestampMs?: number },
 ): Promise<{ serverId: string; content: string }> {
-  const response = await apiClient.post<ApiResponse<CreateVideoCommentRequestDto>>(
+  const response = await apiClient.post<ApiResponse<CommentResponseDto>>(
     `/videos/${videoId}/comments`,
     data,
   );
@@ -106,9 +98,10 @@ export async function createCommentReply(
   commentId: string,
   data: { content: string },
 ): Promise<{ serverId: string; content: string }> {
-  const response = await apiClient.post<
-    ApiResponse<CreateVideoCommentRequestDto & { replyId?: string }>
-  >(`/comments/${commentId}/replies`, data);
+  const response = await apiClient.post<ApiResponse<CommentResponseDto>>(
+    `/comments/${commentId}/replies`,
+    data,
+  );
 
   if (response.data.resultType === 'SUCCESS') {
     // DTO → Model 변환
