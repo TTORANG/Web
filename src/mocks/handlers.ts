@@ -834,21 +834,66 @@ const videoHandlers = [
     });
   }),
 
-  // 프로젝트별 영상 목록
-  http.get(`${BASE_URL}/presentations/:projectId/videos`, async () => {
-    await delay(150);
-    return ok({
-      videos: [
-        {
-          videoId: MOCK_VIDEO.videoId,
-          title: MOCK_VIDEO.title,
-          status: 'ready',
-          durationSeconds: MOCK_VIDEO.duration,
-          thumbnailUrl: null,
-          createdAt: new Date().toISOString(),
-        },
-      ],
-    });
+  // 프로젝트별 영상 목록 (검색/필터/정렬 지원)
+  http.get(`${BASE_URL}/presentations/:projectId/videos`, async ({ params, request }) => {
+    await delay(200);
+    const { projectId } = params as { projectId: string };
+    const url = new URL(request.url);
+    const search = url.searchParams.get('search') || '';
+    const filter = url.searchParams.get('filter') || 'all';
+    const sort = url.searchParams.get('sort') || 'recent';
+
+    console.log(`[MSW] GET /presentations/${projectId}/videos`, { search, filter, sort });
+
+    // localStorage에서 읽기
+    const storedData = localStorage.getItem('mockVideos');
+    if (!storedData) {
+      return ok({ videos: [], total: 0 });
+    }
+
+    const localVideos: MockVideo[] = JSON.parse(storedData) as MockVideo[];
+
+    // 해당 프로젝트의 영상만 필터링
+    const projectVideos = localVideos.filter((video) => video.projectId === projectId);
+
+    // VideoDto 형식으로 변환
+    let videos: VideoDto[] = projectVideos.map((video) => ({
+      videoId: String(video.id),
+      title: video.title,
+      status: 'ready' as const,
+      durationSeconds: video.durationSeconds,
+      rootCommentCount: video.rootCommentCount,
+      replyCount: video.replyCount,
+      reactionCount: video.reactionCount,
+      viewCount: video.viewCount,
+      thumbnailUrl: `https://example.com/thumb${video.id}.jpg`,
+      createdAt: video.createdAt,
+    }));
+
+    // 검색 필터링
+    if (search) {
+      videos = videos.filter((video) => video.title.toLowerCase().includes(search.toLowerCase()));
+    }
+
+    // 듀레이션 필터링
+    if (filter === '3m') {
+      videos = videos.filter((video) => video.durationSeconds <= 180);
+    } else if (filter === '5m') {
+      videos = videos.filter((video) => video.durationSeconds <= 300);
+    }
+
+    // 정렬
+    if (sort === 'recent') {
+      videos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } else if (sort === 'commentCount') {
+      videos.sort(
+        (a, b) => b.rootCommentCount + b.replyCount - (a.rootCommentCount + a.replyCount),
+      );
+    } else if (sort === 'name') {
+      videos.sort((a, b) => a.title.localeCompare(b.title, 'ko'));
+    }
+
+    return ok({ videos, total: videos.length });
   }),
 
   // 영상 상세 (timeline 포함)
@@ -871,7 +916,7 @@ const videoHandlers = [
       fb.reactions.forEach((r) => {
         if (r.count > 0) {
           timelineReactions.push({
-            timestampMs: fb.timestampMs,
+            timestampMs: fb.timestampMs * 1000, // seconds → ms
             emojiType: r.type,
             count: r.count,
           });
@@ -881,7 +926,7 @@ const videoHandlers = [
         const user = MOCK_USERS.find((u) => u.id === c.userId);
         timelineComments.push({
           commentId: c.id,
-          timestampMs: fb.timestampMs,
+          timestampMs: fb.timestampMs * 1000, // seconds → ms
           content: c.content,
           createdAt: c.createdAt,
           user: { userId: c.userId, name: user?.name ?? '알 수 없음' },
@@ -924,7 +969,6 @@ const videoHandlers = [
     });
   }),
 ];
-
 // ═══════════════════════════════════════════════════════════════
 //  SHARES — /presentations/:projectId/shares, /shares/:shareToken
 // ═══════════════════════════════════════════════════════════════
@@ -1167,80 +1211,4 @@ export const handlers = [
   ...shareHandlers,
   ...fileHandlers,
   ...analyticsHandlers,
-  /**
-   * 영상 이탈 분석 조회
-   * GET /videos/:videoId/analytics/exits
-   */
-  http.get(`${BASE_URL}/videos/:videoId/analytics/exits`, async ({ params }) => {
-    await delay(200);
-    const { videoId } = params as { videoId: string };
-    console.log(`[MSW] GET /videos/${videoId}/analytics/exits`);
-
-    return HttpResponse.json(wrapResponse(getMockVideoExitAnalytics(videoId)));
-  }),
-
-  /**
-   * 프로젝트별 녹화 영상 목록 조회
-   * GET /presentations/:projectId/videos
-   */
-  http.get(`${BASE_URL}/presentations/:projectId/videos`, async ({ params, request }) => {
-    await delay(200);
-    const { projectId } = params;
-    const url = new URL(request.url);
-    const search = url.searchParams.get('search') || '';
-    const filter = url.searchParams.get('filter') || 'all';
-    const sort = url.searchParams.get('sort') || 'recent';
-
-    console.log(`[MSW] GET /presentations/${projectId}/videos`, { search, filter, sort });
-
-    // localStorage에서 읽기 (기존 코드 그대로)
-    const storedData = localStorage.getItem('mockVideos');
-    if (!storedData) {
-      return HttpResponse.json(wrapResponse({ videos: [], total: 0 }));
-    }
-
-    const localVideos: MockVideo[] = JSON.parse(storedData) as MockVideo[];
-
-    // 해당 프로젝트의 영상만 필터링
-    const projectVideos = localVideos.filter((video) => video.projectId === projectId);
-
-    // VideoDto 형식으로 변환
-    let videos: VideoDto[] = projectVideos.map((video) => ({
-      videoId: String(video.id),
-      title: video.title,
-      status: 'ready' as const,
-      durationSeconds: video.durationSeconds,
-      rootCommentCount: video.rootCommentCount,
-      replyCount: video.replyCount,
-      reactionCount: video.reactionCount,
-      viewCount: video.viewCount,
-      thumbnailUrl: `https://example.com/thumb${video.id}.jpg`,
-      createdAt: video.createdAt,
-    }));
-
-    // 검색 필터링
-    if (search) {
-      videos = videos.filter((video) => video.title.toLowerCase().includes(search.toLowerCase()));
-    }
-
-    // 듀레이션 필터링
-    if (filter === '3m') {
-      videos = videos.filter((video) => video.durationSeconds <= 180);
-    } else if (filter === '5m') {
-      videos = videos.filter((video) => video.durationSeconds <= 300);
-    }
-
-    // 정렬
-    if (sort === 'recent') {
-      videos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    } else if (sort === 'commentCount') {
-      videos.sort(
-        (a, b) => b.rootCommentCount + b.replyCount - (a.rootCommentCount + a.replyCount),
-      );
-    } else if (sort === 'name') {
-      videos.sort((a, b) => a.title.localeCompare(b.title, 'ko'));
-    }
-
-    return HttpResponse.json(wrapResponse({ videos, total: videos.length }));
-  }),
 ];
