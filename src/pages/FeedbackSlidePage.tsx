@@ -20,6 +20,8 @@ import SlideTitle from '@/components/slide/script/SlideTitle';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useHotkey, useSlideActions } from '@/hooks';
 import { useSlideCommentsQuery } from '@/hooks/queries/useCommentQueries';
+import { useSlideReactionSummaries } from '@/hooks/queries/useReaction.ts';
+import { useScript } from '@/hooks/queries/useScript';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { useExitTracker } from '@/hooks/useExitTracker';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
@@ -49,10 +51,17 @@ export default function FeedbackSlidePage() {
   const { comments, addComment, addReply, deleteComment, updateComment } = useComments();
   const { reactions, toggleReaction } = useReactions();
   const initSlide = useSlideStore((state) => state.initSlide);
-  const { setComments } = useSlideActions();
+  const updateSlide = useSlideStore((state) => state.updateSlide);
+  const storedSlide = useSlideStore((state) => state.slide);
+  const { setComments, updateScript } = useSlideActions();
   const { data: fetchedComments, isLoading: isCommentsLoading } = useSlideCommentsQuery(
     currentSlide?.slideId,
   );
+  const { data: reactionSummaries } = useSlideReactionSummaries(
+    currentSlide?.slideId ? [currentSlide.slideId] : [],
+  );
+  const { data: scriptData } = useScript(currentSlide?.slideId ?? '');
+  const displaySlide = storedSlide ?? currentSlide;
 
   const [commentDraft, setCommentDraft] = useState('');
 
@@ -112,6 +121,24 @@ export default function FeedbackSlidePage() {
     );
   }, [currentSlide, fetchedComments, setComments, slideIndex]);
 
+  useEffect(() => {
+    if (!currentSlide || !scriptData) return;
+    updateScript(scriptData.scriptText ?? '');
+  }, [currentSlide, scriptData, updateScript]);
+
+  useEffect(() => {
+    if (!currentSlide || !reactionSummaries?.[0]) return;
+
+    const summary = reactionSummaries[0];
+    const baseReactions = createDefaultReactions();
+    const mergedReactions = baseReactions.map((reaction) => ({
+      ...reaction,
+      count: summary[reaction.type] ?? reaction.count,
+    }));
+
+    updateSlide({ emojiReactions: mergedReactions });
+  }, [currentSlide, reactionSummaries, updateSlide]);
+
   const handleGoToRef = useCallback(
     (ref: NonNullable<Comment['ref']>) => {
       if (ref.kind !== 'slide') return;
@@ -132,7 +159,7 @@ export default function FeedbackSlidePage() {
     <div className="flex h-full w-full">
       <div className="hidden md:flex flex-1 px-35">
         <SlideViewer
-          slide={currentSlide}
+          slide={displaySlide}
           slideIndex={slideIndex}
           totalSlides={totalSlides}
           isFirst={isFirst}
@@ -174,10 +201,10 @@ export default function FeedbackSlidePage() {
       {/* 모바일 뷰 */}
       <FeedbackMobileLayout
         mediaSlot={
-          currentSlide ? (
+          displaySlide ? (
             <img
-              src={currentSlide.imageUrl}
-              alt={currentSlide.title}
+              src={displaySlide.imageUrl}
+              alt={displaySlide.title}
               className="max-h-full max-w-full"
             />
           ) : (
@@ -207,10 +234,10 @@ export default function FeedbackSlidePage() {
             <SlideTitle fallbackTitle={`슬라이드 ${slideIndex + 1}`} readOnly />
             <div className="mt-3 bg-gray-200 rounded-lg px-4 py-3 h-48 overflow-y-auto">
               <p
-                className={`text-body-s ${currentSlide?.script ? 'text-black' : 'text-gray-400'}`}
+                className={`text-body-s ${displaySlide?.script ? 'text-black' : 'text-gray-400'}`}
                 style={{ whiteSpace: 'pre-line' }}
               >
-                {currentSlide?.script || '대본이 없습니다.'}
+                {displaySlide?.script || '대본이 없습니다.'}
               </p>
             </div>
           </div>
