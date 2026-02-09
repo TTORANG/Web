@@ -8,7 +8,9 @@ import { useParams } from 'react-router-dom';
 import { videosApi } from '@/api/endpoints/videos';
 import { useVideoComments } from '@/hooks/useVideoComments';
 import { useVideoReactions } from '@/hooks/useVideoReactions';
+import { MOCK_VIDEO } from '@/mocks/videos';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
+import type { SlideListItem } from '@/types';
 import type { Comment } from '@/types/comment';
 import { formatVideoTimestamp } from '@/utils/format';
 
@@ -38,10 +40,19 @@ export function useFeedbackVideo() {
   const [commentDraft, setCommentDraft] = useState('');
 
   // TODO: 실제 API로 프로젝트 슬라이드 조회
-  const projectSlides = useMemo(() => [], []);
+  const projectSlides = useMemo<SlideListItem[]>(() => [], []);
 
   // TODO: 슬라이드 전환 시간 계산
-  const slideChangeTimes = useMemo(() => [], []);
+  const slideChangeTimes = useMemo(() => {
+    if (projectSlides.length === 0) return [];
+
+    const videoDuration = MOCK_VIDEO.duration;
+    const slideCount = projectSlides.length;
+
+    return projectSlides.map(
+      (slide, i) => slide.startTime ?? Math.floor(i * (videoDuration / slideCount)),
+    );
+  }, [projectSlides]);
 
   // 타임스탬프 프리픽스 (댓글 입력 시 자동 삽입)
   const timestampPrefix = useMemo(() => `${formatVideoTimestamp(currentTime)} `, [currentTime]);
@@ -64,11 +75,10 @@ export function useFeedbackVideo() {
   // 비디오 초기화 - 서버 API로 실제 비디오 데이터를 가져옴
   useEffect(() => {
     let cancelled = false;
-
     const loadVideo = async () => {
       try {
         // 서버에서 비디오 상세 정보 조회
-        const response = await videosApi.getVideoDetail(TEST_VIDEO_ID);
+        const response = await videosApi.getVideoDetail(TEST_VIDEO_ID.toString());
         if (cancelled) return;
 
         // 서버 응답 구조: { resultType: "SUCCESS", success: { video: {...}, timeline: {...} } }
@@ -104,7 +114,9 @@ export function useFeedbackVideo() {
 
         initVideo(videoData);
       } catch (error) {
-        console.error('[useFeedbackVideo] 비디오 로드 실패, 폴백 사용:', error);
+        if (import.meta.env.DEV) {
+          console.error('[useFeedbackVideo] 비디오 로드 실패, 폴백 사용:', error);
+        }
         if (cancelled) return;
 
         // 서버 요청 실패 시 폴백: videoId만 실제 값 사용

@@ -5,6 +5,7 @@
  * 영상의 특정 타임스탬프에 대한 댓글과 리액션을 관리합니다.
  */
 import type { Comment } from './comment';
+import type { Presentation } from './presentation';
 import type { Reaction, ReactionType } from './script';
 
 /**
@@ -70,4 +71,28 @@ export interface VideoFeedback {
 
   /** 모든 리액션 이벤트 */
   reactionEvents: ReactionEvent[];
+}
+/**
+ * Mock 비디오 데이터 타입 (localStorage용)
+ */
+export interface MockVideo {
+  projectId: string;
+  id: number;
+  title: string;
+  createdAt: string;
+  durationSeconds: number;
+  slideCount: number;
+  rootCommentCount: number;
+  replyCount: number;
+  reactionCount: number;
+  viewCount: number;
+}
+/**
+ * 영상 프레젠테이션 (Presentation 확장)
+ */
+export interface VideoPresentation extends Presentation {
+  commentCount: number;
+  reactionCount: number;
+  viewCount: number;
+  status: 'processing' | 'ready' | 'failed';
 }
