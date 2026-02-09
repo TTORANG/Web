@@ -38,7 +38,7 @@ interface CommentProps {
  */
 function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
   // rootCommentId가 없으면 자기 자신이 최상위 댓글
-  const resolvedRootId = rootCommentId ?? comment.id;
+  const resolvedRootId = rootCommentId ?? comment.commentId;
   const {
     replyingToId,
     replyDraft,
@@ -46,13 +46,13 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
     toggleReply,
     submitReply,
     cancelReply,
+    deleteComment,
     editingId,
     editDraft,
     setEditDraft,
     startEdit,
     cancelEdit,
     submitEdit,
-    deleteComment,
     goToRef,
   } = useCommentContext();
 
@@ -64,21 +64,21 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
   const authorName = user?.name ?? '알 수 없음';
   const authorProfileImage = user?.profileImage;
 
-  const isActive = replyingToId === comment.id;
-  const isEditing = editingId === comment.id;
+  const isActive = replyingToId === comment.commentId;
+  const isEditing = editingId === comment.commentId;
 
   const handleStartEdit = useCallback(() => {
-    if (editingId === comment.id) return;
-    startEdit(comment.id, comment.content);
-  }, [startEdit, editingId, comment.id, comment.content]);
+    if (editingId === comment.commentId) return;
+    startEdit(comment.commentId, comment.content);
+  }, [startEdit, editingId, comment.commentId, comment.content]);
 
   const handleSubmitEdit = useCallback(() => {
-    submitEdit(comment.id);
-  }, [submitEdit, comment.id]);
+    submitEdit(comment.commentId);
+  }, [submitEdit, comment.commentId]);
 
   const handleToggleReply = useCallback(() => {
-    toggleReply(comment.id);
-  }, [toggleReply, comment.id]);
+    toggleReply(comment.commentId);
+  }, [toggleReply, comment.commentId]);
 
   const handleSubmitReply = useCallback(() => {
     // 항상 최상위 부모 댓글 ID로 답글 제출 (서버는 root에만 답글 허용)
@@ -86,8 +86,8 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
   }, [submitReply, resolvedRootId]);
 
   const handleDelete = useCallback(() => {
-    deleteComment?.(comment.id);
-  }, [deleteComment, comment.id]);
+    deleteComment?.(comment.commentId);
+  }, [deleteComment, comment.commentId]);
 
   const handleGoToRef = useCallback(() => {
     if (comment.ref) {
@@ -140,10 +140,8 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
                     onClick={handleStartEdit}
                     aria-label="댓글 수정"
                     className={clsx(
-                      'flex items-center gap-1 rounded text-caption-bold active:opacity-80 focus-visible:outline-2 focus-visible:outline-gray-400',
-                      isEditing
-                        ? 'text-gray-400'
-                        : 'text-[#FFFFFF] hover:text-[rgba(255,255,255,0.8)]',
+                      'flex items-center gap-1 rounded text-caption-bold active:opacity-80 focus-visible:outline-2 focus-visible:outline-main',
+                      isEditing ? 'text-gray-400' : 'text-black',
                     )}
                   >
                     수정
@@ -154,7 +152,7 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
                       type="button"
                       onClick={handleDelete}
                       aria-label="댓글 삭제"
-                      className="flex items-center gap-1 rounded text-caption-bold text-error hover:text-red-400 active:opacity-80 focus-visible:outline-2 focus-visible:outline-error"
+                      className="flex items-center gap-1 rounded text-caption-bold text-error active:opacity-80 focus-visible:outline-2 focus-visible:outline-error"
                     >
                       삭제
                       <RemoveIcon className="h-4 w-4" aria-hidden="true" />
@@ -223,7 +221,7 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
         </div>
       </div>
 
-      {replyingToId === comment.id && (
+      {replyingToId === comment.commentId && (
         <CommentInput
           value={replyDraft}
           onChange={setReplyDraft}
@@ -239,7 +237,7 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
         <div>
           {comment.replies.map((reply, index) => (
             <Comment
-              key={reply.id ?? `reply-${comment.id}-${index}`}
+              key={reply.commentId ?? `reply-${comment.commentId}-${index}`}
               comment={reply}
               isIndented
               rootCommentId={resolvedRootId}

@@ -16,6 +16,16 @@ interface SlideLog {
   timestampMs: number;
 }
 
+/**
+ * 영상 청크 업로드 훅
+ *
+ * 영상을 1MB 단위 청크로 분할하여 순차 업로드하고, 진행률을 추적합니다.
+ *
+ * @returns uploadVideo - 영상 업로드 함수 (videoId 반환, 실패 시 null)
+ * @returns isUploading - 업로드 진행 중 여부
+ * @returns progress - 업로드 진행 상태 (청크 수, 퍼센트, 단계)
+ * @returns error - 에러 메시지
+ */
 export const useVideoUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState<UploadProgress>({
@@ -31,7 +41,7 @@ export const useVideoUpload = () => {
     projectId: number,
     title: string,
     slideLogs: SlideLog[],
-  ): Promise<number | null> => {
+  ): Promise<string | null> => {
     setIsUploading(true);
     setError(null);
 

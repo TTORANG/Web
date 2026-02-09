@@ -3,12 +3,11 @@
  * @description 슬라이드 제목과 대본을 표시하는 패널
  */
 import SlideTitle from '@/components/slide/script/SlideTitle';
-import type { SlideListItem } from '@/types/slide';
 
 import SlideNavigation from '../SlideNavigation';
 
 interface SlideInfoPanelProps {
-  slide: SlideListItem;
+  script?: string;
   slideIndex: number;
   totalSlides: number;
   isFirst: boolean;
@@ -18,7 +17,7 @@ interface SlideInfoPanelProps {
 }
 
 export default function SlideInfoPanel({
-  slide,
+  script,
   slideIndex,
   totalSlides,
   isFirst,
@@ -45,10 +44,10 @@ export default function SlideInfoPanel({
 
       <div className="bg-gray-200 rounded-t-lg px-4 py-3 h-48 overflow-y-auto">
         <p
-          className={`text-body-s ${slide.script ? 'text-black' : 'text-gray-600'}`}
+          className={`text-body-s ${script ? 'text-black' : 'text-gray-600'}`}
           style={{ whiteSpace: 'pre-line' }}
         >
-          {slide.script || '대본이 없습니다.'}
+          {script || '대본이 없습니다.'}
         </p>
       </div>
     </div>

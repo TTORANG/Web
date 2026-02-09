@@ -143,7 +143,7 @@ export default function CommentPopover() {
       <CommentProvider value={contextValue}>
         <div className="h-80 overflow-y-auto">
           {comments.map((comment) => (
-            <Comment key={comment.id} comment={comment} isIndented={comment.isReply} />
+            <Comment key={comment.commentId} comment={comment} isIndented={comment.isReply} />
           ))}
         </div>
       </CommentProvider>

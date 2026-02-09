@@ -19,24 +19,21 @@ import SlideViewer from '@/components/feedback/SlideViewer';
 import SlideTitle from '@/components/slide/script/SlideTitle';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useHotkey, useSlideActions } from '@/hooks';
-import { useSlideCommentsQuery } from '@/hooks/queries/useCommentQueries';
-import { useSlideReactionSummaries } from '@/hooks/queries/useReaction.ts';
 import { useScript } from '@/hooks/queries/useScript';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { useExitTracker } from '@/hooks/useExitTracker';
+import { useFeedbackWebSocket } from '@/hooks/useFeedbackWebSocket';
+import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
+import { useSlideCommentsLoader } from '@/hooks/useSlideCommentsLoader';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
+import { useSlideReactions } from '@/hooks/useSlideReactions';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
-
-import { useComments } from '../hooks/useComments';
-import { useFeedbackWebSocket } from '../hooks/useFeedbackWebSocket';
-import { useReactions } from '../hooks/useReactions';
 
 export default function FeedbackSlidePage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { data: slides, isLoading } = useSlides(projectId ?? '');
 
-  // 웹소켓 연결
   const { isConnected, currentRooms, joinProject, leaveProject, getRooms } = useFeedbackWebSocket({
     projectId: projectId ?? '',
     enabled: !!projectId,
@@ -48,20 +45,13 @@ export default function FeedbackSlidePage() {
 
   const currentSlide = slides?.[slideIndex];
 
-  const { comments, addComment, addReply, deleteComment, updateComment } = useComments();
-  const { reactions, toggleReaction } = useReactions();
+  const { comments, addComment, addReply, deleteComment, updateComment } =
+    useSlideCommentsActions();
+  const { reactions, toggleReaction } = useSlideReactions();
+  const script = useSlideStore((state) => state.slide?.script ?? '');
   const initSlide = useSlideStore((state) => state.initSlide);
-  const updateSlide = useSlideStore((state) => state.updateSlide);
-  const storedSlide = useSlideStore((state) => state.slide);
-  const { setComments, updateScript } = useSlideActions();
-  const { data: fetchedComments, isLoading: isCommentsLoading } = useSlideCommentsQuery(
-    currentSlide?.slideId,
-  );
-  const { data: reactionSummaries } = useSlideReactionSummaries(
-    currentSlide?.slideId ? [currentSlide.slideId] : [],
-  );
+  const { updateScript } = useSlideActions();
   const { data: scriptData } = useScript(currentSlide?.slideId ?? '');
-  const displaySlide = storedSlide ?? currentSlide;
 
   const [commentDraft, setCommentDraft] = useState('');
 
@@ -70,6 +60,20 @@ export default function FeedbackSlidePage() {
     addComment(commentDraft, slideIndex);
     setCommentDraft('');
   };
+
+  const mapComments = useCallback(
+    (comments: Comment[]) => {
+      if (!currentSlide) return comments;
+      const slideLabel = `Slide ${slideIndex + 1}`;
+      return comments.map((comment) => ({
+        ...comment,
+        slideId: currentSlide.slideId,
+        ref: { kind: 'slide' as const, index: slideIndex },
+        slideRef: slideLabel,
+      }));
+    },
+    [currentSlide, slideIndex],
+  );
 
   useHotkey({ ArrowLeft: goPrev, ArrowRight: goNext }, { enabled: !isLoading });
 
@@ -94,50 +98,25 @@ export default function FeedbackSlidePage() {
 
   useExitTracker(buildExitPayload);
 
-  /** 슬라이드 변경 시 store 초기화 */
   useEffect(() => {
     if (!currentSlide) return;
 
     initSlide({
       ...currentSlide,
-      emojiReactions:
-        currentSlide.emojiReactions && currentSlide.emojiReactions.length > 0
-          ? currentSlide.emojiReactions
-          : createDefaultReactions(),
+      emojiReactions: createDefaultReactions(),
     });
-    setComments([]);
-  }, [slideIndex, currentSlide, initSlide, setComments]);
+    updateScript('');
+  }, [slideIndex, currentSlide, initSlide, updateScript]);
+
+  const { isLoading: isCommentsLoading } = useSlideCommentsLoader(currentSlide?.slideId, {
+    mapComments,
+  });
 
   useEffect(() => {
-    if (!currentSlide || !fetchedComments) return;
-    const slideLabel = `Slide ${slideIndex + 1}`;
-    setComments(
-      fetchedComments.map((comment) => ({
-        ...comment,
-        slideId: currentSlide.slideId,
-        ref: { kind: 'slide', index: slideIndex },
-        slideRef: slideLabel,
-      })),
-    );
-  }, [currentSlide, fetchedComments, setComments, slideIndex]);
-
-  useEffect(() => {
-    if (!currentSlide || !scriptData) return;
-    updateScript(scriptData.scriptText ?? '');
-  }, [currentSlide, scriptData, updateScript]);
-
-  useEffect(() => {
-    if (!currentSlide || !reactionSummaries?.[0]) return;
-
-    const summary = reactionSummaries[0];
-    const baseReactions = createDefaultReactions();
-    const mergedReactions = baseReactions.map((reaction) => ({
-      ...reaction,
-      count: summary[reaction.type] ?? reaction.count,
-    }));
-
-    updateSlide({ emojiReactions: mergedReactions });
-  }, [currentSlide, reactionSummaries, updateSlide]);
+    if (scriptData) {
+      updateScript(scriptData.scriptText);
+    }
+  }, [scriptData, updateScript]);
 
   const handleGoToRef = useCallback(
     (ref: NonNullable<Comment['ref']>) => {
@@ -159,7 +138,8 @@ export default function FeedbackSlidePage() {
     <div className="flex h-full w-full">
       <div className="hidden md:flex flex-1 px-35">
         <SlideViewer
-          slide={displaySlide}
+          slide={currentSlide}
+          script={script}
           slideIndex={slideIndex}
           totalSlides={totalSlides}
           isFirst={isFirst}
@@ -198,17 +178,16 @@ export default function FeedbackSlidePage() {
         </aside>
       </div>
 
-      {/* 모바일 뷰 */}
       <FeedbackMobileLayout
         mediaSlot={
-          displaySlide ? (
+          currentSlide ? (
             <img
-              src={displaySlide.imageUrl}
-              alt={displaySlide.title}
+              src={currentSlide.imageUrl}
+              alt={currentSlide.title}
               className="max-h-full max-w-full"
             />
           ) : (
-            <div className="py-20 text-black">슬라이드를 불러오는 중...</div>
+            <div className="py-20 text-black">????? ???? ?...</div>
           )
         }
         navigationSlot={
@@ -231,13 +210,13 @@ export default function FeedbackSlidePage() {
         }
         scriptTabContent={
           <div className="px-4 py-4">
-            <SlideTitle fallbackTitle={`슬라이드 ${slideIndex + 1}`} readOnly />
+            <SlideTitle fallbackTitle={`???? ${slideIndex + 1}`} readOnly />
             <div className="mt-3 bg-gray-200 rounded-lg px-4 py-3 h-48 overflow-y-auto">
               <p
-                className={`text-body-s ${displaySlide?.script ? 'text-black' : 'text-gray-400'}`}
+                className={`text-body-s ${script ? 'text-black' : 'text-gray-400'}`}
                 style={{ whiteSpace: 'pre-line' }}
               >
-                {displaySlide?.script || '대본이 없습니다.'}
+                {script || '??? ????.'}
               </p>
             </div>
           </div>
@@ -268,7 +247,6 @@ export default function FeedbackSlidePage() {
         commentCount={comments.length}
       />
 
-      {/* WebSocket 디버그 UI (개발 환경에서만) */}
       <WebSocketDebug
         isConnected={isConnected}
         currentRooms={currentRooms}

@@ -8,12 +8,12 @@
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Skeleton } from '@/components/common';
-import type { SlideListItem } from '@/types/slide';
+import type { SlideDetail } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
 
 interface ScriptSectionProps {
-  slides: SlideListItem[];
+  slides: SlideDetail[];
   slideChangeTimes: number[];
   currentTime: number;
   onSeek?: (time: number) => void;
