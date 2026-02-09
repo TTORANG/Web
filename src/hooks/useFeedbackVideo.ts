@@ -40,17 +40,8 @@ export function useFeedbackVideo() {
   // TODO: 실제 API로 프로젝트 슬라이드 조회
   const projectSlides = useMemo(() => [], []);
 
-  // 슬라이드 전환 시간 계산
-  const slideChangeTimes = useMemo(() => {
-    if (projectSlides.length === 0) return [];
-
-    const videoDuration = MOCK_VIDEO.duration; // MOCK_VIDEOS → MOCK_VIDEO
-    const slideCount = projectSlides.length;
-
-    return projectSlides.map(
-      (slide, i) => slide.startTime ?? Math.floor(i * (videoDuration / slideCount)),
-    );
-  }, [projectSlides]);
+  // TODO: 슬라이드 전환 시간 계산
+  const slideChangeTimes = useMemo(() => [], []);
 
   // 타임스탬프 프리픽스 (댓글 입력 시 자동 삽입)
   const timestampPrefix = useMemo(() => `${formatVideoTimestamp(currentTime)} `, [currentTime]);
@@ -73,11 +64,10 @@ export function useFeedbackVideo() {
   // 비디오 초기화 - 서버 API로 실제 비디오 데이터를 가져옴
   useEffect(() => {
     let cancelled = false;
-
     const loadVideo = async () => {
       try {
         // 서버에서 비디오 상세 정보 조회
-        const response = await videosApi.getVideoDetail(TEST_VIDEO_ID);
+        const response = await videosApi.getVideoDetail(TEST_VIDEO_ID.toString());
         if (cancelled) return;
 
         // 서버 응답 구조: { resultType: "SUCCESS", success: { video: {...}, timeline: {...} } }
