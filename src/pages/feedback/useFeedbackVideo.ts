@@ -182,7 +182,10 @@ export function useFeedbackVideo() {
     let cancelled = false;
 
     const loadFromShareToken = async () => {
-      const sharedContent = await getSharedContent(shareToken);
+      const { user } = useAuthStore.getState();
+      const sessionId = user?.sessionId;
+
+      const sharedContent = await getSharedContent(shareToken, sessionId);
       if (cancelled) return;
 
       const sharedSlides = normalizeSharedSlides(
@@ -190,10 +193,12 @@ export function useFeedbackVideo() {
         projectId,
       );
 
-      const accessToken = sharedContent.sessionInfo?.tokens?.accessToken;
-      const refreshToken = sharedContent.sessionInfo?.tokens?.refreshToken;
-      if (accessToken && refreshToken) {
-        useAuthStore.getState().anonymous(accessToken, refreshToken);
+      if (!sessionId) {
+        const accessToken = sharedContent.sessionInfo?.tokens?.accessToken;
+        const refreshToken = sharedContent.sessionInfo?.tokens?.refreshToken;
+        if (accessToken && refreshToken) {
+          useAuthStore.getState().anonymous(accessToken, refreshToken);
+        }
       }
 
       const videoId = sharedContent.projectContent?.video?.videoId ?? '';
