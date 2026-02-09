@@ -72,6 +72,9 @@ export function useFeedbackVideo() {
         if (cancelled) return;
 
         // 서버 응답 구조: { resultType: "SUCCESS", success: { video: {...}, timeline: {...} } }
+        if (response.data.resultType !== 'SUCCESS') {
+          throw new Error(response.data.error.reason);
+        }
         const { video: serverVideo } = response.data.success;
 
         // 서버 응답에서 비디오 URL 추출
