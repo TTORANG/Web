@@ -110,7 +110,7 @@ export async function createCommentReply(
  *
  * @param commentId - 댓글 ID
  */
-export async function deleteVideoComment(commentId: number): Promise<void> {
+export async function deleteVideoComment(commentId: string): Promise<void> {
   const response = await apiClient.delete<ApiResponse<null>>(`/comments/${commentId}`);
 
   if (response.data.resultType === 'FAILURE') {

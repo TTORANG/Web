@@ -147,13 +147,11 @@ export function useVideoComments() {
     deleteCommentStore(commentId);
 
     try {
-      // 서버 API 호출 (serverId를 number로 변환)
-      const commentIdNum = parseInt(targetComment.serverId, 10);
-      if (isNaN(commentIdNum)) {
+      if (targetComment.serverId) {
         throw new Error('Invalid comment server ID');
       }
 
-      await deleteVideoComment(commentIdNum);
+      await deleteVideoComment(targetComment.serverId);
       showToast.success('댓글이 삭제되었습니다.');
     } catch (_error) {
       showToast.error('댓글 삭제에 실패했습니다.', '잠시 후 다시 시도해주세요.');
