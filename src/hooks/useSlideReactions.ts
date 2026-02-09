@@ -18,7 +18,7 @@ import { useToggleReaction } from './queries/useReaction.ts';
 
 const EMPTY_REACTIONS: Reaction[] = [];
 
-export function useReactions() {
+export function useSlideReactions() {
   const slideId = useSlideStore((state) => state.slide?.slideId);
   const reactions = useSlideStore((state) => state.slide?.emojiReactions ?? EMPTY_REACTIONS);
   const toggleReactionStore = useSlideStore((state) => state.toggleReaction);

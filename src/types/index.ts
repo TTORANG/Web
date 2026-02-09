@@ -33,7 +33,7 @@ export type {
 } from './share';
 
 // Slide
-export type { SlideListItem } from './slide';
+export type { SlideDetail, SlideListItem } from './slide';
 
 // Theme
 export type { ThemeMode } from './theme';

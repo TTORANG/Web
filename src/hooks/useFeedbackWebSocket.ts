@@ -43,7 +43,7 @@ export function useFeedbackWebSocket({ projectId, enabled = true }: UseFeedbackW
 
       // WebSocket 페이로드에서 직접 Store 업데이트
       const currentVideo = useVideoFeedbackStore.getState().video;
-      if (currentVideo && Number(data.videoId) === currentVideo.videoId) {
+      if (currentVideo && data.videoId === currentVideo.videoId) {
         // console.log('🔄 [Feedback WebSocket] Adding comment to store from WebSocket data...');
 
         // WebSocket 데이터에서 받은 정보로 댓글 추가

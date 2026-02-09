@@ -69,11 +69,8 @@ interface VideoFeedbackState {
   updateCommentServerId: (commentId: string, serverId: string) => void;
 }
 
-/**
- * 플랫 배열에서 ID로 댓글 존재 여부 확인
- */
-function hasCommentId(comments: Comment[], id: string): boolean {
-  return comments.some((c) => c.id === id);
+function hasCommentId(flat: Comment[], commentId: string) {
+  return flat.some((c) => c.commentId === commentId);
 }
 
 // function getAllComments(feedbacks: any[]): Comment[] {
@@ -292,7 +289,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
 
           // 플랫 구조: 단순히 id가 일치하는 댓글 업데이트
           const updatedComments = targetFeedback.comments.map((c) =>
-            c.id === commentId ? { ...c, serverId } : c,
+            c.commentId === commentId ? { ...c, serverId } : c,
           );
 
           const updatedFeedbacks = state.video.feedbacks.map((f) =>

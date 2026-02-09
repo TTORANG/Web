@@ -1,9 +1,12 @@
 import { apiClient } from '@/api/client';
 import type {
   ChunkUploadResponseDto,
-  CommentResponseDto,
+  CreateCommentResponseDto,
+  CreateReplyCommentResponseDto,
   FinishVideoRequestDto,
   FinishVideoResponseDto,
+  GetVideoDetailResponseDto,
+  GetVideoSlidesResponseDto,
   StartVideoRequestDto,
   StartVideoResponseDto,
 } from '@/api/dto';
@@ -15,7 +18,7 @@ import type { GetProjectVideosResponseDto, GetVideoDetailResponseDto } from '../
  * DTO → Model 변환: CommentResponseDto를 앱 내부용 Model로 변환
  * 주의: 서버 응답에서 댓글은 'commentId', 답글은 'replyId'를 사용할 수 있음
  */
-function commentDtoToModel(dto: CommentResponseDto & { replyId?: string }): {
+function commentDtoToModel(dto: CreateCommentResponseDto & { replyId?: string }): {
   serverId: string;
   content: string;
 } {
@@ -59,7 +62,8 @@ export const videosApi = {
     apiClient.get<ApiResponse<GetVideoDetailResponseDto>>(`/videos/${videoId}`),
 
   // GET /videos/{videoId}/slides - 슬라이드 타임라인 조회
-  getVideoSlides: (videoId: string) => apiClient.get(`/videos/${videoId}/slides`),
+  getVideoSlides: (videoId: string) =>
+    apiClient.get<ApiResponse<GetVideoSlidesResponseDto>>(`/videos/${videoId}/slides`),
   /**
    * GET /presentations/:projectId/videos - 프로젝트별 영상 목록 조회
    */
@@ -96,17 +100,19 @@ export const videosApi = {
  * @returns Model - serverId와 content
  */
 export async function createVideoComment(
-  videoId: number,
+  videoId: string,
   data: { content: string; timestampMs?: number },
 ): Promise<{ serverId: string; content: string }> {
-  const response = await apiClient.post<ApiResponse<CommentResponseDto>>(
+  const response = await apiClient.post<ApiResponse<CreateCommentResponseDto>>(
     `/videos/${videoId}/comments`,
     data,
   );
 
   if (response.data.resultType === 'SUCCESS') {
-    // DTO → Model 변환
-    return commentDtoToModel(response.data.success);
+    return {
+      serverId: response.data.success.commentId,
+      content: response.data.success.content,
+    };
   }
   throw new Error(response.data.error.reason);
 }
@@ -119,17 +125,19 @@ export async function createVideoComment(
  * @returns Model - serverId와 content
  */
 export async function createCommentReply(
-  commentId: number,
+  commentId: string,
   data: { content: string },
 ): Promise<{ serverId: string; content: string }> {
-  const response = await apiClient.post<ApiResponse<CommentResponseDto & { replyId?: string }>>(
+  const response = await apiClient.post<ApiResponse<CreateReplyCommentResponseDto>>(
     `/comments/${commentId}/replies`,
     data,
   );
 
   if (response.data.resultType === 'SUCCESS') {
-    // DTO → Model 변환
-    return commentDtoToModel(response.data.success);
+    return {
+      serverId: response.data.success.replyId,
+      content: response.data.success.content,
+    };
   }
   throw new Error(response.data.error.reason);
 }
@@ -139,7 +147,7 @@ export async function createCommentReply(
  *
  * @param commentId - 댓글 ID
  */
-export async function deleteVideoComment(commentId: number): Promise<void> {
+export async function deleteVideoComment(commentId: string): Promise<void> {
   const response = await apiClient.delete<ApiResponse<null>>(`/comments/${commentId}`);
 
   if (response.data.resultType === 'FAILURE') {

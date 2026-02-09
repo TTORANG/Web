@@ -22,8 +22,6 @@ import {
   TopSlideCard,
 } from '@/components/insight';
 import { createDefaultReactions } from '@/constants/reaction';
-import { useSlideReactionSummaries } from '@/hooks/queries/useReaction.ts';
-import { useSlides } from '@/hooks/queries/useSlides';
 import {
   useProjectAnalyticsSummary,
   useRecentComments,
@@ -31,7 +29,9 @@ import {
   useSlideRetention,
   useVideoAnalytics,
   useVideoRetention,
-} from '@/hooks/useAnalytics';
+} from '@/hooks/queries/useAnalytics';
+import { useSlideReactionSummaries } from '@/hooks/queries/useReaction.ts';
+import { useSlides } from '@/hooks/queries/useSlides';
 import type { DropOffSlide, DropOffTime, SummaryStat } from '@/types/insight';
 import type { SlideListItem } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';
@@ -382,7 +382,7 @@ export default function InsightPage() {
                         ...reaction,
                         count: summary[reaction.type] ?? 0,
                       }))
-                    : (slide?.emojiReactions ?? baseReactions);
+                    : baseReactions;
                   const reactionMetrics = summaryReactions.filter((reaction) => reaction.count > 0);
 
                   return (

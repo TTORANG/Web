@@ -26,8 +26,8 @@ export default function SlideTitle({
 
   if (readOnly) {
     return (
-      <span className="inline-flex h-7 items-center px-2 text-sm font-semibold text-gray-800">
-        <span className="whitespace-normal wrap-break-word">{resolvedTitle}</span>
+      <span className="inline-flex h-7 items-center px-2 text-sm font-semibold text-gray-800 min-w-0">
+        <span className="max-w-40 truncate">{resolvedTitle}</span>
       </span>
     );
   }
@@ -56,7 +56,8 @@ function SlideTitleEditable({
   const { mutate: updateSlideApi } = useUpdateSlide();
 
   const handleSave = (newTitle: string, close: () => void) => {
-    const nextTitle = newTitle.trim() || storeTitle || fallbackTitle;
+    const trimmedTitle = newTitle.trim();
+    const nextTitle = trimmedTitle || storeTitle || fallbackTitle;
     if (!nextTitle) return;
 
     updateSlide({ title: nextTitle });
@@ -74,6 +75,7 @@ function SlideTitleEditable({
       onSave={handleSave}
       isCollapsed={isCollapsed}
       ariaLabel="슬라이드 이름 변경"
+      titleClassName="max-w-40 truncate"
     />
   );
 }

@@ -26,6 +26,8 @@ export interface ToggleVideoReactionDto {
  * 영상 리액션 토글 응답 DTO
  */
 export interface ToggleVideoReactionResponseDto {
+  reactionId: string;
+  videoId: string;
   active: boolean;
 }
 
@@ -35,6 +37,31 @@ export interface ToggleVideoReactionResponseDto {
 export interface ReadReactionCountDto {
   slideId: string;
   reactions: Record<ReactionType, number>;
+}
+
+/**
+ * 영상 리액션 구간 집계 항목 Dto
+ */
+export interface ReadVideoReactionSummaryItemDto {
+  emojiType: ReactionType;
+  count: number;
+}
+
+/**
+ * 영상 리액션 타임라인 마커 Dto
+ */
+export interface ReadVideoReactionTimelineMarkerDto {
+  timestampMs: number;
+  emojiType: ReactionType;
+  count: number;
+}
+
+/**
+ * 영상 리액션 타임라인 응답 Dto
+ */
+export interface ReadVideoReactionTimelineResponseDto {
+  intervalMs: number;
+  markers: ReadVideoReactionTimelineMarkerDto[];
 }
 
 /**
