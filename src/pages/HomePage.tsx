@@ -1,5 +1,8 @@
 import { useMemo } from 'react';
 
+import { useQueryClient } from '@tanstack/react-query';
+
+import { queryKeys } from '@/api';
 import IntroSection from '@/components/home/IntroSection';
 import PresentationsSection from '@/components/home/PresentationsSection';
 import { usePresentations, usePresentationsWithFilters } from '@/hooks/queries/usePresentations';
@@ -14,6 +17,7 @@ const ACCEPTED_FILES_TYPES = '.pptx,.pdf';
 
 export default function HomePage() {
   //const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { uploadFile, cancelUpload, isUploading, progress, error } = useUploadFile();
 
   const onFileSelected = async (file: File) => {
@@ -21,10 +25,12 @@ export default function HomePage() {
 
     if (response?.resultType === 'SUCCESS') {
       showToast.success('업로드 완료!');
+      void queryClient.invalidateQueries({ queryKey: queryKeys.presentations.lists() });
       //const projectId = response.success.projectId;
       //navigate(`/presentations/${projectId}`);
     }
   };
+
   const query = useHomeQuery();
   const sort = useHomeSort();
   const filter = useHomeFilter();
