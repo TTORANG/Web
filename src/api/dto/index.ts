@@ -37,7 +37,7 @@ export type {
   GetPresentationsRequestDto,
   GetPresentationsResponseDto,
   UpdatePresentationRequestDto,
-  DeleteProjectResponseDto,
+  DeletePresentationResponseDto,
 } from './presentations.dto';
 // export type { UploadFileResponseDto } from './files.dto';
 export type {

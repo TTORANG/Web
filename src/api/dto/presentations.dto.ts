@@ -1,4 +1,4 @@
-import type { PresentationListResponse } from '@/types/presentation';
+import type { Presentation } from '@/types/presentation';
 
 /**
  * 새 프로젝트 생성 요청 DTO (POST)
@@ -27,7 +27,7 @@ export interface CreatePresentationResponseDto {
 /**
  * 프로젝트 목록 조회 및 검색 요청 DTO (GET)
  */
-export interface GetPresentationListRequestDto {
+export interface GetPresentationsRequestDto {
   page?: number;
   limit?: number;
   search?: string;
@@ -38,8 +38,8 @@ export interface GetPresentationListRequestDto {
 /**
  * 프로젝트 목록 조회 응답 DTO
  */
-export interface GetPresentationListResponseDto {
-  presentations: Array<PresentationListResponse>;
+export interface GetPresentationsResponseDto {
+  presentations: Presentation[];
   total: number;
   page: number;
   limit: number;
