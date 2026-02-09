@@ -133,8 +133,7 @@ export const useMediaStream = (videoDeviceId?: string, audioDeviceId?: string) =
     return () => {
       cleanupStream();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [videoDeviceId, audioDeviceId]);
+  }, [videoDeviceId, audioDeviceId, startStream, cleanupStream]);
 
   return {
     stream,

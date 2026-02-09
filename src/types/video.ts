@@ -76,7 +76,7 @@ export interface VideoFeedback {
  * Mock 비디오 데이터 타입 (localStorage용)
  */
 export interface MockVideo {
-  projectId: string | readonly string[] | undefined;
+  projectId: string;
   id: number;
   title: string;
   createdAt: string;

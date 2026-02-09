@@ -9,7 +9,7 @@ import type {
 } from '@/api/dto';
 import type { ApiResponse } from '@/types/api';
 
-import type { GetProjectVideosResponseDto } from '../dto/video.dto';
+import type { GetProjectVideosResponseDto, GetVideoDetailResponseDto } from '../dto/video.dto';
 
 /**
  * DTO → Model 변환: CommentResponseDto를 앱 내부용 Model로 변환
@@ -35,7 +35,7 @@ export const videosApi = {
     apiClient.post<ApiResponse<StartVideoResponseDto>>('/videos/start', data),
 
   // POST /videos/{videoId}/chunks/{chunkIndex} - 청크 업로드
-  uploadChunk: (videoId: number, chunkIndex: number, file: Blob) => {
+  uploadChunk: (videoId: string, chunkIndex: number, file: Blob) => {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -55,7 +55,8 @@ export const videosApi = {
     apiClient.post<ApiResponse<FinishVideoResponseDto>>(`/videos/${videoId}/finish`, data),
 
   // GET /videos/{videoId} - 영상 상세 조회
-  getVideoDetail: (videoId: string) => apiClient.get(`/videos/${videoId}`),
+  getVideoDetail: (videoId: string) =>
+    apiClient.get<ApiResponse<GetVideoDetailResponseDto>>(`/videos/${videoId}`),
 
   // GET /videos/{videoId}/slides - 슬라이드 타임라인 조회
   getVideoSlides: (videoId: string) => apiClient.get(`/videos/${videoId}/slides`),

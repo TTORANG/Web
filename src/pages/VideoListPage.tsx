@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { CardView, ListView } from '@/components/common';
-import { ActionButton } from '@/components/common/ActionButton';
 import PresentationCard from '@/components/presentation/PresentationCard';
 import PresentationHeader from '@/components/presentation/PresentationHeader';
 import PresentationList from '@/components/presentation/PresentationList';
@@ -12,6 +11,20 @@ import type { FilterMode, SortMode, ViewMode } from '@/types/home';
 
 const SKELETON_CARD_COUNT = 6;
 const SKELETON_LIST_COUNT = 4;
+interface Video {
+  id: number;
+  projectId: string;
+  title: string;
+  createdAt: string;
+  durationSeconds: number;
+  slideCount: number;
+  size: number;
+  videoData?: string;
+  videoUrl?: string;
+  thumbnailUrl?: string;
+  status: 'processing' | 'ready' | 'failed';
+  durations?: { [key: number]: number };
+}
 
 export default function VideoListPage() {
   const navigate = useNavigate();
@@ -59,6 +72,16 @@ export default function VideoListPage() {
 
   const handleStartRecording = () => {
     navigate(`/${projectId}/video/record`);
+  };
+  const handleVideoClick = (video: Video) => {
+    if (video.status === 'ready') {
+      // 모달 대신 페이지로 이동
+      navigate(`}/video/${video.id}`);
+    } else if (video.status === 'processing') {
+      alert('영상이 처리 중입니다. 잠시 후 다시 시도해주세요.');
+    } else {
+      alert('영상 처리에 실패했습니다.');
+    }
   };
 
   if (!projectId) {

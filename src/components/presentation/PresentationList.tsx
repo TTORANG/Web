@@ -24,10 +24,6 @@ type Props = (Presentation | VideoPresentation) & {
   mode?: 'slide' | 'videos';
 };
 
-function isVideoPresentation(item: Presentation | VideoPresentation): item is VideoPresentation {
-  return 'reactionCount' in item && 'viewCount' in item;
-}
-
 function PresentationListSkeleton() {
   return (
     <article className="flex w-full items-center justify-between bg-white px-5 py-4 rounded-2xl border border-gray-200">

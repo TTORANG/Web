@@ -19,10 +19,10 @@ import {
   InsightPage,
   OAuthCallbackPage,
   SlidePage,
-  VideoPage,
+  VideoListPage,
   VideoRecordPage,
+  // VideoDetailPage
 } from '@/pages';
-import VideoListPage from '@/pages/VideoListPage';
 
 export const router = createBrowserRouter([
   {
@@ -71,6 +71,10 @@ export const router = createBrowserRouter([
     ),
     children: [{ index: true, element: <FdSlidePage /> }],
   },
+  // {
+  //   path: '/video/:videoId',
+  //   element: <VideoDetailPage />,
+  // },
   {
     path: '/:projectId/video/record',
     element: <VideoRecordPage />,

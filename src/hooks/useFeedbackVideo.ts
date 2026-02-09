@@ -8,6 +8,7 @@ import { useParams } from 'react-router-dom';
 import { videosApi } from '@/api/endpoints/videos';
 import { useVideoComments } from '@/hooks/useVideoComments';
 import { useVideoReactions } from '@/hooks/useVideoReactions';
+import { MOCK_VIDEO } from '@/mocks/videos';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Comment } from '@/types/comment';
 import { formatVideoTimestamp } from '@/utils/format';
@@ -41,8 +42,16 @@ export function useFeedbackVideo() {
   const projectSlides = useMemo(() => [], []);
 
   // TODO: 슬라이드 전환 시간 계산
-  const slideChangeTimes = useMemo(() => [], []);
+  const slideChangeTimes = useMemo(() => {
+    if (projectSlides.length === 0) return [];
 
+    const videoDuration = MOCK_VIDEO.duration; // MOCK_VIDEOS → MOCK_VIDEO
+    const slideCount = projectSlides.length;
+
+    return projectSlides.map(
+      (slide, i) => slide.startTime ?? Math.floor(i * (videoDuration / slideCount)),
+    );
+  }, [projectSlides]);
   // 타임스탬프 프리픽스 (댓글 입력 시 자동 삽입)
   const timestampPrefix = useMemo(() => `${formatVideoTimestamp(currentTime)} `, [currentTime]);
 

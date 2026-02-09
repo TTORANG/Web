@@ -21,8 +21,6 @@ bun.lock
 .env.development
 *.local
 !.env.local.example
-.env.development
-.env.production
 
 # Editor directories and files
 .vscode/*

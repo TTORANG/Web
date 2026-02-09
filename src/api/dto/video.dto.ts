@@ -72,3 +72,46 @@ export interface GetProjectVideosResponseDto {
   videos: VideoDto[];
   total: number;
 }
+/**
+ * 영상 상세 조회 응답 DTO
+ */
+export interface GetVideoDetailResponseDto {
+  video: {
+    videoId: string;
+    title: string;
+    status: 'processing' | 'ready' | 'failed';
+    durationSeconds: number;
+    width: number;
+    height: number;
+    fps: number;
+    hlsMasterUrl: string;
+    thumbnailUrl: string;
+    createdAt: string;
+  };
+  timeline: {
+    reactions: Array<{
+      timestampMs: number;
+      emojiType: string;
+      count: number;
+    }>;
+    comments: Array<{
+      commentId: string;
+      timestampMs: number;
+      content: string;
+      createdAt: string;
+      user: {
+        userId: string;
+        name: string;
+      };
+      replies?: Array<{
+        replyId: string;
+        content: string;
+        createdAt: string;
+        user: {
+          userId: string;
+          name: string;
+        };
+      }>;
+    }>;
+  };
+}

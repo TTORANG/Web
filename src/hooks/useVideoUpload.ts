@@ -108,6 +108,7 @@ export const useVideoUpload = () => {
 
           const newVideo: MockVideo = {
             id: videoId,
+            projectId: projectId.toString(),
             title,
             createdAt: new Date().toISOString(),
             durationSeconds: Math.round(videoBlob.size / 1024 / 100),

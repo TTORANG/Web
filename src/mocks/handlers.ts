@@ -8,11 +8,9 @@
 import { HttpResponse, delay, http } from 'msw';
 
 import type { VideoDto } from '@/api/dto/video.dto';
-import { createDefaultReactions } from '@/constants/reaction';
-import { FEEDBACK_WINDOW } from '@/constants/video';
 import type { Presentation } from '@/types/presentation';
 import type { SlideListItem } from '@/types/slide';
-import type { MockVideo, VideoFeedback, VideoTimestampFeedback } from '@/types/video';
+import type { MockVideo } from '@/types/video';
 
 import {
   getMockProjectAnalyticsSummary,

@@ -103,10 +103,10 @@ function PresentationCard(props: Props) {
     confirmRename,
   } = useRename({ projectId, initialTitle: title });
 
-  const isVideo = 'reactionCount' in rest && 'viewCount' in rest;
-  const totalCommentCount = isVideo ? (rest as VideoPresentation).commentCount : feedbackCount;
-  const reactionCount = isVideo ? (rest as VideoPresentation).reactionCount : 0;
-  const viewCount = isVideo ? (rest as VideoPresentation).viewCount : 0;
+  const isVideo = 'reactionCount' in props && 'viewCount' in props;
+  const totalCommentCount = isVideo ? (props as VideoPresentation).commentCount : feedbackCount;
+  const reactionCount = isVideo ? (props as VideoPresentation).reactionCount : 0;
+  const viewCount = isVideo ? (props as VideoPresentation).viewCount : 0;
   const isRenaming = isRenameModalOpen && isRenamePending;
 
   const handleCardClick = () => {
