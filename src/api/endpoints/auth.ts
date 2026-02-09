@@ -2,7 +2,7 @@
  * @file auth.ts
  * @description 인증 관련 API 엔드포인트
  */
-import { apiClient } from '@/api';
+import { apiClient } from '@/api/client';
 import type { SocialLoginSuccessResponseDto } from '@/api/dto';
 import type { ApiResponse } from '@/types/api';
 

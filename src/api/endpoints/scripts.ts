@@ -2,7 +2,7 @@
  * @file scripts.ts
  * @description 대본 관련 API 엔드포인트
  */
-import { apiClient } from '@/api';
+import { apiClient } from '@/api/client';
 import type {
   GetScriptResponseDto,
   GetScriptVersionHistoryResponseDto,

@@ -12,6 +12,16 @@ export interface VideoDto {
 }
 
 /**
+ * 영상 타임스탬프 댓글 생성
+ */
+export interface CreateCommentDto {
+  content: string;
+
+  /** 답글인 경우 부모 댓글 ID */
+  parentId?: string;
+}
+
+/**
  * 영상 녹화 세션 생성 요청 DTO
  */
 export interface StartVideoRequestDto {

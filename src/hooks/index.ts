@@ -9,7 +9,7 @@ export * from './useHotkey';
 export * from './useMediaQuery';
 export * from './useSlideNavigation';
 export * from './useSlideSelectors';
-export * from './queries/useOpinions';
+export * from './useComments';
 export * from './queries/usePresentations';
 export * from './queries/useSlides';
 export * from './useRename';

@@ -18,6 +18,7 @@ interface CommentListProps {
   onAddReply: (targetId: string, content: string) => void;
   onGoToRef: (ref: NonNullable<CommentType['ref']>) => void;
   onDeleteComment?: (commentId: string) => void;
+  onUpdateComment?: (commentId: string, content: string) => void;
   isLoading?: boolean;
 }
 
@@ -28,10 +29,13 @@ export default function CommentList({
   onAddReply,
   onGoToRef,
   onDeleteComment,
+  onUpdateComment,
   isLoading = false,
 }: CommentListProps) {
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState('');
 
   const submitReply = useCallback(
     (targetId: string) => {
@@ -54,6 +58,27 @@ export default function CommentList({
     setReplyDraft('');
   }, []);
 
+  const startEdit = useCallback((id: string, currentContent: string) => {
+    setEditingId(id);
+    setEditDraft(currentContent);
+  }, []);
+
+  const cancelEdit = useCallback(() => {
+    setEditingId(null);
+    setEditDraft('');
+  }, []);
+
+  const submitEdit = useCallback(
+    (id: string) => {
+      if (editDraft.trim() && onUpdateComment) {
+        onUpdateComment(id, editDraft.trim());
+      }
+      setEditingId(null);
+      setEditDraft('');
+    },
+    [editDraft, onUpdateComment],
+  );
+
   const contextValue = useMemo(
     () => ({
       replyingToId,
@@ -63,9 +88,28 @@ export default function CommentList({
       submitReply,
       cancelReply,
       deleteComment: onDeleteComment,
+      editingId,
+      editDraft,
+      setEditDraft,
+      startEdit,
+      cancelEdit,
+      submitEdit,
       goToRef: onGoToRef,
     }),
-    [replyingToId, replyDraft, toggleReply, submitReply, cancelReply, onDeleteComment, onGoToRef],
+    [
+      replyingToId,
+      replyDraft,
+      toggleReply,
+      submitReply,
+      cancelReply,
+      onDeleteComment,
+      editingId,
+      editDraft,
+      startEdit,
+      cancelEdit,
+      submitEdit,
+      onGoToRef,
+    ],
   );
 
   if (isLoading) {

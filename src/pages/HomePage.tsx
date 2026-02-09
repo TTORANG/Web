@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 
-//import { useNavigate } from 'react-router-dom';
-
 import IntroSection from '@/components/home/IntroSection';
 import PresentationsSection from '@/components/home/PresentationsSection';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -46,10 +44,9 @@ export default function HomePage() {
     return (p: Presentation) => {
       switch (filter) {
         case '3m':
-          return p.durationSeconds <= 180; // 3분 = 180초
+          return p.durationSeconds <= 180;
         case '5m':
-          return p.durationSeconds <= 300; // 5분 = 300초
-
+          return p.durationSeconds <= 300;
         default:
           return true;
       }

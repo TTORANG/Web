@@ -12,7 +12,7 @@ import clsx from 'clsx';
 import Comment from '@/components/comment/Comment';
 import { CommentProvider } from '@/components/comment/CommentContext';
 import { Popover, Skeleton } from '@/components/common';
-import { useSlideOpinions } from '@/hooks';
+import { useSlideComments } from '@/hooks';
 import { useComments } from '@/hooks/useComments';
 
 interface CommentPopoverProps {
@@ -20,11 +20,13 @@ interface CommentPopoverProps {
 }
 
 export default function CommentPopover({ isLoading }: CommentPopoverProps) {
-  const opinions = useSlideOpinions();
-  const { comments: treeOpinions, addReply, deleteComment } = useComments();
+  const slideComments = useSlideComments();
+  const { comments: treeComments, addReply, deleteComment, updateComment } = useComments();
 
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState('');
 
   const submitReply = useCallback(
     (targetId: string) => {
@@ -47,6 +49,27 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
     setReplyDraft('');
   }, []);
 
+  const startEdit = useCallback((id: string, currentContent: string) => {
+    setEditingId(id);
+    setEditDraft(currentContent);
+  }, []);
+
+  const cancelEdit = useCallback(() => {
+    setEditingId(null);
+    setEditDraft('');
+  }, []);
+
+  const submitEdit = useCallback(
+    (id: string) => {
+      if (editDraft.trim()) {
+        updateComment(id, editDraft.trim());
+      }
+      setEditingId(null);
+      setEditDraft('');
+    },
+    [editDraft, updateComment],
+  );
+
   const contextValue = useMemo(
     () => ({
       replyingToId,
@@ -56,9 +79,27 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
       submitReply,
       cancelReply,
       deleteComment,
+      editingId,
+      editDraft,
+      setEditDraft,
+      startEdit,
+      cancelEdit,
+      submitEdit,
       goToRef: () => {}, // 슬라이드 페이지에서는 ref 이동 불필요
     }),
-    [replyingToId, replyDraft, toggleReply, submitReply, cancelReply, deleteComment],
+    [
+      replyingToId,
+      replyDraft,
+      toggleReply,
+      submitReply,
+      cancelReply,
+      deleteComment,
+      editingId,
+      editDraft,
+      startEdit,
+      cancelEdit,
+      submitEdit,
+    ],
   );
 
   return (
@@ -66,7 +107,7 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
       trigger={({ isOpen }) => (
         <button
           type="button"
-          aria-label={`의견 ${opinions.length}개 보기`}
+          aria-label={`의견 ${slideComments.length}개 보기`}
           className={clsx(
             'inline-flex h-7 items-center gap-1 rounded px-2',
             'outline-1 -outline-offset-1 focus-visible:outline-2 focus-visible:outline-main',
@@ -92,7 +133,7 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
             {isLoading ? (
               <Skeleton width="100%" height={16} className="rounded" />
             ) : (
-              opinions.length
+              slideComments.length
             )}
           </span>
         </button>
@@ -110,8 +151,8 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
       {/* 의견 목록 */}
       <CommentProvider value={contextValue}>
         <div className="h-80 overflow-y-auto">
-          {treeOpinions.map((opinion) => (
-            <Comment key={opinion.id} comment={opinion} />
+          {treeComments.map((comment) => (
+            <Comment key={comment.id} comment={comment} />
           ))}
         </div>
       </CommentProvider>

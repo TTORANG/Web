@@ -9,6 +9,7 @@ import {
   ShareButton,
 } from '@/components/common';
 // TODO: 컴포넌트 교체
+import FeedbackHeaderCenter from '@/components/feedback/FeedbackHeaderCenter';
 import FeedbackHeaderLeft from '@/components/feedback/FeedbackHeaderLeft';
 import {
   DevTestPage,
@@ -65,7 +66,9 @@ export const router = createBrowserRouter([
   },
   {
     path: '/feedback/slide/:projectId',
-    element: <Layout theme="dark" left={<FeedbackHeaderLeft />} />,
+    element: (
+      <Layout theme="dark" left={<FeedbackHeaderLeft />} center={<FeedbackHeaderCenter />} />
+    ),
     children: [{ index: true, element: <FdSlidePage /> }],
   },
   {
@@ -74,7 +77,9 @@ export const router = createBrowserRouter([
   },
   {
     path: '/feedback/video/:projectId',
-    element: <Layout theme="dark" left={<FeedbackHeaderLeft />} />,
+    element: (
+      <Layout theme="dark" left={<FeedbackHeaderLeft />} center={<FeedbackHeaderCenter />} />
+    ),
     children: [{ index: true, element: <FdVideoPage /> }],
   },
 ]);

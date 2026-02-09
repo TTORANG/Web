@@ -10,12 +10,11 @@ import { queryKeys } from '@/api';
 import type { UpdateProjectDto } from '@/api/dto';
 import { getPresentations } from '@/api/endpoints/presentations';
 import {
-  createPresentation,
   deletePresentation,
   getPresentation,
   updatePresentation,
 } from '@/api/endpoints/presentations';
-import type { CreatePresentationRequest, Presentation } from '@/types/presentation';
+import type { Presentation } from '@/types/presentation';
 import { showToast } from '@/utils/toast';
 
 /** 프로젝트 목록 조회 */
@@ -49,18 +48,6 @@ export function useUpdatePresentation() {
         updatePresentation,
       );
       // 목록은 최신 데이터 반영을 위해 무효화
-      void queryClient.invalidateQueries({ queryKey: queryKeys.presentations.lists() });
-    },
-  });
-}
-
-/** 프로젝트 생성 */
-export function useCreatePresentation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: CreatePresentationRequest) => createPresentation(data),
-
-    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.presentations.lists() });
     },
   });

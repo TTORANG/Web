@@ -147,7 +147,7 @@ export const MOCK_VIDEO: VideoFeedback = {
     // ===== 앞부분 (0~60초) =====
     // 3초 - fire 우세 (총합: 15)
     {
-      timestamp: 3,
+      timestampMs: 3_000,
       comments: [
         {
           id: 'vc-1',
@@ -169,7 +169,7 @@ export const MOCK_VIDEO: VideoFeedback = {
 
     // 15초 - good 우세 (총합: 12)
     {
-      timestamp: 15,
+      timestampMs: 15_000,
       comments: [
         {
           id: 'vc-3',
@@ -191,7 +191,7 @@ export const MOCK_VIDEO: VideoFeedback = {
 
     // 28초 - sleepy 우세 (총합: 8)
     {
-      timestamp: 28,
+      timestampMs: 28_000,
       comments: [],
       reactions: [
         { type: 'fire' as const, count: 1, active: false },
@@ -204,7 +204,7 @@ export const MOCK_VIDEO: VideoFeedback = {
 
     // 45초 - fire 우세 (총합: 20) - 인기 구간!
     {
-      timestamp: 45,
+      timestampMs: 45_000,
       comments: [
         {
           id: 'vc-45-1',
@@ -227,7 +227,7 @@ export const MOCK_VIDEO: VideoFeedback = {
     // ===== 중간부분 (60~300초) =====
     // 90초 - confused 우세 (총합: 10)
     {
-      timestamp: 90,
+      timestampMs: 90_000,
       comments: [
         {
           id: 'vc-90-1',
@@ -249,7 +249,7 @@ export const MOCK_VIDEO: VideoFeedback = {
 
     // 150초 - fire 우세 (총합: 25) - 가장 인기 구간!
     {
-      timestamp: 150,
+      timestampMs: 150_000,
       comments: [
         {
           id: 'vc-150-1',
@@ -280,7 +280,7 @@ export const MOCK_VIDEO: VideoFeedback = {
 
     // 210초 - good 우세 (총합: 14)
     {
-      timestamp: 210,
+      timestampMs: 210_000,
       comments: [],
       reactions: [
         { type: 'fire' as const, count: 3, active: false },
@@ -293,7 +293,7 @@ export const MOCK_VIDEO: VideoFeedback = {
 
     // 270초 - bad 우세 (총합: 7)
     {
-      timestamp: 270,
+      timestampMs: 270_000,
       comments: [
         {
           id: 'vc-270-1',
@@ -316,7 +316,7 @@ export const MOCK_VIDEO: VideoFeedback = {
     // ===== 후반부 (300~500초) =====
     // 330초 - fire 우세 (총합: 18)
     {
-      timestamp: 330,
+      timestampMs: 330_000,
       comments: [
         {
           id: 'vc-330-1',
@@ -338,7 +338,7 @@ export const MOCK_VIDEO: VideoFeedback = {
 
     // 390초 - good 우세 (총합: 11)
     {
-      timestamp: 390,
+      timestampMs: 390_000,
       comments: [],
       reactions: [
         { type: 'fire' as const, count: 2, active: false },
@@ -351,7 +351,7 @@ export const MOCK_VIDEO: VideoFeedback = {
 
     // 450초 - fire 우세 (총합: 16)
     {
-      timestamp: 450,
+      timestampMs: 450_000,
       comments: [
         {
           id: 'vc-450-1',
@@ -374,7 +374,7 @@ export const MOCK_VIDEO: VideoFeedback = {
     // ===== 엔딩부분 (500~596초) =====
     // 520초 - sleepy 우세 (총합: 6)
     {
-      timestamp: 520,
+      timestampMs: 520_000,
       comments: [],
       reactions: [
         { type: 'fire' as const, count: 1, active: false },
@@ -387,7 +387,7 @@ export const MOCK_VIDEO: VideoFeedback = {
 
     // 560초 - confused 우세 (총합: 113) - 엔딩 크레딧
     {
-      timestamp: 560,
+      timestampMs: 560_000,
       comments: [
         {
           id: 'vc-560-1',
@@ -409,7 +409,7 @@ export const MOCK_VIDEO: VideoFeedback = {
 
     // 590초 - fire 우세 (총합: 22) - 마지막 장면 인기!
     {
-      timestamp: 590,
+      timestampMs: 590_000,
       comments: [
         {
           id: 'vc-590-1',
