@@ -1,27 +1,16 @@
 import { apiClient } from '@/api/client';
 import type {
   ChunkUploadResponseDto,
-  CommentResponseDto,
+  CreateCommentResponseDto,
+  CreateReplyCommentResponseDto,
   FinishVideoRequestDto,
   FinishVideoResponseDto,
+  GetVideoDetailResponseDto,
+  GetVideoSlidesResponseDto,
   StartVideoRequestDto,
   StartVideoResponseDto,
 } from '@/api/dto';
 import type { ApiResponse } from '@/types/api';
-
-/**
- * DTO → Model 변환: CommentResponseDto를 앱 내부용 Model로 변환
- * 주의: 서버 응답에서 댓글은 'commentId', 답글은 'replyId'를 사용할 수 있음
- */
-function commentDtoToModel(dto: CommentResponseDto): {
-  serverId: string;
-  content: string;
-} {
-  return {
-    serverId: dto.commentId,
-    content: dto.content,
-  };
-}
 
 // ============================================================================
 // 레거시 videosApi 객체 (하위 호환성 유지)
@@ -53,10 +42,12 @@ export const videosApi = {
     apiClient.post<ApiResponse<FinishVideoResponseDto>>(`/videos/${videoId}/finish`, data),
 
   // GET /videos/{videoId} - 영상 상세 조회
-  getVideoDetail: (videoId: string) => apiClient.get(`/videos/${videoId}`),
+  getVideoDetail: (videoId: string) =>
+    apiClient.get<ApiResponse<GetVideoDetailResponseDto>>(`/videos/${videoId}`),
 
   // GET /videos/{videoId}/slides - 슬라이드 타임라인 조회
-  getVideoSlides: (videoId: string) => apiClient.get(`/videos/${videoId}/slides`),
+  getVideoSlides: (videoId: string) =>
+    apiClient.get<ApiResponse<GetVideoSlidesResponseDto>>(`/videos/${videoId}/slides`),
 };
 
 // ============================================================================
@@ -75,14 +66,16 @@ export async function createVideoComment(
   videoId: string,
   data: { content: string; timestampMs?: number },
 ): Promise<{ serverId: string; content: string }> {
-  const response = await apiClient.post<ApiResponse<CommentResponseDto>>(
+  const response = await apiClient.post<ApiResponse<CreateCommentResponseDto>>(
     `/videos/${videoId}/comments`,
     data,
   );
 
   if (response.data.resultType === 'SUCCESS') {
-    // DTO → Model 변환
-    return commentDtoToModel(response.data.success);
+    return {
+      serverId: response.data.success.commentId,
+      content: response.data.success.content,
+    };
   }
   throw new Error(response.data.error.reason);
 }
@@ -98,14 +91,16 @@ export async function createCommentReply(
   commentId: string,
   data: { content: string },
 ): Promise<{ serverId: string; content: string }> {
-  const response = await apiClient.post<ApiResponse<CommentResponseDto>>(
+  const response = await apiClient.post<ApiResponse<CreateReplyCommentResponseDto>>(
     `/comments/${commentId}/replies`,
     data,
   );
 
   if (response.data.resultType === 'SUCCESS') {
-    // DTO → Model 변환
-    return commentDtoToModel(response.data.success);
+    return {
+      serverId: response.data.success.replyId,
+      content: response.data.success.content,
+    };
   }
   throw new Error(response.data.error.reason);
 }
