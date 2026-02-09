@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { CardView, ListView } from '@/components/common';
-import { ActionButton } from '@/components/common/ActionButton';
 import PresentationCard from '@/components/presentation/PresentationCard';
 import PresentationHeader from '@/components/presentation/PresentationHeader';
 import PresentationList from '@/components/presentation/PresentationList';
