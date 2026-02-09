@@ -119,7 +119,9 @@ export function useFeedbackVideo() {
 
         initVideo(videoData);
       } catch (error) {
-        console.error('[useFeedbackVideo] 비디오 로드 실패, 폴백 사용:', error);
+        if (import.meta.env.DEV) {
+          console.error('[useFeedbackVideo] 비디오 로드 실패, 폴백 사용:', error);
+        }
         if (cancelled) return;
 
         // 서버 요청 실패 시 폴백: videoId만 실제 값 사용
