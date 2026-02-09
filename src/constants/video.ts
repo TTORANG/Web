@@ -7,7 +7,7 @@
  * Local feedback grouping window in seconds.
  * Used for optimistic active-state handling around the current playback time.
  */
-export const FEEDBACK_WINDOW = 2;
+export const FEEDBACK_WINDOW = 5;
 
 /**
  * Reaction count aggregation window in seconds.

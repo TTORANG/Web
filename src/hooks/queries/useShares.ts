@@ -1,7 +1,8 @@
-import { useInfiniteQuery, useMutation } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 
 import { queryKeys } from '@/api';
-import { createShareLink, getShareableVideos } from '@/api/endpoints/shares';
+import { createShareLink, getShareableVideos, getSharedContent } from '@/api/endpoints/shares';
+import { useAuthStore } from '@/stores/authStore';
 import type { CreateShareLinkRequest } from '@/types/share';
 
 /**
@@ -32,5 +33,20 @@ export function useCreateShareLink() {
   return useMutation({
     mutationFn: ({ projectId, data }: { projectId: string; data: CreateShareLinkRequest }) =>
       createShareLink(projectId, data),
+  });
+}
+
+/**
+ * 공유 토큰으로 공유 콘텐츠 조회
+ *
+ * @param shareToken - 공유 토큰
+ */
+export function useSharedContent(shareToken: string | undefined) {
+  const sessionId = useAuthStore((s) => s.user?.sessionId);
+
+  return useQuery({
+    queryKey: queryKeys.shares.content(shareToken ?? ''),
+    queryFn: () => getSharedContent(shareToken!, sessionId),
+    enabled: !!shareToken,
   });
 }

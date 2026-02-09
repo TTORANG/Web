@@ -6,15 +6,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import { getSharedContent } from '@/api/endpoints/shares';
-import { getSlides } from '@/api/endpoints/slides';
 import { videosApi } from '@/api/endpoints/videos';
 import { useVideoComments } from '@/hooks/useVideoComments';
 import { useVideoReactions } from '@/hooks/useVideoReactions';
 import { useAuthStore } from '@/stores/authStore';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
-import type { SlideListItem } from '@/types';
 import type { Comment } from '@/types/comment';
-import type { SharedProjectSlide } from '@/types/share';
+import type { ReadSharedContentData, SharedProjectSlide } from '@/types/share';
 import type { SlideDetail } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';
 
@@ -57,7 +55,7 @@ function toNumber(value: string | number | undefined, fallback: number): number 
   return fallback;
 }
 
-function normalizeSharedSlides(rawSlides: SharedProjectSlide[], projectId: string): SlideDetail[] {
+function normalizeSharedSlides(rawSlides: SharedProjectSlide[]): SlideDetail[] {
   const now = new Date().toISOString();
 
   return rawSlides
@@ -65,7 +63,7 @@ function normalizeSharedSlides(rawSlides: SharedProjectSlide[], projectId: strin
       const slideNum = toNumber(slide.slideNum, index + 1);
       return {
         slideId: slide.slideId,
-        projectId: projectId || SHARED_PROJECT_ID,
+        projectId: SHARED_PROJECT_ID,
         title: `슬라이드 ${slideNum}`,
         slideNum,
         imageUrl: toPublicUrl(slide.imageUrl),
@@ -75,17 +73,6 @@ function normalizeSharedSlides(rawSlides: SharedProjectSlide[], projectId: strin
       };
     })
     .sort((a, b) => a.slideNum - b.slideNum);
-}
-
-function normalizeProjectSlides(rawSlides: SlideDetail[], projectId: string): SlideDetail[] {
-  return rawSlides
-    .slice()
-    .sort((a, b) => a.slideNum - b.slideNum)
-    .map((slide) => ({
-      ...slide,
-      projectId: slide.projectId || projectId,
-      imageUrl: toPublicUrl(slide.imageUrl),
-    }));
 }
 
 function mapSlidesByTimeline(
@@ -140,9 +127,8 @@ function mapSlidesByTimeline(
   };
 }
 
-export function useFeedbackVideo() {
-  const { projectId = '', shareToken: routeShareToken = '' } = useParams<{
-    projectId?: string;
+export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
+  const { shareToken: routeShareToken = '' } = useParams<{
     shareToken?: string;
   }>();
   const [searchParams] = useSearchParams();
@@ -181,30 +167,24 @@ export function useFeedbackVideo() {
   useEffect(() => {
     let cancelled = false;
 
-    const loadFromShareToken = async () => {
+    const loadFromSharedContent = async (content: ReadSharedContentData) => {
       const { user } = useAuthStore.getState();
       const sessionId = user?.sessionId;
 
-      const sharedContent = await getSharedContent(shareToken, sessionId);
-      if (cancelled) return;
-
-      const sharedSlides = normalizeSharedSlides(
-        sharedContent.projectContent?.slides ?? [],
-        projectId,
-      );
+      const sharedSlides = normalizeSharedSlides(content.projectContent?.slides ?? []);
 
       if (!sessionId) {
-        const accessToken = sharedContent.sessionInfo?.tokens?.accessToken;
-        const refreshToken = sharedContent.sessionInfo?.tokens?.refreshToken;
+        const accessToken = content.sessionInfo?.tokens?.accessToken;
+        const refreshToken = content.sessionInfo?.tokens?.refreshToken;
         if (accessToken && refreshToken) {
           useAuthStore.getState().anonymous(accessToken, refreshToken);
         }
       }
 
-      const videoId = sharedContent.projectContent?.video?.videoId ?? '';
+      const videoId = content.projectContent?.video?.videoId ?? '';
       const normalizedVideoId = String(videoId || DEFAULT_VIDEO_ID);
-      let videoUrl = toPlayableVideoUrl(sharedContent.projectContent?.video?.videoUrl);
-      let videoTitle = sharedContent.projectContent?.title ?? '공유 영상';
+      let videoUrl = toPlayableVideoUrl(content.projectContent?.video?.videoUrl);
+      let videoTitle = content.projectContent?.title ?? '공유 영상';
       let duration = FALLBACK_VIDEO_DURATION_SECONDS;
       let timelineSlides: Array<{ slideId: string; timestampMs: number }> = [];
 
@@ -252,65 +232,20 @@ export function useFeedbackVideo() {
       setSlideChangeTimes(mapped.slideChangeTimes);
     };
 
-    const loadFallback = async () => {
-      const videoId = DEFAULT_VIDEO_ID;
-
-      const [detailResult, timelineResult, slidesResult] = await Promise.allSettled([
-        videosApi.getVideoDetail(videoId),
-        videosApi.getVideoSlides(videoId),
-        projectId ? getSlides(projectId) : Promise.resolve([]),
-      ]);
+    const loadFromShareToken = async () => {
+      const { user } = useAuthStore.getState();
+      const sessionId = user?.sessionId;
+      const content = await getSharedContent(shareToken, sessionId);
       if (cancelled) return;
-
-      let sourceSlides: SlideDetail[] = [];
-      if (slidesResult.status === 'fulfilled') {
-        sourceSlides = normalizeProjectSlides(slidesResult.value as SlideDetail[], projectId);
-      }
-
-      let videoUrl = '';
-      let videoTitle = '테스트 영상';
-      let duration = FALLBACK_VIDEO_DURATION_SECONDS;
-      let timelineSlides: Array<{ slideId: string; timestampMs: number }> = [];
-
-      if (detailResult.status === 'fulfilled' && detailResult.value.data.resultType === 'SUCCESS') {
-        const serverVideo = detailResult.value.data.success.video;
-        videoUrl = toPlayableVideoUrl(serverVideo?.hlsMasterUrl);
-        videoTitle = serverVideo?.title || videoTitle;
-        duration = serverVideo?.durationSeconds || duration;
-      }
-
-      if (
-        timelineResult.status === 'fulfilled' &&
-        timelineResult.value.data.resultType === 'SUCCESS'
-      ) {
-        timelineSlides = timelineResult.value.data.success.slides.map((slide) => ({
-          slideId: String(slide.slideId),
-          timestampMs: slide.timestampMs,
-        }));
-      }
-
-      const mapped = mapSlidesByTimeline(sourceSlides, timelineSlides);
-
-      initVideo({
-        videoId,
-        videoUrl,
-        title: videoTitle,
-        duration,
-        comments: [],
-        reactionEvents: [],
-        feedbacks: [],
-      });
-
-      setProjectSlides(mapped.slides);
-      setSlideChangeTimes(mapped.slideChangeTimes);
+      await loadFromSharedContent(content);
     };
 
     const load = async () => {
       try {
-        if (shareToken) {
+        if (sharedContent) {
+          await loadFromSharedContent(sharedContent);
+        } else if (shareToken) {
           await loadFromShareToken();
-        } else {
-          await loadFallback();
         }
       } catch (error) {
         console.error('[useFeedbackVideo] load failed:', error);
@@ -319,7 +254,7 @@ export function useFeedbackVideo() {
         initVideo({
           videoId: DEFAULT_VIDEO_ID,
           videoUrl: '',
-          title: '테스트 영상',
+          title: '공유 영상',
           duration: FALLBACK_VIDEO_DURATION_SECONDS,
           comments: [],
           reactionEvents: [],
@@ -339,7 +274,7 @@ export function useFeedbackVideo() {
     return () => {
       cancelled = true;
     };
-  }, [initVideo, projectId, shareToken]);
+  }, [initVideo, sharedContent, shareToken]);
 
   return {
     isLoading,
