@@ -7,11 +7,21 @@
  */
 import { HttpResponse, delay, http } from 'msw';
 
-import type { VideoDto } from '@/api/dto/video.dto';
+import type { CreateCommentResponseDto, CreateReplyCommentResponseDto } from '@/api/dto';
+import type {
+  CreateChunkUploadResponseDto,
+  CreateCommentRequestDto,
+  CreateFinishVideoRequestDto,
+  CreateFinishVideoResponseDto,
+  CreateStartVideoRequestDto,
+  CreateStartVideoResponseDto,
+  ReadProjectVideosResponseDto,
+  ReadVideoDetailResponseDto,
+  ReadVideoSlidesResponseDto,
+} from '@/api/dto/video.dto';
+import type { ApiResponse } from '@/types';
 import type { Presentation } from '@/types/presentation';
-import type { SlideListItem } from '@/types/slide';
 import type { SlideDetail } from '@/types/slide';
-import type { MockVideo } from '@/types/video';
 
 import {
   getMockProjectAnalyticsSummary,
@@ -21,7 +31,15 @@ import {
 import { MOCK_PROJECTS } from './projects';
 import { MOCK_SLIDES } from './slides';
 import { MOCK_CURRENT_USER, MOCK_USERS } from './users';
-import { MOCK_VIDEO } from './videos';
+import {
+  filterVideosBySearch,
+  filterVideosByStatus,
+  mockSlideTimelines,
+  mockTimelines,
+  mockVideoDetails,
+  mockVideoList,
+  sortVideos,
+} from './videos';
 
 // ── URL Constants ────────────────────────────────────────────
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
@@ -425,7 +443,10 @@ const scriptHandlers = [
 
     // 버전 추가
     const versions = scriptVersions.get(slideId) ?? [];
-    const nextVer = versions.length > 0 ? Math.max(...versions.map((v) => v.versionNumber)) + 1 : 1;
+    const nextVer =
+      versions.length > 0
+        ? Math.max(...versions.map((v: { versionNumber: number }) => v.versionNumber)) + 1
+        : 1;
     versions.push({
       versionNumber: nextVer,
       scriptText: text,
@@ -458,7 +479,9 @@ const scriptHandlers = [
     const { slideId } = params as { slideId: string };
     const body = (await request.json()) as { version: number };
     const versions = scriptVersions.get(slideId) ?? [];
-    const target = versions.find((v) => v.versionNumber === body.version);
+    const target = versions.find(
+      (v: { versionNumber: number }) => v.versionNumber === body.version,
+    );
     if (!target) return fail(404, 'SC001', '해당 버전을 찾을 수 없습니다.');
 
     const slide = slides.find((s) => s.slideId === slideId);
@@ -815,16 +838,17 @@ const reactionHandlers = [
     const url = new URL(request.url);
     const intervalMs = Number(url.searchParams.get('intervalMs') ?? '5000');
 
-    // MOCK_VIDEO feedbacks에서 타임라인 마커 생성
+    // mock 타임라인에서 마커 생성
     const markers: { timestampMs: number; emojiType: string; count: number }[] = [];
-    if (videoId === MOCK_VIDEO.videoId) {
-      MOCK_VIDEO.feedbacks.forEach((fb) => {
-        const bucket = Math.floor(fb.timestampMs / intervalMs) * intervalMs;
-        fb.reactions.forEach((r) => {
-          if (r.count > 0) markers.push({ timestampMs: bucket, emojiType: r.type, count: r.count });
-        });
+    const timeline = mockTimelines[videoId];
+
+    if (timeline) {
+      timeline.reactions.forEach((r) => {
+        const bucket = Math.floor(r.timestampMs / intervalMs) * intervalMs;
+        markers.push({ timestampMs: bucket, emojiType: r.emojiType, count: r.count });
       });
     }
+
     return ok({ intervalMs, markers });
   }),
 
@@ -837,17 +861,18 @@ const reactionHandlers = [
     const windowMs = Number(url.searchParams.get('windowMs') ?? '2000');
 
     const result: { emojiType: string; count: number }[] = [];
-    if (videoId === MOCK_VIDEO.videoId) {
+    const timeline = mockTimelines[videoId];
+
+    if (timeline) {
       const totals: Record<string, number> = {};
-      MOCK_VIDEO.feedbacks.forEach((fb) => {
-        if (fb.timestampMs >= timestampMs - windowMs && fb.timestampMs <= timestampMs + windowMs) {
-          fb.reactions.forEach((r) => {
-            totals[r.type] = (totals[r.type] ?? 0) + r.count;
-          });
+      timeline.reactions.forEach((r) => {
+        if (r.timestampMs >= timestampMs - windowMs && r.timestampMs <= timestampMs + windowMs) {
+          totals[r.emojiType] = (totals[r.emojiType] ?? 0) + r.count;
         }
       });
       Object.entries(totals).forEach(([type, count]) => result.push({ emojiType: type, count }));
     }
+
     return ok(result);
   }),
 ];
@@ -857,172 +882,195 @@ const reactionHandlers = [
 // ═══════════════════════════════════════════════════════════════
 
 const videoHandlers = [
-  // 녹화 시작
+  // POST /videos/start - 영상 녹화 세션 생성
   http.post(`${BASE_URL}/videos/start`, async ({ request }) => {
     await delay(200);
-    const body = (await request.json()) as { projectId: number; title: string };
-    return ok({ videoId: nextId(), ...body });
+    const body = (await request.json()) as CreateStartVideoRequestDto;
+    const videoId = String(Date.now());
+
+    return HttpResponse.json<ApiResponse<CreateStartVideoResponseDto>>({
+      resultType: 'SUCCESS',
+      success: {
+        videoId,
+      },
+      error: null,
+    });
   }),
 
-  // 청크 업로드
-  http.post(`${BASE_URL}/videos/:videoId/chunks/:chunkIndex`, async () => {
+  // POST /videos/:videoId/chunks/:chunkIndex - 청크 업로드
+  http.post(`${BASE_URL}/videos/:videoId/chunks/:chunkIndex`, async ({ params }) => {
     await delay(100);
-    return ok({ ok: true });
+    const { videoId, chunkIndex } = params;
+
+    console.log(`[MSW] Chunk ${chunkIndex} uploaded for video ${videoId}`);
+
+    return HttpResponse.json<ApiResponse<CreateChunkUploadResponseDto>>({
+      resultType: 'SUCCESS',
+      success: {
+        ok: true,
+      },
+      error: null,
+    });
   }),
 
-  // 녹화 완료
+  // POST /videos/:videoId/finish - 녹화 종료
   http.post(`${BASE_URL}/videos/:videoId/finish`, async ({ params, request }) => {
     await delay(300);
-    const { videoId } = params as { videoId: string };
-    const body = (await request.json()) as {
-      slideLogs: { slideId: number; timestampMs: number }[];
-    };
-    return ok({
-      videoId,
-      status: 'processing',
-      slideCount: body.slideLogs.length,
-      slideDurations: body.slideLogs.map((log) => ({
-        slideId: String(log.slideId),
-        totalDurationMs: 30000,
-      })),
+    const { videoId } = params;
+    const body = (await request.json()) as CreateFinishVideoRequestDto;
+
+    return HttpResponse.json<ApiResponse<CreateFinishVideoResponseDto>>({
+      resultType: 'SUCCESS',
+      success: {
+        videoId: String(videoId),
+        status: 'processing',
+        slideCount: body.slideLogs.length,
+        slideDurations: body.slideLogs.map((log) => ({
+          slideId: String(log.slideId),
+          totalDurationMs: log.timestampMs,
+        })),
+      },
+      error: null,
     });
   }),
 
-  // 프로젝트별 영상 목록 (검색/필터/정렬 지원)
+  // GET /presentations/:projectId/videos - 프로젝트별 영상 목록 조회
   http.get(`${BASE_URL}/presentations/:projectId/videos`, async ({ params, request }) => {
     await delay(200);
-    const { projectId } = params as { projectId: string };
+    const { projectId } = params;
     const url = new URL(request.url);
     const search = url.searchParams.get('search') || '';
-    const filter = url.searchParams.get('filter') || 'all';
+    const filter = url.searchParams.get('filter') || '';
     const sort = url.searchParams.get('sort') || 'recent';
 
-    console.log(`[MSW] GET /presentations/${projectId}/videos`, { search, filter, sort });
+    // 필터링 & 정렬
+    let videos = mockVideoList;
+    videos = filterVideosBySearch(videos, search);
+    videos = filterVideosByStatus(videos, filter);
+    videos = sortVideos(videos, sort);
 
-    // localStorage에서 읽기
-    const storedData = localStorage.getItem('mockVideos');
-    if (!storedData) {
-      return ok({ videos: [], total: 0 });
-    }
-
-    const localVideos: MockVideo[] = JSON.parse(storedData) as MockVideo[];
-
-    // 해당 프로젝트의 영상만 필터링
-    const projectVideos = localVideos.filter((video) => video.projectId === projectId);
-
-    // VideoDto 형식으로 변환
-    let videos: VideoDto[] = projectVideos.map((video) => ({
-      videoId: String(video.id),
-      title: video.title,
-      status: 'ready' as const,
-      durationSeconds: video.durationSeconds,
-      rootCommentCount: video.rootCommentCount,
-      replyCount: video.replyCount,
-      reactionCount: video.reactionCount,
-      viewCount: video.viewCount,
-      thumbnailUrl: `https://example.com/thumb${video.id}.jpg`,
-      createdAt: video.createdAt,
-    }));
-
-    // 검색 필터링
-    if (search) {
-      videos = videos.filter((video) => video.title.toLowerCase().includes(search.toLowerCase()));
-    }
-
-    // 듀레이션 필터링
-    if (filter === '3m') {
-      videos = videos.filter((video) => video.durationSeconds <= 180);
-    } else if (filter === '5m') {
-      videos = videos.filter((video) => video.durationSeconds <= 300);
-    }
-
-    // 정렬
-    if (sort === 'recent') {
-      videos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    } else if (sort === 'commentCount') {
-      videos.sort(
-        (a, b) => b.rootCommentCount + b.replyCount - (a.rootCommentCount + a.replyCount),
-      );
-    } else if (sort === 'name') {
-      videos.sort((a, b) => a.title.localeCompare(b.title, 'ko'));
-    }
-
-    return ok({ videos, total: videos.length });
+    return HttpResponse.json<ApiResponse<ReadProjectVideosResponseDto>>({
+      resultType: 'SUCCESS',
+      success: {
+        videos,
+        total: videos.length,
+      },
+      error: null,
+    });
   }),
 
-  // 영상 상세 (timeline 포함)
+  // GET /videos/:videoId - 영상 상세 조회
   http.get(`${BASE_URL}/videos/:videoId`, async ({ params }) => {
     await delay(200);
-    const { videoId } = params as { videoId: string };
-    if (videoId !== MOCK_VIDEO.videoId) return fail(404, 'V001', '영상을 찾을 수 없습니다.');
+    const { videoId } = params;
+    const video = mockVideoDetails[String(videoId)];
+    const timeline = mockTimelines[String(videoId)];
 
-    // MOCK_VIDEO feedbacks → Server timeline 포맷으로 변환
-    const timelineReactions: { timestampMs: number; emojiType: string; count: number }[] = [];
-    const timelineComments: {
-      commentId: string;
-      timestampMs: number;
-      content: string;
-      createdAt: string;
-      user: { userId: string; name: string };
-    }[] = [];
+    if (!video) {
+      return HttpResponse.json<ApiResponse<ReadVideoDetailResponseDto>>(
+        {
+          resultType: 'FAILURE',
+          error: {
+            errorCode: 'VIDEO_NOT_FOUND',
+            reason: '영상을 찾을 수 없습니다.',
+            data: null,
+          },
+          success: null,
+        },
+        { status: 404 },
+      );
+    }
 
-    MOCK_VIDEO.feedbacks.forEach((fb) => {
-      fb.reactions.forEach((r) => {
-        if (r.count > 0) {
-          timelineReactions.push({
-            timestampMs: fb.timestampMs * 1000, // seconds → ms
-            emojiType: r.type,
-            count: r.count,
-          });
-        }
-      });
-      fb.comments.forEach((c) => {
-        const user = MOCK_USERS.find((u) => u.id === c.userId);
-        timelineComments.push({
-          commentId: c.commentId,
-          timestampMs: fb.timestampMs,
-          content: c.content,
-          createdAt: c.createdAt,
-          user: { userId: c.userId, name: user?.name ?? '알 수 없음' },
-        });
-      });
-    });
-
-    return ok({
-      video: {
-        videoId: MOCK_VIDEO.videoId,
-        title: MOCK_VIDEO.title,
-        status: 'ready',
-        durationSeconds: MOCK_VIDEO.duration,
-        width: 1920,
-        height: 1080,
-        fps: 30,
-        hlsMasterUrl: MOCK_VIDEO.videoUrl,
-        thumbnailUrl: null,
-        createdAt: new Date().toISOString(),
+    return HttpResponse.json<ApiResponse<ReadVideoDetailResponseDto>>({
+      resultType: 'SUCCESS',
+      success: {
+        video,
+        timeline: timeline || { reactions: [], comments: [] },
       },
-      timeline: { reactions: timelineReactions, comments: timelineComments },
+      error: null,
     });
   }),
 
-  // 영상-슬라이드 타임라인
+  // GET /videos/:videoId/slides - 슬라이드 타임라인 조회
   http.get(`${BASE_URL}/videos/:videoId/slides`, async ({ params }) => {
-    await delay(100);
-    const { videoId } = params as { videoId: string };
-    if (videoId !== MOCK_VIDEO.videoId) return fail(404, 'V001', '영상을 찾을 수 없습니다.');
-    // p1 프로젝트의 처음 5개 슬라이드로 타임라인 생성
-    const p1Slides = slides
-      .filter((s) => s.projectId === 'p1')
-      .sort((a, b) => a.slideNum - b.slideNum)
-      .slice(0, 5);
-    return ok({
-      slides: p1Slides.map((s, i) => ({
-        slideId: s.slideId,
-        timestampMs: i * Math.floor((MOCK_VIDEO.duration * 1000) / 5),
-      })),
+    await delay(150);
+    const { videoId } = params;
+    const slides = mockSlideTimelines[String(videoId)];
+
+    if (!slides) {
+      return HttpResponse.json<ApiResponse<ReadVideoSlidesResponseDto>>(
+        {
+          resultType: 'FAILURE',
+          error: {
+            errorCode: 'VIDEO_NOT_FOUND',
+            reason: '영상을 찾을 수 없습니다.',
+            data: null,
+          },
+          success: null,
+        },
+        { status: 404 },
+      );
+    }
+
+    return HttpResponse.json<ApiResponse<ReadVideoSlidesResponseDto>>({
+      resultType: 'SUCCESS',
+      success: {
+        slides,
+      },
+      error: null,
+    });
+  }),
+
+  // POST /videos/:videoId/comments - 댓글 작성
+  http.post(`${BASE_URL}/videos/:videoId/comments`, async ({ params, request }) => {
+    await delay(200);
+    const { videoId } = params;
+    const body = (await request.json()) as CreateCommentRequestDto & { timestampMs?: number };
+
+    return HttpResponse.json<ApiResponse<CreateCommentResponseDto>>({
+      resultType: 'SUCCESS',
+      success: {
+        commentId: `c${Date.now()}`,
+        content: body.content,
+        createdAt: new Date().toISOString(),
+        userId: MOCK_CURRENT_USER.id,
+      },
+      error: null,
+    });
+  }),
+
+  // POST /comments/:commentId/replies - 답글 작성
+  http.post(`${BASE_URL}/comments/:commentId/replies`, async ({ params, request }) => {
+    await delay(200);
+    const { commentId } = params;
+    const body = (await request.json()) as CreateCommentRequestDto;
+
+    return HttpResponse.json<ApiResponse<CreateReplyCommentResponseDto>>({
+      resultType: 'SUCCESS',
+      success: {
+        replyId: `r${Date.now()}`,
+        content: body.content,
+        createdAt: new Date().toISOString(),
+        userId: MOCK_CURRENT_USER.id,
+        parentCommentId: String(commentId),
+      },
+      error: null,
+    });
+  }),
+
+  // DELETE /comments/:commentId - 댓글 삭제
+  http.delete(`${BASE_URL}/comments/:commentId`, async ({ params }) => {
+    await delay(150);
+    const { commentId } = params;
+
+    return HttpResponse.json<ApiResponse<null>>({
+      resultType: 'SUCCESS',
+      success: null,
+      error: null,
     });
   }),
 ];
+
 // ═══════════════════════════════════════════════════════════════
 //  SHARES — /presentations/:projectId/shares, /shares/:shareToken
 // ═══════════════════════════════════════════════════════════════
@@ -1058,7 +1106,7 @@ const shareHandlers = [
       sharedContentSummary: {
         scope: body.scope,
         projectTitle: project?.title ?? '',
-        videoTitle: body.videoId ? MOCK_VIDEO.title : null,
+        videoTitle: body.videoId ? mockVideoDetails[body.videoId]?.title : null,
         videoCreatedAt: body.videoId ? now : null,
         thumbnailUrl: project?.thumbnailUrl ?? null,
       },
@@ -1079,6 +1127,8 @@ const shareHandlers = [
       .filter((s) => s.projectId === link.projectId)
       .sort((a, b) => a.slideNum - b.slideNum);
 
+    const videoDetail = link.videoId ? mockVideoDetails[link.videoId] : null;
+
     return ok({
       message: '공유된 프로젝트에 접속했습니다.',
       sessionInfo: {
@@ -1098,11 +1148,11 @@ const shareHandlers = [
           scriptText: s.script ?? '',
         })),
         video:
-          link.scope === 'slides_script_video'
+          link.scope === 'slides_script_video' && videoDetail
             ? {
-                videoId: MOCK_VIDEO.videoId,
-                videoUrl: MOCK_VIDEO.videoUrl,
-                thumbnailUrl: null,
+                videoId: videoDetail.videoId,
+                videoUrl: videoDetail.hlsMasterUrl,
+                thumbnailUrl: videoDetail.thumbnailUrl,
               }
             : null,
       },
@@ -1123,7 +1173,7 @@ const shareHandlers = [
         shareToken: l.shareToken,
         isActive: true,
         viewCount: l.viewCount,
-        videoTitle: l.videoId ? MOCK_VIDEO.title : null,
+        videoTitle: l.videoId ? mockVideoDetails[l.videoId]?.title : null,
         createdAt: l.createdAt,
       })),
     );
@@ -1136,20 +1186,23 @@ const shareHandlers = [
     const page = Number(url.searchParams.get('page') ?? '1');
     const pageSize = Number(url.searchParams.get('pageSize') ?? '10');
 
-    const allVideos = [
-      {
-        id: MOCK_VIDEO.videoId,
-        title: MOCK_VIDEO.title,
-        thumbnailUrl: null as string | null,
-        createdAt: new Date().toISOString(),
-      },
-    ];
+    const allVideos = mockVideoList.map((v) => ({
+      id: v.videoId,
+      title: v.title,
+      thumbnailUrl: v.thumbnailUrl,
+      createdAt: v.createdAt,
+    }));
+
     const start = (page - 1) * pageSize;
     const paged = allVideos.slice(start, start + pageSize);
 
     return ok({
       videos: paged,
-      pagination: { currentPage: page, totalCount: allVideos.length, hasNext: false },
+      pagination: {
+        currentPage: page,
+        totalCount: allVideos.length,
+        hasNext: start + pageSize < allVideos.length,
+      },
     });
   }),
 ];
@@ -1210,18 +1263,34 @@ const analyticsHandlers = [
   }),
 
   // 영상 타임라인 분석
-  http.get(`${BASE_URL}/videos/:videoId/analytics/timeline`, async () => {
+  http.get(`${BASE_URL}/videos/:videoId/analytics/timeline`, async ({ params }) => {
     await delay(100);
-    const timeline = [];
-    for (let t = 0; t <= MOCK_VIDEO.duration * 1000; t += 30000) {
-      timeline.push({
-        timestampMs: t,
-        reactionCount: Math.floor(Math.random() * 10),
-        commentCount: Math.floor(Math.random() * 3),
-        feedbackCount: Math.floor(Math.random() * 13),
-      });
+    const { videoId } = params as { videoId: string };
+    const timeline = mockTimelines[videoId];
+
+    const result = [];
+    if (timeline) {
+      // 30초 간격으로 데이터 생성
+      const duration = mockVideoDetails[videoId]?.durationSeconds || 600;
+      for (let t = 0; t <= duration * 1000; t += 30000) {
+        const reactionsInWindow = timeline.reactions.filter(
+          (r) => r.timestampMs >= t - 15000 && r.timestampMs < t + 15000,
+        );
+        const commentsInWindow = timeline.comments.filter(
+          (c) => c.timestampMs >= t - 15000 && c.timestampMs < t + 15000,
+        );
+
+        result.push({
+          timestampMs: t,
+          reactionCount: reactionsInWindow.reduce((sum, r) => sum + r.count, 0),
+          commentCount: commentsInWindow.length,
+          feedbackCount:
+            reactionsInWindow.reduce((sum, r) => sum + r.count, 0) + commentsInWindow.length,
+        });
+      }
     }
-    return ok({ timeline });
+
+    return ok({ timeline: result });
   }),
 
   // 페이지뷰 기록
