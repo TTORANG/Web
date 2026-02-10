@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import { useQuery } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 
 import { getConversionStatus } from '@/api/endpoints/presentations';
 import { queryKeys } from '@/api/queryClient';
@@ -19,7 +20,14 @@ export default function SlidePage() {
     queryKey: queryKeys.presentations.detail(`${projectId ?? ''}:status`),
     queryFn: () => getConversionStatus(projectId ?? ''),
     enabled: !!projectId,
-    refetchInterval: 2000,
+    retry: false,
+    refetchInterval: (query) => {
+      const error = query.state.error;
+      if (isAxiosError(error) && error.response?.status === 401) {
+        return false;
+      }
+      return 2000;
+    },
   });
 
   const slideIdParam = searchParams.get('slideId');
