@@ -5,16 +5,62 @@
  * shareToken으로 공유 콘텐츠를 조회한 뒤,
  * scope에 따라 슬라이드 피드백 또는 비디오 피드백 페이지로 분기합니다.
  */
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { recordPageView } from '@/api/endpoints/analytics';
 import { Spinner } from '@/components/common';
 import { useSharedContent } from '@/hooks/queries/useShares';
+import { useExitTracker } from '@/hooks/useExitTracker';
+import type { ShareExitSnapshot } from '@/pages/feedback/useFeedbackVideo';
 
 import FeedbackVideoPage from './FeedbackVideoPage';
+
+interface ShareExitSnapshotState {
+  shareToken: string;
+  snapshot: ShareExitSnapshot;
+}
 
 export default function SharePage() {
   const { shareToken } = useParams<{ shareToken: string }>();
   const { data, isLoading, isError } = useSharedContent(shareToken);
+  // 하위 페이지(FeedbackVideo/FeedbackSlide)가 보고하는 마지막 시청 위치를 저장합니다.
+  // 실제 `/analytics/exit` 전송은 SharePage 한 곳에서만 담당합니다.
+  const [exitSnapshotState, setExitSnapshotState] = useState<ShareExitSnapshotState | null>(null);
+
+  useEffect(() => {
+    if (!shareToken || !data) return;
+
+    const sentKey = `pageview:${shareToken}`;
+    if (sessionStorage.getItem(sentKey) === '1') return;
+
+    sessionStorage.setItem(sentKey, '1');
+
+    // 공유페이지 진입 시 `recordPageView`를 전송합니다.
+    void recordPageView({ shareToken }).catch(() => {
+      sessionStorage.removeItem(sentKey);
+    });
+  }, [shareToken, data]);
+
+  const buildExitPayload = useCallback(() => {
+    if (!shareToken || !data) return null;
+    const exitSnapshot =
+      exitSnapshotState?.shareToken === shareToken ? exitSnapshotState.snapshot : null;
+
+    // 중앙 이탈 payload 생성:
+    // `shareToken`은 항상 포함하고, `last*` 값은 하위 페이지가 보고한 경우에만 포함합니다.
+    return {
+      shareToken,
+      ...(exitSnapshot?.lastSlideId != null ? { lastSlideId: exitSnapshot.lastSlideId } : {}),
+      ...(exitSnapshot?.lastVideoId != null ? { lastVideoId: exitSnapshot.lastVideoId } : {}),
+      ...(exitSnapshot?.lastVideoTimeMs != null
+        ? { lastVideoTimeMs: exitSnapshot.lastVideoTimeMs }
+        : {}),
+    };
+  }, [shareToken, data, exitSnapshotState]);
+
+  // 공유 페이지의 `/analytics/exit`는 이 위치에서만 전송합니다.
+  useExitTracker(buildExitPayload);
 
   if (isLoading) {
     return (
@@ -32,11 +78,22 @@ export default function SharePage() {
     );
   }
 
-  const scope = data.shareInfo?.scope;
+  const scope = data.shareInfo.scope;
 
   if (scope === 'slides_script') {
-    //return <FeedbackSlidePage sharedSlides={data.projectContent.slides} />; // 샌디 슬라이드페이지
+    // 공유 슬라이드 페이지를 연결할 때도 `onShareExitSnapshotChange`를 함께 넘겨
+    // `/analytics/exit` 전송 주체를 SharePage로 유지합니다.
+    // 예시: <FeedbackSlidePage onShareExitSnapshotChange={setExitSnapshot} disableOwnExitTracking />
+    // return <FeedbackSlidePage sharedSlides={data.projectContent.slides} />; // 샌디 슬라이드페이지
   }
 
-  return <FeedbackVideoPage sharedContent={data} />;
+  return (
+    <FeedbackVideoPage
+      sharedContent={data}
+      onShareExitSnapshotChange={(snapshot) => {
+        if (!shareToken) return;
+        setExitSnapshotState({ shareToken, snapshot });
+      }}
+    />
+  );
 }
