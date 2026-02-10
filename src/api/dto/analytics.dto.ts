@@ -16,7 +16,7 @@ export interface RecordAnalyticsEventResponseDto {
  * 페이지 조회 기록 요청 DTO
  */
 export interface RecordPageViewRequestDto {
-  projectId: number;
+  shareToken: string;
 }
 
 /**
