@@ -27,10 +27,14 @@ export function usePresentations(options?: { enabled?: boolean }) {
 /**
  * 프로젝트 목록 조회 (필터/검색/정렬 지원)
  */
-export function usePresentationsWithFilters(params: GetPresentationsRequestDto) {
+export function usePresentationsWithFilters(
+  params: GetPresentationsRequestDto,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: queryKeys.presentations.list(params),
     queryFn: () => getPresentations(params),
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -66,6 +70,26 @@ export function useUpdatePresentation() {
           old
             ? { ...old, title: updatePresentation.title, updatedAt: updatePresentation.updatedAt }
             : old,
+      );
+      // 목록 캐시는 즉시 업데이트 (화면 전환 시 반영 지연 방지)
+      queryClient.setQueriesData<PresentationListResponse>(
+        { queryKey: queryKeys.presentations.lists() },
+        (oldData) => {
+          if (!oldData) return oldData;
+          const nextPresentations = oldData.presentations.map((item) =>
+            item.projectId === updatePresentation.projectId
+              ? {
+                  ...item,
+                  title: updatePresentation.title,
+                  updatedAt: updatePresentation.updatedAt,
+                }
+              : item,
+          );
+          return {
+            ...oldData,
+            presentations: nextPresentations,
+          };
+        },
       );
       // 목록은 최신 데이터 반영을 위해 무효화
       void queryClient.invalidateQueries({ queryKey: queryKeys.presentations.lists() });
