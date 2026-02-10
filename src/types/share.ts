@@ -57,7 +57,7 @@ export type ShareableVideosResponse = ApiResponse<ShareableVideosData>;
 /** 5. 공유 콘텐츠 조회 */
 export interface SharedProjectSlide {
   slideId: string;
-  slideNum: string | number;
+  slideNum: number;
   imageUrl: string;
   scriptText: string;
   timestampMs?: number;

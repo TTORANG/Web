@@ -107,7 +107,7 @@ export const useFeedbackSlide = ({
 
   useHotkey({ ArrowLeft: goPrev, ArrowRight: goNext }, { enabled: slides.length > 0 });
 
-  const buildExitPayload = useCallback(() => {
+  const buildExitPayload = () => {
     if (!shareToken) return null;
 
     const payload: { shareToken: string; lastSlideId?: number } = {
@@ -122,7 +122,7 @@ export const useFeedbackSlide = ({
     }
 
     return payload;
-  }, [shareToken, currentSlide]);
+  };
 
   useExitTracker(buildExitPayload);
 
