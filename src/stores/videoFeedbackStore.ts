@@ -10,7 +10,7 @@ import { devtools } from 'zustand/middleware';
 
 import { createDefaultReactions, getExclusiveCounterpart } from '@/constants/reaction';
 import { FEEDBACK_WINDOW } from '@/constants/video';
-import { MOCK_CURRENT_USER } from '@/mocks/users';
+import { useAuthStore } from '@/stores/authStore';
 import type { Comment } from '@/types/comment';
 import type { Reaction, ReactionType } from '@/types/script';
 import type { VideoFeedback, VideoTimestampFeedback } from '@/types/video';
@@ -161,9 +161,12 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
             refSeconds,
           );
 
+          const currentUser = useAuthStore.getState().user;
           const createdComment = createComment({
             content: finalContent,
-            userId: MOCK_CURRENT_USER.id,
+            userId: currentUser?.id ?? 'unknown',
+            userName: currentUser?.name,
+            userProfileImage: currentUser?.profileImage,
             ref,
           });
 
@@ -200,12 +203,15 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
 
           if (!targetFeedback) return state;
 
+          const currentUser = useAuthStore.getState().user;
           const { comments: updatedComments, newComment } = addReplyToFlat(
             targetFeedback.comments,
             parentId,
             {
               content: content.trim(),
-              userId: MOCK_CURRENT_USER.id,
+              userId: currentUser?.id ?? 'unknown',
+              userName: currentUser?.name,
+              userProfileImage: currentUser?.profileImage,
             },
           );
 

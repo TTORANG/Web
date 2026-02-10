@@ -10,7 +10,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
 import { getExclusiveCounterpart } from '@/constants/reaction';
-import { MOCK_CURRENT_USER } from '@/mocks/users';
+import { useAuthStore } from '@/stores/authStore';
 import type { Comment } from '@/types/comment';
 import type { ReactionType } from '@/types/script';
 import type { SlideDetail } from '@/types/slide';
@@ -102,10 +102,13 @@ export const useSlideStore = create<SlideState>()(
 
             // 항상 최상위 부모 댓글에 답글을 달도록 rootParentId를 찾음
             const rootParentId = findRootParentId(state.slide.comments ?? [], parentId);
+            const currentUser = useAuthStore.getState().user;
 
             const { comments } = addReplyToFlat(state.slide.comments ?? [], rootParentId, {
               content,
-              userId: MOCK_CURRENT_USER.id,
+              userId: currentUser?.id ?? 'unknown',
+              userName: currentUser?.name,
+              userProfileImage: currentUser?.profileImage,
             });
 
             return {
@@ -164,10 +167,13 @@ export const useSlideStore = create<SlideState>()(
       addComment: (content, slideIndex) => {
         const trimmed = content.trim();
         if (!trimmed) return;
+        const currentUser = useAuthStore.getState().user;
 
         const newComment = createComment({
           content: trimmed,
-          userId: MOCK_CURRENT_USER.id,
+          userId: currentUser?.id ?? 'unknown',
+          userName: currentUser?.name,
+          userProfileImage: currentUser?.profileImage,
           ref: { kind: 'slide', index: slideIndex },
         });
 
