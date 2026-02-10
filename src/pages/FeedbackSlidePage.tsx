@@ -212,7 +212,7 @@ export default function FeedbackSlidePage() {
               className="max-h-full max-w-full"
             />
           ) : (
-            <div className="py-20 text-black">????? ???? ?...</div>
+            <div className="py-20 text-black">슬라이드를 불러올 수 없습니다...</div>
           )
         }
         navigationSlot={

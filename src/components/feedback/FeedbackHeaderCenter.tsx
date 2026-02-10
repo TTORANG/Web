@@ -9,7 +9,7 @@ export default function FeedbackHeaderCenter() {
   const { projectId } = useParams<{ projectId: string }>();
 
   const { data: presentation } = usePresentation(projectId ?? '');
-  const title = presentation?.title ?? '';
+  const title = presentation?.title?.trim() ? presentation.title : '내 발표';
   const postedAt = presentation?.updatedAt
     ? dayjs(presentation.updatedAt).format('YYYY.MM.DD HH:mm:ss')
     : '-';
