@@ -83,7 +83,11 @@ export default function CommentInput({
 
   useEffect(() => {
     if (autoFocus && textareaRef.current) {
-      textareaRef.current.focus();
+      const el = textareaRef.current;
+      el.focus();
+      // 커서를 텍스트 끝으로 이동
+      const len = el.value.length;
+      el.setSelectionRange(len, len);
     }
   }, [autoFocus]);
 

@@ -1137,6 +1137,21 @@ const shareHandlers = [
       .sort((a, b) => a.slideNum - b.slideNum);
 
     const videoDetail = link.videoId ? mockVideoDetails[link.videoId] : null;
+    const videoSlideTimeline = link.videoId ? (mockSlideTimelines[link.videoId] ?? []) : [];
+    const slideTimestampMap = new Map(
+      videoSlideTimeline.map((slide) => [String(slide.slideId), slide.timestampMs]),
+    );
+    const sharedComments = link.videoId
+      ? (videoComments.get(link.videoId) ?? []).map((comment) => ({
+          commentId: comment.commentId,
+          content: comment.content,
+          writer: comment.userName,
+          targetType: 'video' as const,
+          targetId: link.videoId ?? '',
+          timestampMs: comment.timestampMs,
+          createdAt: comment.createdAt,
+        }))
+      : [];
 
     return ok({
       message: '공유된 프로젝트에 접속했습니다.',
@@ -1155,6 +1170,7 @@ const shareHandlers = [
           slideNum: s.slideNum,
           imageUrl: s.imageUrl,
           scriptText: s.script ?? '',
+          timestampMs: slideTimestampMap.get(String(s.slideId)),
         })),
         video:
           link.scope === 'slides_script_video' && videoDetail
@@ -1164,6 +1180,7 @@ const shareHandlers = [
                 thumbnailUrl: videoDetail.thumbnailUrl,
               }
             : null,
+        comments: sharedComments,
       },
     });
   }),

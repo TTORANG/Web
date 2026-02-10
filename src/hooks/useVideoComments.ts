@@ -10,6 +10,12 @@ import { showToast } from '@/utils/toast';
 
 const EMPTY_COMMENTS: Comment[] = [];
 
+function getServerCommentId(comment: Comment): string | null {
+  if (comment.serverId?.trim()) return comment.serverId;
+  if (!comment.isMine && comment.commentId.trim()) return comment.commentId;
+  return null;
+}
+
 /**
  * 영상 댓글 관리 훅
  *
@@ -95,8 +101,9 @@ export function useVideoComments() {
       // parentId로 부모 댓글 찾기 (serverId 필요)
       const allComments = video?.feedbacks.flatMap((f) => f.comments) || [];
       const parentComment = allComments.find((c) => c.commentId === parentId);
+      const parentServerId = parentComment ? getServerCommentId(parentComment) : null;
 
-      if (!parentComment || !parentComment.serverId) {
+      if (!parentComment) {
         showToast.error('답글 등록에 실패했습니다.', '부모 댓글을 찾을 수 없습니다.');
         return;
       }
@@ -105,11 +112,11 @@ export function useVideoComments() {
       const extracted = extractTimestampFromComment(content);
       const contentToSend = extracted ? extracted.content : content;
 
-      if (parentComment.serverId) {
+      if (!parentServerId) {
         showToast.error('답글 등록에 실패했습니다.', '잘못된 댓글 ID입니다.');
         return;
       }
-      const model = await createCommentReply(parentComment.serverId, { content: contentToSend });
+      const model = await createCommentReply(parentServerId, { content: contentToSend });
 
       // 서버 ID 저장 (Model에서 serverId 추출)
       if (model && tempReply) {
@@ -131,6 +138,7 @@ export function useVideoComments() {
     // 플랫 구조: 모든 댓글(답글 포함)이 같은 배열에 있음
     const allComments = video.feedbacks.flatMap((f) => f.comments);
     const targetComment = allComments.find((c) => c.commentId === commentId);
+    const targetServerId = targetComment ? getServerCommentId(targetComment) : null;
 
     if (!targetComment) {
       showToast.error('댓글을 찾을 수 없습니다.');
@@ -138,7 +146,7 @@ export function useVideoComments() {
     }
 
     // serverId가 없으면 로컬에서만 삭제 (아직 서버에 저장되지 않음)
-    if (!targetComment.serverId) {
+    if (!targetServerId) {
       deleteCommentStore(commentId);
       return;
     }
@@ -147,7 +155,7 @@ export function useVideoComments() {
     deleteCommentStore(commentId);
 
     try {
-      await deleteVideoComment(targetComment.serverId);
+      await deleteVideoComment(targetServerId);
       showToast.success('댓글이 삭제되었습니다.');
     } catch {
       showToast.error('댓글 삭제에 실패했습니다.', '잠시 후 다시 시도해주세요.');
