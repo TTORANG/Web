@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 
-import { type RecordExitRequest, recordExit as recordExitApi } from '@/api/endpoints/analytics';
+import type { RecordExitRequestDto } from '@/api/dto/analytics.dto';
+import { recordExit as recordExitApi } from '@/api/endpoints/analytics';
 import { useRecordExit } from '@/hooks/queries/useAnalytics';
 
 type ExitMode = 'unload' | 'unmount';
@@ -13,7 +14,7 @@ type ExitMode = 'unload' | 'unmount';
  *
  * @param buildExitPayload - 이탈 시 전송할 페이로드를 생성하는 콜백 (null 반환 시 전송 생략)
  */
-export function useExitTracker(buildExitPayload: () => RecordExitRequest | null) {
+export function useExitTracker(buildExitPayload: () => RecordExitRequestDto | null) {
   const { mutate } = useRecordExit();
   const exitSentRef = useRef(false);
 

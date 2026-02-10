@@ -148,3 +148,20 @@ export interface RecentCommentSlideDto {
   title: string;
   imageUrl: string;
 }
+
+/**
+ * recordExit 요청 타입
+ */
+export interface RecordExitRequestDto {
+  projectId: number;
+  lastSlideId?: number;
+  lastVideoId?: number;
+  lastVideoTimeMs?: number;
+}
+
+/**
+ * recordExit 응답 타입
+ */
+export interface RecordExitResponseDto {
+  ok: boolean;
+}
