@@ -186,3 +186,48 @@ export interface RecentCommentSlideDto {
   title: string;
   imageUrl: string;
 }
+
+/**
+ * recordExit 요청 타입
+ */
+export interface RecordExitRequestDto {
+  shareToken: string;
+  lastSlideId?: number;
+  lastVideoId?: number;
+  lastVideoTimeMs?: number;
+}
+
+/**
+ * recordExit 응답 타입
+ */
+export interface RecordExitResponseDto {
+  ok: boolean;
+}
+
+/**
+ * page-view 요청 타입
+ */
+export interface RecordPageViewRequestDto {
+  shareToken: string;
+}
+
+/**
+ * page-view 응답 타입
+ */
+export interface RecordPageViewResponseDto {
+  ok: boolean;
+}
+
+/**
+ * slide-view 요청 타입
+ */
+export interface RecordSlideViewRequestDto {
+  slideId: number;
+}
+
+/**
+ * slide-view 응답 타입
+ */
+export interface RecordSlideViewResponseDto {
+  ok: boolean;
+}

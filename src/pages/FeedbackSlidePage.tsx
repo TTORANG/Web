@@ -1,160 +1,67 @@
 /**
  * @file FeedbackSlidePage
- * @description 피드백 슬라이드 페이지
+ * @description 슬라이드 피드백 페이지
  *
  * 슬라이드 뷰어, 댓글 목록, 리액션 버튼을 포함합니다.
- * 좌우 화살표 키로 슬라이드 이동이 가능합니다.
+ * 좌우 키로 슬라이드 이동이 가능합니다.
  */
-import { useCallback, useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
 import { Spinner } from '@/components/common';
-import WebSocketDebug from '@/components/common/WebSocketDebug';
 import FeedbackMobileLayout from '@/components/feedback/FeedbackMobileLayout';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
 import SlideNavigation from '@/components/feedback/SlideNavigation';
 import SlideViewer from '@/components/feedback/SlideViewer';
 import SlideTitle from '@/components/slide/script/SlideTitle';
 import { createDefaultReactions } from '@/constants/reaction';
-import { useHotkey, useSlideActions, useSlideScript } from '@/hooks';
-import { useScript } from '@/hooks/queries/useScript';
-import { useSlides } from '@/hooks/queries/useSlides';
-import { useExitTracker } from '@/hooks/useExitTracker';
-import { useFeedbackWebSocket } from '@/hooks/useFeedbackWebSocket';
-import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
-import { useSlideCommentsLoader } from '@/hooks/useSlideCommentsLoader';
-import { useSlideNavigation } from '@/hooks/useSlideNavigation';
-import { useSlideReactions } from '@/hooks/useSlideReactions';
-import { useSlideStore } from '@/stores/slideStore';
-import type { Comment } from '@/types/comment';
+import type { ReadSharedContentData } from '@/types/share';
 
-export interface ShareSlideExitSnapshot {
-  lastSlideId?: number;
-}
+import { useFeedbackSlide } from './feedback/useFeedbackSlide';
+import type { ShareExitSnapshot } from './feedback/useFeedbackVideo';
 
 interface FeedbackSlidePageProps {
-  // 부모(SharePage)가 현재 슬라이드 위치를 받을 때 사용하는 콜백입니다.
-  onShareExitSnapshotChange?: (snapshot: ShareSlideExitSnapshot) => void;
-  // 부모(SharePage)가 /analytics/exit를 중앙 전송할 때 true로 설정합니다.
-  disableOwnExitTracking?: boolean;
+  sharedContent?: ReadSharedContentData;
+  onShareExitSnapshotChange?: (snapshot: ShareExitSnapshot) => void;
 }
 
 export default function FeedbackSlidePage({
+  sharedContent,
   onShareExitSnapshotChange,
-  disableOwnExitTracking = false,
 }: FeedbackSlidePageProps = {}) {
-  const { projectId } = useParams<{ projectId: string }>();
-  const [searchParams] = useSearchParams();
-  const shareToken = searchParams.get('shareToken') ?? '';
-  const { data: slides, isLoading } = useSlides(projectId ?? '');
-
-  // 웹소켓 연결
-  const { isConnected, currentRooms, joinProject, leaveProject, getRooms } = useFeedbackWebSocket({
-    projectId: projectId ?? '',
-    enabled: !!projectId,
+  const { shareToken } = useParams<{ shareToken: string }>();
+  const { state, actions } = useFeedbackSlide({
+    sharedSlides: sharedContent?.projectContent?.slides,
+    shareToken,
+    onShareExitSnapshotChange,
   });
 
-  const totalSlides = slides?.length ?? 0;
-  const navigation = useSlideNavigation(totalSlides);
-  const { slideIndex, goPrev, goNext, isFirst, isLast, goToIndex } = navigation;
+  const {
+    currentSlide,
+    totalSlides,
+    slideIndex,
+    script,
+    comments,
+    commentDraft,
+    reactions,
+    isLoading,
+    isCommentsLoading,
+    isFirst,
+    isLast,
+  } = state;
 
-  const currentSlide = slides?.[slideIndex];
-
-  const { comments, addComment, addReply, deleteComment, updateComment } =
-    useSlideCommentsActions();
-  const { reactions, toggleReaction } = useSlideReactions();
-  const script = useSlideScript();
-  const initSlide = useSlideStore((state) => state.initSlide);
-  const { updateScript } = useSlideActions();
-  const { data: scriptData } = useScript(currentSlide?.slideId ?? '');
-
-  const [commentDraft, setCommentDraft] = useState('');
-
-  const handleAddComment = () => {
-    if (!commentDraft.trim()) return;
-    addComment(commentDraft, slideIndex);
-    setCommentDraft('');
-  };
-
-  const mapComments = useCallback(
-    (comments: Comment[]) => {
-      if (!currentSlide) return comments;
-      const slideLabel = `Slide ${slideIndex + 1}`;
-      return comments.map((comment) => ({
-        ...comment,
-        slideId: currentSlide.slideId,
-        ref: { kind: 'slide' as const, index: slideIndex },
-        slideRef: slideLabel,
-      }));
-    },
-    [currentSlide, slideIndex],
-  );
-
-  useHotkey({ ArrowLeft: goPrev, ArrowRight: goNext }, { enabled: !isLoading });
-
-  const buildExitPayload = useCallback(() => {
-    if (!shareToken) return null;
-
-    const payload: { shareToken: string; lastSlideId?: number } = {
-      shareToken,
-    };
-
-    if (currentSlide?.slideId) {
-      const slideIdNum = Number(currentSlide.slideId);
-      if (Number.isFinite(slideIdNum)) {
-        payload.lastSlideId = slideIdNum;
-      }
-    }
-
-    return payload;
-  }, [shareToken, currentSlide]);
-
-  const buildTrackedExitPayload = useCallback(() => {
-    // 부모가 exit 전송을 담당하는 경우, 여기서는 전송하지 않아 중복을 막습니다.
-    if (disableOwnExitTracking) return null;
-    return buildExitPayload();
-  }, [disableOwnExitTracking, buildExitPayload]);
-
-  useEffect(() => {
-    // 현재 보고 있는 슬라이드 ID를 부모 스냅샷과 동기화합니다.
-    if (!onShareExitSnapshotChange || !currentSlide?.slideId) return;
-    const slideIdNum = Number(currentSlide.slideId);
-    if (!Number.isFinite(slideIdNum)) return;
-    onShareExitSnapshotChange({ lastSlideId: slideIdNum });
-  }, [onShareExitSnapshotChange, currentSlide]);
-
-  useExitTracker(buildTrackedExitPayload);
-
-  /** 슬라이드 변경 시 store 초기화 */
-  useEffect(() => {
-    if (!currentSlide) return;
-
-    initSlide({
-      ...currentSlide,
-      emojiReactions: createDefaultReactions(),
-    });
-    updateScript('');
-  }, [slideIndex, currentSlide, initSlide, updateScript]);
-
-  const { isLoading: isCommentsLoading } = useSlideCommentsLoader(currentSlide?.slideId, {
-    mapComments,
-  });
-
-  useEffect(() => {
-    if (scriptData) {
-      updateScript(scriptData.scriptText);
-    }
-  }, [scriptData, updateScript]);
-
-  const handleGoToRef = useCallback(
-    (ref: NonNullable<Comment['ref']>) => {
-      if (ref.kind !== 'slide') return;
-      goToIndex(ref.index);
-    },
-    [goToIndex],
-  );
+  const {
+    goPrev,
+    goNext,
+    handleGoToRef,
+    setCommentDraft,
+    handleAddComment,
+    addReply,
+    deleteComment,
+    updateComment,
+    toggleReaction,
+  } = actions;
 
   if (isLoading) {
     return (
@@ -208,7 +115,6 @@ export default function FeedbackSlidePage({
         </aside>
       </div>
 
-      {/* 모바일 뷰 */}
       <FeedbackMobileLayout
         mediaSlot={
           currentSlide ? (
@@ -218,7 +124,7 @@ export default function FeedbackSlidePage({
               className="max-h-full max-w-full"
             />
           ) : (
-            <div className="py-20 text-black">슬라이드를 불러오는 중...</div>
+            <div className="py-20 text-black">슬라이드를 불러올 수 없습니다...</div>
           )
         }
         navigationSlot={
@@ -276,16 +182,6 @@ export default function FeedbackSlidePage({
           </>
         }
         commentCount={comments.length}
-      />
-
-      {/* WebSocket 디버그 UI (개발 환경에서만) */}
-      <WebSocketDebug
-        isConnected={isConnected}
-        currentRooms={currentRooms}
-        projectId={projectId}
-        onJoinProject={joinProject}
-        onLeaveProject={leaveProject}
-        onGetRooms={getRooms}
       />
     </div>
   );

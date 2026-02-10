@@ -14,6 +14,7 @@ import { useSharedContent } from '@/hooks/queries/useShares';
 import { useExitTracker } from '@/hooks/useExitTracker';
 import type { ShareExitSnapshot } from '@/pages/feedback/useFeedbackVideo';
 
+import FeedbackSlidePage from './FeedbackSlidePage';
 import FeedbackVideoPage from './FeedbackVideoPage';
 
 interface ShareExitSnapshotState {
@@ -81,10 +82,15 @@ export default function SharePage() {
   const scope = data.shareInfo.scope;
 
   if (scope === 'slides_script') {
-    // 공유 슬라이드 페이지를 연결할 때도 `onShareExitSnapshotChange`를 함께 넘겨
-    // `/analytics/exit` 전송 주체를 SharePage로 유지합니다.
-    // 예시: <FeedbackSlidePage onShareExitSnapshotChange={setExitSnapshot} disableOwnExitTracking />
-    // return <FeedbackSlidePage sharedSlides={data.projectContent.slides} />; // 샌디 슬라이드페이지
+    return (
+      <FeedbackSlidePage
+        sharedContent={data}
+        onShareExitSnapshotChange={(snapshot) => {
+          if (!shareToken) return;
+          setExitSnapshotState({ shareToken, snapshot });
+        }}
+      />
+    );
   }
 
   return (

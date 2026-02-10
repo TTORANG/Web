@@ -1,61 +1,47 @@
 import { useCallback, useEffect, useRef } from 'react';
 
-import { type RecordExitRequest, recordExit as recordExitApi } from '@/api/endpoints/analytics';
-import { useRecordExit } from '@/hooks/queries/useAnalytics';
-
-type ExitMode = 'unload' | 'unmount';
+import type { RecordExitRequestDto } from '@/api/dto/analytics.dto';
+import { useRecordExit } from '@/hooks/queries/useAnalytics.ts';
 
 /**
  * 페이지 이탈 추적 훅
  *
- * pagehide / visibilitychange 이벤트와 컴포넌트 언마운트 시
- * 이탈 데이터를 서버에 전송합니다. 중복 전송을 방지합니다.
+ * 브라우저 종료/새로고침/탭 이동 시 pagehide 또는 beforeunload에서 이탈 데이터를 전송합니다.
+ * visibilitychange는 창 가림/탭 전환에서도 발생하므로 사용하지 않습니다.
  *
  * @param buildExitPayload - 이탈 시 전송할 페이로드를 생성하는 콜백 (null 반환 시 전송 생략)
  */
-export function useExitTracker(buildExitPayload: () => RecordExitRequest | null) {
+export function useExitTracker(buildExitPayload: () => RecordExitRequestDto | null) {
   const { mutate } = useRecordExit();
   const exitSentRef = useRef(false);
-  const payloadBuilderRef = useRef(buildExitPayload);
+  const buildExitPayloadRef = useRef(buildExitPayload);
 
   useEffect(() => {
-    payloadBuilderRef.current = buildExitPayload;
+    buildExitPayloadRef.current = buildExitPayload;
   }, [buildExitPayload]);
 
-  const sendExit = useCallback(
-    (mode: ExitMode) => {
-      if (exitSentRef.current) return;
-      const payload = payloadBuilderRef.current();
-      if (!payload) return;
+  const sendExit = useCallback(() => {
+    if (exitSentRef.current) return;
+    const payload = buildExitPayloadRef.current();
+    if (!payload) return;
 
-      exitSentRef.current = true;
-      if (mode === 'unload') {
-        recordExitApi(payload);
-      } else {
-        mutate(payload);
-      }
-    },
-    [mutate],
-  );
+    exitSentRef.current = true;
+    mutate(payload);
+  }, [mutate]);
 
   useEffect(() => {
-    const handlePageHide = () => sendExit('unload');
-    const handleBeforeUnload = () => sendExit('unload');
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        sendExit('unload');
-      }
+    const handlePageHide = (event: PageTransitionEvent) => {
+      if (event.persisted) return;
+      sendExit();
     };
+    const handleBeforeUnload = () => sendExit();
 
     window.addEventListener('pagehide', handlePageHide);
     window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('pagehide', handlePageHide);
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      sendExit('unmount');
     };
   }, [sendExit]);
 }

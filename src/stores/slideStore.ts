@@ -24,9 +24,12 @@ import {
 
 interface SlideState {
   slide: SlideDetail | null;
+  reactionHistory: Record<string, ReactionType[]>;
+  reactionCounts: Record<string, Record<string, number>>;
 
   initSlide: (slide: SlideDetail) => void;
   updateSlide: (updates: Partial<SlideDetail>) => void;
+  setReactionCounts: (slideId: string, counts: Record<string, number>) => void;
   updateScript: (script: string) => void;
   deleteComment: (id: string) => void;
   updateComment: (id: string, content: string) => void;
@@ -42,6 +45,9 @@ export const useSlideStore = create<SlideState>()(
     (set, get) => ({
       slide: null,
 
+      reactionHistory: {},
+      reactionCounts: {},
+
       initSlide: (slide) => {
         set({ slide }, false, 'slide/initSlide');
       },
@@ -53,6 +59,19 @@ export const useSlideStore = create<SlideState>()(
           }),
           false,
           'slide/updateSlide',
+        );
+      },
+
+      setReactionCounts: (slideId, counts) => {
+        set(
+          (state) => ({
+            reactionCounts: {
+              ...state.reactionCounts,
+              [slideId]: { ...counts },
+            },
+          }),
+          false,
+          'slide/setReactionCounts',
         );
       },
 
@@ -139,6 +158,9 @@ export const useSlideStore = create<SlideState>()(
           (state) => {
             if (!state.slide) return state;
 
+            // 여기서 slideId를 정의해야 아래 return 문에서 쓸 수 있습니다.
+            const slideId = state.slide.slideId;
+
             const currentReactions = state.slide.emojiReactions || [];
             const targetReaction = currentReactions.find((r) => r.type === type);
             const isActivating = !targetReaction?.active;
@@ -146,6 +168,7 @@ export const useSlideStore = create<SlideState>()(
             // exclusive 그룹에서 반대 타입 찾기
             const counterpart = getExclusiveCounterpart(type);
 
+            // 1. 리액션 상태 업데이트 (기존 로직)
             const newReactions = currentReactions.map((r) => {
               // 토글 대상
               if (r.type === type) {
@@ -155,7 +178,7 @@ export const useSlideStore = create<SlideState>()(
                 return { ...r, active: true, count: r.count + 1 };
               }
 
-              // 활성화 시 exclusive 반대 타입 비활성화
+              // 활성화 시 exclusive 반대 타입 비활성화 (좋아요 누르면 싫어요 꺼짐)
               if (isActivating && counterpart && r.type === counterpart && r.active) {
                 return { ...r, active: false, count: Math.max(0, r.count - 1) };
               }
@@ -163,11 +186,28 @@ export const useSlideStore = create<SlideState>()(
               return r;
             });
 
+            // 변경된 리액션 목록에서 'active: true'인 것만 골라내서 히스토리에 저장
+            // (이렇게 하면 exclusive 로직 때문에 꺼진 버튼도 알아서 히스토리에서 빠집니다)
+            const activeTypes = newReactions.filter((r) => r.active).map((r) => r.type);
+
+            // 3️⃣ [추가] 변경된 숫자들을 싹 긁어모아서 저장소에 넣기
+            const currentCounts = state.reactionCounts[slideId] || {};
+            const newCounts = { ...currentCounts };
+            newReactions.forEach((r) => {
+              newCounts[r.type] = r.count;
+            });
+
             return {
               slide: {
                 ...state.slide,
                 emojiReactions: newReactions,
               },
+              // ✅ 히스토리 업데이트 (현재 슬라이드 ID를 키값으로 저장)
+              reactionHistory: {
+                ...state.reactionHistory,
+                [state.slide.slideId]: activeTypes,
+              },
+              reactionCounts: { ...state.reactionCounts, [slideId]: newCounts },
             };
           },
           false,

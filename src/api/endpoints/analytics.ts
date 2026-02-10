@@ -12,10 +12,12 @@ import type {
   ReadVideoRetentionResponseDto,
   RecordAnalyticsEventResponseDto,
   RecordExitRequestDto,
+  RecordExitResponseDto,
   RecordPageViewRequestDto,
+  RecordSlideViewRequestDto,
+  RecordSlideViewResponseDto,
   RecordVideoEventRequestDto,
 } from '@/api/dto/analytics.dto';
-import { useAuthStore } from '@/stores/authStore';
 import type { ApiResponse } from '@/types/api';
 
 // 슬라이드 분석 api 연동
@@ -59,6 +61,20 @@ export async function getProjectAnalyticsSummary(
 }
 
 /**
+ * 이탈 기록
+ */
+export function recordExit(data: RecordExitRequestDto) {
+  // keepalive 옵션이 필요 없으므로 apiClient로 통일
+  return apiClient.post<ApiResponse<RecordExitResponseDto>>('/analytics/exit', data);
+}
+
+/**
+ * 슬라이드 조회 기록
+ */
+export function slideView(data: RecordSlideViewRequestDto) {
+  return apiClient.post<ApiResponse<RecordSlideViewResponseDto>>('/analytics/slide-view', data);
+}
+/**
  * 페이지 조회 기록
  */
 export async function recordPageView(
@@ -88,34 +104,6 @@ export async function recordVideoEvent(
     throw new Error('영상 이벤트 기록 전송에 실패했습니다.');
   }
   return response.data.success;
-}
-
-/**
- * 이탈 지점 기록
- * pagehide/unload 상황을 위해 keepalive fetch를 사용합니다.
- */
-export function recordExit(data: RecordExitRequestDto) {
-  const baseURL = apiClient.defaults.baseURL ?? '';
-  // baseURL 처리 (기존 로직 유지)
-  const fullUrl = baseURL ? new URL('/analytics/exit', baseURL).toString() : '/analytics/exit';
-  const { accessToken } = useAuthStore.getState();
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
-  }
-
-  // return fetch(...)를 바로 반환하여 Promise가 끊기지 않게 합니다.
-  return fetch(fullUrl, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(data),
-    keepalive: true,
-    credentials: 'include',
-  });
 }
 
 // 기존 코드와의 호환을 위한 별칭 타입

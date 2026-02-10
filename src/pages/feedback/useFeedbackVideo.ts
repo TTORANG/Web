@@ -33,7 +33,7 @@ const SHARED_PROJECT_ID = 'shared';
 export interface ShareExitSnapshot {
   lastSlideId?: number;
   lastVideoId?: number;
-  lastVideoTimeMs: number;
+  lastVideoTimeMs?: number;
 }
 
 interface UseFeedbackVideoOptions {
@@ -42,13 +42,8 @@ interface UseFeedbackVideoOptions {
   onShareExitSnapshotChange?: (snapshot: ShareExitSnapshot) => void;
 }
 
-function toPublicUrl(url?: string | null): string {
-  if (!url) return '';
-  return url.startsWith('gs://') ? `https://storage.googleapis.com/${url.slice(5)}` : url;
-}
-
 function toPlayableVideoUrl(url?: string | null): string {
-  const publicUrl = toPublicUrl(url);
+  const publicUrl = url ?? '';
   if (!publicUrl) return '';
 
   if (!import.meta.env.DEV) {
@@ -87,7 +82,7 @@ function normalizeSharedSlides(rawSlides: SharedProjectSlide[]): SlideDetail[] {
         projectId: SHARED_PROJECT_ID,
         title: `슬라이드 ${slideNum}`,
         slideNum,
-        imageUrl: toPublicUrl(slide.imageUrl),
+        imageUrl: slide.imageUrl,
         createdAt: now,
         updatedAt: now,
         script: slide.scriptText,
