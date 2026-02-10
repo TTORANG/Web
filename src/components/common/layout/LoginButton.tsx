@@ -13,11 +13,13 @@ import LogoutIcon from '@/assets/icons/icon-logout.svg?react';
 import { Dropdown } from '@/components/common/Dropdown';
 import { Modal } from '@/components/common/Modal';
 import { useAuthStore } from '@/stores/authStore';
+import { isAnonymousEmail } from '@/utils/auth';
 import { showToast } from '@/utils/toast';
 
 import { HeaderButton } from './HeaderButton';
 
 export function LoginButton() {
+  const accessToken = useAuthStore((s) => s.accessToken);
   const user = useAuthStore((s) => s.user);
   const openLoginModal = useAuthStore((s) => s.openLoginModal);
   const logout = useAuthStore((s) => s.logout);
@@ -25,7 +27,29 @@ export function LoginButton() {
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
 
-  if (!user) {
+  const isGuest = !accessToken;
+  const isAnon = Boolean(accessToken && isAnonymousEmail(user?.email));
+  const isSocial = Boolean(accessToken && user?.email && !isAnonymousEmail(user.email));
+
+  // 로그인 전 (게스트)
+  if (isGuest) {
+    return <HeaderButton text="로그인" icon={<LoginIcon />} onClick={openLoginModal} />;
+  }
+
+  // 익명 사용자
+  if (isAnon || !user) {
+    return (
+      <HeaderButton
+        text="익명 사용자(로그인)"
+        icon={null}
+        onClick={openLoginModal}
+        className="hover:bg-gray-50"
+      />
+    );
+  }
+
+  // 소셜이 아닌데 여기까지 왔다면(비정상 상태) 방어
+  if (!isSocial) {
     return <HeaderButton text="로그인" icon={<LoginIcon />} onClick={openLoginModal} />;
   }
 
@@ -54,7 +78,7 @@ export function LoginButton() {
             type="button"
             className="flex cursor-pointer items-center gap-2 text-body-s-bold text-gray-800 transition-colors hover:text-gray-600"
           >
-            {user.name ?? '사용자'}
+            {user.name ?? user.email.split('@')[0] ?? '사용자'}
             {user.profileImage ? (
               <img
                 src={user.profileImage}
