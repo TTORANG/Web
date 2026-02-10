@@ -65,6 +65,23 @@ export interface ReadVideoReactionTimelineResponseDto {
 }
 
 /**
+ * 타임라인 버킷별 리액션 항목 Dto
+ */
+export interface ReadVideoReactionBucketDto {
+  timestampMs: number;
+  totalCount: number;
+  reactions: Record<ReactionType, number>;
+}
+
+/**
+ * 타임라인 버킷별 전체 리액션 조회 응답 Dto
+ */
+export interface ReadVideoReactionBucketsResponseDto {
+  intervalMs: number;
+  buckets: ReadVideoReactionBucketDto[];
+}
+
+/**
  * 프로젝트 전체 슬라이드 리액션 집계 조회 Dto
  */
 export interface ReadReactionSummaryDto {

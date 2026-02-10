@@ -1,10 +1,6 @@
 /**
  * @file VideoPlaybackBar.tsx
- * @description 비디오 재생바 + 조작 컨트롤 컴포넌트
- *
- * - ProgressBar: 재생 프로그레스 + 스크러빙 + 썸네일 미리보기
- * - VolumeControl: 볼륨 조절 + 시간 표시
- * - 재생/일시정지, 전체화면 버튼
+ * @description Playback controls and progress UI.
  */
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -18,9 +14,7 @@ import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { ReactionType } from '@/types/script';
 import type { SlideListItem } from '@/types/slide';
 import type { SegmentHighlight } from '@/types/video';
-import { computeSegmentHighlightsFromFeedbacks } from '@/utils/video';
 
-const DEFAULT_TIMELINE_INTERVAL_MS = 5000;
 const MAX_HIGHLIGHTS = 10;
 
 const buildHighlightsFromTimeline = (
@@ -31,6 +25,8 @@ const buildHighlightsFromTimeline = (
   duration: number,
   topN: number,
 ): SegmentHighlight[] => {
+  if (!timeline.markers.length || duration <= 0) return [];
+
   const intervalSec = timeline.intervalMs / 1000;
   const highlights = timeline.markers
     .map((marker) => {
@@ -75,22 +71,18 @@ export default function VideoPlaybackBar({
 }: VideoPlaybackBarProps) {
   const currentTime = useVideoFeedbackStore((s) => s.currentTime);
   const updateCurrentTime = useVideoFeedbackStore((s) => s.updateCurrentTime);
-  const video = useVideoFeedbackStore((s) => s.video);
-  const { data: timeline } = useVideoReactionTimeline(video?.videoId, DEFAULT_TIMELINE_INTERVAL_MS);
+  const videoId = useVideoFeedbackStore((s) => s.video?.videoId);
+
+  const { data: reactionTimeline } = useVideoReactionTimeline(videoId, 5000);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
 
-  // 5초 버킷별 세그먼트 하이라이트 계산 (최다 리액션 기반)
   const segmentHighlights = useMemo(() => {
-    if (!video) return [];
-    if (timeline) {
-      return buildHighlightsFromTimeline(timeline, video.duration, MAX_HIGHLIGHTS);
-    }
-    return computeSegmentHighlightsFromFeedbacks(video.feedbacks, video.duration, MAX_HIGHLIGHTS);
-  }, [video, timeline]);
+    if (!reactionTimeline) return [];
+    return buildHighlightsFromTimeline(reactionTimeline, duration, MAX_HIGHLIGHTS);
+  }, [reactionTimeline, duration]);
 
-  // 비디오 play/pause 이벤트 구독
   useEffect(() => {
     if (!videoElement) return;
 
@@ -124,14 +116,13 @@ export default function VideoPlaybackBar({
       try {
         await videoElement.play();
       } catch {
-        // autoplay 정책 등
+        // ignore autoplay block
       }
     } else {
       videoElement.pause();
     }
   }, [videoElement]);
 
-  // Spacebar로 재생/일시정지 토글
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code !== 'Space') return;
@@ -168,7 +159,6 @@ export default function VideoPlaybackBar({
 
   return (
     <div className="flex w-full flex-col gap-2">
-      {/* 재생 프로그레스바 */}
       <ProgressBar
         currentTime={currentTime}
         duration={duration}
@@ -178,10 +168,8 @@ export default function VideoPlaybackBar({
         segmentHighlights={segmentHighlights}
       />
 
-      {/* 조작 영역 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          {/* 재생/일시정지 버튼 */}
           <button
             type="button"
             onClick={togglePlay}
@@ -195,7 +183,6 @@ export default function VideoPlaybackBar({
             />
           </button>
 
-          {/* 볼륨 + 시간 표시 */}
           <VolumeControl
             volume={volume}
             onVolumeChange={handleVolumeChange}
@@ -215,7 +202,6 @@ export default function VideoPlaybackBar({
             </button>
           )}
 
-          {/* 전체화면 버튼 */}
           <button
             type="button"
             onClick={toggleFullscreen}

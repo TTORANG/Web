@@ -15,6 +15,7 @@ import EditIcon from '@/assets/icons/icon-edit.svg?react';
 import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
 import { UserAvatar } from '@/components/common';
+import { useAuthStore } from '@/stores/authStore';
 import type { Comment as CommentType } from '@/types/comment';
 import { formatRelativeTime, formatVideoTimestamp } from '@/utils/format';
 
@@ -55,9 +56,13 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
     submitEdit,
     goToRef,
   } = useCommentContext();
-
-  const authorName = comment.userName ?? '알 수 없음';
-  const authorProfileImage = comment.userProfileImage;
+  const currentUser = useAuthStore((state) => state.user);
+  const fallbackName =
+    currentUser?.name ?? currentUser?.email?.split('@')[0] ?? currentUser?.id ?? '알 수 없음';
+  const authorName =
+    comment.userName ?? (comment.isMine ? fallbackName : (comment.userId ?? fallbackName));
+  const authorProfileImage =
+    comment.userProfileImage ?? (comment.isMine ? currentUser?.profileImage : undefined);
 
   const isActive = replyingToId === comment.commentId;
   const isEditing = editingId === comment.commentId;

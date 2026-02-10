@@ -8,6 +8,8 @@
 import type {
   CreateShareLinkRequest,
   CreateShareLinkResponse,
+  ReadSharedContentData,
+  ReadSharedContentResponse,
   ShareableVideosResponse,
 } from '@/types/share';
 
@@ -65,4 +67,24 @@ export async function createShareLink(
     data,
   );
   return response.data;
+}
+
+/**
+ * 공유 토큰으로 공유 콘텐츠 조회
+ *
+ * @param shareToken - 공유 토큰
+ * @param sessionId - 기존에 로그인된 세션 ID
+ * @returns 공유된 프로젝트 콘텐츠(슬라이드/영상)
+ */
+export async function getSharedContent(
+  shareToken: string,
+  sessionId?: string,
+): Promise<ReadSharedContentData> {
+  const url = `/shares/${shareToken}` + (sessionId ? `?sessionId=${sessionId}` : '');
+  const response = await apiClient.get<ReadSharedContentResponse>(url);
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
 }

@@ -73,6 +73,11 @@ function hasCommentId(flat: Comment[], commentId: string) {
   return flat.some((c) => c.commentId === commentId);
 }
 
+function getCurrentCommentAuthorId(): string {
+  const user = useAuthStore.getState().user;
+  return user?.id ?? user?.name ?? 'anonymous';
+}
+
 // function getAllComments(feedbacks: any[]): Comment[] {
 //   return feedbacks.flatMap((f) => f.comments);
 // }
@@ -108,17 +113,14 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
           const counterpart = getExclusiveCounterpart(type);
 
           const updatedReactions = targetFeedback.reactions.map((r: Reaction) => {
-            // 토글 대상
+            // 토글 대상: active만 변경, count는 optimisticDelta가 담당
             if (r.type === type) {
-              if (r.active) {
-                return { ...r, active: false, count: Math.max(0, r.count - 1) };
-              }
-              return { ...r, active: true, count: r.count + 1 };
+              return { ...r, active: !r.active };
             }
 
             // 활성화 시 exclusive 반대 타입 비활성화
             if (isActivating && counterpart && r.type === counterpart && r.active) {
-              return { ...r, active: false, count: Math.max(0, r.count - 1) };
+              return { ...r, active: false };
             }
 
             return r;
@@ -164,7 +166,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
           const currentUser = useAuthStore.getState().user;
           const createdComment = createComment({
             content: finalContent,
-            userId: currentUser?.id ?? 'unknown',
+            userId: getCurrentCommentAuthorId(),
             userName: currentUser?.name,
             userProfileImage: currentUser?.profileImage,
             ref,
@@ -209,7 +211,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
             parentId,
             {
               content: content.trim(),
-              userId: currentUser?.id ?? 'unknown',
+              userId: getCurrentCommentAuthorId(),
               userName: currentUser?.name,
               userProfileImage: currentUser?.profileImage,
             },

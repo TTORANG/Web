@@ -1,9 +1,10 @@
 /**
  * @file videoReactions.ts
- * @description 영상 리액션 관련 API 엔드포인트
+ * @description Video reaction related APIs.
  */
 import { apiClient } from '@/api/client';
 import type {
+  ReadVideoReactionBucketsResponseDto,
   ReadVideoReactionSummaryItemDto,
   ReadVideoReactionTimelineResponseDto,
   ToggleVideoReactionDto,
@@ -14,11 +15,7 @@ import type { ApiResponse } from '@/types/api';
 export type { ToggleVideoReactionDto as ToggleVideoReactionRequest };
 
 /**
- * 영상 리액션 토글
- *
- * @param videoId - 영상 ID
- * @param data - 리액션 데이터 (type + timestamp)
- * @returns { active: boolean } - 토글 후 활성 상태
+ * 영상타임스탬프 리액션 생성/상태 설정 Toggle a reaction at a specific video timestamp.
  */
 export async function toggleVideoReaction(
   videoId: string,
@@ -32,16 +29,14 @@ export async function toggleVideoReaction(
   if (response.resultType === 'SUCCESS') {
     return response.success;
   }
+
   throw new Error(response.error.reason);
 }
 
 /**
- * 영상 리액션 (특정 시점) 조회
- *
- * @param videoId - 영상 ID
- * @param params - timestampMs (필수), windowMs (선택)
- * @returns 이모지 타입별 집계 배열
- */
+ * 시간대별 영상 리액션 조회Read reaction counts around a timestamp window.
+ 현재 재생시간(timestmapMs) 기준 +-windowMs범위 내 리액션을 조회
+*/
 export async function getVideoReactions(
   videoId: string,
   params: { timestampMs: number; windowMs?: number },
@@ -54,15 +49,13 @@ export async function getVideoReactions(
   if (data.resultType === 'SUCCESS') {
     return data.success;
   }
+
   throw new Error(data.error.reason);
 }
 
 /**
- * 영상 리액션 타임라인 조회
- *
- * @param videoId - 영상 ID
- * @param params - intervalMs (선택)
- * @returns 타임라인 마커
+ * 타임라인 리액션조회, 구간별 대표이모지찾기_재생바표기할때 씀.
+ * 버킷설정해서 최상위 10개 뽑아서 재생바에 표기하기
  */
 export async function getVideoReactionTimeline(
   videoId: string,
@@ -76,5 +69,26 @@ export async function getVideoReactionTimeline(
   if (data.resultType === 'SUCCESS') {
     return data.success;
   }
+
+  throw new Error(data.error.reason);
+}
+
+/**
+ * 타임라인 버킷별 전체 리액션 조회
+ * intervalMs 단위 버킷으로 묶어 각 구간의 이모지별 개수와 totalCount를 반환
+ */
+export async function getVideoReactionBuckets(
+  videoId: string,
+  params?: { intervalMs?: number },
+): Promise<ReadVideoReactionBucketsResponseDto> {
+  const { data } = await apiClient.get<ApiResponse<ReadVideoReactionBucketsResponseDto>>(
+    `/videos/${videoId}/reactions/timeline/buckets`,
+    { params },
+  );
+
+  if (data.resultType === 'SUCCESS') {
+    return data.success;
+  }
+
   throw new Error(data.error.reason);
 }
