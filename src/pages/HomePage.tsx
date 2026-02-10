@@ -9,6 +9,7 @@ import { usePresentations, usePresentationsWithFilters } from '@/hooks/queries/u
 import { useDebounce } from '@/hooks/useDebounce';
 import { useHomeFilter, useHomeQuery, useHomeSort } from '@/hooks/useHomeSelectors';
 import { useUploadFile } from '@/hooks/useUploadFile';
+import { useAuthStore } from '@/stores/authStore';
 import { showToast } from '@/utils/toast';
 
 const ACCEPTED_FILES_TYPES = '.pptx,.pdf';
@@ -19,6 +20,8 @@ export default function HomePage() {
   //const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { uploadFile, cancelUpload, isUploading, progress, error } = useUploadFile();
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const isLoggedIn = Boolean(accessToken);
 
   const onFileSelected = async (file: File) => {
     const response = await uploadFile({ file, title: file.name });
@@ -66,11 +69,13 @@ export default function HomePage() {
     [debouncedQuery, maxDuration],
   );
   const { data: baseData, isLoading: isBaseLoading } = usePresentations({
-    enabled: needsBaseTotal,
+    enabled: isLoggedIn && needsBaseTotal,
   });
-  const { data: filteredData, isLoading: isFilteredLoading } = usePresentationsWithFilters(params);
+  const { data: filteredData, isLoading: isFilteredLoading } = usePresentationsWithFilters(params, {
+    enabled: isLoggedIn,
+  });
 
-  const isLoading = (needsBaseTotal ? isBaseLoading : false) || isFilteredLoading;
+  const isLoading = isLoggedIn && ((needsBaseTotal ? isBaseLoading : false) || isFilteredLoading);
   const presentations = filteredData?.presentations ?? [];
   const totalCount = needsBaseTotal ? (baseData?.total ?? 0) : (filteredData?.total ?? 0);
   const filteredCount = filteredData?.total ?? 0;

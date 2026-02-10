@@ -27,10 +27,14 @@ export function usePresentations(options?: { enabled?: boolean }) {
 /**
  * 프로젝트 목록 조회 (필터/검색/정렬 지원)
  */
-export function usePresentationsWithFilters(params: GetPresentationsRequestDto) {
+export function usePresentationsWithFilters(
+  params: GetPresentationsRequestDto,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: queryKeys.presentations.list(params),
     queryFn: () => getPresentations(params),
+    enabled: options?.enabled ?? true,
   });
 }
 
