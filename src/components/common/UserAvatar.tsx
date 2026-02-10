@@ -23,14 +23,15 @@ export function UserAvatar({
         width={size}
         height={size}
         className={clsx('rounded-full object-cover', className)}
+        style={{ backgroundColor: 'var(--color-gray-200)' }}
       />
     );
   }
 
   return (
     <div
-      className={clsx('flex items-center justify-center rounded-full bg-gray-300', className)}
-      style={{ width: size, height: size }}
+      className={clsx('flex items-center justify-center rounded-full', className)}
+      style={{ width: size, height: size, backgroundColor: 'var(--color-gray-200)' }}
     >
       <svg
         width={Math.max(16, Math.round(size * 0.5))}
