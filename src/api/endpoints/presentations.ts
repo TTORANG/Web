@@ -6,14 +6,40 @@
  * 이 함수들은 직접 호출하지 않고, hooks/queries에서 사용합니다.
  */
 import { apiClient } from '@/api/client';
-import type {
-  DeleteProjectResponseDto,
-  GetPresentationsRequestDto,
-  UpdateProjectRequestDto,
-  UpdateProjectResponseDto,
-} from '@/api/dto';
+import type { UpdatePresentationRequestDto } from '@/api/dto';
 import type { ApiResponse, ConversionStatusResponse } from '@/types/api';
-import type { Presentation, PresentationListResponse } from '@/types/presentation';
+import type {
+  Presentation,
+  PresentationListResponse,
+  UpdatePresentationResponse,
+} from '@/types/presentation';
+
+import type {
+  CreatePresentationRequestDto,
+  CreatePresentationResponseDto,
+  DeletePresentationResponseDto,
+  GetPresentationsRequestDto,
+} from '../dto/presentations.dto';
+
+/**
+ * 새 프로젝트 생성 (POST)
+ *
+ * @param data
+ * @returns
+ */
+export async function createPresentation(
+  data: CreatePresentationRequestDto,
+): Promise<CreatePresentationResponseDto> {
+  const response = await apiClient.post<ApiResponse<CreatePresentationResponseDto>>(
+    '/presentations',
+    data,
+  );
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
+}
 
 /**
  * 프로젝트 목록 조회 (GET)
@@ -53,13 +79,13 @@ export async function getPresentation(projectId: string): Promise<Presentation> 
  *
  * @param projectId
  * @param data - 수정할 프로젝트 데이터
- * @returns UpdateProjectResponseDto - 수정된 프로젝트 정보
+ * @returns UpdatePresentationResponse - 수정된 프로젝트 정보
  */
 export async function updatePresentation(
   projectId: string,
-  data: UpdateProjectRequestDto,
-): Promise<UpdateProjectResponseDto> {
-  const response = await apiClient.patch<ApiResponse<UpdateProjectResponseDto>>(
+  data: UpdatePresentationRequestDto,
+): Promise<UpdatePresentationResponse> {
+  const response = await apiClient.patch<ApiResponse<UpdatePresentationResponse>>(
     `/presentations/${projectId}`,
     data,
   );
@@ -75,8 +101,10 @@ export async function updatePresentation(
  *
  * @param projectId
  */
-export async function deletePresentation(projectId: string): Promise<DeleteProjectResponseDto> {
-  const response = await apiClient.delete<ApiResponse<DeleteProjectResponseDto>>(
+export async function deletePresentation(
+  projectId: string,
+): Promise<DeletePresentationResponseDto> {
+  const response = await apiClient.delete<ApiResponse<DeletePresentationResponseDto>>(
     `/presentations/${projectId}`,
   );
 

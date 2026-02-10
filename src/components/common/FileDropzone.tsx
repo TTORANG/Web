@@ -36,7 +36,8 @@ export default function FileDropzone({
   const dragCounter = useRef(0);
   const [isDragging, setIsDragging] = useState(false);
   const isUploading = currentStep === 'uploading' || currentStep === 'finishing';
-  const isBlocked = disabled || isUploading; // 업로드 중에는 모든 입력 차단
+  const isDisabled = disabled;
+  const isBlocked = isDisabled || isUploading; // 업로드 중에는 모든 입력 차단
 
   useEffect(() => {
     if (error) showToast.warning('업로드에 실패했어요.', error);
@@ -114,6 +115,7 @@ export default function FileDropzone({
 
   const showDragOverlay = isDragging && !isBlocked;
   const showUploadOverlay = isUploading;
+  const shouldBlurBase = showDragOverlay;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (isBlocked) return;
@@ -145,7 +147,9 @@ export default function FileDropzone({
         onDrop={handleDrop}
         className={clsx(
           'group relative w-full overflow-hidden rounded-2xl border bg-white px-8 py-14 shadow-sm transition focus:ring-1 focus:ring-gray-200',
-          isBlocked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-gray-100',
+          isDisabled && !isUploading && 'cursor-not-allowed opacity-60',
+          isUploading && 'cursor-default',
+          !isBlocked && 'cursor-pointer hover:bg-gray-100',
           showDragOverlay ? 'border-gray-900 ring-1 ring-gray-200' : 'border-gray-200',
         )}
       >
@@ -153,7 +157,7 @@ export default function FileDropzone({
         <div
           className={clsx(
             'flex flex-col items-center gap-4 transition',
-            (showDragOverlay || showUploadOverlay) && 'blur-sm opacity-40',
+            shouldBlurBase && 'blur-sm opacity-40',
           )}
         >
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800 not-visited:transition group-hover:bg-gray-900">
@@ -179,7 +183,7 @@ export default function FileDropzone({
         {/* 업로드 오버레이 : 박스 안에 진행률 표시 */}
         {showUploadOverlay && (
           <div
-            className="absolute inset-0 z-20 isolate flex flex-col items-center justify-center gap-4 rounded-2xl bg-white px-6 cursor-default"
+            className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 rounded-2xl bg-white px-6 cursor-default"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();

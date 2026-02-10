@@ -21,6 +21,7 @@ import type {
 } from '@/types/share';
 import type { SlideDetail } from '@/types/slide';
 import type { VideoTimestampFeedback } from '@/types/video';
+import { userFromAccessToken } from '@/utils/auth';
 import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
 
@@ -321,7 +322,14 @@ export function useFeedbackVideo(
         const refreshToken = content.sessionInfo.tokens.refreshToken;
         const anonymousSessionId = content.sessionInfo.sessionId;
         if (accessToken && refreshToken) {
-          useAuthStore.getState().anonymous(accessToken, refreshToken, anonymousSessionId);
+          const store = useAuthStore.getState();
+          const derivedUser = userFromAccessToken(accessToken, anonymousSessionId);
+          store.setAuth({
+            user: derivedUser,
+            accessToken,
+            refreshToken,
+            anonymousSessionId: anonymousSessionId ?? null,
+          });
           ({ user } = useAuthStore.getState());
         }
       }

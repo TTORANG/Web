@@ -17,20 +17,34 @@ interface HomeState {
   setViewMode: (viewMode: ViewMode) => void;
   setSort: (sort: SortMode) => void;
   setFilter: (filter: FilterMode) => void;
+  reset: () => void;
 }
+
+const initialUiState = {
+  query: '',
+  sort: null,
+  filter: null,
+} as const satisfies Pick<HomeState, 'query' | 'sort' | 'filter'>;
 
 export const useHomeStore = create<HomeState>()(
   devtools(
     persist(
-      (set) => ({
-        query: '',
-        viewMode: 'card',
-        sort: null,
-        filter: null,
+      (set, get) => ({
+        ...initialUiState,
+        viewMode: 'card' as ViewMode,
         setQuery: (query) => set({ query }, false, 'home/setQuery'),
         setViewMode: (viewMode) => set({ viewMode }, false, 'home/setViewMode'),
         setSort: (sort) => set({ sort }, false, 'home/setSort'),
         setFilter: (filter) => set({ filter }, false, 'home/setFilter'),
+        reset: () =>
+          set(
+            {
+              ...initialUiState,
+              viewMode: get().viewMode,
+            },
+            false,
+            'home/reset',
+          ),
       }),
       {
         name: 'home-store',
