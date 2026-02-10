@@ -9,6 +9,7 @@ import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { queryKeys } from '@/api/queryClient';
+import { useAuthStore } from '@/stores/authStore.ts';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type {
   CommentDeletedPayload,
@@ -16,7 +17,6 @@ import type {
   NewReactionPayload,
   ReactionCountUpdatedPayload,
 } from '@/types/websocket';
-import { showToast } from '@/utils/toast';
 
 import { useWebSocket } from './useWebSocket';
 
@@ -38,8 +38,11 @@ export function useFeedbackWebSocket({ projectId, enabled = true }: UseFeedbackW
     (data: NewCommentPayload) => {
       // console.log('[Feedback WebSocket] New comment:', data);
 
-      // 새 댓글 알림
-      showToast.info('새 댓글', '누군가 댓글을 작성했습니다.');
+      // 본인 댓글이면 토스트 생략
+      const currentUserId = useAuthStore.getState().user?.id;
+      if (currentUserId && data.userId === currentUserId) {
+        return;
+      }
 
       // WebSocket 페이로드에서 직접 Store 업데이트
       const currentVideo = useVideoFeedbackStore.getState().video;
@@ -67,10 +70,7 @@ export function useFeedbackWebSocket({ projectId, enabled = true }: UseFeedbackW
 
   const handleCommentDeleted = useCallback(
     (data: CommentDeletedPayload) => {
-      // console.log('[Feedback WebSocket] Comment deleted:', data);
-
-      // 댓글 삭제 알림
-      showToast.info('댓글 삭제됨', '댓글이 삭제되었습니다.');
+      console.log('[Feedback WebSocket] Comment deleted:', data);
 
       // WebSocket 페이로드에서 직접 Store 업데이트
       if (data.commentId) {
@@ -89,10 +89,12 @@ export function useFeedbackWebSocket({ projectId, enabled = true }: UseFeedbackW
 
   const handleNewReaction = useCallback(
     (data: NewReactionPayload) => {
-      // console.log('[Feedback WebSocket] New reaction:', data);
+      console.log('[Feedback WebSocket] New reaction:', data);
 
-      // 리액션 추가 애니메이션 표시
-      showToast.success('👍', '누군가 반응했습니다!');
+      const currentUserId = useAuthStore.getState().user?.id;
+      if (currentUserId && data.userId === currentUserId) {
+        return;
+      }
 
       // TanStack Query 캐시 무효화 - 비디오별 리액션 목록 갱신
       if (data.videoId) {
@@ -136,15 +138,13 @@ export function useFeedbackWebSocket({ projectId, enabled = true }: UseFeedbackW
 
   const handleConnect = useCallback(() => {
     // console.log(`[Feedback WebSocket] Connected to project: ${projectId}`);
-    showToast.success('실시간 연결됨', '피드백이 실시간으로 동기화됩니다.');
-
     // 연결 성공 시 테스트 이벤트 전송 (디버깅용)
     // console.log('🧪 [Test] Sending test message to server...');
   }, []);
 
   const handleDisconnect = useCallback(() => {
     // console.log('[Feedback WebSocket] Disconnected');
-    showToast.warning('연결 끊김', '재연결 중입니다...');
+    // 연결 끊김 알림은 토스트 대신 조용히 처리
   }, []);
 
   // ========== 웹소켓 연결 ==========
