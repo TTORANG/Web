@@ -71,6 +71,26 @@ export function useUpdatePresentation() {
             ? { ...old, title: updatePresentation.title, updatedAt: updatePresentation.updatedAt }
             : old,
       );
+      // 목록 캐시는 즉시 업데이트 (화면 전환 시 반영 지연 방지)
+      queryClient.setQueriesData<PresentationListResponse>(
+        { queryKey: queryKeys.presentations.lists() },
+        (oldData) => {
+          if (!oldData) return oldData;
+          const nextPresentations = oldData.presentations.map((item) =>
+            item.projectId === updatePresentation.projectId
+              ? {
+                  ...item,
+                  title: updatePresentation.title,
+                  updatedAt: updatePresentation.updatedAt,
+                }
+              : item,
+          );
+          return {
+            ...oldData,
+            presentations: nextPresentations,
+          };
+        },
+      );
       // 목록은 최신 데이터 반영을 위해 무효화
       void queryClient.invalidateQueries({ queryKey: queryKeys.presentations.lists() });
     },
