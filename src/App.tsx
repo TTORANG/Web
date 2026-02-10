@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
 
 import { useQueryClient } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 
 import { queryKeys } from '@/api/queryClient';
 import { DevFab } from '@/components/common/DevFab';
@@ -11,6 +12,7 @@ import { useThemeListener } from '@/stores/themeStore';
 
 import { sessionApi } from './api/endpoints/session';
 import { isAnonymousEmail, userFromAccessToken } from './utils/auth';
+import { showToast } from './utils/toast';
 
 function App() {
   useThemeListener();
@@ -57,9 +59,28 @@ function App() {
 
           if (mergeResponse.resultType === 'SUCCESS') {
             store.clearAnonymousSession();
+            const mergedCount = mergeResponse.success?.mergedProjectsCount;
+            if (typeof mergedCount === 'number' && mergedCount > 0) {
+              showToast.success(
+                '익명 세션이 병합되었어요.',
+                `${mergedCount}개의 발표가 계정으로 이동했어요.`,
+              );
+            }
+          } else {
+            showToast.warning(
+              '세션 병합에 실패했어요.',
+              mergeResponse.error?.reason ?? '잠시 후 다시 시도해주세요.',
+            );
           }
-        } catch {
-          // 병합 실패해도 로그인 자체는 유지
+        } catch (err: unknown) {
+          let reason = '세션 병합 중 오류가 발생했어요.';
+
+          if (isAxiosError(err)) {
+            reason = err.response?.data?.error?.reason || err.message || reason;
+          } else if (err instanceof Error) {
+            reason = err.message || reason;
+          }
+          showToast.warning('로그인은 완료됐지만 익명 데이터 병합은 실패했어요.', reason);
         }
       }
 
