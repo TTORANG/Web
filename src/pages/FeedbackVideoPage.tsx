@@ -5,27 +5,25 @@
  * 데스크톱과 모바일 뷰를 모두 포함하며, 반응형으로 UI를 렌더링합니다.
  * CSS-only 방식으로 단일 비디오 요소의 위치를 조정하여 심리스한 전환을 지원합니다.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
 
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
-import WebSocketDebug from '@/components/common/WebSocketDebug';
 import FeedbackMobileLayout from '@/components/feedback/FeedbackMobileLayout';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
 import ScriptSection from '@/components/feedback/ScriptSection';
 import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
-import { useExitTracker } from '@/hooks/useExitTracker';
-import { useFeedbackWebSocket } from '@/hooks/useFeedbackWebSocket';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { useFeedbackVideo } from '@/pages/feedback/useFeedbackVideo';
-import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
+import type { ReadSharedContentData } from '@/types/share';
 
-export default function FeedbackVideoPage() {
-  const { projectId } = useParams<{ projectId: string }>();
+interface FeedbackVideoPageProps {
+  sharedContent?: ReadSharedContentData;
+}
+
+export default function FeedbackVideoPage({ sharedContent }: FeedbackVideoPageProps = {}) {
   const isDesktop = useIsDesktop();
-  const ctx = useFeedbackVideo();
-  const videoId = useVideoFeedbackStore((s) => s.video?.videoId);
+  const ctx = useFeedbackVideo(sharedContent);
 
   const {
     isLoading,
@@ -47,33 +45,6 @@ export default function FeedbackVideoPage() {
     updateComment,
     toggleReaction,
   } = ctx;
-
-  const buildExitPayload = useCallback(() => {
-    if (!projectId) return null;
-    const projectIdNum = Number(projectId);
-    if (!Number.isFinite(projectIdNum)) return null;
-
-    const payload: {
-      projectId: number;
-      lastVideoId?: number;
-      lastVideoTimeMs?: number;
-    } = {
-      projectId: projectIdNum,
-    };
-
-    if (videoId) {
-      const videoIdNum = Number(videoId);
-      if (Number.isFinite(videoIdNum)) {
-        payload.lastVideoId = videoIdNum;
-      }
-    }
-
-    payload.lastVideoTimeMs = Math.max(0, Math.round(currentTime * 1000));
-
-    return payload;
-  }, [projectId, videoId, currentTime]);
-
-  useExitTracker(buildExitPayload);
 
   // 비디오 위치 계산을 위한 refs
   const desktopPlaceholderRef = useRef<HTMLDivElement>(null);
@@ -127,12 +98,6 @@ export default function FeedbackVideoPage() {
       window.removeEventListener('scroll', updateVideoPosition, true);
     };
   }, [isDesktop]);
-
-  // 웹소켓 연결
-  const { isConnected, currentRooms, joinProject, leaveProject, getRooms } = useFeedbackWebSocket({
-    projectId: projectId ?? '',
-    enabled: !!projectId,
-  });
 
   return (
     <div className="flex h-full w-full">
@@ -237,16 +202,6 @@ export default function FeedbackVideoPage() {
           showLayoutToggle={!isDesktop}
         />
       </div>
-
-      {/* WebSocket 디버그 UI (개발 환경에서만) */}
-      <WebSocketDebug
-        isConnected={isConnected}
-        currentRooms={currentRooms}
-        projectId={projectId}
-        onJoinProject={joinProject}
-        onLeaveProject={leaveProject}
-        onGetRooms={getRooms}
-      />
     </div>
   );
 }

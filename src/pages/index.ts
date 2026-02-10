@@ -9,3 +9,4 @@ export { default as VideoRecordPage } from './VideoRecordPage';
 export { default as VideoListPage } from './VideoListPage';
 //export { default as VideoDetailPage } from './VideoDetailPage';
 export { default as VideoPage } from './VideoPage';
+export { default as SharePage } from './SharePage';

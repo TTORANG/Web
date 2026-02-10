@@ -15,6 +15,7 @@ import EditIcon from '@/assets/icons/icon-edit.svg?react';
 import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
 import { MOCK_USERS } from '@/mocks/users';
+import { useAuthStore } from '@/stores/authStore';
 import type { Comment as CommentType } from '@/types/comment';
 import { formatRelativeTime, formatVideoTimestamp } from '@/utils/format';
 
@@ -55,14 +56,20 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
     submitEdit,
     goToRef,
   } = useCommentContext();
+  const currentUser = useAuthStore((state) => state.user);
 
   // 서버가 userId를 숫자로 반환하는 경우 user-{id} 형식으로 변환하여 매칭
   const normalizedUserId = comment.userId?.startsWith('user-')
     ? comment.userId
     : `user-${comment.userId}`;
   const user = MOCK_USERS.find((u) => u.id === normalizedUserId || u.id === comment.userId);
-  const authorName = user?.name ?? '알 수 없음';
-  const authorProfileImage = user?.profileImage;
+  const currentUserName =
+    currentUser?.name ?? currentUser?.email?.split('@')[0] ?? currentUser?.id ?? comment.userId;
+  const authorName = comment.isMine
+    ? currentUserName
+    : (user?.name ?? comment.userId ?? '알 수 없음');
+  const authorProfileImage =
+    (comment.isMine ? currentUser?.profileImage : undefined) ?? user?.profileImage;
 
   const isActive = replyingToId === comment.commentId;
   const isEditing = editingId === comment.commentId;
