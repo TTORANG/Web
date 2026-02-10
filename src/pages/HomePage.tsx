@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/api';
 import IntroSection from '@/components/home/IntroSection';
 import PresentationsSection from '@/components/home/PresentationsSection';
-import { usePresentations, usePresentationsWithFilters } from '@/hooks/queries/usePresentations';
+import { usePresentations, usePresentationsWithFilters } from '@/hooks';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useHomeFilter, useHomeQuery, useHomeSort } from '@/hooks/useHomeSelectors';
 import { useUploadFile } from '@/hooks/useUploadFile';

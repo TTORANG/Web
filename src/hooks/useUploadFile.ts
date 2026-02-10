@@ -65,10 +65,13 @@ export function useUploadFile() {
       try {
         /**
          * 익명 세션 발급
-         * - store에 accessToken이 있으면 session 생성을 스킵함
+         * - accessToken이 없거나
+         * - user가 없으면 익명 세션을 다시 확보
          */
-        const { accessToken } = useAuthStore.getState();
-        if (!accessToken) {
+        const state = useAuthStore.getState();
+        const needsAnonymousSession = !state.accessToken || !state.user;
+
+        if (needsAnonymousSession) {
           const sessionResponse = await sessionApi.createAnonymousSession();
           if (sessionResponse.resultType === 'FAILURE') {
             throw new Error(sessionResponse.error?.reason ?? '익명 세션 생성 실패');
@@ -124,7 +127,6 @@ export function useUploadFile() {
         setProgress({ ...initialProgress, currentStep: 'preparing' });
         return null;
       } finally {
-        setIsUploading(false);
         setIsUploading(false);
       }
     },

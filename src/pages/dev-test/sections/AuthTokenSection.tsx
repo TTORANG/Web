@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { sessionApi } from '@/api/endpoints/session';
 import { TextField } from '@/components/common';
 import { useAuthStore } from '@/stores/authStore';
+import { isAnonymousEmail, userFromAccessToken } from '@/utils/auth';
 import { parseJwtPayload } from '@/utils/jwt';
 import { showToast } from '@/utils/toast';
 
@@ -24,7 +25,7 @@ const decodeJwtPayload = (token: string | null): JwtDecodeResult => {
 export function AuthTokenSection() {
   const accessToken = useAuthStore((state) => state.accessToken);
   const refreshToken = useAuthStore((state) => state.refreshToken);
-  const anonymous = useAuthStore((state) => state.anonymous);
+  const setAuth = useAuthStore((state) => state.setAuth);
   const logout = useAuthStore((state) => state.logout);
 
   const [nextAccessToken, setNextAccessToken] = useState('');
@@ -44,7 +45,15 @@ export function AuthTokenSection() {
       return;
     }
 
-    anonymous(trimmedAccessToken, trimmedRefreshToken || refreshToken || '');
+    const user = userFromAccessToken(trimmedAccessToken);
+    const anonSessionId = isAnonymousEmail(user.email) ? user.sessionId : null;
+
+    setAuth({
+      user,
+      accessToken: trimmedAccessToken,
+      refreshToken: trimmedRefreshToken || refreshToken || null,
+      anonymousSessionId: anonSessionId,
+    });
     showToast.success('토큰을 저장했습니다.');
   };
 
