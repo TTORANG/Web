@@ -6,7 +6,7 @@
  * 좌우 화살표 키로 슬라이드 이동이 가능합니다.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
@@ -32,6 +32,8 @@ import type { Comment } from '@/types/comment';
 
 export default function FeedbackSlidePage() {
   const { projectId } = useParams<{ projectId: string }>();
+  const [searchParams] = useSearchParams();
+  const shareToken = searchParams.get('shareToken') ?? '';
   const { data: slides, isLoading } = useSlides(projectId ?? '');
 
   // 웹소켓 연결
@@ -79,12 +81,10 @@ export default function FeedbackSlidePage() {
   useHotkey({ ArrowLeft: goPrev, ArrowRight: goNext }, { enabled: !isLoading });
 
   const buildExitPayload = useCallback(() => {
-    if (!projectId) return null;
-    const projectIdNum = Number(projectId);
-    if (!Number.isFinite(projectIdNum)) return null;
+    if (!shareToken) return null;
 
-    const payload: { projectId: number; lastSlideId?: number } = {
-      projectId: projectIdNum,
+    const payload: { shareToken: string; lastSlideId?: number } = {
+      shareToken,
     };
 
     if (currentSlide?.slideId) {
@@ -95,7 +95,7 @@ export default function FeedbackSlidePage() {
     }
 
     return payload;
-  }, [projectId, currentSlide]);
+  }, [shareToken, currentSlide]);
 
   useExitTracker(buildExitPayload);
 
