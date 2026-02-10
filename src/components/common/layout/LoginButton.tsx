@@ -14,6 +14,7 @@ import LoginIcon from '@/assets/icons/icon-login.svg?react';
 import LogoutIcon from '@/assets/icons/icon-logout.svg?react';
 import { Dropdown } from '@/components/common/Dropdown';
 import { Modal } from '@/components/common/Modal';
+import { UserAvatar } from '@/components/common/UserAvatar';
 import { useAuthStore } from '@/stores/authStore';
 import { useHomeStore } from '@/stores/homeStore';
 import { isAnonymousEmail } from '@/utils/auth';
@@ -79,6 +80,8 @@ export function LoginButton() {
     }
   };
 
+  const displayName = user?.name ?? user?.email?.split('@')[0] ?? user?.id ?? '사용자';
+
   return (
     <>
       <Dropdown
@@ -91,16 +94,8 @@ export function LoginButton() {
             type="button"
             className="flex cursor-pointer items-center gap-2 text-body-s-bold text-gray-800 transition-colors hover:text-gray-600"
           >
-            {user.name ?? user.email.split('@')[0] ?? '사용자'}
-            {user.profileImage ? (
-              <img
-                src={user.profileImage}
-                alt="프로필"
-                className="size-6 rounded-full object-cover"
-              />
-            ) : (
-              <div className="size-6 rounded-full bg-gray-200" />
-            )}
+            {displayName}
+            <UserAvatar src={user.profileImage} alt={displayName} size={24} />
           </button>
         }
         items={[
