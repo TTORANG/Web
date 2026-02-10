@@ -35,7 +35,7 @@ export default function SharePage() {
   const scope = data.shareInfo?.scope;
 
   if (scope === 'slides_script') {
-    //return <FeedbackSlidePage sharedSlides={data.projectContent.slides} />;
+    //return <FeedbackSlidePage sharedSlides={data.projectContent.slides} />; // 샌디 슬라이드페이지
   }
 
   return <FeedbackVideoPage sharedContent={data} />;

@@ -119,6 +119,8 @@ export const queryKeys = {
         [...queryKeys.reactions.video.all(videoId), 'window', timestampMs, windowMs] as const,
       timeline: (videoId: string, intervalMs = 5000) =>
         [...queryKeys.reactions.video.all(videoId), 'timeline', intervalMs] as const,
+      buckets: (videoId: string, intervalMs = 5000) =>
+        [...queryKeys.reactions.video.all(videoId), 'buckets', intervalMs] as const,
     },
   },
 } as const;

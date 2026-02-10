@@ -18,7 +18,7 @@ import { showToast } from '@/utils/toast';
 import { useToggleVideoReaction, useVideoReactionWindow } from './queries/useVideoReactionQueries';
 
 const REACTION_DEBOUNCE_MS = 500;
-const QUERY_TIMESTAMP_STEP_MS = 1000;
+const QUERY_TIMESTAMP_STEP_MS = 1000; // 몇초 마다 데이터 가져올지
 
 export function useVideoReactions() {
   const video = useVideoFeedbackStore((s) => s.video);
@@ -46,6 +46,7 @@ export function useVideoReactions() {
   const pendingDebounceTypes = useRef(new Set<ReactionType>());
   const pendingApiCount = useRef(0);
   const debounceTimers = useRef<Partial<Record<ReactionType, ReturnType<typeof setTimeout>>>>({});
+  const debounceBaselineActives = useRef<Partial<Record<ReactionType, boolean>>>({});
   const activeTimers = useRef<Partial<Record<ReactionType, ReturnType<typeof setTimeout>>>>({});
 
   useEffect(() => {
@@ -90,7 +91,7 @@ export function useVideoReactions() {
     if (!video) return;
 
     const timestampMs = Math.round(currentTime * 1000);
-    const storedActive = getStoredReactions(video.videoId, timestampMs);
+    const storedActive = getStoredReactions(video.videoId);
     const wasActive = storedActive[type];
     const newActive = !wasActive;
 
@@ -123,15 +124,33 @@ export function useVideoReactions() {
       return next;
     });
 
-    setStoredReaction(video.videoId, timestampMs, type, newActive);
+    setStoredReaction(video.videoId, type, newActive);
 
     if (debounceTimers.current[type]) {
       clearTimeout(debounceTimers.current[type]);
+    }
+    if (!pendingDebounceTypes.current.has(type)) {
+      debounceBaselineActives.current[type] = wasActive;
     }
     pendingDebounceTypes.current.add(type);
 
     debounceTimers.current[type] = setTimeout(() => {
       pendingDebounceTypes.current.delete(type);
+
+      const latestStored = getStoredReactions(video.videoId);
+      const latestDesiredActive = latestStored[type];
+      const baselineActive = debounceBaselineActives.current[type];
+      delete debounceBaselineActives.current[type];
+
+      // 클릭 버스트 후 최종 상태가 처음과 같으면 POST 스킵
+      if (baselineActive !== undefined && latestDesiredActive === baselineActive) {
+        const hasPending = pendingDebounceTypes.current.size > 0 || pendingApiCount.current > 0;
+        if (!hasPending) {
+          setOptimisticDeltas({});
+        }
+        return;
+      }
+
       pendingApiCount.current += 1;
 
       toggleReactionApi(
@@ -153,9 +172,9 @@ export function useVideoReactions() {
           onError: () => {
             showToast.error('반응을 반영하지 못했습니다.');
 
-            setStoredReaction(video.videoId, timestampMs, type, wasActive);
+            setStoredReaction(video.videoId, type, wasActive);
             if (counterpart && counterpartWasActive) {
-              setStoredReaction(video.videoId, timestampMs, counterpart, true);
+              setStoredReaction(video.videoId, counterpart, true);
             }
 
             setOptimisticDeltas((prev) => {

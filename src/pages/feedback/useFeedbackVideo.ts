@@ -223,8 +223,18 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
     let cancelled = false;
 
     const loadFromSharedContent = async (content: ReadSharedContentData) => {
-      const { user } = useAuthStore.getState();
+      let { user } = useAuthStore.getState();
       const sessionId = user?.sessionId;
+
+      if (!sessionId) {
+        const accessToken = content.sessionInfo?.tokens?.accessToken;
+        const refreshToken = content.sessionInfo?.tokens?.refreshToken;
+        const anonymousSessionId = content.sessionInfo?.sessionId;
+        if (accessToken && refreshToken) {
+          useAuthStore.getState().anonymous(accessToken, refreshToken, anonymousSessionId);
+          ({ user } = useAuthStore.getState());
+        }
+      }
 
       const sharedSlides = normalizeSharedSlides(content.projectContent?.slides ?? []);
       const sharedComments = content.projectContent?.comments ?? [];
@@ -240,14 +250,6 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
           slideId: String(slide.slideId),
           timestampMs: normalizeTimestampMs(slide.timestampMs),
         }));
-
-      if (!sessionId) {
-        const accessToken = content.sessionInfo?.tokens?.accessToken;
-        const refreshToken = content.sessionInfo?.tokens?.refreshToken;
-        if (accessToken && refreshToken) {
-          useAuthStore.getState().anonymous(accessToken, refreshToken);
-        }
-      }
 
       const videoId = content.projectContent?.video?.videoId ?? '';
       const normalizedVideoId = String(videoId || DEFAULT_VIDEO_ID);
