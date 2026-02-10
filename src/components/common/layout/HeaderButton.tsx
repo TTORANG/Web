@@ -27,7 +27,7 @@ export function HeaderButton({ text, icon, onClick, className }: HeaderButtonPro
       )}
     >
       {text}
-      {icon && icon}
+      {icon}
     </button>
   );
 }

@@ -28,8 +28,8 @@ export function LoginButton() {
   const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   const isGuest = !accessToken;
-  const isAnon = Boolean(accessToken && isAnonymousEmail(user?.email));
-  const isSocial = Boolean(accessToken && user?.email && !isAnonymousEmail(user.email));
+  const isAnon = accessToken && isAnonymousEmail(user?.email);
+  const isSocial = accessToken && user?.email && !isAnonymousEmail(user.email);
 
   // 로그인 전 (게스트)
   if (isGuest) {

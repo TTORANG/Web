@@ -26,14 +26,15 @@ export function userFromAccessToken(accessToken: string, sessionIdOverride?: str
 /**
  * 익명/소셜 판별 규칙 (user.email 기반)
  */
-export function isAnonymousEmail(email: string | undefined | null): boolean {
+export function isAnonymousEmail(email?: string | null): boolean {
   if (!email) return true;
 
   const e = email.toLowerCase();
+  const [, domain = ''] = e.split('@');
 
   if (e.includes('anonymous')) return true;
   if (e.startsWith('anon')) return true;
-  if (e.endsWith('ttorang.com')) return true;
+  if (domain === 'ttorang.com') return true;
 
   return false;
 }
