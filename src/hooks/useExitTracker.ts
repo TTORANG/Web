@@ -16,11 +16,16 @@ type ExitMode = 'unload' | 'unmount';
 export function useExitTracker(buildExitPayload: () => RecordExitRequest | null) {
   const { mutate } = useRecordExit();
   const exitSentRef = useRef(false);
+  const payloadBuilderRef = useRef(buildExitPayload);
+
+  useEffect(() => {
+    payloadBuilderRef.current = buildExitPayload;
+  }, [buildExitPayload]);
 
   const sendExit = useCallback(
     (mode: ExitMode) => {
       if (exitSentRef.current) return;
-      const payload = buildExitPayload();
+      const payload = payloadBuilderRef.current();
       if (!payload) return;
 
       exitSentRef.current = true;
@@ -30,11 +35,12 @@ export function useExitTracker(buildExitPayload: () => RecordExitRequest | null)
         mutate(payload);
       }
     },
-    [buildExitPayload, mutate],
+    [mutate],
   );
 
   useEffect(() => {
     const handlePageHide = () => sendExit('unload');
+    const handleBeforeUnload = () => sendExit('unload');
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
         sendExit('unload');
@@ -42,10 +48,12 @@ export function useExitTracker(buildExitPayload: () => RecordExitRequest | null)
     };
 
     window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('beforeunload', handleBeforeUnload);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       sendExit('unmount');
     };

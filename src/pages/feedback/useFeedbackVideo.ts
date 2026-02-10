@@ -9,7 +9,6 @@ import { recordVideoEvent } from '@/api/endpoints/analytics';
 import { getSharedContent } from '@/api/endpoints/shares';
 import { videosApi } from '@/api/endpoints/videos';
 import { createDefaultReactions } from '@/constants/reaction';
-import { useExitTracker } from '@/hooks/useExitTracker';
 import { useVideoComments } from '@/hooks/useVideoComments';
 import { useVideoReactions } from '@/hooks/useVideoReactions';
 import { useAuthStore } from '@/stores/authStore';
@@ -29,6 +28,18 @@ const DEFAULT_VIDEO_ID = '34';
 const FALLBACK_SLIDE_DURATION_SECONDS = 10;
 const FALLBACK_VIDEO_DURATION_SECONDS = 9;
 const SHARED_PROJECT_ID = 'shared';
+
+export interface ShareExitSnapshot {
+  lastSlideId?: number;
+  lastVideoId?: number;
+  lastVideoTimeMs: number;
+}
+
+interface UseFeedbackVideoOptions {
+  // SharePage가 최신 시청 위치 스냅샷을 받을 때 사용하는 콜백입니다.
+  // 공유 플로우에서 /analytics/exit 실제 전송은 SharePage가 담당합니다.
+  onShareExitSnapshotChange?: (snapshot: ShareExitSnapshot) => void;
+}
 
 function toPublicUrl(url?: string | null): string {
   if (!url) return '';
@@ -196,7 +207,11 @@ function mapSharedCommentsToFeedbacks(
     }));
 }
 
-export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
+export function useFeedbackVideo(
+  sharedContent?: ReadSharedContentData,
+  options: UseFeedbackVideoOptions = {},
+) {
+  const { onShareExitSnapshotChange } = options;
   const { shareToken: routeShareToken = '' } = useParams<{
     shareToken?: string;
   }>();
@@ -219,8 +234,7 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
   const [commentDraft, setCommentDraft] = useState('');
 
   const timestampPrefix = useMemo(() => `${formatVideoTimestamp(currentTime)} `, [currentTime]);
-
-  // 비디오 이벤트 기록할때, videoId 필요해서
+  // 비디오 이벤트 기록 API는 number videoId를 사용합니다.
   const videoIdNum = useMemo(() => {
     const parsed = Number(video?.videoId);
     return Number.isFinite(parsed) ? parsed : null;
@@ -238,8 +252,7 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
     },
     [requestSeek],
   );
-
-  // 비디오이벤트 기록 핸들러
+  // 비디오 재생 이벤트(play/pause/seek)를 기록합니다.
   const handleVideoPlaybackEvent = useCallback(
     (eventType: 'play' | 'pause' | 'seek', timeSeconds: number) => {
       if (videoIdNum == null) return;
@@ -249,30 +262,24 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
         videoId: videoIdNum,
         eventType,
         timestampMs,
-      }).catch((error) => {
-        console.error('[useFeedbackVideo] recordVideoEvent failed:', error);
-      });
+      }).catch(() => undefined);
     },
     [videoIdNum],
   );
-
-  // 피드백비디오페이지에서 이탈 추적 연결
-  const buildExitPayload = useCallback(() => {
-    if (!shareToken) return null;
+  // SharePage가 중앙에서 exit를 전송할 수 있도록 최신 시청 위치를 부모로 보고합니다.
+  // (공유 플로우에서 이 훅은 /analytics/exit를 직접 전송하지 않습니다.)
+  useEffect(() => {
+    if (!onShareExitSnapshotChange) return;
+    // 초기 마운트/로딩 구간은 제외해서 0초 스냅샷 보고를 방지합니다.
+    if (!shareToken || !video || isLoading) return;
 
     const safeCurrentTime = Number.isFinite(currentTime) && currentTime >= 0 ? currentTime : 0;
-    const payload: {
-      shareToken: string;
-      lastSlideId?: number;
-      lastVideoId?: number;
-      lastVideoTimeMs: number;
-    } = {
-      shareToken,
+    const snapshot: ShareExitSnapshot = {
       lastVideoTimeMs: Math.round(safeCurrentTime * 1000),
     };
 
     if (videoIdNum != null) {
-      payload.lastVideoId = videoIdNum;
+      snapshot.lastVideoId = videoIdNum;
     }
 
     if (projectSlides.length > 0) {
@@ -287,15 +294,21 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
       );
       const lastSlideId = toNumericId(projectSlides[lastSlideIndex]?.slideId);
       if (lastSlideId != null) {
-        payload.lastSlideId = lastSlideId;
+        snapshot.lastSlideId = lastSlideId;
       }
     }
 
-    return payload;
-  }, [shareToken, currentTime, videoIdNum, projectSlides, slideChangeTimes]);
-
-  useExitTracker(buildExitPayload);
-
+    onShareExitSnapshotChange(snapshot);
+  }, [
+    onShareExitSnapshotChange,
+    shareToken,
+    video,
+    isLoading,
+    currentTime,
+    videoIdNum,
+    projectSlides,
+    slideChangeTimes,
+  ]);
   useEffect(() => {
     let cancelled = false;
 
@@ -392,8 +405,7 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
         } else if (shareToken) {
           await loadFromShareToken();
         }
-      } catch (error) {
-        console.error('[useFeedbackVideo] load failed:', error);
+      } catch {
         if (cancelled) return;
 
         initVideo({

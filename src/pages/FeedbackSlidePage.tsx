@@ -30,7 +30,21 @@ import { useSlideReactions } from '@/hooks/useSlideReactions';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
 
-export default function FeedbackSlidePage() {
+export interface ShareSlideExitSnapshot {
+  lastSlideId?: number;
+}
+
+interface FeedbackSlidePageProps {
+  // 부모(SharePage)가 현재 슬라이드 위치를 받을 때 사용하는 콜백입니다.
+  onShareExitSnapshotChange?: (snapshot: ShareSlideExitSnapshot) => void;
+  // 부모(SharePage)가 /analytics/exit를 중앙 전송할 때 true로 설정합니다.
+  disableOwnExitTracking?: boolean;
+}
+
+export default function FeedbackSlidePage({
+  onShareExitSnapshotChange,
+  disableOwnExitTracking = false,
+}: FeedbackSlidePageProps = {}) {
   const { projectId } = useParams<{ projectId: string }>();
   const [searchParams] = useSearchParams();
   const shareToken = searchParams.get('shareToken') ?? '';
@@ -97,7 +111,21 @@ export default function FeedbackSlidePage() {
     return payload;
   }, [shareToken, currentSlide]);
 
-  useExitTracker(buildExitPayload);
+  const buildTrackedExitPayload = useCallback(() => {
+    // 부모가 exit 전송을 담당하는 경우, 여기서는 전송하지 않아 중복을 막습니다.
+    if (disableOwnExitTracking) return null;
+    return buildExitPayload();
+  }, [disableOwnExitTracking, buildExitPayload]);
+
+  useEffect(() => {
+    // 현재 보고 있는 슬라이드 ID를 부모 스냅샷과 동기화합니다.
+    if (!onShareExitSnapshotChange || !currentSlide?.slideId) return;
+    const slideIdNum = Number(currentSlide.slideId);
+    if (!Number.isFinite(slideIdNum)) return;
+    onShareExitSnapshotChange({ lastSlideId: slideIdNum });
+  }, [onShareExitSnapshotChange, currentSlide]);
+
+  useExitTracker(buildTrackedExitPayload);
 
   /** 슬라이드 변경 시 store 초기화 */
   useEffect(() => {

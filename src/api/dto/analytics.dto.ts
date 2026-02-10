@@ -37,7 +37,7 @@ export interface RecordVideoEventRequestDto {
  * 이탈 지점 기록 요청 DTO
  */
 export interface RecordExitRequestDto {
-  projectId: number;
+  shareToken: string;
   lastSlideId?: number;
   lastVideoId?: number;
   lastVideoTimeMs?: number;

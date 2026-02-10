@@ -15,6 +15,7 @@ import type {
   RecordPageViewRequestDto,
   RecordVideoEventRequestDto,
 } from '@/api/dto/analytics.dto';
+import { useAuthStore } from '@/stores/authStore';
 import type { ApiResponse } from '@/types/api';
 
 // 슬라이드 분석 api 연동
@@ -94,20 +95,26 @@ export async function recordVideoEvent(
  * pagehide/unload 상황을 위해 keepalive fetch를 사용합니다.
  */
 export function recordExit(data: RecordExitRequestDto) {
-  // try-catch 블록을 제거하세요!
-
   const baseURL = apiClient.defaults.baseURL ?? '';
   // baseURL 처리 (기존 로직 유지)
   const fullUrl = baseURL ? new URL('/analytics/exit', baseURL).toString() : '/analytics/exit';
+  const { accessToken } = useAuthStore.getState();
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
 
   // return fetch(...)를 바로 반환하여 Promise가 끊기지 않게 합니다.
   return fetch(fullUrl, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers,
     body: JSON.stringify(data),
     keepalive: true,
+    credentials: 'include',
   });
 }
 
