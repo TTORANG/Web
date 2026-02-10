@@ -61,7 +61,7 @@ export default function FileDropzone({
     if (inputRef.current) inputRef.current.value = ''; // 같은 파일 다시 선택 가능하게 (선택창 value 초기화)
   };
 
-  const handleDragEnter = (e: React.DragEvent<HTMLButtonElement>) => {
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     if (isBlocked) return;
@@ -70,13 +70,13 @@ export default function FileDropzone({
     setIsDragging(true);
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLButtonElement>) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     if (isBlocked) return;
   };
 
-  const handleDragLeave = (e: React.DragEvent<HTMLButtonElement>) => {
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     if (isBlocked) return;
@@ -85,7 +85,7 @@ export default function FileDropzone({
     if (dragCounter.current === 0) setIsDragging(false);
   };
 
-  const handleDrop = (e: React.DragEvent<HTMLButtonElement>) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     // 드롭 시 카운터 초기화해서 다음 드래그 상태가 꼬이지 않도록 함
@@ -115,6 +115,14 @@ export default function FileDropzone({
   const showDragOverlay = isDragging && !isBlocked;
   const showUploadOverlay = isUploading;
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (isBlocked) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openFileDialog();
+    }
+  };
+
   return (
     <div className="w-full mt-10">
       <input
@@ -125,9 +133,12 @@ export default function FileDropzone({
         onChange={(e) => handleFile(e.target.files)}
       />
 
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={isBlocked ? -1 : 0}
+        aria-disabled={isBlocked}
         onClick={openFileDialog}
+        onKeyDown={handleKeyDown}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -187,7 +198,7 @@ export default function FileDropzone({
             </button>
           </div>
         )}
-      </button>
+      </div>
     </div>
   );
 }

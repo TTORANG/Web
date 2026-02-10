@@ -41,7 +41,7 @@ export interface PaginatedData<T> {
 /**
  * 변환 상태
  */
-export type ConversionStatus = 'processing' | 'completed' | 'failed';
+export type ConversionStatus = 'queued' | 'processing' | 'completed' | 'partial_done' | 'failed';
 
 /**
  * 변환 진행 상황
