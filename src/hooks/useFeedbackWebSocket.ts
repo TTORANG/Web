@@ -4,7 +4,7 @@
  *
  * 실시간 댓글/리액션 이벤트를 수신하여 Zustand Store를 직접 업데이트합니다.
  */
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -17,6 +17,7 @@ import type {
   NewReactionPayload,
   ReactionCountUpdatedPayload,
 } from '@/types/websocket';
+import { showToast } from '@/utils/toast';
 
 import { useWebSocket } from './useWebSocket';
 
@@ -31,6 +32,7 @@ interface UseFeedbackWebSocketOptions {
 
 export function useFeedbackWebSocket({ projectId, enabled = true }: UseFeedbackWebSocketOptions) {
   const queryClient = useQueryClient();
+  const didNotifyConnectRef = useRef(false);
 
   // ========== 이벤트 핸들러 ==========
 
@@ -137,9 +139,9 @@ export function useFeedbackWebSocket({ projectId, enabled = true }: UseFeedbackW
   );
 
   const handleConnect = useCallback(() => {
-    // console.log(`[Feedback WebSocket] Connected to project: ${projectId}`);
-    // 연결 성공 시 테스트 이벤트 전송 (디버깅용)
-    // console.log('🧪 [Test] Sending test message to server...');
+    if (didNotifyConnectRef.current) return;
+    didNotifyConnectRef.current = true;
+    showToast.success('실시간 연결 완료');
   }, []);
 
   const handleDisconnect = useCallback(() => {
