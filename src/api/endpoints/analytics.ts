@@ -10,6 +10,10 @@ import type {
   ReadSlideRetentionResponseDto,
   ReadVideoExitAnalyticsResponseDto,
   ReadVideoRetentionResponseDto,
+  RecordAnalyticsEventResponseDto,
+  RecordExitRequestDto,
+  RecordPageViewRequestDto,
+  RecordVideoEventRequestDto,
 } from '@/api/dto/analytics.dto';
 import type { ApiResponse } from '@/types/api';
 
@@ -53,14 +57,43 @@ export async function getProjectAnalyticsSummary(
   return response.data.success;
 }
 
-export interface RecordExitRequest {
-  projectId: number;
-  lastSlideId?: number;
-  lastVideoId?: number;
-  lastVideoTimeMs?: number;
+/**
+ * 페이지 조회 기록
+ */
+export async function recordPageView(
+  data: RecordPageViewRequestDto,
+): Promise<RecordAnalyticsEventResponseDto> {
+  const response = await apiClient.post<ApiResponse<RecordAnalyticsEventResponseDto>>(
+    '/analytics/pageview',
+    data,
+  );
+  if (!response.data.success) {
+    throw new Error('페이지 조회 기록 전송에 실패했습니다.');
+  }
+  return response.data.success;
 }
 
-export function recordExit(data: RecordExitRequest) {
+/**
+ * 영상 이벤트 기록
+ */
+export async function recordVideoEvent(
+  data: RecordVideoEventRequestDto,
+): Promise<RecordAnalyticsEventResponseDto> {
+  const response = await apiClient.post<ApiResponse<RecordAnalyticsEventResponseDto>>(
+    '/analytics/video-event',
+    data,
+  );
+  if (!response.data.success) {
+    throw new Error('영상 이벤트 기록 전송에 실패했습니다.');
+  }
+  return response.data.success;
+}
+
+/**
+ * 이탈 지점 기록
+ * pagehide/unload 상황을 위해 keepalive fetch를 사용합니다.
+ */
+export function recordExit(data: RecordExitRequestDto) {
   // try-catch 블록을 제거하세요!
 
   const baseURL = apiClient.defaults.baseURL ?? '';
@@ -77,6 +110,9 @@ export function recordExit(data: RecordExitRequest) {
     keepalive: true,
   });
 }
+
+// 기존 코드와의 호환을 위한 별칭 타입
+export type RecordExitRequest = RecordExitRequestDto;
 
 // 슬라이드별 청중 잔존률 api 연동
 export async function getSlideRetention(projectId: number): Promise<ReadSlideRetentionResponseDto> {

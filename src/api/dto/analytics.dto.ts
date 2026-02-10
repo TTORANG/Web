@@ -5,6 +5,44 @@ export interface RestoreScriptRequestDto {
   version: number;
 }
 
+/**
+ * 분석 이벤트 기록 공통 응답 DTO  - ok: true가 고정임
+ */
+export interface RecordAnalyticsEventResponseDto {
+  ok: true;
+}
+
+/**
+ * 페이지 조회 기록 요청 DTO
+ */
+export interface RecordPageViewRequestDto {
+  projectId: number;
+}
+
+/**
+ * 영상 이벤트 타입
+ */
+export type VideoEventType = 'play' | 'pause' | 'seek';
+
+/**
+ * 영상 이벤트 기록 요청 DTO
+ */
+export interface RecordVideoEventRequestDto {
+  videoId: number;
+  eventType: VideoEventType;
+  timestampMs: number;
+}
+
+/**
+ * 이탈 지점 기록 요청 DTO
+ */
+export interface RecordExitRequestDto {
+  projectId: number;
+  lastSlideId?: number;
+  lastVideoId?: number;
+  lastVideoTimeMs?: number;
+}
+
 //위 형식대로 response, request dto 작성 부탁드립니다.
 
 /**

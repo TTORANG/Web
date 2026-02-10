@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
+import { recordVideoEvent } from '@/api/endpoints/analytics';
 import { getSharedContent } from '@/api/endpoints/shares';
 import { videosApi } from '@/api/endpoints/videos';
 import { createDefaultReactions } from '@/constants/reaction';
@@ -206,6 +207,12 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
 
   const timestampPrefix = useMemo(() => `${formatVideoTimestamp(currentTime)} `, [currentTime]);
 
+  // 비디오 이벤트 기록할때, videoId 필요해서
+  const videoIdNum = useMemo(() => {
+    const parsed = Number(video?.videoId);
+    return Number.isFinite(parsed) ? parsed : null;
+  }, [video?.videoId]);
+
   const handleAddComment = useCallback(() => {
     if (!commentDraft.trim()) return;
     addComment(commentDraft, currentTime);
@@ -217,6 +224,23 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
       if (ref.kind === 'video') requestSeek(ref.seconds);
     },
     [requestSeek],
+  );
+
+  // 비디오이벤트 기록 핸들러
+  const handleVideoPlaybackEvent = useCallback(
+    (eventType: 'play' | 'pause' | 'seek', timeSeconds: number) => {
+      if (videoIdNum == null) return;
+      const timestampMs = Math.max(0, Math.round(timeSeconds * 1000));
+
+      void recordVideoEvent({
+        videoId: videoIdNum,
+        eventType,
+        timestampMs,
+      }).catch((error) => {
+        console.error('[useFeedbackVideo] recordVideoEvent failed:', error);
+      });
+    },
+    [videoIdNum],
   );
 
   useEffect(() => {
@@ -361,6 +385,7 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
     setCommentDraft,
     handleAddComment,
     handleGoToTimeRef,
+    handleVideoPlaybackEvent,
     addReply,
     deleteComment,
     updateComment,

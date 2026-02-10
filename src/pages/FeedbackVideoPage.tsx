@@ -40,6 +40,7 @@ export default function FeedbackVideoPage({ sharedContent }: FeedbackVideoPagePr
     setCommentDraft,
     handleAddComment,
     handleGoToTimeRef,
+    handleVideoPlaybackEvent,
     addReply,
     deleteComment,
     updateComment,
@@ -198,6 +199,7 @@ export default function FeedbackVideoPage({ sharedContent }: FeedbackVideoPagePr
           slideChangeTimes={slideChangeTimes}
           webcamVideoUrl={webcamVideoUrl}
           onTimeUpdate={updateCurrentTime}
+          onVideoEvent={handleVideoPlaybackEvent}
           disablePip={!isDesktop}
           showLayoutToggle={!isDesktop}
         />
