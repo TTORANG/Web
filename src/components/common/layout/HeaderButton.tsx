@@ -8,7 +8,7 @@ import clsx from 'clsx';
 
 interface HeaderButtonProps {
   text: string;
-  icon: ReactNode;
+  icon?: ReactNode;
   onClick: () => void;
   className?: string;
 }
