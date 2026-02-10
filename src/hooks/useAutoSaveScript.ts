@@ -36,7 +36,7 @@ export function useAutoSaveScript() {
       try {
         await mutateAsync({ slideId, data: { script } });
         lastSavedRef.current = script;
-        showToast.success('저장 완료');
+        showToast.success('저장 완료', '대본이 자동으로 저장되었습니다.');
       } catch {
         showToast.error('저장 실패', '다시 시도해주세요.');
       }

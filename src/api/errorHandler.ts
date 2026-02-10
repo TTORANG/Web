@@ -8,7 +8,9 @@ type ErrorHandler = (message: string) => void;
  */
 const errorHandlers: Record<number, ErrorHandler> = {
   401: () => {
-    // 세션 만료 시 로그아웃 처리
+    const { accessToken } = useAuthStore.getState();
+    // 로그인 상태일 때만 만료 처리 (비로그인 상태에서는 토스트 금지)
+    if (!accessToken) return;
     useAuthStore.getState().logout();
     showToast.error('로그인이 만료되었습니다.', '다시 로그인해주세요.');
   },
