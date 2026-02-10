@@ -123,14 +123,17 @@ export const useFeedbackSlide = ({
 
   useExitTracker(buildExitPayload);
 
+  const lastExitSnapshotSlideIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (!onShareExitSnapshotChange) return;
     if (!shareToken) return;
     if (!currentSlide?.slideId) return;
+    if (lastExitSnapshotSlideIdRef.current === currentSlide.slideId) return;
 
     const slideIdNum = Number(currentSlide.slideId);
     if (!Number.isFinite(slideIdNum)) return;
 
+    lastExitSnapshotSlideIdRef.current = currentSlide.slideId;
     onShareExitSnapshotChange({ lastSlideId: slideIdNum });
   }, [onShareExitSnapshotChange, shareToken, currentSlide?.slideId]);
 
