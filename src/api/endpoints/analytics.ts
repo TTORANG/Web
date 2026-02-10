@@ -14,12 +14,10 @@ import type {
   RecordExitRequestDto,
   RecordExitResponseDto,
   RecordPageViewRequestDto,
-  RecordPageViewResponseDto,
   RecordSlideViewRequestDto,
   RecordSlideViewResponseDto,
   RecordVideoEventRequestDto,
 } from '@/api/dto/analytics.dto';
-import { useAuthStore } from '@/stores/authStore';
 import type { ApiResponse } from '@/types/api';
 
 // 슬라이드 분석 api 연동
