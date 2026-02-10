@@ -93,7 +93,13 @@ export function useSlideCommentsActions() {
 
   const comments = useMemo(() => {
     if (!flatComments) return EMPTY_COMMENTS;
-    return flatToTree(flatComments);
+    const sorted = [...flatComments].sort((a, b) => {
+      const at = Date.parse(a.createdAt);
+      const bt = Date.parse(b.createdAt);
+      if (Number.isNaN(at) || Number.isNaN(bt)) return 0;
+      return at - bt; // 시간순(오래된 -> 최신)
+    });
+    return flatToTree(sorted);
   }, [flatComments]);
 
   const addComment = (content: string, currentSlideIndex: number) => {
@@ -157,6 +163,7 @@ export function useSlideCommentsActions() {
     // 서버에 저장되지 않은 댓글은 로컬에서만 삭제
     if (!targetServerId) {
       deleteCommentStore(commentId);
+      showToast.success('댓글이 삭제되었습니다.');
       return;
     }
 
@@ -170,6 +177,7 @@ export function useSlideCommentsActions() {
           queryClient.invalidateQueries({
             queryKey: queryKeys.comments.list(targetSlideId),
           });
+          showToast.success('댓글이 삭제되었습니다.');
         },
         onError: () => {
           setComments(previousComments);
