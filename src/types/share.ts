@@ -60,7 +60,7 @@ export interface SharedProjectSlide {
   slideNum: number;
   imageUrl: string;
   scriptText: string;
-  timestampMs?: number;
+  timestampMs: number;
 }
 
 export interface SharedProjectVideo {
@@ -77,30 +77,30 @@ export interface SharedProjectComment {
   writer: string;
   targetType: SharedProjectCommentTargetType;
   targetId: string;
-  parentId: string;
+  parentId: string | null;
   timestampMs: number;
   createdAt: string;
 }
 
 export interface ReadSharedContentData {
-  message?: string;
-  sessionInfo?: {
+  message: string;
+  sessionInfo: {
     sessionId: string;
     tokens: {
       accessToken: string;
       refreshToken: string;
     };
   };
-  shareInfo?: {
+  shareInfo: {
     shareToken: string;
-    scope: ShareScope | string;
-    createdAt?: string;
+    scope: ShareScope;
+    createdAt: string;
   };
   projectContent: {
-    title?: string;
+    title: string;
     slides: SharedProjectSlide[];
-    video?: SharedProjectVideo | null;
-    comments?: SharedProjectComment[];
+    video: SharedProjectVideo | null;
+    comments: SharedProjectComment[];
   };
 }
 

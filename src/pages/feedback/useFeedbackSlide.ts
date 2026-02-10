@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { pageView, slideView } from '@/api/endpoints/analytics';
+import { recordPageView, slideView } from '@/api/endpoints/analytics';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useHotkey, useSlideActions } from '@/hooks';
 import { useScript } from '@/hooks/queries/useScript';
 import { useExitTracker } from '@/hooks/useExitTracker';
-import { useFeedbackWebSocket } from '@/hooks/useFeedbackWebSocket';
 import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
 import { useSlideCommentsLoader } from '@/hooks/useSlideCommentsLoader';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
@@ -14,6 +13,8 @@ import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
 import type { SharedProjectSlide } from '@/types/share';
 import type { SlideDetail } from '@/types/slide';
+
+import type { ShareExitSnapshot } from './useFeedbackVideo';
 
 const SHARED_PROJECT_ID = 'shared';
 
@@ -50,20 +51,16 @@ type UseFeedbackSlideOptions = {
   sharedSlides?: SharedProjectSlide[];
   shareToken?: string;
   projectId?: string;
+  onShareExitSnapshotChange?: (snapshot: ShareExitSnapshot) => void;
 };
 
 export const useFeedbackSlide = ({
   sharedSlides,
   shareToken,
-  projectId,
+  onShareExitSnapshotChange,
 }: UseFeedbackSlideOptions = {}) => {
   const isShared = true;
   const slides = useMemo(() => normalizeSharedSlides(sharedSlides ?? []), [sharedSlides]);
-
-  const webSocket = useFeedbackWebSocket({
-    projectId: projectId ?? '',
-    enabled: !!projectId,
-  });
 
   const totalSlides = slides?.length ?? 0;
   const navigation = useSlideNavigation(totalSlides);
@@ -126,6 +123,17 @@ export const useFeedbackSlide = ({
 
   useExitTracker(buildExitPayload);
 
+  useEffect(() => {
+    if (!onShareExitSnapshotChange) return;
+    if (!shareToken) return;
+    if (!currentSlide?.slideId) return;
+
+    const slideIdNum = Number(currentSlide.slideId);
+    if (!Number.isFinite(slideIdNum)) return;
+
+    onShareExitSnapshotChange({ lastSlideId: slideIdNum });
+  }, [onShareExitSnapshotChange, shareToken, currentSlide?.slideId]);
+
   const prevSlideIdRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -177,7 +185,7 @@ export const useFeedbackSlide = ({
   useEffect(() => {
     if (!shareToken || pageViewSentRef.current) return;
     pageViewSentRef.current = true;
-    void pageView({ shareToken });
+    void recordPageView({ shareToken });
   }, [shareToken]);
 
   const lastSlideViewIdRef = useRef<string | null>(null);
@@ -218,6 +226,5 @@ export const useFeedbackSlide = ({
       updateComment,
       toggleReaction,
     },
-    webSocket,
   };
 };

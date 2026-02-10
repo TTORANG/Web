@@ -10,13 +10,16 @@ import type {
   ReadSlideRetentionResponseDto,
   ReadVideoExitAnalyticsResponseDto,
   ReadVideoRetentionResponseDto,
+  RecordAnalyticsEventResponseDto,
   RecordExitRequestDto,
   RecordExitResponseDto,
   RecordPageViewRequestDto,
   RecordPageViewResponseDto,
   RecordSlideViewRequestDto,
   RecordSlideViewResponseDto,
+  RecordVideoEventRequestDto,
 } from '@/api/dto/analytics.dto';
+import { useAuthStore } from '@/stores/authStore';
 import type { ApiResponse } from '@/types/api';
 
 // 슬라이드 분석 api 연동
@@ -59,18 +62,54 @@ export async function getProjectAnalyticsSummary(
   return response.data.success;
 }
 
+/**
+ * 이탈 기록
+ */
 export function recordExit(data: RecordExitRequestDto) {
   // keepalive 옵션이 필요 없으므로 apiClient로 통일
   return apiClient.post<ApiResponse<RecordExitResponseDto>>('/analytics/exit', data);
 }
 
-export function pageView(data: RecordPageViewRequestDto) {
-  return apiClient.post<ApiResponse<RecordPageViewResponseDto>>('/analytics/pageview', data);
-}
-
+/**
+ * 슬라이드 조회 기록
+ */
 export function slideView(data: RecordSlideViewRequestDto) {
   return apiClient.post<ApiResponse<RecordSlideViewResponseDto>>('/analytics/slide-view', data);
 }
+/**
+ * 페이지 조회 기록
+ */
+export async function recordPageView(
+  data: RecordPageViewRequestDto,
+): Promise<RecordAnalyticsEventResponseDto> {
+  const response = await apiClient.post<ApiResponse<RecordAnalyticsEventResponseDto>>(
+    '/analytics/pageview',
+    data,
+  );
+  if (!response.data.success) {
+    throw new Error('페이지 조회 기록 전송에 실패했습니다.');
+  }
+  return response.data.success;
+}
+
+/**
+ * 영상 이벤트 기록
+ */
+export async function recordVideoEvent(
+  data: RecordVideoEventRequestDto,
+): Promise<RecordAnalyticsEventResponseDto> {
+  const response = await apiClient.post<ApiResponse<RecordAnalyticsEventResponseDto>>(
+    '/analytics/video-event',
+    data,
+  );
+  if (!response.data.success) {
+    throw new Error('영상 이벤트 기록 전송에 실패했습니다.');
+  }
+  return response.data.success;
+}
+
+// 기존 코드와의 호환을 위한 별칭 타입
+export type RecordExitRequest = RecordExitRequestDto;
 
 // 슬라이드별 청중 잔존률 api 연동
 export async function getSlideRetention(projectId: number): Promise<ReadSlideRetentionResponseDto> {

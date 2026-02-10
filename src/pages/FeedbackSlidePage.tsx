@@ -10,24 +10,32 @@ import { useParams } from 'react-router-dom';
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
 import { Spinner } from '@/components/common';
-import WebSocketDebug from '@/components/common/WebSocketDebug';
 import FeedbackMobileLayout from '@/components/feedback/FeedbackMobileLayout';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
 import SlideNavigation from '@/components/feedback/SlideNavigation';
 import SlideViewer from '@/components/feedback/SlideViewer';
 import SlideTitle from '@/components/slide/script/SlideTitle';
 import { createDefaultReactions } from '@/constants/reaction';
-import type { SharedProjectSlide } from '@/types/share';
+import type { ReadSharedContentData } from '@/types/share';
 
 import { useFeedbackSlide } from './feedback/useFeedbackSlide';
+import type { ShareExitSnapshot } from './feedback/useFeedbackVideo';
 
 interface FeedbackSlidePageProps {
-  sharedSlides?: SharedProjectSlide[];
+  sharedContent?: ReadSharedContentData;
+  onShareExitSnapshotChange?: (snapshot: ShareExitSnapshot) => void;
 }
 
-export default function FeedbackSlidePage({ sharedSlides }: FeedbackSlidePageProps = {}) {
-  const { projectId, shareToken } = useParams<{ projectId: string; shareToken: string }>();
-  const { state, actions, webSocket } = useFeedbackSlide({ projectId, shareToken, sharedSlides });
+export default function FeedbackSlidePage({
+  sharedContent,
+  onShareExitSnapshotChange,
+}: FeedbackSlidePageProps = {}) {
+  const { shareToken } = useParams<{ shareToken: string }>();
+  const { state, actions } = useFeedbackSlide({
+    sharedSlides: sharedContent?.projectContent?.slides,
+    shareToken,
+    onShareExitSnapshotChange,
+  });
 
   const {
     currentSlide,
@@ -54,8 +62,6 @@ export default function FeedbackSlidePage({ sharedSlides }: FeedbackSlidePagePro
     updateComment,
     toggleReaction,
   } = actions;
-
-  const { isConnected, currentRooms, joinProject, leaveProject, getRooms } = webSocket;
 
   if (isLoading) {
     return (
@@ -176,15 +182,6 @@ export default function FeedbackSlidePage({ sharedSlides }: FeedbackSlidePagePro
           </>
         }
         commentCount={comments.length}
-      />
-
-      <WebSocketDebug
-        isConnected={isConnected}
-        currentRooms={currentRooms}
-        projectId={projectId}
-        onJoinProject={joinProject}
-        onLeaveProject={leaveProject}
-        onGetRooms={getRooms}
       />
     </div>
   );

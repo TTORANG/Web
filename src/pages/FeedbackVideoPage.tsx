@@ -14,16 +14,20 @@ import ReactionButtons from '@/components/feedback/ReactionButtons';
 import ScriptSection from '@/components/feedback/ScriptSection';
 import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
-import { useFeedbackVideo } from '@/pages/feedback/useFeedbackVideo';
+import { type ShareExitSnapshot, useFeedbackVideo } from '@/pages/feedback/useFeedbackVideo';
 import type { ReadSharedContentData } from '@/types/share';
 
 interface FeedbackVideoPageProps {
   sharedContent?: ReadSharedContentData;
+  onShareExitSnapshotChange?: (snapshot: ShareExitSnapshot) => void;
 }
 
-export default function FeedbackVideoPage({ sharedContent }: FeedbackVideoPageProps = {}) {
+export default function FeedbackVideoPage({
+  sharedContent,
+  onShareExitSnapshotChange,
+}: FeedbackVideoPageProps = {}) {
   const isDesktop = useIsDesktop();
-  const ctx = useFeedbackVideo(sharedContent);
+  const ctx = useFeedbackVideo(sharedContent, { onShareExitSnapshotChange });
 
   const {
     isLoading,
@@ -40,6 +44,7 @@ export default function FeedbackVideoPage({ sharedContent }: FeedbackVideoPagePr
     setCommentDraft,
     handleAddComment,
     handleGoToTimeRef,
+    handleVideoPlaybackEvent,
     addReply,
     deleteComment,
     updateComment,
@@ -198,6 +203,7 @@ export default function FeedbackVideoPage({ sharedContent }: FeedbackVideoPagePr
           slideChangeTimes={slideChangeTimes}
           webcamVideoUrl={webcamVideoUrl}
           onTimeUpdate={updateCurrentTime}
+          onVideoEvent={handleVideoPlaybackEvent}
           disablePip={!isDesktop}
           showLayoutToggle={!isDesktop}
         />
