@@ -75,7 +75,7 @@ export default function HomePage() {
     enabled: isLoggedIn,
   });
 
-  const isLoading = isLoggedIn && ((needsBaseTotal ? isBaseLoading : false) || isFilteredLoading);
+  const isLoading = isLoggedIn && (isBaseLoading || isFilteredLoading);
   const presentations = filteredData?.presentations ?? [];
   const totalCount = needsBaseTotal ? (baseData?.total ?? 0) : (filteredData?.total ?? 0);
   const filteredCount = filteredData?.total ?? 0;
