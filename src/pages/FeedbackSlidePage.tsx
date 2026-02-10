@@ -1,11 +1,10 @@
 /**
  * @file FeedbackSlidePage
- * @description 피드백 슬라이드 페이지
+ * @description 슬라이드 피드백 페이지
  *
  * 슬라이드 뷰어, 댓글 목록, 리액션 버튼을 포함합니다.
- * 좌우 화살표 키로 슬라이드 이동이 가능합니다.
+ * 좌우 키로 슬라이드 이동이 가능합니다.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
@@ -18,138 +17,40 @@ import SlideNavigation from '@/components/feedback/SlideNavigation';
 import SlideViewer from '@/components/feedback/SlideViewer';
 import SlideTitle from '@/components/slide/script/SlideTitle';
 import { createDefaultReactions } from '@/constants/reaction';
-import { useHotkey, useSlideActions } from '@/hooks';
-import { useScript } from '@/hooks/queries/useScript';
-import { useSlides } from '@/hooks/queries/useSlides';
-import { useExitTracker } from '@/hooks/useExitTracker';
-import { useFeedbackWebSocket } from '@/hooks/useFeedbackWebSocket';
-import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
-import { useSlideCommentsLoader } from '@/hooks/useSlideCommentsLoader';
-import { useSlideNavigation } from '@/hooks/useSlideNavigation';
-import { useSlideReactions } from '@/hooks/useSlideReactions';
-import { useSlideStore } from '@/stores/slideStore';
-import type { Comment } from '@/types/comment';
+
+import { useFeedbackSlide } from './feedback/useFeedbackSlide';
 
 export default function FeedbackSlidePage() {
   const { projectId } = useParams<{ projectId: string }>();
-  const { data: slides, isLoading } = useSlides(projectId ?? '');
+  const { state, actions, webSocket } = useFeedbackSlide(projectId);
 
-  const { isConnected, currentRooms, joinProject, leaveProject, getRooms } = useFeedbackWebSocket({
-    projectId: projectId ?? '',
-    enabled: !!projectId,
-  });
+  const {
+    currentSlide,
+    totalSlides,
+    slideIndex,
+    script,
+    comments,
+    commentDraft,
+    reactions,
+    isLoading,
+    isCommentsLoading,
+    isFirst,
+    isLast,
+  } = state;
 
-  const totalSlides = slides?.length ?? 0;
-  const navigation = useSlideNavigation(totalSlides);
-  const { slideIndex, goPrev, goNext, isFirst, isLast, goToIndex } = navigation;
+  const {
+    goPrev,
+    goNext,
+    handleGoToRef,
+    setCommentDraft,
+    handleAddComment,
+    addReply,
+    deleteComment,
+    updateComment,
+    toggleReaction,
+  } = actions;
 
-  const currentSlide = slides?.[slideIndex];
-
-  const { comments, addComment, addReply, deleteComment, updateComment } =
-    useSlideCommentsActions();
-  const { reactions, toggleReaction } = useSlideReactions();
-  const script = useSlideStore((state) => state.slide?.script ?? '');
-  const initSlide = useSlideStore((state) => state.initSlide);
-
-  const reactionHistory = useSlideStore((state) => state.reactionHistory);
-  const reactionCounts = useSlideStore((state) => state.reactionCounts);
-
-  const { updateScript } = useSlideActions();
-  const { data: scriptData } = useScript(currentSlide?.slideId ?? '');
-
-  const [commentDraft, setCommentDraft] = useState('');
-
-  const handleAddComment = () => {
-    if (!commentDraft.trim()) return;
-    addComment(commentDraft, slideIndex);
-    setCommentDraft('');
-  };
-
-  const mapComments = useCallback(
-    (comments: Comment[]) => {
-      if (!currentSlide) return comments;
-      const slideLabel = `Slide ${slideIndex + 1}`;
-      return comments.map((comment) => ({
-        ...comment,
-        slideId: currentSlide.slideId,
-        ref: { kind: 'slide' as const, index: slideIndex },
-        slideRef: slideLabel,
-      }));
-    },
-    [currentSlide, slideIndex],
-  );
-
-  useHotkey({ ArrowLeft: goPrev, ArrowRight: goNext }, { enabled: !isLoading });
-
-  const buildExitPayload = useCallback(() => {
-    if (!projectId) return null;
-    const projectIdNum = Number(projectId);
-    if (!Number.isFinite(projectIdNum)) return null;
-
-    const payload: { projectId: number; lastSlideId?: number } = {
-      projectId: projectIdNum,
-    };
-
-    if (currentSlide?.slideId) {
-      const slideIdNum = Number(currentSlide.slideId);
-      if (Number.isFinite(slideIdNum)) {
-        payload.lastSlideId = slideIdNum;
-      }
-    }
-
-    return payload;
-  }, [projectId, currentSlide]);
-
-  useExitTracker(buildExitPayload);
-
-  const prevSlideIdRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (!currentSlide) return;
-
-    // 3. 진짜 슬라이드가 바뀌었을 때만 초기화 실행 (ID 비교)
-    if (prevSlideIdRef.current !== currentSlide.slideId) {
-      prevSlideIdRef.current = currentSlide.slideId;
-
-      // "이 슬라이드 ID에 대해 저장된 내 리액션 기록이 있나?"
-      const mySavedReactions = reactionHistory[currentSlide.slideId] || [];
-      // 이 슬라이드의 저장된 숫자 꺼내기
-      const mySavedCounts = reactionCounts[currentSlide.slideId] || {};
-
-      // 기본 리액션 목록을 만들고, 히스토리에 있는 건 active: true로 켜준다.
-      const initialReactions = createDefaultReactions().map((reaction) => ({
-        ...reaction,
-        active: mySavedReactions.includes(reaction.type), // 기록이 있으면 true!
-        // 저장된 숫자가 있으면 그거 쓰고, 없으면 기본값(서버값)
-        count: mySavedCounts[reaction.type] ?? reaction.count,
-      }));
-
-      initSlide({
-        ...currentSlide,
-        emojiReactions: initialReactions, // 새 슬라이드 진입 시에만 초기화
-      });
-      updateScript('');
-    }
-    // 4. 같은 슬라이드라면 initSlide를 호출하지 않음 -> 스토어의 active 상태 보존됨
-  }, [currentSlide, initSlide, updateScript, reactionHistory, reactionCounts]);
-
-  const { isLoading: isCommentsLoading } = useSlideCommentsLoader(currentSlide?.slideId, {
-    mapComments,
-  });
-
-  useEffect(() => {
-    if (scriptData) {
-      updateScript(scriptData.scriptText);
-    }
-  }, [scriptData, updateScript]);
-
-  const handleGoToRef = useCallback(
-    (ref: NonNullable<Comment['ref']>) => {
-      if (ref.kind !== 'slide') return;
-      goToIndex(ref.index);
-    },
-    [goToIndex],
-  );
+  const { isConnected, currentRooms, joinProject, leaveProject, getRooms } = webSocket;
 
   if (isLoading) {
     return (

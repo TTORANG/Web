@@ -12,6 +12,10 @@ import type {
   ReadVideoRetentionResponseDto,
   RecordExitRequestDto,
   RecordExitResponseDto,
+  RecordPageViewRequestDto,
+  RecordPageViewResponseDto,
+  RecordSlideViewRequestDto,
+  RecordSlideViewResponseDto,
 } from '@/api/dto/analytics.dto';
 import type { ApiResponse } from '@/types/api';
 
@@ -58,6 +62,14 @@ export async function getProjectAnalyticsSummary(
 export function recordExit(data: RecordExitRequestDto) {
   // keepalive 옵션이 필요 없으므로 apiClient로 통일
   return apiClient.post<ApiResponse<RecordExitResponseDto>>('/analytics/exit', data);
+}
+
+export function pageView(data: RecordPageViewRequestDto) {
+  return apiClient.post<ApiResponse<RecordPageViewResponseDto>>('/analytics/pageview', data);
+}
+
+export function slideView(data: RecordSlideViewRequestDto) {
+  return apiClient.post<ApiResponse<RecordSlideViewResponseDto>>('/analytics/slide-view', data);
 }
 
 // 슬라이드별 청중 잔존률 api 연동
