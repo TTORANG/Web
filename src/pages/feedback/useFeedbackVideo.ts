@@ -9,6 +9,7 @@ import { recordVideoEvent } from '@/api/endpoints/analytics';
 import { getSharedContent } from '@/api/endpoints/shares';
 import { videosApi } from '@/api/endpoints/videos';
 import { createDefaultReactions } from '@/constants/reaction';
+import { useExitTracker } from '@/hooks/useExitTracker';
 import { useVideoComments } from '@/hooks/useVideoComments';
 import { useVideoReactions } from '@/hooks/useVideoReactions';
 import { useAuthStore } from '@/stores/authStore';
@@ -22,6 +23,7 @@ import type {
 import type { SlideDetail } from '@/types/slide';
 import type { VideoTimestampFeedback } from '@/types/video';
 import { formatVideoTimestamp } from '@/utils/format';
+import { getSlideIndexFromTime } from '@/utils/video';
 
 const DEFAULT_VIDEO_ID = '34';
 const FALLBACK_SLIDE_DURATION_SECONDS = 10;
@@ -138,6 +140,17 @@ function normalizeTimestampMs(value: number | null | undefined): number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
 }
 
+function toNumericId(value: string | number | null | undefined): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.trunc(value);
+  }
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? Math.trunc(parsed) : null;
+  }
+  return null;
+}
+
 function mapSharedCommentsToFeedbacks(
   rawComments: SharedProjectComment[],
   currentUserId?: string,
@@ -242,6 +255,46 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
     },
     [videoIdNum],
   );
+
+  // 피드백비디오페이지에서 이탈 추적 연결
+  const buildExitPayload = useCallback(() => {
+    if (!shareToken) return null;
+
+    const safeCurrentTime = Number.isFinite(currentTime) && currentTime >= 0 ? currentTime : 0;
+    const payload: {
+      shareToken: string;
+      lastSlideId?: number;
+      lastVideoId?: number;
+      lastVideoTimeMs: number;
+    } = {
+      shareToken,
+      lastVideoTimeMs: Math.round(safeCurrentTime * 1000),
+    };
+
+    if (videoIdNum != null) {
+      payload.lastVideoId = videoIdNum;
+    }
+
+    if (projectSlides.length > 0) {
+      const changeTimes =
+        slideChangeTimes.length > 0
+          ? slideChangeTimes
+          : projectSlides.map((_, index) => index * FALLBACK_SLIDE_DURATION_SECONDS);
+      const lastSlideIndex = getSlideIndexFromTime(
+        safeCurrentTime,
+        changeTimes,
+        projectSlides.length - 1,
+      );
+      const lastSlideId = toNumericId(projectSlides[lastSlideIndex]?.slideId);
+      if (lastSlideId != null) {
+        payload.lastSlideId = lastSlideId;
+      }
+    }
+
+    return payload;
+  }, [shareToken, currentTime, videoIdNum, projectSlides, slideChangeTimes]);
+
+  useExitTracker(buildExitPayload);
 
   useEffect(() => {
     let cancelled = false;
