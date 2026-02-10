@@ -77,9 +77,9 @@ export interface SharedProjectComment {
   writer: string;
   targetType: SharedProjectCommentTargetType;
   targetId: string;
+  parentId: string;
   timestampMs: number;
   createdAt: string;
-  parentCommentId?: string;
 }
 
 export interface ReadSharedContentData {

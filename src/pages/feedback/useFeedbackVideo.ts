@@ -27,13 +27,8 @@ const FALLBACK_SLIDE_DURATION_SECONDS = 10;
 const FALLBACK_VIDEO_DURATION_SECONDS = 9;
 const SHARED_PROJECT_ID = 'shared';
 
-function toPublicUrl(url?: string | null): string {
-  if (!url) return '';
-  return url.startsWith('gs://') ? `https://storage.googleapis.com/${url.slice(5)}` : url;
-}
-
 function toPlayableVideoUrl(url?: string | null): string {
-  const publicUrl = toPublicUrl(url);
+  const publicUrl = url ?? '';
   if (!publicUrl) return '';
 
   if (!import.meta.env.DEV) {
@@ -72,7 +67,7 @@ function normalizeSharedSlides(rawSlides: SharedProjectSlide[]): SlideDetail[] {
         projectId: SHARED_PROJECT_ID,
         title: `슬라이드 ${slideNum}`,
         slideNum,
-        imageUrl: toPublicUrl(slide.imageUrl),
+        imageUrl: slide.imageUrl,
         createdAt: now,
         updatedAt: now,
         script: slide.scriptText ?? '',
@@ -150,7 +145,7 @@ function mapSharedCommentsToFeedbacks(
     const timestampMs = normalizeTimestampMs(sharedComment.timestampMs);
     const fallbackId = `shared-comment-${timestampMs}-${index}`;
     const commentId = sharedComment.commentId || fallbackId;
-    const parentId = sharedComment.parentCommentId || undefined;
+    const parentId = sharedComment.parentId || undefined;
     const userId = sharedComment.writer?.trim() || 'unknown';
 
     const mappedComment: Comment = {

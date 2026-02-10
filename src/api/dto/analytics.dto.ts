@@ -153,7 +153,7 @@ export interface RecentCommentSlideDto {
  * recordExit 요청 타입
  */
 export interface RecordExitRequestDto {
-  projectId: number;
+  shareToken: string;
   lastSlideId?: number;
   lastVideoId?: number;
   lastVideoTimeMs?: number;
@@ -170,7 +170,7 @@ export interface RecordExitResponseDto {
  * page-view 요청 타입
  */
 export interface RecordPageViewRequestDto {
-  projectId: number;
+  shareToken: string;
 }
 
 /**

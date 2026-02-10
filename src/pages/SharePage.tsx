@@ -10,6 +10,7 @@ import { useParams } from 'react-router-dom';
 import { Spinner } from '@/components/common';
 import { useSharedContent } from '@/hooks/queries/useShares';
 
+import FeedbackSlidePage from './FeedbackSlidePage';
 import FeedbackVideoPage from './FeedbackVideoPage';
 
 export default function SharePage() {
@@ -35,7 +36,7 @@ export default function SharePage() {
   const scope = data.shareInfo?.scope;
 
   if (scope === 'slides_script') {
-    //return <FeedbackSlidePage sharedSlides={data.projectContent.slides} />; // 샌디 슬라이드페이지
+    return <FeedbackSlidePage sharedSlides={data.projectContent.slides} />;
   }
 
   return <FeedbackVideoPage sharedContent={data} />;

@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { pageView, slideView } from '@/api/endpoints/analytics';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useHotkey, useSlideActions } from '@/hooks';
 import { useScript } from '@/hooks/queries/useScript';
-import { useSlides } from '@/hooks/queries/useSlides';
 import { useExitTracker } from '@/hooks/useExitTracker';
 import { useFeedbackWebSocket } from '@/hooks/useFeedbackWebSocket';
 import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
@@ -13,9 +12,53 @@ import { useSlideNavigation } from '@/hooks/useSlideNavigation';
 import { useSlideReactions } from '@/hooks/useSlideReactions';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
+import type { SharedProjectSlide } from '@/types/share';
+import type { SlideDetail } from '@/types/slide';
 
-export const useFeedbackSlide = (projectId: string | undefined) => {
-  const { data: slides, isLoading: isSlidesLoading } = useSlides(projectId ?? '');
+const SHARED_PROJECT_ID = 'shared';
+
+function toNumber(value: string | number | undefined, fallback: number): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
+}
+
+function normalizeSharedSlides(rawSlides: SharedProjectSlide[]): SlideDetail[] {
+  const now = new Date().toISOString();
+
+  return rawSlides
+    .map((slide, index) => {
+      const slideNum = toNumber(slide.slideNum, index + 1);
+      return {
+        slideId: slide.slideId,
+        projectId: SHARED_PROJECT_ID,
+        title: `슬라이드 ${slideNum}`,
+        slideNum,
+        imageUrl: slide.imageUrl,
+        createdAt: now,
+        updatedAt: now,
+        script: slide.scriptText ?? '',
+      };
+    })
+    .sort((a, b) => a.slideNum - b.slideNum);
+}
+
+type UseFeedbackSlideOptions = {
+  sharedSlides?: SharedProjectSlide[];
+  shareToken?: string;
+  projectId?: string;
+};
+
+export const useFeedbackSlide = ({
+  sharedSlides,
+  shareToken,
+  projectId,
+}: UseFeedbackSlideOptions = {}) => {
+  const isShared = true;
+  const slides = useMemo(() => normalizeSharedSlides(sharedSlides ?? []), [sharedSlides]);
 
   const webSocket = useFeedbackWebSocket({
     projectId: projectId ?? '',
@@ -38,7 +81,7 @@ export const useFeedbackSlide = (projectId: string | undefined) => {
   const reactionCounts = useSlideStore((state) => state.reactionCounts);
 
   const { updateScript } = useSlideActions();
-  const { data: scriptData } = useScript(currentSlide?.slideId ?? '');
+  const { data: scriptData } = useScript(isShared ? '' : (currentSlide?.slideId ?? ''));
 
   const [commentDraft, setCommentDraft] = useState('');
 
@@ -62,15 +105,13 @@ export const useFeedbackSlide = (projectId: string | undefined) => {
     [currentSlide, slideIndex],
   );
 
-  useHotkey({ ArrowLeft: goPrev, ArrowRight: goNext }, { enabled: !isSlidesLoading });
+  useHotkey({ ArrowLeft: goPrev, ArrowRight: goNext }, { enabled: slides.length > 0 });
 
   const buildExitPayload = useCallback(() => {
-    if (!projectId) return null;
-    const projectIdNum = Number(projectId);
-    if (!Number.isFinite(projectIdNum)) return null;
+    if (!shareToken) return null;
 
-    const payload: { projectId: number; lastSlideId?: number } = {
-      projectId: projectIdNum,
+    const payload: { shareToken: string; lastSlideId?: number } = {
+      shareToken,
     };
 
     if (currentSlide?.slideId) {
@@ -81,7 +122,7 @@ export const useFeedbackSlide = (projectId: string | undefined) => {
     }
 
     return payload;
-  }, [projectId, currentSlide]);
+  }, [shareToken, currentSlide]);
 
   useExitTracker(buildExitPayload);
 
@@ -106,9 +147,13 @@ export const useFeedbackSlide = (projectId: string | undefined) => {
         ...currentSlide,
         emojiReactions: initialReactions,
       });
-      updateScript('');
+      if (isShared) {
+        updateScript(currentSlide.script ?? '');
+      } else {
+        updateScript('');
+      }
     }
-  }, [currentSlide, initSlide, updateScript, reactionHistory, reactionCounts]);
+  }, [currentSlide, initSlide, updateScript, reactionHistory, reactionCounts, isShared]);
 
   const { isLoading: isCommentsLoading } = useSlideCommentsLoader(currentSlide?.slideId, {
     mapComments,
@@ -130,12 +175,10 @@ export const useFeedbackSlide = (projectId: string | undefined) => {
 
   const pageViewSentRef = useRef(false);
   useEffect(() => {
-    if (!projectId || pageViewSentRef.current) return;
-    const projectIdNum = Number(projectId);
-    if (!Number.isFinite(projectIdNum)) return;
+    if (!shareToken || pageViewSentRef.current) return;
     pageViewSentRef.current = true;
-    void pageView({ projectId: projectIdNum });
-  }, [projectId]);
+    void pageView({ shareToken });
+  }, [shareToken]);
 
   const lastSlideViewIdRef = useRef<string | null>(null);
   useEffect(() => {
@@ -159,7 +202,7 @@ export const useFeedbackSlide = (projectId: string | undefined) => {
       comments,
       commentDraft,
       reactions,
-      isLoading: isSlidesLoading,
+      isLoading: false,
       isCommentsLoading,
       isFirst: navigation.isFirst,
       isLast: navigation.isLast,

@@ -17,12 +17,17 @@ import SlideNavigation from '@/components/feedback/SlideNavigation';
 import SlideViewer from '@/components/feedback/SlideViewer';
 import SlideTitle from '@/components/slide/script/SlideTitle';
 import { createDefaultReactions } from '@/constants/reaction';
+import type { SharedProjectSlide } from '@/types/share';
 
 import { useFeedbackSlide } from './feedback/useFeedbackSlide';
 
-export default function FeedbackSlidePage() {
-  const { projectId } = useParams<{ projectId: string }>();
-  const { state, actions, webSocket } = useFeedbackSlide(projectId);
+interface FeedbackSlidePageProps {
+  sharedSlides?: SharedProjectSlide[];
+}
+
+export default function FeedbackSlidePage({ sharedSlides }: FeedbackSlidePageProps = {}) {
+  const { projectId, shareToken } = useParams<{ projectId: string; shareToken: string }>();
+  const { state, actions, webSocket } = useFeedbackSlide({ projectId, shareToken, sharedSlides });
 
   const {
     currentSlide,

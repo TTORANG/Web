@@ -13,7 +13,6 @@ import type {
 } from '@/api/dto';
 import type { ApiResponse } from '@/types/api';
 import type { SlideListItem } from '@/types/slide';
-import { convertGsUrlToHttps } from '@/utils/convertGsUrl';
 
 /**
  * 프로젝트의 슬라이드 목록 조회
@@ -30,10 +29,7 @@ export async function getSlides(projectId: string): Promise<SlideListItem[]> {
   );
 
   if (response.data.resultType === 'SUCCESS') {
-    return response.data.success.map((slide) => ({
-      ...slide,
-      imageUrl: convertGsUrlToHttps(slide.imageUrl),
-    }));
+    return response.data.success;
   }
   throw new Error(response.data.error.reason);
 }
@@ -50,12 +46,7 @@ export async function getSlide(slideId: string): Promise<GetSlideResponseDto> {
   );
 
   if (response.data.resultType === 'SUCCESS') {
-    const slide = response.data.success;
-
-    return {
-      ...slide,
-      imageUrl: convertGsUrlToHttps(slide.imageUrl),
-    };
+    return response.data.success;
   }
   throw new Error(response.data.error.reason);
 }
@@ -77,11 +68,7 @@ export async function updateSlide(
   );
 
   if (response.data.resultType === 'SUCCESS') {
-    const slide = response.data.success;
-    return {
-      ...slide,
-      imageUrl: convertGsUrlToHttps(slide.imageUrl),
-    };
+    return response.data.success;
   }
   throw new Error(response.data.error.reason);
 }
