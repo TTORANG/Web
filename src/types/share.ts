@@ -57,15 +57,29 @@ export type ShareableVideosResponse = ApiResponse<ShareableVideosData>;
 /** 5. 공유 콘텐츠 조회 */
 export interface SharedProjectSlide {
   slideId: string;
-  slideNum: string;
+  slideNum: string | number;
   imageUrl: string;
   scriptText: string;
+  timestampMs?: number;
 }
 
 export interface SharedProjectVideo {
   videoId: string;
   videoUrl: string | null;
   thumbnailUrl: string | null;
+}
+
+export type SharedProjectCommentTargetType = 'video' | 'slide';
+
+export interface SharedProjectComment {
+  commentId: string;
+  content: string;
+  writer: string;
+  targetType: SharedProjectCommentTargetType;
+  targetId: string;
+  timestampMs: number;
+  createdAt: string;
+  parentCommentId?: string;
 }
 
 export interface ReadSharedContentData {
@@ -86,6 +100,7 @@ export interface ReadSharedContentData {
     title?: string;
     slides: SharedProjectSlide[];
     video?: SharedProjectVideo | null;
+    comments?: SharedProjectComment[];
   };
 }
 

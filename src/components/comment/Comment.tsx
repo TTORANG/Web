@@ -61,7 +61,7 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
     ? comment.userId
     : `user-${comment.userId}`;
   const user = MOCK_USERS.find((u) => u.id === normalizedUserId || u.id === comment.userId);
-  const authorName = user?.name ?? '알 수 없음';
+  const authorName = user?.name ?? comment.userId ?? '알 수 없음';
   const authorProfileImage = user?.profileImage;
 
   const isActive = replyingToId === comment.commentId;

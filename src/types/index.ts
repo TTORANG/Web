@@ -32,6 +32,8 @@ export type {
   CreateShareLinkResponse,
   SharedProjectSlide,
   SharedProjectVideo,
+  SharedProjectComment,
+  SharedProjectCommentTargetType,
   ReadSharedContentData,
   ReadSharedContentResponse,
 } from './share';

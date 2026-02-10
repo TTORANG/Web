@@ -7,13 +7,19 @@ import { useParams, useSearchParams } from 'react-router-dom';
 
 import { getSharedContent } from '@/api/endpoints/shares';
 import { videosApi } from '@/api/endpoints/videos';
+import { createDefaultReactions } from '@/constants/reaction';
 import { useVideoComments } from '@/hooks/useVideoComments';
 import { useVideoReactions } from '@/hooks/useVideoReactions';
 import { useAuthStore } from '@/stores/authStore';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Comment } from '@/types/comment';
-import type { ReadSharedContentData, SharedProjectSlide } from '@/types/share';
+import type {
+  ReadSharedContentData,
+  SharedProjectComment,
+  SharedProjectSlide,
+} from '@/types/share';
 import type { SlideDetail } from '@/types/slide';
+import type { VideoTimestampFeedback } from '@/types/video';
 import { formatVideoTimestamp } from '@/utils/format';
 
 const DEFAULT_VIDEO_ID = '34';
@@ -127,6 +133,55 @@ function mapSlidesByTimeline(
   };
 }
 
+function normalizeTimestampMs(value: number | null | undefined): number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+}
+
+function mapSharedCommentsToFeedbacks(
+  rawComments: SharedProjectComment[],
+  currentUserId?: string,
+  currentUserName?: string,
+): VideoTimestampFeedback[] {
+  if (!rawComments.length) return [];
+
+  const groupedComments = new Map<number, Comment[]>();
+
+  rawComments.forEach((sharedComment, index) => {
+    const timestampMs = normalizeTimestampMs(sharedComment.timestampMs);
+    const fallbackId = `shared-comment-${timestampMs}-${index}`;
+    const commentId = sharedComment.commentId || fallbackId;
+    const parentId = sharedComment.parentCommentId || undefined;
+    const userId = sharedComment.writer?.trim() || 'unknown';
+
+    const mappedComment: Comment = {
+      commentId,
+      serverId: commentId,
+      parentId,
+      isReply: Boolean(parentId),
+      replies: parentId ? undefined : [],
+      userId,
+      content: sharedComment.content ?? '',
+      createdAt: sharedComment.createdAt ?? new Date().toISOString(),
+      isMine:
+        (Boolean(currentUserId) && userId === currentUserId) ||
+        (Boolean(currentUserName) && userId === currentUserName),
+      ref: { kind: 'video', seconds: timestampMs / 1000 },
+    };
+
+    const existing = groupedComments.get(timestampMs) ?? [];
+    existing.push(mappedComment);
+    groupedComments.set(timestampMs, existing);
+  });
+
+  return [...groupedComments.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([timestampMs, comments]) => ({
+      timestampMs,
+      comments,
+      reactions: createDefaultReactions(),
+    }));
+}
+
 export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
   const { shareToken: routeShareToken = '' } = useParams<{
     shareToken?: string;
@@ -172,6 +227,19 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
       const sessionId = user?.sessionId;
 
       const sharedSlides = normalizeSharedSlides(content.projectContent?.slides ?? []);
+      const sharedComments = content.projectContent?.comments ?? [];
+      const sharedFeedbacks = mapSharedCommentsToFeedbacks(sharedComments, user?.id, user?.name);
+      const fallbackTimelineSlides = (content.projectContent?.slides ?? [])
+        .filter(
+          (slide) =>
+            typeof slide.timestampMs === 'number' &&
+            Number.isFinite(slide.timestampMs) &&
+            slide.timestampMs >= 0,
+        )
+        .map((slide) => ({
+          slideId: String(slide.slideId),
+          timestampMs: normalizeTimestampMs(slide.timestampMs),
+        }));
 
       if (!sessionId) {
         const accessToken = content.sessionInfo?.tokens?.accessToken;
@@ -186,7 +254,7 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
       let videoUrl = toPlayableVideoUrl(content.projectContent?.video?.videoUrl);
       let videoTitle = content.projectContent?.title ?? '공유 영상';
       let duration = FALLBACK_VIDEO_DURATION_SECONDS;
-      let timelineSlides: Array<{ slideId: string; timestampMs: number }> = [];
+      let timelineSlides: Array<{ slideId: string; timestampMs: number }> = fallbackTimelineSlides;
 
       if (normalizedVideoId) {
         const [detailResult, timelineResult] = await Promise.allSettled([
@@ -223,9 +291,9 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
         videoUrl: videoUrl || '',
         title: videoTitle,
         duration,
-        comments: [],
+        comments: sharedFeedbacks.flatMap((feedback) => feedback.comments),
         reactionEvents: [],
-        feedbacks: [],
+        feedbacks: sharedFeedbacks,
       });
 
       setProjectSlides(mapped.slides);
