@@ -4,7 +4,6 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { SlideList, SlideWorkspace } from '@/components/slide';
 import { setLastSlideId } from '@/constants/navigation';
 import { useSlides } from '@/hooks/queries/useSlides';
-import { useSlideWebSocket } from '@/hooks/useSlideWebSocket';
 import { showToast } from '@/utils/toast';
 
 export default function SlidePage() {
@@ -15,12 +14,6 @@ export default function SlidePage() {
 
   const slideIdParam = searchParams.get('slideId');
   const currentSlide = slides?.find((s) => s.slideId === slideIdParam) ?? slides?.[0];
-
-  useSlideWebSocket({
-    projectId: projectId ?? '',
-    slideId: currentSlide?.slideId,
-    enabled: !!projectId,
-  });
 
   /**
    * 슬라이드 로드 에러 처리
