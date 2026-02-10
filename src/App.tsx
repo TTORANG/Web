@@ -1,7 +1,10 @@
 import { useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
 
+import { useQueryClient } from '@tanstack/react-query';
+
 import type { JwtPayloadDto } from '@/api/dto';
+import { queryKeys } from '@/api/queryClient';
 import { DevFab } from '@/components/common/DevFab';
 import { router } from '@/router';
 import { useAuthStore } from '@/stores/authStore';
@@ -10,6 +13,8 @@ import { parseJwtPayload } from '@/utils/jwt';
 
 function App() {
   useThemeListener();
+  const queryClient = useQueryClient();
+  const accessToken = useAuthStore((state) => state.accessToken);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -40,6 +45,11 @@ function App() {
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, []);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    void queryClient.invalidateQueries({ queryKey: queryKeys.presentations.lists() });
+  }, [accessToken, queryClient]);
 
   return (
     <>

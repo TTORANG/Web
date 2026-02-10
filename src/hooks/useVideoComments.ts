@@ -147,10 +147,6 @@ export function useVideoComments() {
     deleteCommentStore(commentId);
 
     try {
-      if (targetComment.serverId) {
-        throw new Error('Invalid comment server ID');
-      }
-
       await deleteVideoComment(targetComment.serverId);
       showToast.success('댓글이 삭제되었습니다.');
     } catch {
