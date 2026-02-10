@@ -88,6 +88,7 @@ export const queryKeys = {
   shares: {
     all: ['shares'] as const,
     videos: (projectId: string) => [...queryKeys.shares.all, 'videos', projectId] as const,
+    content: (shareToken: string) => [...queryKeys.shares.all, 'content', shareToken] as const,
   },
   comments: {
     all: ['comments'] as const,
@@ -118,6 +119,8 @@ export const queryKeys = {
         [...queryKeys.reactions.video.all(videoId), 'window', timestampMs, windowMs] as const,
       timeline: (videoId: string, intervalMs = 5000) =>
         [...queryKeys.reactions.video.all(videoId), 'timeline', intervalMs] as const,
+      buckets: (videoId: string, intervalMs = 5000) =>
+        [...queryKeys.reactions.video.all(videoId), 'buckets', intervalMs] as const,
     },
   },
 } as const;

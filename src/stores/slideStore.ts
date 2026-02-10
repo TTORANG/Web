@@ -33,15 +33,16 @@ interface SlideState {
   updateScript: (script: string) => void;
   deleteComment: (id: string) => void;
   updateComment: (id: string, content: string) => void;
-  addReply: (parentId: string, content: string) => void;
+  updateCommentServerId: (localId: string, serverId: string) => void;
+  addReply: (parentId: string, content: string) => Comment | undefined;
   toggleReaction: (type: ReactionType) => void;
-  addComment: (content: string, slideIndex: number) => void;
+  addComment: (content: string, slideIndex: number) => Comment | undefined;
   setComments: (comments: Comment[]) => void;
 }
 
 export const useSlideStore = create<SlideState>()(
   devtools(
-    (set) => ({
+    (set, get) => ({
       slide: null,
 
       reactionHistory: {},
@@ -114,29 +115,42 @@ export const useSlideStore = create<SlideState>()(
         );
       },
 
-      addReply: (parentId, content) => {
+      updateCommentServerId: (localId, serverId) => {
         set(
-          (state) => {
-            if (!state.slide) return state;
-
-            // 항상 최상위 부모 댓글에 답글을 달도록 rootParentId를 찾음
-            const rootParentId = findRootParentId(state.slide.comments ?? [], parentId);
-
-            const { comments } = addReplyToFlat(state.slide.comments ?? [], rootParentId, {
-              content,
-              userId: MOCK_CURRENT_USER.id,
-            });
-
-            return {
-              slide: {
-                ...state.slide,
-                comments,
-              },
-            };
-          },
+          (state) => ({
+            slide: state.slide
+              ? {
+                  ...state.slide,
+                  comments: (state.slide.comments ?? []).map((c) =>
+                    c.commentId === localId ? { ...c, serverId } : c,
+                  ),
+                }
+              : null,
+          }),
           false,
-          'slide/addReply',
+          'slide/updateCommentServerId',
         );
+      },
+
+      addReply: (parentId, content) => {
+        const currentState = get();
+        if (!currentState.slide) return undefined;
+
+        // 항상 최상위 부모 댓글에 답글을 달도록 rootParentId를 찾음
+        const rootParentId = findRootParentId(currentState.slide.comments ?? [], parentId);
+
+        const { comments, newComment } = addReplyToFlat(
+          currentState.slide.comments ?? [],
+          rootParentId,
+          {
+            content,
+            userId: MOCK_CURRENT_USER.id,
+          },
+        );
+
+        set({ slide: { ...currentState.slide, comments } }, false, 'slide/addReply');
+
+        return newComment;
       },
 
       toggleReaction: (type) => {
@@ -203,7 +217,7 @@ export const useSlideStore = create<SlideState>()(
 
       addComment: (content, slideIndex) => {
         const trimmed = content.trim();
-        if (!trimmed) return;
+        if (!trimmed) return undefined;
 
         const newComment = createComment({
           content: trimmed,
@@ -223,6 +237,8 @@ export const useSlideStore = create<SlideState>()(
           false,
           'slide/addComment',
         );
+
+        return newComment;
       },
 
       setComments: (comments) => {

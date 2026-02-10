@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import type { CreateCommentRequestDto } from '@/api';
+import type { CreateCommentResponseDto, CreateReplyCommentResponseDto } from '@/api/dto';
 import {
   createReply,
   createSlideComment,
@@ -82,6 +83,7 @@ export function useSlideCommentsActions() {
   const addReplyStore = useSlideStore((state) => state.addReply);
   const deleteCommentStore = useSlideStore((state) => state.deleteComment);
   const updateCommentStore = useSlideStore((state) => state.updateComment);
+  const updateCommentServerIdStore = useSlideStore((state) => state.updateCommentServerId);
   const setComments = useSlideStore((state) => state.setComments);
 
   const { mutate: createCommentMutate } = useCreateCommentMutation();
@@ -106,12 +108,15 @@ export function useSlideCommentsActions() {
     if (!slideId) return;
 
     const previousComments = flatComments ?? [];
-    addCommentStore(content, currentSlideIndex);
+    const newComment = addCommentStore(content, currentSlideIndex);
 
     createCommentMutate(
       { slideId, projectId, data: { content } },
       {
-        onSuccess: () => {
+        onSuccess: (response: CreateCommentResponseDto) => {
+          if (newComment) {
+            updateCommentServerIdStore(newComment.commentId, response.commentId);
+          }
           queryClient.invalidateQueries({
             queryKey: queryKeys.comments.list(slideId),
           });
@@ -132,12 +137,15 @@ export function useSlideCommentsActions() {
 
     // 최상위 부모에게 답글 달기 (slideStore의 addReply가 rootParentId를 찾음)
     const previousComments = flatComments ?? [];
-    addReplyStore(parentId, content);
+    const newReply = addReplyStore(parentId, content);
 
     createReplyMutate(
       { commentId: targetServerId, slideId: targetSlideId, projectId, data: { content } },
       {
-        onSuccess: () => {
+        onSuccess: (response: CreateReplyCommentResponseDto) => {
+          if (newReply) {
+            updateCommentServerIdStore(newReply.commentId, response.replyId);
+          }
           queryClient.invalidateQueries({
             queryKey: queryKeys.comments.list(targetSlideId),
           });

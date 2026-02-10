@@ -1,78 +1,74 @@
 /**
  * @file useVideoReactions.ts
- * @description 영상 리액션 관리 훅 (이벤트 window 방식)
+ * @description Video reactions logic.
  *
- * Optimistic UI 패턴으로 리액션 토글을 처리합니다.
- * 1. Store 즉시 업데이트 (optimistic)
- * 2. API 비동기 호출
- * 3. 실패 시 rollback (toggleReaction 재호출)
+ * - Count: sum of reactions within current playback time +/- 5000ms.
+ * - Active UI: transient only. It turns on immediately and turns off after 500ms.
+ * - Network: debounce per emoji. Only the last click within 500ms is sent.
  */
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { REACTION_TYPES } from '@/constants/reaction';
-import { FEEDBACK_WINDOW } from '@/constants/video';
+import { REACTION_TYPES, getExclusiveCounterpart } from '@/constants/reaction';
+import { REACTION_COUNT_WINDOW } from '@/constants/video';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Reaction, ReactionType } from '@/types/script';
+import { getStoredReactions, setStoredReaction } from '@/utils/reactionStorage';
 import { showToast } from '@/utils/toast';
-import { getOverlappingFeedbacks } from '@/utils/video';
 
 import { useToggleVideoReaction, useVideoReactionWindow } from './queries/useVideoReactionQueries';
-import { useDebouncedCallback } from './useDebounce';
 
-/**
- * 영상 리액션 관리 훅
- *
- * Optimistic UI 패턴으로 리액션 토글을 처리합니다.
- * Store 즉시 업데이트 → API 호출 → 실패 시 rollback.
- *
- * @returns reactions - 현재 시간 구간의 리액션 목록
- * @returns toggleReaction - 리액션 토글 함수
- */
+const REACTION_DEBOUNCE_MS = 500;
+const QUERY_TIMESTAMP_STEP_MS = 1000; // 몇초 마다 데이터 가져올지
+
 export function useVideoReactions() {
   const video = useVideoFeedbackStore((s) => s.video);
   const currentTime = useVideoFeedbackStore((s) => s.currentTime);
-  const toggleReactionStore = useVideoFeedbackStore((s) => s.toggleReaction);
 
-  const { mutate: toggleReactionApi } = useToggleVideoReaction();
-  const timestampMs = Math.round(currentTime * 1000);
-  const requestTimestampMs = Math.round(timestampMs / 1000) * 1000;
-  const windowMs = 2000;
-  const { data: windowSummary } = useVideoReactionWindow(
+  const currentTimestampMs = Math.round(currentTime * 1000);
+  const queryTimestampMs =
+    Math.round(currentTimestampMs / QUERY_TIMESTAMP_STEP_MS) * QUERY_TIMESTAMP_STEP_MS;
+  const queryWindowMs = REACTION_COUNT_WINDOW * 1000;
+
+  const { data: windowReactions } = useVideoReactionWindow(
     video?.videoId,
-    requestTimestampMs,
-    windowMs,
+    video ? queryTimestampMs : undefined,
+    queryWindowMs,
   );
+  const { mutate: toggleReactionApi } = useToggleVideoReaction();
+
+  const [optimisticDeltas, setOptimisticDeltas] = useState<Partial<Record<ReactionType, number>>>(
+    {},
+  );
+  const [transientActives, setTransientActives] = useState<Partial<Record<ReactionType, boolean>>>(
+    {},
+  );
+
+  const pendingDebounceTypes = useRef(new Set<ReactionType>());
+  const pendingApiCount = useRef(0);
+  const debounceTimers = useRef<Partial<Record<ReactionType, ReturnType<typeof setTimeout>>>>({});
+  const debounceBaselineActives = useRef<Partial<Record<ReactionType, boolean>>>({});
+  const activeTimers = useRef<Partial<Record<ReactionType, ReturnType<typeof setTimeout>>>>({});
+
+  useEffect(() => {
+    const debounceTimerMap = debounceTimers.current;
+    const activeTimerMap = activeTimers.current;
+
+    return () => {
+      Object.values(debounceTimerMap).forEach((timer) => {
+        if (timer) clearTimeout(timer);
+      });
+      Object.values(activeTimerMap).forEach((timer) => {
+        if (timer) clearTimeout(timer);
+      });
+    };
+  }, []);
 
   const reactions: Reaction[] = useMemo(() => {
     if (!video) {
       return REACTION_TYPES.map((type) => ({ type, count: 0, active: false }));
     }
 
-    // 현재 시간과 겹치는 모든 feedbacks 찾기 (±FEEDBACK_WINDOW 범위)
-    const overlappingFeedbacks = getOverlappingFeedbacks(
-      video.feedbacks,
-      currentTime,
-      FEEDBACK_WINDOW,
-    );
-    const closestFeedback =
-      overlappingFeedbacks.length > 0
-        ? overlappingFeedbacks.reduce((closest, current) => {
-            return Math.abs(current.timestampMs - currentTime * 1000) <
-              Math.abs(closest.timestampMs - currentTime * 1000)
-              ? current
-              : closest;
-          })
-        : null;
-
-    const activeMap: Record<ReactionType, boolean> = REACTION_TYPES.reduce(
-      (acc, type) => {
-        acc[type] = closestFeedback?.reactions.find((r) => r.type === type)?.active ?? false;
-        return acc;
-      },
-      {} as Record<ReactionType, boolean>,
-    );
-
-    const countMap: Record<ReactionType, number> = REACTION_TYPES.reduce(
+    const serverCountMap = REACTION_TYPES.reduce(
       (acc, type) => {
         acc[type] = 0;
         return acc;
@@ -80,35 +76,82 @@ export function useVideoReactions() {
       {} as Record<ReactionType, number>,
     );
 
-    if (windowSummary) {
-      windowSummary.forEach((item) => {
-        countMap[item.emojiType] = item.count;
-      });
-    } else if (overlappingFeedbacks.length > 0) {
-      // fallback: 로컬 store 기반 합산
-      REACTION_TYPES.forEach((type) => {
-        countMap[type] = overlappingFeedbacks.reduce((sum, feedback) => {
-          const reaction = feedback.reactions.find((r) => r.type === type);
-          return sum + (reaction?.count || 0);
-        }, 0);
-      });
-    }
+    windowReactions?.forEach((item) => {
+      serverCountMap[item.emojiType] = item.count;
+    });
 
     return REACTION_TYPES.map((type) => ({
       type,
-      count: countMap[type],
-      active: activeMap[type],
+      count: Math.max(0, serverCountMap[type] + (optimisticDeltas[type] || 0)),
+      active: transientActives[type] ?? false,
     }));
-  }, [video, currentTime, windowSummary]);
+  }, [video, windowReactions, optimisticDeltas, transientActives]);
 
-  /**
-   * API 호출 함수 (debounce 적용됨)
-   * - 500ms 내 같은 리액션 연타 시 마지막 클릭만 서버에 전송
-   * - 정확한 timestampMs를 서버에 전송 (segmentation은 백엔드에서 처리)
-   */
-  const callToggleReactionApi = useDebouncedCallback(
-    (type: ReactionType, timestampMs: number) => {
-      if (!video) return;
+  const toggleReaction = (type: ReactionType) => {
+    if (!video) return;
+
+    const timestampMs = Math.round(currentTime * 1000);
+    const storedActive = getStoredReactions(video.videoId);
+    const wasActive = storedActive[type];
+    const newActive = !wasActive;
+
+    const counterpart = getExclusiveCounterpart(type);
+    const counterpartWasActive = counterpart ? storedActive[counterpart] : false;
+
+    setTransientActives((prev) => {
+      const next = { ...prev, [type]: true };
+      if (counterpart) {
+        next[counterpart] = false;
+      }
+      return next;
+    });
+
+    if (activeTimers.current[type]) {
+      clearTimeout(activeTimers.current[type]);
+    }
+    activeTimers.current[type] = setTimeout(() => {
+      setTransientActives((prev) => ({ ...prev, [type]: false }));
+    }, REACTION_DEBOUNCE_MS);
+
+    setOptimisticDeltas((prev) => {
+      const next = {
+        ...prev,
+        [type]: (prev[type] || 0) + (wasActive ? -1 : 1),
+      };
+      if (newActive && counterpart && counterpartWasActive) {
+        next[counterpart] = (prev[counterpart] || 0) - 1;
+      }
+      return next;
+    });
+
+    setStoredReaction(video.videoId, type, newActive);
+
+    if (debounceTimers.current[type]) {
+      clearTimeout(debounceTimers.current[type]);
+    }
+    if (!pendingDebounceTypes.current.has(type)) {
+      debounceBaselineActives.current[type] = wasActive;
+    }
+    pendingDebounceTypes.current.add(type);
+
+    debounceTimers.current[type] = setTimeout(() => {
+      pendingDebounceTypes.current.delete(type);
+
+      const latestStored = getStoredReactions(video.videoId);
+      const latestDesiredActive = latestStored[type];
+      const baselineActive = debounceBaselineActives.current[type];
+      delete debounceBaselineActives.current[type];
+
+      // 클릭 버스트 후 최종 상태가 처음과 같으면 POST 스킵
+      if (baselineActive !== undefined && latestDesiredActive === baselineActive) {
+        const hasPending = pendingDebounceTypes.current.size > 0 || pendingApiCount.current > 0;
+        if (!hasPending) {
+          setOptimisticDeltas({});
+        }
+        return;
+      }
+
+      pendingApiCount.current += 1;
 
       toggleReactionApi(
         {
@@ -119,31 +162,35 @@ export function useVideoReactions() {
           },
         },
         {
-          onSuccess: () => {},
+          onSettled: () => {
+            pendingApiCount.current -= 1;
+            const hasPending = pendingDebounceTypes.current.size > 0 || pendingApiCount.current > 0;
+            if (!hasPending) {
+              setOptimisticDeltas({});
+            }
+          },
           onError: () => {
             showToast.error('반응을 반영하지 못했습니다.');
-            // 롤백: Store 상태 되돌리기
-            toggleReactionStore(type);
+
+            setStoredReaction(video.videoId, type, wasActive);
+            if (counterpart && counterpartWasActive) {
+              setStoredReaction(video.videoId, counterpart, true);
+            }
+
+            setOptimisticDeltas((prev) => {
+              const next = {
+                ...prev,
+                [type]: (prev[type] || 0) + (wasActive ? 1 : -1),
+              };
+              if (counterpart && counterpartWasActive) {
+                next[counterpart] = (prev[counterpart] || 0) + 1;
+              }
+              return next;
+            });
           },
         },
       );
-    },
-    500, // 500ms debounce
-  );
-
-  const toggleReaction = (type: ReactionType) => {
-    if (!video) {
-      return;
-    }
-
-    // 정확한 타임스탬프: 현재 재생 시간의 밀리초 값 (예: 3.567s → 3567ms)
-    const timestampMs = Math.round(currentTime * 1000);
-
-    // 1. Store 즉시 업데이트 (Optimistic UI - 사용자는 즉시 반응 봄)
-    toggleReactionStore(type);
-
-    // 2. API 호출은 debounce 처리 (500ms 내 연타하면 마지막만 전송)
-    callToggleReactionApi(type, timestampMs);
+    }, REACTION_DEBOUNCE_MS);
   };
 
   return { reactions, toggleReaction };
