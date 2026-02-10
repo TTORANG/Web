@@ -33,10 +33,12 @@ export type {
 } from './reactions.dto';
 export type { RestoreScriptRequestDto } from './analytics.dto';
 export type {
-  DeleteProjectResponseDto,
+  CreatePresentationRequestDto,
+  CreatePresentationResponseDto,
   GetPresentationsRequestDto,
-  UpdateProjectRequestDto,
-  UpdateProjectResponseDto,
+  GetPresentationsResponseDto,
+  UpdatePresentationRequestDto,
+  DeletePresentationResponseDto,
 } from './presentations.dto';
 // export type { UploadFileResponseDto } from './files.dto';
 export type {

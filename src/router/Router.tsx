@@ -83,13 +83,13 @@ export const router = createBrowserRouter([
     path: '/:projectId/video/record',
     element: <VideoRecordPage />,
   },
-  // {
-  //   path: '/feedback/video/:projectId',
-  //   element: (
-  //     <Layout theme="dark" left={<FeedbackHeaderLeft />} center={<FeedbackHeaderCenter />} />
-  //   ),
-  //   children: [{ index: true, element: <FdVideoPage /> }],
-  // },
+  {
+    path: '/feedback/video/:projectId',
+    element: (
+      <Layout theme="dark" left={<FeedbackHeaderLeft />} center={<FeedbackHeaderCenter />} />
+    ),
+    children: [{ index: true, element: <FeedbackVideoPage /> }],
+  },
 
   {
     path: '/share/:shareToken',

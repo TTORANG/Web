@@ -25,6 +25,8 @@ export default function IntroSection({
   onFileSelected,
   isEmpty,
 }: IntroSectionProps) {
+  const isUploading = currentStep === 'uploading' || currentStep === 'finishing';
+
   return (
     <section
       className={clsx(
@@ -42,7 +44,7 @@ export default function IntroSection({
 
       {/* Dropzone */}
       <FileDropzone
-        disabled={disabled}
+        disabled={disabled && !isUploading}
         accept={accept}
         currentStep={currentStep}
         progress={progress}

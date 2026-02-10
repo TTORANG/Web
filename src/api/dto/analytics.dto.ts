@@ -5,6 +5,44 @@ export interface RestoreScriptRequestDto {
   version: number;
 }
 
+/**
+ * 분석 이벤트 기록 공통 응답 DTO  - ok: true가 고정임
+ */
+export interface RecordAnalyticsEventResponseDto {
+  ok: true;
+}
+
+/**
+ * 페이지 조회 기록 요청 DTO
+ */
+export interface RecordPageViewRequestDto {
+  shareToken: string;
+}
+
+/**
+ * 영상 이벤트 타입
+ */
+export type VideoEventType = 'play' | 'pause' | 'seek';
+
+/**
+ * 영상 이벤트 기록 요청 DTO
+ */
+export interface RecordVideoEventRequestDto {
+  videoId: number;
+  eventType: VideoEventType;
+  timestampMs: number;
+}
+
+/**
+ * 이탈 지점 기록 요청 DTO
+ */
+export interface RecordExitRequestDto {
+  shareToken: string;
+  lastSlideId?: number;
+  lastVideoId?: number;
+  lastVideoTimeMs?: number;
+}
+
 //위 형식대로 response, request dto 작성 부탁드립니다.
 
 /**
@@ -148,4 +186,49 @@ export interface RecentCommentSlideDto {
   slideNum: number;
   title: string;
   imageUrl: string;
+}
+
+/**
+ * recordExit 요청 타입
+ */
+export interface RecordExitRequestDto {
+  shareToken: string;
+  lastSlideId?: number;
+  lastVideoId?: number;
+  lastVideoTimeMs?: number;
+}
+
+/**
+ * recordExit 응답 타입
+ */
+export interface RecordExitResponseDto {
+  ok: boolean;
+}
+
+/**
+ * page-view 요청 타입
+ */
+export interface RecordPageViewRequestDto {
+  shareToken: string;
+}
+
+/**
+ * page-view 응답 타입
+ */
+export interface RecordPageViewResponseDto {
+  ok: boolean;
+}
+
+/**
+ * slide-view 요청 타입
+ */
+export interface RecordSlideViewRequestDto {
+  slideId: number;
+}
+
+/**
+ * slide-view 응답 타입
+ */
+export interface RecordSlideViewResponseDto {
+  ok: boolean;
 }
