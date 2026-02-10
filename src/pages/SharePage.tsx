@@ -32,7 +32,7 @@ export default function SharePage() {
     );
   }
 
-  const scope = data.shareInfo?.scope;
+  const scope = data.shareInfo.scope;
 
   if (scope === 'slides_script') {
     //return <FeedbackSlidePage sharedSlides={data.projectContent.slides} />; // 샌디 슬라이드페이지

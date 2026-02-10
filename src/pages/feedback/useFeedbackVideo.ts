@@ -76,7 +76,7 @@ function normalizeSharedSlides(rawSlides: SharedProjectSlide[]): SlideDetail[] {
         imageUrl: toPublicUrl(slide.imageUrl),
         createdAt: now,
         updatedAt: now,
-        script: slide.scriptText ?? '',
+        script: slide.scriptText,
       };
     })
     .sort((a, b) => a.slideNum - b.slideNum);
@@ -151,8 +151,8 @@ function mapSharedCommentsToFeedbacks(
     const timestampMs = normalizeTimestampMs(sharedComment.timestampMs);
     const fallbackId = `shared-comment-${timestampMs}-${index}`;
     const commentId = sharedComment.commentId || fallbackId;
-    const parentId = sharedComment.parentCommentId || undefined;
-    const userId = sharedComment.writer?.trim() || 'unknown';
+    const parentId = sharedComment.parentId ?? undefined;
+    const userId = sharedComment.writer.trim() || 'unknown';
 
     const mappedComment: Comment = {
       commentId,
@@ -161,8 +161,8 @@ function mapSharedCommentsToFeedbacks(
       isReply: Boolean(parentId),
       replies: parentId ? undefined : [],
       userId,
-      content: sharedComment.content ?? '',
-      createdAt: sharedComment.createdAt ?? new Date().toISOString(),
+      content: sharedComment.content,
+      createdAt: sharedComment.createdAt,
       isMine:
         (Boolean(currentUserId) && userId === currentUserId) ||
         (Boolean(currentUserName) && userId === currentUserName),
@@ -251,19 +251,19 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
       const sessionId = user?.sessionId;
 
       if (!sessionId) {
-        const accessToken = content.sessionInfo?.tokens?.accessToken;
-        const refreshToken = content.sessionInfo?.tokens?.refreshToken;
-        const anonymousSessionId = content.sessionInfo?.sessionId;
+        const accessToken = content.sessionInfo.tokens.accessToken;
+        const refreshToken = content.sessionInfo.tokens.refreshToken;
+        const anonymousSessionId = content.sessionInfo.sessionId;
         if (accessToken && refreshToken) {
           useAuthStore.getState().anonymous(accessToken, refreshToken, anonymousSessionId);
           ({ user } = useAuthStore.getState());
         }
       }
 
-      const sharedSlides = normalizeSharedSlides(content.projectContent?.slides ?? []);
-      const sharedComments = content.projectContent?.comments ?? [];
+      const sharedSlides = normalizeSharedSlides(content.projectContent.slides);
+      const sharedComments = content.projectContent.comments;
       const sharedFeedbacks = mapSharedCommentsToFeedbacks(sharedComments, user?.id, user?.name);
-      const fallbackTimelineSlides = (content.projectContent?.slides ?? [])
+      const fallbackTimelineSlides = content.projectContent.slides
         .filter(
           (slide) =>
             typeof slide.timestampMs === 'number' &&
@@ -275,10 +275,10 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
           timestampMs: normalizeTimestampMs(slide.timestampMs),
         }));
 
-      const videoId = content.projectContent?.video?.videoId ?? '';
+      const videoId = content.projectContent.video?.videoId ?? '';
       const normalizedVideoId = String(videoId || DEFAULT_VIDEO_ID);
-      let videoUrl = toPlayableVideoUrl(content.projectContent?.video?.videoUrl);
-      let videoTitle = content.projectContent?.title ?? '공유 영상';
+      let videoUrl = toPlayableVideoUrl(content.projectContent.video?.videoUrl);
+      let videoTitle = content.projectContent.title || '공유 영상';
       let duration = FALLBACK_VIDEO_DURATION_SECONDS;
       let timelineSlides: Array<{ slideId: string; timestampMs: number }> = fallbackTimelineSlides;
 
@@ -327,9 +327,7 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
     };
 
     const loadFromShareToken = async () => {
-      const { user } = useAuthStore.getState();
-      const sessionId = user?.sessionId;
-      const content = await getSharedContent(shareToken, sessionId);
+      const content = await getSharedContent(shareToken);
       if (cancelled) return;
       await loadFromSharedContent(content);
     };
