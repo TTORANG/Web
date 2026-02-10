@@ -1,6 +1,10 @@
 import { useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
+import { useQuery } from '@tanstack/react-query';
+
+import { getConversionStatus } from '@/api/endpoints/presentations';
+import { queryKeys } from '@/api/queryClient';
 import { SlideList, SlideWorkspace } from '@/components/slide';
 import { setLastSlideId } from '@/constants/navigation';
 import { useSlides } from '@/hooks/queries/useSlides';
@@ -11,9 +15,19 @@ export default function SlidePage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const { data: slides, isLoading, isError } = useSlides(projectId ?? '');
+  const { data: conversionStatus } = useQuery({
+    queryKey: queryKeys.presentations.detail(`${projectId ?? ''}:status`),
+    queryFn: () => getConversionStatus(projectId ?? ''),
+    enabled: !!projectId,
+    refetchInterval: 2000,
+  });
 
   const slideIdParam = searchParams.get('slideId');
   const currentSlide = slides?.find((s) => s.slideId === slideIdParam) ?? slides?.[0];
+
+  const isConverting =
+    conversionStatus?.status === 'queued' || conversionStatus?.status === 'processing';
+  const showSkeleton = isLoading || (!slides?.length && isConverting);
 
   /**
    * 슬라이드 로드 에러 처리
@@ -52,10 +66,14 @@ export default function SlidePage() {
   return (
     <div className="h-full bg-gray-100">
       <div className="flex h-full gap-12 pl-14 pr-20 pt-6">
-        <SlideList slides={slides} currentSlideId={currentSlide?.slideId} isLoading={isLoading} />
+        <SlideList
+          slides={slides}
+          currentSlideId={currentSlide?.slideId}
+          isLoading={showSkeleton}
+        />
 
         <main className="flex-1 h-full min-w-0 overflow-hidden">
-          <SlideWorkspace slide={currentSlide} isLoading={isLoading} />
+          <SlideWorkspace slide={currentSlide} isLoading={showSkeleton} />
         </main>
       </div>
     </div>
