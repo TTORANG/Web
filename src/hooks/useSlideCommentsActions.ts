@@ -93,7 +93,13 @@ export function useSlideCommentsActions() {
 
   const comments = useMemo(() => {
     if (!flatComments) return EMPTY_COMMENTS;
-    return flatToTree(flatComments);
+    const sorted = [...flatComments].sort((a, b) => {
+      const at = Date.parse(a.createdAt);
+      const bt = Date.parse(b.createdAt);
+      if (Number.isNaN(at) || Number.isNaN(bt)) return 0;
+      return at - bt; // 시간순(오래된 -> 최신)
+    });
+    return flatToTree(sorted);
   }, [flatComments]);
 
   const addComment = (content: string, currentSlideIndex: number) => {
