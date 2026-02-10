@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import clsx from 'clsx';
@@ -15,7 +14,7 @@ import type { Presentation } from '@/types/presentation';
 import type { VideoPresentation } from '@/types/video';
 import { formatRelativeTime } from '@/utils/format';
 
-import { Dropdown, Skeleton } from '../common';
+import { Dropdown } from '../common';
 import type { DropdownItem } from '../common/Dropdown';
 import { HighlightText } from '../common/HighlightText';
 import DeletePresentationModal from './DeletePresentationModal';
@@ -88,7 +87,6 @@ function PresentationCard(props: Props) {
   } = props;
 
   const navigate = useNavigate();
-  const [isThumbLoaded, setIsThumbLoaded] = useState(false);
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
     usePresentationDeletion(projectId);
 
@@ -134,39 +132,13 @@ function PresentationCard(props: Props) {
         onClick={handleCardClick}
         className="rounded-2xl border-none bg-white transition-shadow cursor-pointer hover:shadow-lg"
       >
-        <div className="relative aspect-video w-full overflow-hidden rounded-t-2xl bg-gray-200">
-          {thumbnailUrl ? (
-            <>
-              {!isThumbLoaded && (
-                <div className="absolute inset-0">
-                  <Skeleton
-                    width="100%"
-                    height="100%"
-                    rounded="16px"
-                    className="bg-gray-200/70 animate-[pulse_3s_ease-in-out_infinite]"
-                  />
-                </div>
-              )}
-              <img
-                className={clsx(
-                  'h-full w-full object-contain outline-none transition-opacity',
-                  isThumbLoaded ? 'opacity-100' : 'opacity-0',
-                )}
-                src={thumbnailUrl}
-                alt={`${displayTitle}`}
-                onLoad={() => setIsThumbLoaded(true)}
-                onError={() => setIsThumbLoaded(false)}
-              />
-            </>
-          ) : (
-            <div className="absolute inset-0">
-              <Skeleton
-                width="100%"
-                height="100%"
-                rounded="16px"
-                className="bg-gray-200/70 animate-[pulse_3s_ease-in-out_infinite]"
-              />
-            </div>
+        <div className="aspect-video w-full overflow-hidden rounded-t-2xl bg-gray-200">
+          {thumbnailUrl && (
+            <img
+              className="h-full w-full object-contain outline-none"
+              src={thumbnailUrl}
+              alt={`${displayTitle}`}
+            />
           )}
         </div>
 

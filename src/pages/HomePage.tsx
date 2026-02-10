@@ -3,7 +3,6 @@ import { useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { queryKeys } from '@/api';
-import { getConversionStatus } from '@/api/endpoints/presentations';
 import IntroSection from '@/components/home/IntroSection';
 import PresentationsSection from '@/components/home/PresentationsSection';
 import { usePresentations, usePresentationsWithFilters } from '@/hooks/queries/usePresentations';
@@ -23,33 +22,6 @@ export default function HomePage() {
   const { uploadFile, cancelUpload, isUploading, progress, error } = useUploadFile();
   const accessToken = useAuthStore((state) => state.accessToken);
   const isLoggedIn = Boolean(accessToken);
-  const pollThumbnail = async (projectId: string) => {
-    const MAX_ATTEMPTS = 30;
-    const DELAY_MS = 2000;
-
-    for (let i = 0; i < MAX_ATTEMPTS; i += 1) {
-      try {
-        const status = await getConversionStatus(projectId);
-        const thumbDone =
-          status?.progress?.thumbnail === 'completed' ||
-          status?.status === 'completed' ||
-          status?.status === 'partial_done';
-
-        if (thumbDone) {
-          void queryClient.invalidateQueries({ queryKey: queryKeys.presentations.lists() });
-          return;
-        }
-
-        if (status?.status === 'failed') {
-          return;
-        }
-      } catch {
-        // 네트워크 일시 오류는 다음 폴링에서 재시도
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
-    }
-  };
 
   const onFileSelected = async (file: File) => {
     const response = await uploadFile({ file, title: file.name });
@@ -57,7 +29,6 @@ export default function HomePage() {
     if (response?.resultType === 'SUCCESS') {
       showToast.success('업로드 완료!');
       void queryClient.invalidateQueries({ queryKey: queryKeys.presentations.lists() });
-      void pollThumbnail(response.success.projectId);
       //const projectId = response.success.projectId;
       //navigate(`/presentations/${projectId}`);
     }

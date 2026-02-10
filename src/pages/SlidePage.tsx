@@ -1,14 +1,10 @@
 import { useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
-import { useQuery } from '@tanstack/react-query';
-import { isAxiosError } from 'axios';
-
-import { getConversionStatus } from '@/api/endpoints/presentations';
-import { queryKeys } from '@/api/queryClient';
 import { SlideList, SlideWorkspace } from '@/components/slide';
 import { setLastSlideId } from '@/constants/navigation';
 import { useSlides } from '@/hooks/queries/useSlides';
+import { useSlideWebSocket } from '@/hooks/useSlideWebSocket';
 import { showToast } from '@/utils/toast';
 
 export default function SlidePage() {
@@ -16,26 +12,15 @@ export default function SlidePage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const { data: slides, isLoading, isError } = useSlides(projectId ?? '');
-  const { data: conversionStatus } = useQuery({
-    queryKey: queryKeys.presentations.detail(`${projectId ?? ''}:status`),
-    queryFn: () => getConversionStatus(projectId ?? ''),
-    enabled: !!projectId,
-    retry: false,
-    refetchInterval: (query) => {
-      const error = query.state.error;
-      if (isAxiosError(error) && error.response?.status === 401) {
-        return false;
-      }
-      return 2000;
-    },
-  });
 
   const slideIdParam = searchParams.get('slideId');
   const currentSlide = slides?.find((s) => s.slideId === slideIdParam) ?? slides?.[0];
 
-  const isConverting =
-    conversionStatus?.status === 'queued' || conversionStatus?.status === 'processing';
-  const showSkeleton = isLoading || (!slides?.length && isConverting);
+  useSlideWebSocket({
+    projectId: projectId ?? '',
+    slideId: currentSlide?.slideId,
+    enabled: !!projectId,
+  });
 
   /**
    * 슬라이드 로드 에러 처리
@@ -74,14 +59,10 @@ export default function SlidePage() {
   return (
     <div className="h-full bg-gray-100">
       <div className="flex h-full gap-12 pl-14 pr-20 pt-6">
-        <SlideList
-          slides={slides}
-          currentSlideId={currentSlide?.slideId}
-          isLoading={showSkeleton}
-        />
+        <SlideList slides={slides} currentSlideId={currentSlide?.slideId} isLoading={isLoading} />
 
         <main className="flex-1 h-full min-w-0 overflow-hidden">
-          <SlideWorkspace slide={currentSlide} isLoading={showSkeleton} />
+          <SlideWorkspace slide={currentSlide} isLoading={isLoading} />
         </main>
       </div>
     </div>
