@@ -7,22 +7,27 @@
  */
 import { useState } from 'react';
 
+import { useQueryClient } from '@tanstack/react-query';
+
 import { apiClient } from '@/api/client';
 import LoginIcon from '@/assets/icons/icon-login.svg?react';
 import LogoutIcon from '@/assets/icons/icon-logout.svg?react';
 import { Dropdown } from '@/components/common/Dropdown';
 import { Modal } from '@/components/common/Modal';
 import { useAuthStore } from '@/stores/authStore';
+import { useHomeStore } from '@/stores/homeStore';
 import { isAnonymousEmail } from '@/utils/auth';
 import { showToast } from '@/utils/toast';
 
 import { HeaderButton } from './HeaderButton';
 
 export function LoginButton() {
+  const queryClient = useQueryClient();
   const accessToken = useAuthStore((s) => s.accessToken);
   const user = useAuthStore((s) => s.user);
   const openLoginModal = useAuthStore((s) => s.openLoginModal);
   const logout = useAuthStore((s) => s.logout);
+  const resetHome = useHomeStore((s) => s.reset);
 
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
@@ -31,6 +36,13 @@ export function LoginButton() {
   const isAnon = accessToken && isAnonymousEmail(user?.email);
   const isSocial = accessToken && user?.email && !isAnonymousEmail(user.email);
 
+  const handleLogout = () => {
+    logout();
+    queryClient.clear();
+    resetHome();
+    showToast.success('로그아웃 완료');
+    window.scrollTo({ top: 0 });
+  };
   // 로그인 전 (게스트)
   if (isGuest) {
     return <HeaderButton text="로그인" icon={<LoginIcon />} onClick={openLoginModal} />;
@@ -57,7 +69,7 @@ export function LoginButton() {
     setIsWithdrawing(true);
     try {
       await apiClient.delete(`/users/${user.id}`);
-      logout();
+      handleLogout();
       setIsWithdrawModalOpen(false);
       showToast.success('회원 탈퇴가 완료되었습니다.');
     } catch {
@@ -70,6 +82,7 @@ export function LoginButton() {
   return (
     <>
       <Dropdown
+        key={`${accessToken ?? 'guest'}-${user?.id ?? 'nouser'}`}
         position="bottom"
         align="end"
         ariaLabel="사용자 메뉴"
@@ -99,7 +112,7 @@ export function LoginButton() {
                 <LogoutIcon className="size-6" />
               </span>
             ),
-            onClick: logout,
+            onClick: handleLogout,
             variant: 'danger',
           },
           {
