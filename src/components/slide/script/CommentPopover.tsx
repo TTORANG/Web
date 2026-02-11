@@ -3,16 +3,14 @@
  * @description 의견 목록 팝오버
  *
  * 대본에 대한 팀원들의 의견을 보여주고, 답글을 달 수 있습니다.
- * useSlideCommentsActions 훅을 통해 API와 동기화합니다.
+ * 무한 스크롤로 다음 페이지를 로드합니다.
  */
-import { useCallback, useMemo, useState } from 'react';
-
 import clsx from 'clsx';
 
-import Comment from '@/components/comment/Comment';
-import { CommentProvider } from '@/components/comment/CommentContext';
+import CommentList from '@/components/comment/CommentList';
 import { Popover, Skeleton } from '@/components/common';
-import { useSlideComments } from '@/hooks';
+import { useSlideComments, useSlideId } from '@/hooks';
+import { useSlideCommentsInfiniteQuery } from '@/hooks/queries/useSlideCommentsQuery';
 import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
 
 interface CommentPopoverProps {
@@ -20,6 +18,7 @@ interface CommentPopoverProps {
 }
 
 export default function CommentPopover({ isLoading }: CommentPopoverProps) {
+  const slideId = useSlideId();
   const slideComments = useSlideComments();
   const {
     comments: treeComments,
@@ -27,85 +26,12 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
     deleteComment,
     updateComment,
   } = useSlideCommentsActions();
-
-  const [replyingToId, setReplyingToId] = useState<string | null>(null);
-  const [replyDraft, setReplyDraft] = useState('');
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState('');
-
-  const submitReply = useCallback(
-    (targetId: string) => {
-      if (replyDraft.trim()) {
-        addReply(targetId, replyDraft);
-      }
-      setReplyingToId(null);
-      setReplyDraft('');
-    },
-    [replyDraft, addReply],
-  );
-
-  const toggleReply = useCallback((targetId: string) => {
-    setReplyingToId((prev) => (prev === targetId ? null : targetId));
-    setReplyDraft('');
-  }, []);
-
-  const cancelReply = useCallback(() => {
-    setReplyingToId(null);
-    setReplyDraft('');
-  }, []);
-
-  const startEdit = useCallback((id: string, currentContent: string) => {
-    setEditingId(id);
-    setEditDraft(currentContent);
-  }, []);
-
-  const cancelEdit = useCallback(() => {
-    setEditingId(null);
-    setEditDraft('');
-  }, []);
-
-  const submitEdit = useCallback(
-    (id: string) => {
-      if (editDraft.trim()) {
-        updateComment(id, editDraft.trim());
-      }
-      setEditingId(null);
-      setEditDraft('');
-    },
-    [editDraft, updateComment],
-  );
-
-  const contextValue = useMemo(
-    () => ({
-      replyingToId,
-      replyDraft,
-      setReplyDraft,
-      toggleReply,
-      submitReply,
-      cancelReply,
-      deleteComment,
-      editingId,
-      editDraft,
-      setEditDraft,
-      startEdit,
-      cancelEdit,
-      submitEdit,
-      goToRef: () => {}, // 슬라이드 페이지에서는 ref 이동 불필요
-    }),
-    [
-      replyingToId,
-      replyDraft,
-      toggleReply,
-      submitReply,
-      cancelReply,
-      deleteComment,
-      editingId,
-      editDraft,
-      startEdit,
-      cancelEdit,
-      submitEdit,
-    ],
-  );
+  const {
+    isLoading: isCommentsLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useSlideCommentsInfiniteQuery(slideId);
 
   return (
     <Popover
@@ -154,13 +80,21 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
       </div>
 
       {/* 의견 목록 */}
-      <CommentProvider value={contextValue}>
-        <div className="h-80 overflow-y-auto">
-          {treeComments.map((comment) => (
-            <Comment key={comment.commentId} comment={comment} />
-          ))}
-        </div>
-      </CommentProvider>
+      <div className="h-80">
+        <CommentList
+          comments={treeComments}
+          onAddReply={addReply}
+          onGoToRef={() => {}}
+          onDeleteComment={deleteComment}
+          onUpdateComment={updateComment}
+          isLoading={isLoading || isCommentsLoading}
+          hasNextPage={Boolean(hasNextPage)}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={() => {
+            void fetchNextPage();
+          }}
+        />
+      </div>
     </Popover>
   );
 }
