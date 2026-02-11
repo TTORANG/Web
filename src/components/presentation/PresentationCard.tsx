@@ -153,8 +153,6 @@ function PresentationCard(props: Props) {
                 <p className="mt-1 text-body-s text-gray-400">{formatRelativeTime(updatedAt)}</p>
               </div>
 
-              {/* ✅ 여기가 핵심: Dropdown 자체를 감싸는 div에서 stopPropagation을 겁니다. */}
-              {/* mousedown을 쓰는 이유는 클릭 이벤트보다 먼저 발생하여 확실히 차단하기 위함입니다. */}
               <div
                 className="shrink-0 mt-1"
                 onClick={(e) => e.stopPropagation()}
@@ -185,7 +183,7 @@ function PresentationCard(props: Props) {
               {minutes !== null && (
                 <div className="gap-1 flex items-center">
                   <RecentIcon className="w-4 h-4" />
-                  <span>{minutes} 분</span>
+                  <span className="ml-1">{minutes} 분</span>
                 </div>
               )}
               <div className="flex items-center">
