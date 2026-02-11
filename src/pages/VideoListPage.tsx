@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { toast } from 'sonner';
+
 import { CardView, ListView } from '@/components/common';
 import PresentationCard from '@/components/presentation/PresentationCard';
 import PresentationHeader from '@/components/presentation/PresentationHeader';
@@ -60,6 +62,22 @@ export default function VideoListPage() {
     navigate(`/${projectId}/video/record`);
   };
 
+  const handleVideoClick = (videoId: string, status: string) => {
+    if (status === 'processing') {
+      toast.info('영상을 처리 중입니다', {
+        description: '잠시만 기다려주세요. 처리가 완료되면 확인하실 수 있습니다.',
+      });
+      return;
+    }
+
+    if (status === 'failed') {
+      toast.error('영상 처리에 실패했습니다');
+      return;
+    }
+
+    navigate(`/${projectId}/videos/${videoId}`);
+  };
+
   if (!projectId) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -100,7 +118,6 @@ export default function VideoListPage() {
       aria-labelledby="tab-video"
       className="relative h-full w-full overflow-y-auto bg-gray-100"
     >
-      {/* 업로드 성공 토스트 */}
       {showSuccessToast && (
         <div className="fixed right-4 top-4 z-50 flex animate-slide-in items-center gap-2 rounded-lg bg-success px-6 py-3 shadow-lg">
           <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -114,20 +131,17 @@ export default function VideoListPage() {
         </div>
       )}
 
-      {/* 메인 컨텐츠 */}
       {!isLoading && totalCount === 0 && !hasAppliedQuery ? (
         <div className="flex h-full items-center justify-center">
           <RecordingEmptySection onStart={handleStartRecording} />
         </div>
       ) : (
         <main className="flex h-full flex-col px-18 py-8">
-          {/* 헤더 */}
           <div className="mb-6">
             <h1 className="text-body-l-bold text-gray-800 mb-1">녹화된 영상</h1>
             <p className="text-body-s text-gray-600">발표 연습 영상을 선택해서 확인하세요</p>
           </div>
 
-          {/* 영상 녹화하기 버튼 */}
           <div className="mb-4 flex justify-end">
             <button
               onClick={handleStartRecording}
@@ -138,7 +152,6 @@ export default function VideoListPage() {
             </button>
           </div>
 
-          {/* 검색/필터 헤더 */}
           <div className="mb-4">
             <PresentationHeader
               value={query}
@@ -152,7 +165,6 @@ export default function VideoListPage() {
             />
           </div>
 
-          {/* 콘텐츠 영역 */}
           <section className="flex-1">
             {isLoading || isDebouncing ? (
               viewMode === 'card' ? (
@@ -183,7 +195,28 @@ export default function VideoListPage() {
                     items={videos}
                     getKey={(item) => item.videoId?.toString() || ''}
                     className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-3"
-                    renderCard={(item) => <PresentationCard {...item} mode="videos" />}
+                    renderCard={(item) => {
+                      const isProcessing = item.status === 'processing';
+                      return (
+                        <div
+                          className="relative cursor-pointer"
+                          onClick={() =>
+                            handleVideoClick(item.videoId?.toString() || '', item.status)
+                          }
+                        >
+                          <PresentationCard {...item} mode="videos" />
+                          {isProcessing && (
+                            <div className="absolute inset-0 bg-black/70 rounded-2xl flex items-center justify-center z-10">
+                              <div className="text-center">
+                                <div className="h-10 w-10 animate-spin rounded-full border-4 border-white border-t-transparent mx-auto mb-3" />
+                                <p className="text-white text-sm font-bold">처리 중</p>
+                                <p className="text-white/80 text-xs mt-1">잠시만 기다려주세요</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }}
                     empty={null}
                   />
                 ) : (
@@ -191,7 +224,16 @@ export default function VideoListPage() {
                     items={videos}
                     getKey={(item) => item.videoId?.toString() || ''}
                     className="flex flex-col gap-3"
-                    renderInfo={(item) => <PresentationList {...item} mode="videos" />}
+                    renderInfo={(item) => (
+                      <div
+                        className="cursor-pointer"
+                        onClick={() =>
+                          handleVideoClick(item.videoId?.toString() || '', item.status)
+                        }
+                      >
+                        <PresentationList {...item} mode="videos" />
+                      </div>
+                    )}
                     empty={null}
                   />
                 )}

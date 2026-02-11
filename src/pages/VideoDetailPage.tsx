@@ -55,7 +55,14 @@ export default function VideoDetailPage() {
       setError(null);
 
       try {
-        const response = await videosApi.getVideoDetail(videoId);
+        // videoId를 숫자로 변환
+        const numericVideoId = parseInt(videoId, 10);
+
+        if (isNaN(numericVideoId)) {
+          throw new Error('잘못된 비디오 ID입니다');
+        }
+
+        const response = await videosApi.getVideoDetail(numericVideoId.toString());
 
         if (response.data.resultType === 'FAILURE') {
           throw new Error(response.data.error?.reason || '영상을 불러올 수 없습니다');
@@ -87,12 +94,17 @@ export default function VideoDetailPage() {
 
         setComments(transformedComments);
 
-        const slidesResponse = await videosApi.getVideoSlides(videoId);
-        if (slidesResponse.data.resultType === 'SUCCESS') {
-          const slides = slidesResponse.data.success.slides;
+        // 슬라이드 타임라인 로드 - videoId를 숫자로 변환
+        try {
+          const slidesResponse = await videosApi.getVideoSlides(numericVideoId.toString());
+          if (slidesResponse.data.resultType === 'SUCCESS') {
+            const slides = slidesResponse.data.success.slides;
 
-          setSlideIdOrder(slides.map((slide) => slide.slideId));
-          setSlideChangeTimes(slides.map((slide) => slide.timestampMs / 1000));
+            setSlideIdOrder(slides.map((slide) => slide.slideId));
+            setSlideChangeTimes(slides.map((slide) => slide.timestampMs / 1000));
+          }
+        } catch (slidesError) {
+          console.warn('[VideoDetailPage] 슬라이드 타임라인을 불러올 수 없습니다:', slidesError);
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : '영상 로드 실패';

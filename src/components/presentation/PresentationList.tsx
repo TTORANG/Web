@@ -111,7 +111,13 @@ function PresentationList(props: Props) {
 
   const handleListClick = () => {
     if (isRenaming) return;
-    navigate(getTabPath(projectId, 'slide'));
+
+    if (mode === 'videos' && 'videoId' in props) {
+      const videoId = (props as VideoPresentation).videoId;
+      navigate(`/${projectId}/videos/${videoId}`);
+    } else {
+      navigate(getTabPath(projectId, mode));
+    }
   };
 
   const dropdownItems: DropdownItem[] = [

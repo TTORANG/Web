@@ -29,10 +29,11 @@ export const RecordingSection = ({
   onFinish,
   onExitClick,
 }: RecordingSectionProps) => {
-  const slideImgRef = useRef<HTMLImageElement | null>(null);
   const logContainerRef = useRef<HTMLDivElement>(null);
+  const slideImgRef = useRef<HTMLImageElement | null>(null);
+  const camVideoRef = useRef<HTMLVideoElement>(null);
 
-  const { canvasRef, isRecording, recordedChunks, startRecording, stopRecording } = useRecorder();
+  const { isRecording, recordedChunks, startRecording, stopRecording } = useRecorder();
 
   const { data: presentation } = usePresentation(projectId);
   const { data: slidesData } = useSlides(projectId);
@@ -47,53 +48,30 @@ export const RecordingSection = ({
   const [slideProgress, setSlideProgress] = useState<{ [key: number]: SlideData }>({
     1: { page: 1, duration: 0, visited: true },
   });
-  const [slideImageLoaded, setSlideImageLoaded] = useState<boolean>(false);
   const [recordingStartAttempted, setRecordingStartAttempted] = useState<boolean>(false);
   const [isFinishing, setIsFinishing] = useState<boolean>(false);
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
-  const getSlideImgUrl = useCallback(
-    (p: number) => {
-      const slide = slidesList[p - 1];
-      return slide ? slide.url : '';
-    },
-    [slidesList],
-  );
-
   const currentSlideId = slidesList[currentPage - 1]?.id;
   const { data: scriptData } = useScript(currentSlideId ?? '');
 
+  // 캠 프리뷰 설정
   useEffect(() => {
-    setSlideImageLoaded(false);
-    const imgUrl = getSlideImgUrl(currentPage);
-    if (!imgUrl) return;
-
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = imgUrl;
-
-    img.onload = () => {
-      slideImgRef.current = img;
-      setSlideImageLoaded(true);
-    };
-
-    if (currentPage < totalPages) {
-      const nextUrl = getSlideImgUrl(currentPage + 1);
-      if (nextUrl) {
-        const prefetch = new Image();
-        prefetch.src = nextUrl;
-      }
+    if (initialStream && camVideoRef.current) {
+      camVideoRef.current.srcObject = initialStream;
     }
-  }, [currentPage, totalPages, getSlideImgUrl]);
+  }, [initialStream]);
 
+  // 녹화 시작
   useEffect(() => {
-    if (initialStream && !isRecording && slideImageLoaded && !recordingStartAttempted) {
+    if (initialStream && !isRecording && !recordingStartAttempted) {
       setRecordingStartAttempted(true);
       startRecording(initialStream, slideImgRef);
     }
-  }, [initialStream, isRecording, slideImageLoaded, recordingStartAttempted, startRecording]);
+  }, [initialStream, isRecording, recordingStartAttempted, startRecording]);
 
+  // 타이머
   useEffect(() => {
     if (!isRecording) return;
     const id = setInterval(() => {
@@ -171,6 +149,15 @@ export const RecordingSection = ({
 
   return (
     <div className="fixed inset-0 z-60 bg-white">
+      {/* 숨겨진 슬라이드 이미지 (녹화용) */}
+      <img
+        ref={slideImgRef}
+        src={slidesList[currentPage - 1]?.url}
+        alt="current slide for recording"
+        style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
+        crossOrigin="anonymous"
+      />
+
       {/* Header */}
       <header className="fixed left-0 top-0 z-70 flex h-15 w-full items-center justify-between border-b border-gray-200 bg-white px-18">
         <div className="flex items-center gap-6">
@@ -213,27 +200,43 @@ export const RecordingSection = ({
 
       {/* Main Content */}
       <main className="mt-15 flex h-[calc(100vh-60px)]">
-        {/* Slide Area */}
+        {/* Slide & Camera Area */}
         <section className="relative flex flex-1 flex-col bg-white">
-          {/* Canvas Area */}
           <div className="relative flex flex-1 items-center justify-center px-5 py-4">
             <div className="relative h-full w-full max-w-[1024px]">
-              <canvas
-                ref={canvasRef}
-                width={1920}
-                height={1080}
-                className="h-full w-full rounded-lg object-contain"
-              />
+              {/* 슬라이드 배경 - 사용자에게 보이는 프리뷰 */}
+              <div className="h-full w-full rounded-lg bg-gray-900 flex items-center justify-center overflow-hidden">
+                {slidesList[currentPage - 1]?.url ? (
+                  <img
+                    src={slidesList[currentPage - 1].url}
+                    alt={`슬라이드 ${currentPage}`}
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <div className="text-white">슬라이드 로딩 중...</div>
+                )}
+              </div>
+
+              {/* 캠 프리뷰 - PIP 스타일 (우측 하단) */}
+              <div className="absolute right-5 bottom-28 w-48 h-27 rounded-xl overflow-hidden shadow-2xl border-2 border-white/20 bg-black z-10">
+                <video
+                  ref={camVideoRef}
+                  autoPlay
+                  muted
+                  playsInline
+                  className="h-full w-full object-cover"
+                />
+              </div>
 
               {/* Slide Counter - Top Left */}
-              <div className="absolute left-5 top-4 flex items-center gap-2 rounded-full bg-white/65 px-4 py-2">
+              <div className="absolute left-5 top-4 flex items-center gap-2 rounded-full bg-white/65 px-4 py-2 z-10">
                 <span className="text-body-m-bold text-black">{currentPage}</span>
                 <span className="text-body-m-bold text-black">/</span>
                 <span className="text-body-m-bold text-black">{totalPages}</span>
               </div>
 
               {/* Current Slide Timer - Top Right */}
-              <div className="absolute right-5 top-4 flex flex-col items-start rounded-lg bg-white/65 px-4 pb-2 pt-2.5">
+              <div className="absolute right-5 top-4 flex flex-col items-start rounded-lg bg-white/65 px-4 pb-2 pt-2.5 z-10">
                 <span className="text-caption-bold text-gray-600">현재 슬라이드</span>
                 <span className="text-body-l-bold text-black">
                   {formatTime(slideProgress[currentPage]?.duration || 0)}
@@ -244,14 +247,14 @@ export const RecordingSection = ({
               <button
                 onClick={() => handlePageChange('prev')}
                 disabled={currentPage === 1}
-                className="absolute left-5 top-1/2 -translate-y-1/2 rounded-full bg-white/65 p-2 transition-colors hover:bg-white/80 disabled:opacity-30"
+                className="absolute left-5 top-1/2 -translate-y-1/2 rounded-full bg-white/65 p-2 transition-colors hover:bg-white/80 disabled:opacity-30 z-10"
               >
                 <IconArrowLeft className="h-6 w-6 text-black" />
               </button>
               <button
                 onClick={() => handlePageChange('next')}
                 disabled={currentPage === totalPages}
-                className="absolute right-5 top-1/2 -translate-y-1/2 rounded-full bg-white/65 p-2 transition-colors hover:bg-white/80 disabled:opacity-30"
+                className="absolute right-5 top-1/2 -translate-y-1/2 rounded-full bg-white/65 p-2 transition-colors hover:bg-white/80 disabled:opacity-30 z-10"
               >
                 <IconArrowRight className="h-6 w-6 text-black" />
               </button>
@@ -269,9 +272,9 @@ export const RecordingSection = ({
           {/* Next Slide Preview */}
           <div className="flex flex-col gap-2">
             <h3 className="text-body-s-bold text-gray-800">다음 슬라이드</h3>
-            <div className="h-[197px] w-full overflow-hidden bg-gray-400">
+            <div className="h-[197px] w-full overflow-hidden rounded-lg bg-gray-400">
               {currentPage < totalPages ? (
-                <SlideImage src={getSlideImgUrl(currentPage + 1)} alt="다음 슬라이드" />
+                <SlideImage src={slidesList[currentPage]?.url} alt="다음 슬라이드" />
               ) : (
                 <div className="flex h-full items-center justify-center text-body-m text-gray-600">
                   마지막 슬라이드

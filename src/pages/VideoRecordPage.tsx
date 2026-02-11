@@ -23,26 +23,37 @@ export default function VideoRecordPage() {
 
   const { uploadVideo, progress } = useVideoUpload();
   const UPLOAD_TOAST_ID = 'video-upload';
+  const uploadToastRef = useRef<string | number | null>(null);
 
   useEffect(() => {
     switch (progress.currentStep) {
       case 'uploading':
-        toast.loading('영상 업로드 중...', {
+        uploadToastRef.current = toast.loading('영상 업로드 중...', {
           id: UPLOAD_TOAST_ID,
           description: `${progress.uploadedChunks} / ${progress.totalChunks} 청크 (${progress.percentage}%)`,
         });
         break;
       case 'finishing':
-        toast.loading('영상 처리 중...', {
+        uploadToastRef.current = toast.loading('영상 처리 중...', {
           id: UPLOAD_TOAST_ID,
           description: '서버에서 영상을 처리하고 있습니다',
         });
         break;
       case 'done':
         toast.dismiss(UPLOAD_TOAST_ID);
+        uploadToastRef.current = null;
         break;
     }
   }, [progress]);
+
+  // 컴포넌트 언마운트 시 토스트 정리
+  useEffect(() => {
+    return () => {
+      if (uploadToastRef.current) {
+        toast.dismiss(UPLOAD_TOAST_ID);
+      }
+    };
+  }, []);
 
   const handleTestComplete = (streams: { cam: MediaStream }) => {
     streamRef.current = streams.cam;
@@ -68,20 +79,33 @@ export default function VideoRecordPage() {
 
       const slideLogs = Object.entries(durations)
         .sort(([a], [b]) => Number(a) - Number(b))
-        .map(([slideId], index, arr) => {
-          const previousDuration = arr.slice(0, index).reduce((sum, [, dur]) => sum + dur, 0);
+        .map(([pageNum], index, arr) => {
+          const previousDuration = arr
+            .slice(0, index)
+            .reduce((sum, [, dur]) => sum + Number(dur), 0);
+
           return {
-            slideId: Number(slideId),
+            slideId: Number(pageNum),
             timestampMs: Math.round(previousDuration * 1000),
           };
         });
 
+      console.log('[VideoRecordPage] slideLogs:', slideLogs);
+
       const videoId = await uploadVideo(videoBlob, numericProjectId, title, slideLogs);
 
+      // 업로드 성공 시 토스트 dismiss 후 이동
+      toast.dismiss(UPLOAD_TOAST_ID);
+
       if (videoId) {
-        navigate(`/${projectId}/videos`, { state: { uploadSuccess: true } });
+        // 약간의 딜레이 후 이동 (토스트가 완전히 사라지도록)
+        setTimeout(() => {
+          navigate(`/${projectId}/videos`, { state: { uploadSuccess: true } });
+        }, 100);
       }
     } catch (err: unknown) {
+      toast.dismiss(UPLOAD_TOAST_ID);
+      console.error('[VideoRecordPage] Upload error:', err);
       toast.error('업로드 실패', { description: (err as Error).message });
     }
   };
@@ -97,6 +121,7 @@ export default function VideoRecordPage() {
     }
     setCamStream(null);
     setIsExitModalOpen(false);
+    toast.dismiss(UPLOAD_TOAST_ID);
     navigate(`/${projectId}/slide`);
   };
 

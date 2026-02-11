@@ -48,7 +48,7 @@ const VideoPage = () => {
 
   const handleVideoClick = (video: VideoPresentation) => {
     if (video.status === 'ready') {
-      setSelectedVideo(video);
+      navigate(`/${projectId}/videos/${video.videoId}`);
     } else if (video.status === 'processing') {
       showToast.info('영상을 서버에서 처리 중입니다. 잠시 후 다시 확인해주세요.');
     } else {
