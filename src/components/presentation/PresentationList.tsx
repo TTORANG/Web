@@ -25,6 +25,7 @@ type Props = (Presentation | VideoPresentation) & {
   mode?: 'slide' | 'videos';
   isThumbnailPending?: boolean;
   thumbnailVersion?: number;
+  onDelete?: () => void;
 };
 
 function PresentationListSkeleton() {
@@ -90,6 +91,7 @@ function PresentationList(props: Props) {
     mode = 'slide',
     isThumbnailPending,
     thumbnailVersion,
+    onDelete,
   } = props;
 
   const navigate = useNavigate();
@@ -121,7 +123,23 @@ function PresentationList(props: Props) {
 
   const handleListClick = () => {
     if (isRenaming) return;
-    navigate(getTabPath(projectId, 'slide'));
+
+    if (mode === 'videos' && 'videoId' in props) {
+      const videoId = (props as VideoPresentation).videoId;
+      navigate(`/${projectId}/videos/${videoId}`);
+    } else {
+      navigate(getTabPath(projectId, mode));
+    }
+  };
+
+  const handleDeleteClick = () => {
+    // onDelete prop이 있으면 그것을 사용 (비디오 삭제)
+    // 없으면 기본 프레젠테이션 삭제 모달 열기
+    if (onDelete) {
+      onDelete();
+    } else {
+      openDeleteModal();
+    }
   };
 
   const dropdownItems: DropdownItem[] = [
@@ -134,7 +152,7 @@ function PresentationList(props: Props) {
       id: 'delete',
       label: '삭제',
       variant: 'danger',
-      onClick: openDeleteModal,
+      onClick: handleDeleteClick,
     },
   ];
 
@@ -221,16 +239,18 @@ function PresentationList(props: Props) {
         </div>
       </article>
 
-      {/* 삭제 확인 모달 */}
-      <div onClick={(e) => e.stopPropagation()}>
-        <DeletePresentationModal
-          isOpen={isDeleteModalOpen}
-          presentationTitle={displayTitle}
-          isPending={isPending}
-          onClose={closeDeleteModal}
-          onConfirm={confirmDelete}
-        />
-      </div>
+      {/* 프레젠테이션 삭제 모달 (onDelete가 없을 때만) */}
+      {!onDelete && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <DeletePresentationModal
+            isOpen={isDeleteModalOpen}
+            presentationTitle={displayTitle}
+            isPending={isPending}
+            onClose={closeDeleteModal}
+            onConfirm={confirmDelete}
+          />
+        </div>
+      )}
 
       {/* 이름 변경 모달 */}
       <div onClick={(e) => e.stopPropagation()}>

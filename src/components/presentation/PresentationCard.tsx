@@ -26,6 +26,7 @@ type Props = (Presentation | VideoPresentation) & {
   mode?: 'slide' | 'videos';
   isThumbnailPending?: boolean;
   thumbnailVersion?: number;
+  onDelete?: () => void;
 };
 
 function PresentationCardSkeleton() {
@@ -91,6 +92,7 @@ function PresentationCard(props: Props) {
     mode = 'slide',
     isThumbnailPending,
     thumbnailVersion,
+    onDelete,
   } = props;
 
   const navigate = useNavigate();
@@ -121,7 +123,23 @@ function PresentationCard(props: Props) {
 
   const handleCardClick = () => {
     if (isRenaming) return;
-    navigate(getTabPath(projectId, mode));
+
+    if (mode === 'videos' && 'videoId' in props) {
+      const videoId = (props as VideoPresentation).videoId;
+      navigate(`/${projectId}/videos/${videoId}`);
+    } else {
+      navigate(getTabPath(projectId, mode));
+    }
+  };
+
+  const handleDeleteClick = () => {
+    // onDelete prop이 있으면 그것을 사용 (비디오 삭제)
+    // 없으면 기본 프레젠테이션 삭제 모달 열기
+    if (onDelete) {
+      onDelete();
+    } else {
+      openDeleteModal();
+    }
   };
 
   const dropdownItems: DropdownItem[] = [
@@ -134,7 +152,7 @@ function PresentationCard(props: Props) {
       id: 'delete',
       label: '삭제',
       variant: 'danger',
-      onClick: openDeleteModal,
+      onClick: handleDeleteClick,
     },
   ];
 
@@ -188,7 +206,6 @@ function PresentationCard(props: Props) {
           </div>
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-x-1 gap-y-2 text-caption text-gray-600">
-            {/* 왼쪽: 소요 시간 */}
             <div className="flex items-center gap-3 shrink-0">
               <div className="flex items-center gap-1">
                 <RecentIcon className="w-4 h-4" />
@@ -197,7 +214,6 @@ function PresentationCard(props: Props) {
               </div>
             </div>
 
-            {/* 오른쪽: 댓글, 리액션, 조회수 */}
             <div className="flex items-center gap-2 shrink-0">
               <div className="flex items-center gap-1">
                 <CommentCountIcon className="w-4 h-4" />
@@ -221,15 +237,18 @@ function PresentationCard(props: Props) {
         </div>
       </article>
 
-      <div onClick={(e) => e.stopPropagation()}>
-        <DeletePresentationModal
-          isOpen={isDeleteModalOpen}
-          presentationTitle={title}
-          isPending={isPending}
-          onClose={closeDeleteModal}
-          onConfirm={confirmDelete}
-        />
-      </div>
+      {/* 프레젠테이션 삭제 모달 (onDelete가 없을 때만) */}
+      {!onDelete && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <DeletePresentationModal
+            isOpen={isDeleteModalOpen}
+            presentationTitle={title}
+            isPending={isPending}
+            onClose={closeDeleteModal}
+            onConfirm={confirmDelete}
+          />
+        </div>
+      )}
 
       {/* 이름 변경 모달 */}
       <div onClick={(e) => e.stopPropagation()}>
