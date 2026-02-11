@@ -19,6 +19,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useHomeStore } from '@/stores/homeStore';
 import { isAnonymousEmail } from '@/utils/auth';
 import { showToast } from '@/utils/toast';
+import { getUserDisplayName } from '@/utils/user';
 
 import { HeaderButton } from './HeaderButton';
 
@@ -80,7 +81,7 @@ export function LoginButton() {
     }
   };
 
-  const displayName = user?.name ?? user?.email?.split('@')[0] ?? user?.id ?? '사용자';
+  const displayName = getUserDisplayName(user, '사용자');
 
   return (
     <>

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { ToggleSlideReactionDto } from '@/api';
-import { getSlideReactionSummary, toggleReaction } from '@/api/endpoints/reactions';
+import type { CreateSlideReactionDto } from '@/api';
+import { createReaction, getSlideReactionSummary } from '@/api/endpoints/reactions';
 import { queryKeys } from '@/api/queryClient';
 
 /**
@@ -36,16 +36,17 @@ export function useSlideReactionSummary(slideId?: string) {
 }
 
 /**
- * 슬라이드 리액션 토글 Mutation 훅
+ * 슬라이드 리액션 생성 Mutation 훅
  *
+ * 요청 1회 = 카운트 1 증가 (토글 아님)
  * 성공 시 해당 슬라이드의 리액션 집계 캐시를 무효화합니다.
  */
-export function useToggleReaction() {
+export function useCreateReaction() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ slideId, data }: { slideId: string; data: ToggleSlideReactionDto }) =>
-      toggleReaction(slideId, data),
+    mutationFn: ({ slideId, data }: { slideId: string; data: CreateSlideReactionDto }) =>
+      createReaction(slideId, data),
 
     onSuccess: (_, { slideId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.reactions.summary(slideId) });

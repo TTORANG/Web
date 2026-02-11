@@ -4,29 +4,29 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { getTotalReactions } from '@/api/endpoints/reactions';
 import { queryKeys } from '@/api/queryClient';
-import { createDefaultReactions, getExclusiveCounterpart } from '@/constants/reaction';
+import { createDefaultReactions } from '@/constants/reaction';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Reaction, ReactionType } from '@/types/script';
 import { showToast } from '@/utils/toast';
 
-import { useSlideReactionSummary, useToggleReaction } from './queries/useReaction.ts';
+import { useCreateReaction, useSlideReactionSummary } from './queries/useReaction.ts';
 
 const EMPTY_REACTIONS: Reaction[] = [];
 const OPTIMISTIC_LOCK_DURATION = 2000;
 
-// ✅ [핵심] 훅 밖에 전역 변수로 선언하여, 슬라이드를 이동해도 기록이 유지되게 함
+// 훅 밖에 전역 변수로 선언하여, 슬라이드를 이동해도 기록이 유지되게 함
 // Key: "slideId-reactionType"
 const globalLastActionTimes: Record<string, number> = {};
 
 export function useSlideReactions() {
   const slideId = useSlideStore((state) => state.slide?.slideId);
   const reactions = useSlideStore((state) => state.slide?.emojiReactions ?? EMPTY_REACTIONS);
-  const toggleReactionStore = useSlideStore((state) => state.toggleReaction);
+  const addReactionStore = useSlideStore((state) => state.addReaction);
   const updateSlide = useSlideStore((state) => state.updateSlide);
   const setReactionCounts = useSlideStore((state) => state.setReactionCounts);
   const queryClient = useQueryClient();
 
-  const { mutate: toggleReactionApi } = useToggleReaction();
+  const { mutate: createReactionApi } = useCreateReaction();
   const { data: reactionSummary } = useSlideReactionSummary(slideId);
 
   const latestReactionsRef = useRef(reactions);
@@ -42,30 +42,18 @@ export function useSlideReactions() {
 
     const nextReactions = createDefaultReactions().map((reaction) => {
       const current = currentReactionsState.find((r) => r.type === reaction.type);
-      const counterpart = getExclusiveCounterpart(reaction.type);
-      const counterpartState = counterpart
-        ? currentReactionsState.find((r) => r.type === counterpart)
-        : undefined;
-      const isExclusiveLocked = Boolean(
-        counterpart && (current?.active || counterpartState?.active),
-      );
 
-      // ✅ [수정] 전역 변수(globalLastActionTimes)에서 시간 확인
       const lockKey = `${slideId}-${reaction.type}`;
       const lastActionTime = globalLastActionTimes[lockKey] || 0;
       const isLocked = now - lastActionTime < OPTIMISTIC_LOCK_DURATION;
 
       // 락이 걸려있으면(내가 방금 누름) -> 스토어 값(current.count) 유지
       // 락이 풀렸으면 -> 서버 값(reactionSummary) 반영
-      const count =
-        isLocked || isExclusiveLocked
-          ? (current?.count ?? 0)
-          : (reactionSummary[reaction.type] ?? 0);
+      const count = isLocked ? (current?.count ?? 0) : (reactionSummary[reaction.type] ?? 0);
 
       return {
         ...reaction,
         count,
-        active: current?.active ?? reaction.active,
       };
     });
 
@@ -73,7 +61,7 @@ export function useSlideReactions() {
       currentReactionsState.length === nextReactions.length &&
       currentReactionsState.every((reaction) => {
         const next = nextReactions.find((item) => item.type === reaction.type);
-        return next?.count === reaction.count && next?.active === reaction.active;
+        return next?.count === reaction.count;
       });
 
     if (!isSame) {
@@ -104,39 +92,23 @@ export function useSlideReactions() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slideId, reactionSummary]);
 
-  const toggleReaction = (type: ReactionType) => {
+  const addReaction = (type: ReactionType) => {
     if (!slideId) return;
 
-    // ✅ [수정] 전역 변수에 시간 기록 (슬라이드 ID 포함해서 유니크하게)
-    const now = Date.now();
-    globalLastActionTimes[`${slideId}-${type}`] = now;
+    // 전역 변수에 시간 기록 (슬라이드 ID 포함해서 유니크하게)
+    globalLastActionTimes[`${slideId}-${type}`] = Date.now();
 
-    // 반대쪽 버튼도 같이 락 걸기 (좋아요 취소 시 싫어요 숫자 보호)
-    const counterpart = getExclusiveCounterpart(type);
-    if (counterpart) {
-      globalLastActionTimes[`${slideId}-${counterpart}`] = now;
-    }
+    // 낙관적 업데이트: 카운트 +1
+    addReactionStore(type);
 
-    const baseReactions = reactions.length > 0 ? reactions : createDefaultReactions();
-    const targetReaction = baseReactions.find((r) => r.type === type);
-    const isActivating = !targetReaction?.active;
-
-    const nextReactions = baseReactions.map((reaction) => {
+    const currentReactions = reactions.length > 0 ? reactions : createDefaultReactions();
+    const nextReactions = currentReactions.map((reaction) => {
       if (reaction.type === type) {
-        if (reaction.active) {
-          return { ...reaction, active: false, count: Math.max(0, reaction.count - 1) };
-        }
-        return { ...reaction, active: true, count: reaction.count + 1 };
+        return { ...reaction, count: reaction.count + 1 };
       }
-
-      if (isActivating && counterpart && reaction.type === counterpart && reaction.active) {
-        return { ...reaction, active: false, count: Math.max(0, reaction.count - 1) };
-      }
-
       return reaction;
     });
 
-    toggleReactionStore(type);
     queryClient.setQueryData<Record<ReactionType, number>>(
       queryKeys.reactions.summary(slideId),
       () =>
@@ -149,18 +121,19 @@ export function useSlideReactions() {
         ),
     );
 
-    toggleReactionApi(
+    createReactionApi(
       { slideId, data: { emojiType: type } },
       {
         onError: () => {
           showToast.error('반응을 반영하지 못했습니다.');
-          toggleReactionStore(type);
+          // 실패 시 서버 데이터로 리프레시
+          void queryClient.invalidateQueries({ queryKey: queryKeys.reactions.summary(slideId) });
         },
       },
     );
   };
 
-  return { reactions, toggleReaction };
+  return { reactions, addReaction };
 }
 
 export function useSlideReactionsTotal(projectId: string) {

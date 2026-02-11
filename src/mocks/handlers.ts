@@ -785,17 +785,20 @@ const commentHandlers = [
 // ═══════════════════════════════════════════════════════════════
 
 const reactionHandlers = [
-  // 슬라이드 리액션 토글
-  http.post(`${BASE_URL}/slides/:slideId/reactions/toggle`, async ({ params, request }) => {
+  // 슬라이드 리액션 생성 (요청 1회 = 카운트 1 증가)
+  http.post(`${BASE_URL}/slides/:slideId/reactions`, async ({ params, request }) => {
     await delay(100);
     const { slideId } = params as { slideId: string };
     const body = (await request.json()) as { emojiType: string };
     const reactions = slideReactions.get(slideId) ?? {};
-    const current = reactions[body.emojiType] ?? 0;
-    // 간단 토글: 짝수면 추가, 홀수면 제거
-    reactions[body.emojiType] = current + 1;
+    reactions[body.emojiType] = (reactions[body.emojiType] ?? 0) + 1;
     slideReactions.set(slideId, reactions);
-    return ok({ active: true });
+    return ok({
+      reactionId: String(Date.now()),
+      slideId,
+      emojiType: body.emojiType,
+      createdAt: new Date().toISOString(),
+    });
   }),
 
   // 슬라이드 리액션 요약
