@@ -4,6 +4,7 @@ import clsx from 'clsx';
 
 import CommentCountIcon from '@/assets/icons/icon-comment-count.svg?react';
 import MoreIcon from '@/assets/icons/icon-more.svg?react';
+import PageCountIcon from '@/assets/icons/icon-page-count.svg?react';
 import ReactionCountIcon from '@/assets/icons/icon-reaction-count.svg?react';
 import RecentIcon from '@/assets/icons/icon-recent.svg?react';
 import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
@@ -25,7 +26,7 @@ import RenamePresentationModal from './RenamePresentationModal';
 type Props = (Presentation | VideoPresentation) & {
   highlightQuery?: string;
   mode?: 'slide' | 'videos';
-  isThumbnailPending?: boolean;
+  isPresentationPending?: boolean;
   thumbnailVersion?: number;
   onDelete?: () => void;
   onUpdateTitle?: (newTitle: string) => Promise<void>;
@@ -56,7 +57,7 @@ function PresentationCard(props: Props) {
     feedbackCount,
     thumbnailUrl,
     mode = 'slide',
-    isThumbnailPending,
+    isPresentationPending = false,
     thumbnailVersion,
     onDelete,
     onUpdateTitle,
@@ -69,6 +70,12 @@ function PresentationCard(props: Props) {
   const resolvedSrc = thumbnailUrl
     ? `${thumbnailUrl}${thumbnailUrl.includes('?') ? '&' : '?'}v=${thumbnailVersion}`
     : null;
+  const isProcessing =
+    isPresentationPending ||
+    props.status === 'queued' ||
+    props.status === 'processing' ||
+    props.status === 'partial_done';
+  const minutes = durationSeconds > 0 ? Math.ceil(durationSeconds / 60) : null;
 
   const {
     isRenameModalOpen,
@@ -121,7 +128,7 @@ function PresentationCard(props: Props) {
     <>
       <article
         onClick={handleCardClick}
-        className="relative rounded-2xl border-none bg-white transition-shadow cursor-pointer hover:shadow-lg overflow-hidden"
+        className="relative rounded-2xl border-none bg-white transition-shadow cursor-pointer hover:shadow-lg"
       >
         <div className="aspect-video w-full overflow-hidden rounded-t-2xl bg-transparent">
           <ThumbnailImage
@@ -146,8 +153,6 @@ function PresentationCard(props: Props) {
                 <p className="mt-1 text-body-s text-gray-400">{formatRelativeTime(updatedAt)}</p>
               </div>
 
-              {/* ✅ 여기가 핵심: Dropdown 자체를 감싸는 div에서 stopPropagation을 겁니다. */}
-              {/* mousedown을 쓰는 이유는 클릭 이벤트보다 먼저 발생하여 확실히 차단하기 위함입니다. */}
               <div
                 className="shrink-0 mt-1"
                 onClick={(e) => e.stopPropagation()}
@@ -167,11 +172,24 @@ function PresentationCard(props: Props) {
             </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-x-1 gap-y-2 text-caption text-gray-600">
-            <div className="flex items-center gap-1 shrink-0">
-              <RecentIcon className="w-4 h-4" />
-              <span>{Math.ceil(durationSeconds / 60)}분</span>
-              <span className="ml-1">{slideCount}페이지</span>
+          <div
+            className={clsx(
+              'mt-5 flex flex-wrap items-center justify-between gap-x-1 gap-y-2 text-caption text-gray-600',
+              isProcessing && 'invisible pointer-events-none',
+            )}
+            aria-hidden={isProcessing}
+          >
+            <div className="flex items-center gap-2.5 shrink-0">
+              {minutes !== null && (
+                <div className="gap-1 flex items-center">
+                  <RecentIcon className="w-4 h-4" />
+                  <span className="ml-1">{minutes} 분</span>
+                </div>
+              )}
+              <div className="flex items-center">
+                <PageCountIcon className="w-4 h-4" />
+                <span className="ml-1">{slideCount} 장</span>
+              </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <div className="flex items-center gap-1">
@@ -193,11 +211,8 @@ function PresentationCard(props: Props) {
             </div>
           </div>
         </div>
-        <ProcessingOverlay
-          visible={Boolean(isThumbnailPending)}
-          variant="card"
-          className="rounded-2xl"
-        />
+
+        <ProcessingOverlay visible={isProcessing} variant="card" className="rounded-2xl" />
       </article>
 
       {/* 모달 전파 차단 */}

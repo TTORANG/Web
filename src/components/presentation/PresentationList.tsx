@@ -24,7 +24,7 @@ import RenamePresentationModal from './RenamePresentationModal';
 type Props = (Presentation | VideoPresentation) & {
   highlightQuery?: string;
   mode?: 'slide' | 'videos';
-  isThumbnailPending?: boolean;
+  isPresentationPending?: boolean;
   thumbnailVersion?: number;
   onDelete?: () => void;
   // 비디오 전용 제목 수정 함수 추가
@@ -92,7 +92,7 @@ function PresentationList(props: Props) {
     feedbackCount,
     thumbnailUrl,
     mode = 'slide',
-    isThumbnailPending,
+    isPresentationPending,
     thumbnailVersion,
     onDelete,
     onUpdateTitle,
@@ -105,6 +105,12 @@ function PresentationList(props: Props) {
   const resolvedSrc = thumbnailUrl
     ? `${thumbnailUrl}${thumbnailUrl.includes('?') ? '&' : '?'}v=${thumbnailVersion}`
     : null;
+  const isProcessing =
+    isPresentationPending ||
+    props.status === 'queued' ||
+    props.status === 'processing' ||
+    props.status === 'partial_done';
+  const minutes = durationSeconds > 0 ? Math.ceil(durationSeconds / 60) : null;
 
   const {
     isRenameModalOpen,
@@ -175,7 +181,7 @@ function PresentationList(props: Props) {
     <>
       <article
         onClick={handleListClick}
-        className="relative flex w-full items-center justify-between bg-white px-5 py-4 rounded-2xl border border-gray-200 transition-shadow cursor-pointer hover:shadow-lg overflow-hidden"
+        className="relative flex w-full items-center justify-between bg-white px-5 py-4 rounded-2xl border border-gray-200 transition-shadow cursor-pointer hover:shadow-lg"
       >
         {/* 썸네일 */}
         <div className="relative w-35 h-19.5 shrink-0 overflow-hidden rounded-lg bg-transparent">
@@ -188,55 +194,66 @@ function PresentationList(props: Props) {
         </div>
 
         {/* 본문 */}
-        <div className="flex flex-1 items-center justify-between pl-6">
-          <div className="flex flex-col gap-0.5">
+        <div className="flex flex-1 items-center justify-between pl-6 min-w-0">
+          <div className="flex flex-1 flex-col gap-0.5 min-w-0">
             {/* 제목 */}
-            <div className="truncate text-body-m-bold text-gray-800">{displayTitle}</div>
+            <div className="w-full text-body-m-bold text-gray-800 line-clamp-1">{displayTitle}</div>
 
-            {/* 메타 정보 */}
-            <div className="flex items-center gap-4 text-caption text-gray-600">
-              {/* 날짜 & 소요 시간 */}
-              <div className="flex items-center gap-4">
-                <span>{formatRelativeTime(updatedAt)}</span>
-                <span className="flex items-center gap-1.5">
-                  <RecentIcon className="w-4 h-4" />
-                  {Math.ceil(durationSeconds / 60)}분
-                </span>
-              </div>
+            <div className="flex gap-4">
+              {/* 날짜 */}
+              <div className="text-caption text-gray-600">{formatRelativeTime(updatedAt)}</div>
 
-              {/* 구분선 */}
-              <span className="h-3.5 w-px bg-gray-200" />
-
-              {/* 슬라이드 수 & 피드백 정보 */}
-              <div className="flex items-center gap-4">
-                {mode === 'slide' && (
-                  <span className="flex items-center gap-1">
-                    <PageCountIcon className="w-4 h-4" />
-                    {slideCount} 슬라이드
+              {/* 메타 정보 */}
+              <div
+                className={clsx(
+                  'flex items-center gap-4 text-caption text-gray-600',
+                  isProcessing && 'invisible pointer-events-none',
+                )}
+                aria-hidden={isProcessing}
+              >
+                {/* 소요 시간 */}
+                {minutes !== null && (
+                  <span className="flex items-center gap-1.5">
+                    <RecentIcon className="w-4 h-4" />
+                    {minutes}분
                   </span>
                 )}
-                <span className="flex items-center gap-1">
-                  <CommentCountIcon className="w-4 h-4" />
-                  {commentCount ?? 0}
-                </span>
-                {isVideo && (
-                  <>
+
+                {/* 구분선 */}
+                <span className="h-3.5 w-px bg-gray-200" />
+
+                {/* 슬라이드 수 & 피드백 정보 */}
+                <div className="flex items-center gap-4">
+                  {mode === 'slide' && (
                     <span className="flex items-center gap-1">
-                      <ReactionCountIcon className="w-4 h-4" />
-                      {reactionCount}
+                      <PageCountIcon className="w-4 h-4" />
+                      {slideCount} 장
                     </span>
-                    <span className="flex items-center gap-1">
-                      <ViewCountIcon className="w-4 h-4" />
-                      {viewCount}
-                    </span>
-                  </>
-                )}
+                  )}
+                  <span className="flex items-center gap-1">
+                    <CommentCountIcon className="w-4 h-4" />
+                    {commentCount ?? 0}
+                  </span>
+
+                  {isVideo && (
+                    <>
+                      <span className="flex items-center gap-1">
+                        <ReactionCountIcon className="w-4 h-4" />
+                        {reactionCount}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <ViewCountIcon className="w-4 h-4" />
+                        {viewCount}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
           {/* 더보기 */}
-          <div onClick={(e) => e.stopPropagation()} className="-m-2">
+          <div onClick={(e) => e.stopPropagation()} className="-m-2 shrink-0">
             <Dropdown
               trigger={({ isOpen }) => (
                 <div className="p-2">
@@ -252,11 +269,7 @@ function PresentationList(props: Props) {
           </div>
         </div>
 
-        <ProcessingOverlay
-          visible={Boolean(isThumbnailPending)}
-          variant="list"
-          className="rounded-2xl"
-        />
+        <ProcessingOverlay visible={isProcessing} variant="list" className="rounded-2xl" />
       </article>
 
       {/* 프레젠테이션 삭제 모달 (onDelete가 없을 때만) */}
