@@ -12,7 +12,6 @@ import { useSlides } from '@/hooks/queries/useSlides';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { useAuthStore } from '@/stores/authStore';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
-// 스토어 임포트
 import type { SlideListItem } from '@/types';
 import type { Comment as CommentType } from '@/types/comment';
 
@@ -27,7 +26,7 @@ export default function VideoDetailPage() {
 
   const [videoData, setVideoData] = useState<ReadVideoDetailResponseDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
 
   const [currentTime, setCurrentTime] = useState(0);
 
@@ -182,19 +181,11 @@ export default function VideoDetailPage() {
     }
   }, [commentDraft, currentTime, videoId, currentUser]);
 
-  const handleReplyComment = useCallback(async (_id: string, _content: string) => {
-    console.log('Reply comment - not implemented');
-  }, []);
+  const handleReplyComment = useCallback(async (_id: string, _content: string) => {}, []);
 
-  // 197번 줄
-  const handleDeleteComment = useCallback(async (_id: string) => {
-    console.log('Delete comment - not implemented');
-  }, []);
+  const handleDeleteComment = useCallback(async (_id: string) => {}, []);
 
-  // 200번 줄
-  const handleUpdateComment = useCallback(async (_id: string, _content: string) => {
-    console.log('Update comment - not implemented');
-  }, []);
+  const handleUpdateComment = useCallback(async (_id: string, _content: string) => {}, []);
 
   const handleBack = () => navigate(`/${projectId}/videos`);
   const timestampPrefix = `[${Math.floor(currentTime / 60)}:${Math.floor(currentTime % 60)
