@@ -228,6 +228,7 @@ export function useFeedbackVideo(
   const { comments, addComment, addReply, deleteComment, updateComment } = useVideoComments();
   const { reactions, addReaction } = useVideoReactions();
   const [commentDraft, setCommentDraft] = useState('');
+  const [scrollToCommentId, setScrollToCommentId] = useState<string | undefined>(undefined);
 
   const timestampPrefix = useMemo(() => `${formatVideoTimestamp(currentTime)} `, [currentTime]);
   // 비디오 이벤트 기록 API는 number videoId를 사용합니다.
@@ -236,10 +237,17 @@ export function useFeedbackVideo(
     return Number.isFinite(parsed) ? parsed : null;
   }, [video?.videoId]);
 
-  const handleAddComment = useCallback(() => {
+  const handleAddComment = useCallback(async () => {
     if (!commentDraft.trim()) return;
-    addComment(commentDraft, currentTime);
+    const newCommentId = await addComment(commentDraft, currentTime);
     setCommentDraft('');
+
+    // 새로 작성한 댓글로 자동 스크롤
+    if (newCommentId) {
+      setScrollToCommentId(newCommentId);
+      // 스크롤 후 상태 초기화 (다음 댓글 작성 시 중복 스크롤 방지)
+      setTimeout(() => setScrollToCommentId(undefined), 500);
+    }
   }, [addComment, commentDraft, currentTime]);
 
   const handleGoToTimeRef = useCallback(
@@ -445,6 +453,7 @@ export function useFeedbackVideo(
     reactions,
     commentDraft,
     timestampPrefix,
+    scrollToCommentId,
 
     updateCurrentTime,
     requestSeek,

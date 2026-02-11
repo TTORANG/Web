@@ -38,6 +38,7 @@ export default function FeedbackVideoPage({
     reactions,
     commentDraft,
     timestampPrefix,
+    scrollToCommentId,
     webcamVideoUrl,
     updateCurrentTime,
     requestSeek,
@@ -126,6 +127,7 @@ export default function FeedbackVideoPage({
           <div className="flex-1 min-h-0 overflow-y-auto">
             <CommentList
               comments={comments}
+              scrollToCommentId={scrollToCommentId}
               onAddReply={addReply}
               onGoToRef={handleGoToTimeRef}
               onDeleteComment={deleteComment}
@@ -167,6 +169,7 @@ export default function FeedbackVideoPage({
             <div className="flex-1 min-h-0 overflow-y-auto">
               <CommentList
                 comments={comments}
+                scrollToCommentId={scrollToCommentId}
                 onAddReply={addReply}
                 onGoToRef={handleGoToTimeRef}
                 onDeleteComment={deleteComment}
