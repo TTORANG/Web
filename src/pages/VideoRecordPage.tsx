@@ -86,7 +86,7 @@ export default function VideoRecordPage() {
       let accumulatedMs = 0;
       const slideLogs = Object.entries(durations)
         .sort(([a], [b]) => Number(a) - Number(b))
-        .map(([pageNum]) => {
+        .map(([pageNum, duration]) => {
           const pageIdx = Number(pageNum) - 1;
           const slideId = slidesData[pageIdx]?.slideId;
 
@@ -97,7 +97,8 @@ export default function VideoRecordPage() {
             timestampMs: accumulatedMs,
           };
 
-          accumulatedMs += Math.round(durations[Number(pageNum)] * 1000);
+          const slideDuration = typeof duration === 'number' ? duration : 0;
+          accumulatedMs += Math.round(slideDuration * 1000);
 
           return log;
         })
