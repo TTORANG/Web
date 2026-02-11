@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 
 import type { ReadVideoDetailResponseDto } from '@/api/dto/video.dto';
 import { createReply, deleteComment, updateComment } from '@/api/endpoints/comments';
+import { getScript } from '@/api/endpoints/scripts';
 import { createVideoComment, videosApi } from '@/api/endpoints/videos';
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
@@ -26,6 +27,7 @@ export default function VideoDetailPage() {
   const [commentDraft, setCommentDraft] = useState('');
 
   const { data: slidesData } = useSlides(projectId!);
+
   const [projectSlides, setProjectSlides] = useState<SlideListItem[]>([]);
   const [slideChangeTimes, setSlideChangeTimes] = useState<number[]>([]);
   const [slideIdOrder, setSlideIdOrder] = useState<string[]>([]);
@@ -87,17 +89,36 @@ export default function VideoDetailPage() {
   // 2. 슬라이드 정렬
   useEffect(() => {
     if (!slidesData || slideIdOrder.length === 0) return;
-    const ordered = slideIdOrder
-      .map((id) => {
-        const slide = slidesData.find((s) => s.slideId === id);
-        return slide
-          ? { slideId: slide.slideId, imageUrl: slide.imageUrl, script: slide.script || '' }
-          : null;
-      })
-      .filter((s): s is SlideListItem => s !== null);
-    setProjectSlides(ordered);
-  }, [slidesData, slideIdOrder]);
 
+    const loadScriptsAndOrder = async () => {
+      const ordered = await Promise.all(
+        slideIdOrder.map(async (id) => {
+          const slideBase = slidesData.find((s) => String(s.slideId) === String(id));
+          if (!slideBase) return null;
+
+          try {
+            const scriptRes = await getScript(String(id));
+
+            return {
+              slideId: slideBase.slideId,
+              imageUrl: slideBase.imageUrl,
+              script: scriptRes.scriptText || '',
+            };
+          } catch (err) {
+            return {
+              slideId: slideBase.slideId,
+              imageUrl: slideBase.imageUrl,
+              script: slideBase.script || '',
+            };
+          }
+        }),
+      );
+
+      setProjectSlides(ordered.filter((s): s is SlideListItem => s !== null));
+    };
+
+    loadScriptsAndOrder();
+  }, [slidesData, slideIdOrder]);
   useEffect(() => {
     const updatePosition = () => {
       // 0. 로딩 중일 때는 계산하지 않음
