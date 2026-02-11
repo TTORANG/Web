@@ -47,6 +47,8 @@ export default function FeedbackSlidePage({
     reactions,
     isLoading,
     isCommentsLoading,
+    commentsHasNextPage,
+    commentsIsFetchingNextPage,
     isFirst,
     isLast,
   } = state;
@@ -60,7 +62,8 @@ export default function FeedbackSlidePage({
     addReply,
     deleteComment,
     updateComment,
-    toggleReaction,
+    addReaction,
+    commentsFetchNextPage,
   } = actions;
 
   if (isLoading) {
@@ -94,6 +97,9 @@ export default function FeedbackSlidePage({
               onDeleteComment={deleteComment}
               onUpdateComment={updateComment}
               isLoading={isLoading || isCommentsLoading}
+              hasNextPage={commentsHasNextPage}
+              isFetchingNextPage={commentsIsFetchingNextPage}
+              onLoadMore={commentsFetchNextPage}
             />
           </div>
 
@@ -107,7 +113,7 @@ export default function FeedbackSlidePage({
             />
             <ReactionButtons
               reactions={reactions.length > 0 ? reactions : createDefaultReactions()}
-              onToggleReaction={toggleReaction}
+              onToggleReaction={addReaction}
               layout="grid-2"
               buttonClassName="w-42.25"
             />
@@ -141,7 +147,7 @@ export default function FeedbackSlidePage({
         reactionSlot={
           <ReactionButtons
             reactions={reactions.length > 0 ? reactions : createDefaultReactions()}
-            onToggleReaction={toggleReaction}
+            onToggleReaction={addReaction}
             showLabel={false}
           />
         }
@@ -168,6 +174,9 @@ export default function FeedbackSlidePage({
                 onDeleteComment={deleteComment}
                 onUpdateComment={updateComment}
                 isLoading={isLoading}
+                hasNextPage={commentsHasNextPage}
+                isFetchingNextPage={commentsIsFetchingNextPage}
+                onLoadMore={commentsFetchNextPage}
               />
             </div>
             <div className="shrink-0 px-4 py-3">

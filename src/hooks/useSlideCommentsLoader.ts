@@ -1,43 +1,73 @@
 /**
  * 슬라이드 댓글 로딩 공통 훅
  *
- * - slideId 변경 시 서버에서 댓글 로드
- * - 초기 로드 후에는 Zustand store가 댓글 상태를 관리
+ * - slideId 변경 시 서버에서 댓글 로드 (무한 스크롤)
+ * - 모든 페이지를 flatten하여 Zustand store에 동기화
+ * - 낙관적 댓글(서버 미확인)은 보존
  */
 import { useEffect, useRef } from 'react';
 
+import type { FetchNextPageOptions, InfiniteQueryObserverResult } from '@tanstack/react-query';
+
+import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
 
-import { useSlideCommentsQuery } from './queries/useSlideCommentsQuery';
+import { useSlideCommentsInfiniteQuery } from './queries/useSlideCommentsQuery';
 import { useSlideActions } from './useSlideSelectors';
 
 type UseSlideCommentsLoaderOptions = {
   mapComments?: (comments: Comment[]) => Comment[];
 };
 
-export function useSlideCommentsLoader(slideId?: string, options?: UseSlideCommentsLoaderOptions) {
-  const { setComments } = useSlideActions();
-  const { data: fetchedComments, isLoading } = useSlideCommentsQuery(slideId);
-  const prevSlideIdRef = useRef<string | undefined>(undefined);
-  const initialLoadDoneRef = useRef(false);
+export type CommentsPaginationState = {
+  isLoading: boolean;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+  fetchNextPage: (options?: FetchNextPageOptions) => Promise<InfiniteQueryObserverResult>;
+};
 
-  // slideId가 변경되면 초기 로드 플래그 리셋
+export function useSlideCommentsLoader(
+  slideId?: string,
+  options?: UseSlideCommentsLoaderOptions,
+): CommentsPaginationState {
+  const { setComments } = useSlideActions();
+  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
+    useSlideCommentsInfiniteQuery(slideId);
+  const prevSlideIdRef = useRef<string | undefined>(undefined);
+
+  // slideId가 변경되면 댓글 초기화
   useEffect(() => {
     if (prevSlideIdRef.current !== slideId) {
       prevSlideIdRef.current = slideId;
-      initialLoadDoneRef.current = false;
       setComments([]);
     }
   }, [slideId, setComments]);
 
-  // 초기 로드 시에만 서버 데이터를 store에 적용
+  // 서버 데이터가 변경될 때마다 store에 동기화
+  // 낙관적 댓글(serverId 없는 top-level)과 답글(isReply/parentId)은 보존
   useEffect(() => {
-    if (!fetchedComments || initialLoadDoneRef.current) return;
+    if (!data) return;
 
-    initialLoadDoneRef.current = true;
-    const mapped = options?.mapComments ? options.mapComments(fetchedComments) : fetchedComments;
-    setComments(mapped);
-  }, [fetchedComments, options?.mapComments, setComments]);
+    const serverComments = data.pages.flatMap((p) => p.comments);
+    const mappedServerComments = options?.mapComments
+      ? options.mapComments(serverComments)
+      : serverComments;
+    const localComments = useSlideStore.getState().slide?.comments ?? [];
+    const optimisticComments = localComments.filter((comment) => !comment.serverId);
+    const mergedComments = [...optimisticComments, ...mappedServerComments];
+    const isSameLength = localComments.length === mergedComments.length;
+    const isSameOrderAndIdentity =
+      isSameLength && localComments.every((comment, index) => comment === mergedComments[index]);
 
-  return { isLoading };
+    if (isSameOrderAndIdentity) return;
+
+    setComments(mergedComments);
+  }, [data, options?.mapComments, setComments]);
+
+  return {
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  };
 }

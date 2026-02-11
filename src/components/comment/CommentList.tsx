@@ -4,10 +4,11 @@
  *
  * 댓글 리스트 렌더링과 답글 입력 상태를 관리합니다.
  * CommentProvider로 상태를 공유하여 Comment의 props를 최소화합니다.
+ * 무한 스크롤: 하단 sentinel이 뷰포트에 진입하면 다음 페이지를 로드합니다.
  */
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Skeleton } from '@/components/common';
+import { Modal, Skeleton, Spinner } from '@/components/common';
 import type { Comment as CommentType } from '@/types/comment';
 
 import Comment from './Comment';
@@ -20,6 +21,9 @@ interface CommentListProps {
   onDeleteComment?: (commentId: string) => void;
   onUpdateComment?: (commentId: string, content: string) => void;
   isLoading?: boolean;
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
+  onLoadMore?: () => void;
 }
 
 const skeletonContentWidths = ['90%', '70%', '85%', '60%'];
@@ -31,11 +35,41 @@ export default function CommentList({
   onDeleteComment,
   onUpdateComment,
   isLoading = false,
+  hasNextPage = false,
+  isFetchingNextPage = false,
+  onLoadMore,
 }: CommentListProps) {
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState('');
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // IntersectionObserver로 무한 스크롤
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [target] = entries;
+      if (target.isIntersecting && hasNextPage && !isFetchingNextPage && onLoadMore) {
+        onLoadMore();
+      }
+    },
+    [hasNextPage, isFetchingNextPage, onLoadMore],
+  );
+
+  useEffect(() => {
+    const element = sentinelRef.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(handleObserver, {
+      threshold: 0.5,
+    });
+
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [handleObserver]);
 
   const submitReply = useCallback(
     (targetId: string) => {
@@ -79,6 +113,24 @@ export default function CommentList({
     [editDraft, onUpdateComment],
   );
 
+  const requestDelete = useCallback(
+    (id: string) => {
+      if (!onDeleteComment) return;
+      setDeleteTargetId(id);
+    },
+    [onDeleteComment],
+  );
+
+  const closeDeleteModal = useCallback(() => {
+    setDeleteTargetId(null);
+  }, []);
+
+  const confirmDelete = useCallback(() => {
+    if (!deleteTargetId || !onDeleteComment) return;
+    onDeleteComment(deleteTargetId);
+    setDeleteTargetId(null);
+  }, [deleteTargetId, onDeleteComment]);
+
   const contextValue = useMemo(
     () => ({
       replyingToId,
@@ -93,7 +145,7 @@ export default function CommentList({
       startEdit,
       cancelEdit,
       submitEdit,
-      deleteComment: onDeleteComment,
+      deleteComment: onDeleteComment ? requestDelete : undefined,
       goToRef: onGoToRef,
     }),
     [
@@ -103,6 +155,7 @@ export default function CommentList({
       submitReply,
       cancelReply,
       onDeleteComment,
+      requestDelete,
       editingId,
       editDraft,
       startEdit,
@@ -114,7 +167,7 @@ export default function CommentList({
 
   if (isLoading) {
     return (
-      <div className="mt-2 flex-1 space-y-2 overflow-y-auto">
+      <div className="mt-2 min-h-0 flex-1 space-y-2 overflow-y-auto">
         {skeletonContentWidths.map((width, index) => (
           <div key={index} className="flex gap-3 py-3 pr-4 pl-4 bg-gray-100">
             {/* 프로필 사진 */}
@@ -148,12 +201,43 @@ export default function CommentList({
   }
 
   return (
-    <CommentProvider value={contextValue}>
-      <div className="mt-2 flex-1 space-y-2 overflow-y-auto">
-        {comments.map((comment) => (
-          <Comment key={comment.commentId} comment={comment} />
-        ))}
-      </div>
-    </CommentProvider>
+    <>
+      <CommentProvider value={contextValue}>
+        <div className="mt-2 min-h-0 flex-1 space-y-2 overflow-y-auto">
+          {comments.map((comment) => (
+            <Comment key={comment.commentId} comment={comment} />
+          ))}
+
+          {/* sentinel: 뷰포트 진입 시 다음 페이지 로드 */}
+          {hasNextPage && <div ref={sentinelRef} className="h-1" />}
+
+          {isFetchingNextPage && (
+            <div className="flex justify-center py-3">
+              <Spinner size={24} />
+            </div>
+          )}
+        </div>
+      </CommentProvider>
+
+      <Modal isOpen={!!deleteTargetId} onClose={closeDeleteModal} title="댓글 삭제" size="sm">
+        <p className="text-body-m">댓글을 삭제하시겠습니까?</p>
+        <div className="mt-7 flex gap-3">
+          <button
+            className="flex-1 rounded-md bg-gray-100 py-3 font-bold text-gray-600 transition-colors hover:bg-gray-200"
+            type="button"
+            onClick={closeDeleteModal}
+          >
+            취소
+          </button>
+          <button
+            className="flex-1 rounded-md bg-error py-3 font-bold text-white transition-colors hover:bg-error/90"
+            type="button"
+            onClick={confirmDelete}
+          >
+            삭제
+          </button>
+        </div>
+      </Modal>
+    </>
   );
 }

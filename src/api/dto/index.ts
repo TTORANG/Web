@@ -26,8 +26,8 @@ export type {
   ReadVideoReactionSummaryItemDto,
   ReadVideoReactionTimelineResponseDto,
   ReadVideoReactionTimelineMarkerDto,
-  ToggleSlideReactionDto,
-  ToggleSlideReactionResponseDto,
+  CreateSlideReactionDto,
+  CreateSlideReactionResponseDto,
   ToggleVideoReactionDto,
   ToggleVideoReactionResponseDto,
 } from './reactions.dto';

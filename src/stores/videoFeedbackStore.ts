@@ -75,7 +75,7 @@ function hasCommentId(flat: Comment[], commentId: string) {
 
 function getCurrentCommentAuthorId(): string {
   const user = useAuthStore.getState().user;
-  return user?.id ?? user?.name ?? 'anonymous';
+  return user?.id ?? 'anonymous';
 }
 
 // function getAllComments(feedbacks: any[]): Comment[] {
@@ -163,9 +163,12 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
             refSeconds,
           );
 
+          const currentUser = useAuthStore.getState().user;
           const createdComment = createComment({
             content: finalContent,
             userId: getCurrentCommentAuthorId(),
+            userName: currentUser?.name,
+            userProfileImage: currentUser?.profileImage,
             ref,
           });
 
@@ -202,12 +205,15 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
 
           if (!targetFeedback) return state;
 
+          const currentUser = useAuthStore.getState().user;
           const { comments: updatedComments, newComment } = addReplyToFlat(
             targetFeedback.comments,
             parentId,
             {
               content: content.trim(),
               userId: getCurrentCommentAuthorId(),
+              userName: currentUser?.name,
+              userProfileImage: currentUser?.profileImage,
             },
           );
 

@@ -14,13 +14,15 @@ import FileIcon from '@/assets/icons/icon-document.svg?react';
 import EditIcon from '@/assets/icons/icon-edit.svg?react';
 import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
-import { MOCK_USERS } from '@/mocks/users';
+import { UserAvatar } from '@/components/common';
 import { useAuthStore } from '@/stores/authStore';
 import type { Comment as CommentType } from '@/types/comment';
 import { formatRelativeTime, formatVideoTimestamp } from '@/utils/format';
+import { getUserDisplayName } from '@/utils/user';
 
 import { useCommentContext } from './CommentContext';
 import CommentInput from './CommentInput';
+import CommentReplies from './CommentReplies';
 
 interface CommentProps {
   /** 댓글 데이터 */
@@ -57,19 +59,11 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
     goToRef,
   } = useCommentContext();
   const currentUser = useAuthStore((state) => state.user);
-
-  // 서버가 userId를 숫자로 반환하는 경우 user-{id} 형식으로 변환하여 매칭
-  const normalizedUserId = comment.userId?.startsWith('user-')
-    ? comment.userId
-    : `user-${comment.userId}`;
-  const user = MOCK_USERS.find((u) => u.id === normalizedUserId || u.id === comment.userId);
-  const currentUserName =
-    currentUser?.name ?? currentUser?.email?.split('@')[0] ?? currentUser?.id ?? comment.userId;
-  const authorName = comment.isMine
-    ? currentUserName
-    : (user?.name ?? comment.userId ?? '알 수 없음');
+  const fallbackName = getUserDisplayName(currentUser, '알 수 없음');
+  const authorName =
+    comment.userName ?? (comment.isMine ? fallbackName : (comment.userId ?? fallbackName));
   const authorProfileImage =
-    (comment.isMine ? currentUser?.profileImage : undefined) ?? user?.profileImage;
+    comment.userProfileImage ?? (comment.isMine ? currentUser?.profileImage : undefined);
 
   const isActive = replyingToId === comment.commentId;
   const isEditing = editingId === comment.commentId;
@@ -119,15 +113,7 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
         )}
       >
         <div className="w-8 shrink-0">
-          {authorProfileImage ? (
-            <img
-              src={authorProfileImage}
-              alt={authorName}
-              className="h-8 w-8 rounded-full object-cover"
-            />
-          ) : (
-            <div className="h-8 w-8 rounded-full bg-gray-400" />
-          )}
+          <UserAvatar src={authorProfileImage} alt={authorName} size={32} />
         </div>
 
         <div className="flex flex-1 flex-col gap-1 pt-1.5 min-w-0">
@@ -240,17 +226,12 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
         />
       )}
 
-      {comment.replies && Array.isArray(comment.replies) && comment.replies.length > 0 && (
-        <div>
-          {comment.replies.map((reply, index) => (
-            <Comment
-              key={reply.commentId ?? `reply-${comment.commentId}-${index}`}
-              comment={reply}
-              isIndented
-              rootCommentId={resolvedRootId}
-            />
-          ))}
-        </div>
+      {!isIndented && (
+        <CommentReplies
+          serverId={comment.serverId}
+          localReplies={comment.replies ?? []}
+          rootCommentId={resolvedRootId}
+        />
       )}
     </div>
   );

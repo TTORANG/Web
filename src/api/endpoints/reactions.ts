@@ -3,27 +3,29 @@
  * @description 슬라이드 리액션 관련 API 엔드포인트
  */
 import { apiClient } from '@/api/client';
-import type { ToggleSlideReactionDto } from '@/api/dto';
+import type { CreateSlideReactionDto } from '@/api/dto';
 import type {
+  CreateSlideReactionResponseDto,
   ReadReactionCountDto,
   ReadReactionSummaryDto,
-  ToggleSlideReactionResponseDto,
 } from '@/api/dto/reactions.dto';
 import type { ApiResponse } from '@/types/api';
 
 /**
- * 슬라이드 리액션 토글
+ * 슬라이드 리액션 생성
+ *
+ * 요청 1회 = 카운트 1 증가 (토글 아님)
  *
  * @param slideId - 슬라이드 ID
  * @param data - 리액션 데이터
- * @returns { active: boolean } - 토글 후 활성 상태
+ * @returns 생성된 리액션 정보
  */
-export async function toggleReaction(
+export async function createReaction(
   slideId: string,
-  data: ToggleSlideReactionDto,
-): Promise<ToggleSlideReactionResponseDto> {
-  const { data: response } = await apiClient.post<ApiResponse<ToggleSlideReactionResponseDto>>(
-    `/slides/${slideId}/reactions/toggle`,
+  data: CreateSlideReactionDto,
+): Promise<CreateSlideReactionResponseDto> {
+  const { data: response } = await apiClient.post<ApiResponse<CreateSlideReactionResponseDto>>(
+    `/slides/${slideId}/reactions`,
     data,
   );
 
