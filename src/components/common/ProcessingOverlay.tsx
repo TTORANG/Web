@@ -24,7 +24,8 @@ export default function ProcessingOverlay({
   return (
     <div
       className={clsx(
-        'absolute inset-0 z-20 bg-black/70 flex items-center justify-center',
+        'absolute inset-0 z-20 flex items-center justify-center backdrop-blur-sm transition-all duration-200',
+        'bg-black/60 dark:bg-gray-900/60',
         blockPointerEvents ? 'pointer-events-auto' : 'pointer-events-none',
         className,
       )}

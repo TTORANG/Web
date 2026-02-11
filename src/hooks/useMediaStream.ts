@@ -92,7 +92,7 @@ export const useMediaStream = (videoDeviceId?: string, audioDeviceId?: string) =
         updateVolume();
       } catch (err) {
         if (import.meta.env.DEV) {
-          console.error('오디오 분석 설정 실패:', err);
+          console.error('오디오 분석 설정 중 오류 발생:', err);
         }
       }
     },
@@ -121,7 +121,6 @@ export const useMediaStream = (videoDeviceId?: string, audioDeviceId?: string) =
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : '미디어 장치를 가져오는데 실패했습니다';
-      console.error('미디어 스트림 에러:', err);
       setError(errorMessage);
       setStream(null);
     } finally {
