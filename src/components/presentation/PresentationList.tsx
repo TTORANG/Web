@@ -179,10 +179,10 @@ function PresentationList(props: Props) {
         </div>
 
         {/* 본문 */}
-        <div className="flex flex-1 items-center justify-between pl-6">
-          <div className="flex flex-col gap-0.5">
+        <div className="flex flex-1 items-center justify-between pl-6 min-w-0">
+          <div className="flex flex-1 flex-col gap-0.5 min-w-0">
             {/* 제목 */}
-            <div className="truncate text-body-m-bold text-gray-800">{displayTitle}</div>
+            <div className="w-full text-body-m-bold text-gray-800 line-clamp-1">{displayTitle}</div>
 
             <div className="flex gap-4">
               {/* 날짜 */}
@@ -212,7 +212,7 @@ function PresentationList(props: Props) {
                   {mode === 'slide' && (
                     <span className="flex items-center gap-1">
                       <PageCountIcon className="w-4 h-4" />
-                      {slideCount} 슬라이드
+                      {slideCount} 장
                     </span>
                   )}
                   <span className="flex items-center gap-1">
@@ -238,7 +238,7 @@ function PresentationList(props: Props) {
           </div>
 
           {/* 더보기 */}
-          <div onClick={(e) => e.stopPropagation()} className="-m-2">
+          <div onClick={(e) => e.stopPropagation()} className="-m-2 shrink-0">
             <Dropdown
               trigger={({ isOpen }) => (
                 <div className="p-2">

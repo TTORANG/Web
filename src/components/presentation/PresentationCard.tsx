@@ -4,6 +4,7 @@ import clsx from 'clsx';
 
 import CommentCountIcon from '@/assets/icons/icon-comment-count.svg?react';
 import MoreIcon from '@/assets/icons/icon-more.svg?react';
+import PageCountIcon from '@/assets/icons/icon-page-count.svg?react';
 import ReactionCountIcon from '@/assets/icons/icon-reaction-count.svg?react';
 import RecentIcon from '@/assets/icons/icon-recent.svg?react';
 import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
@@ -215,11 +216,16 @@ function PresentationCard(props: Props) {
             )}
             aria-hidden={isProcessing}
           >
-            <div className="flex items-center gap-3 shrink-0">
-              <div className="flex items-center gap-1">
-                {minutes !== null && <RecentIcon className="w-4 h-4" />}
-                {minutes !== null && <span>{minutes}분</span>}
-                <span className={clsx(minutes !== null && 'ml-1')}>{slideCount}페이지</span>
+            <div className="flex items-center gap-2.5 shrink-0">
+              {minutes !== null && (
+                <div className="gap-1 flex items-center">
+                  <RecentIcon className="w-4 h-4" />
+                  <span>{minutes} 분</span>
+                </div>
+              )}
+              <div className="flex items-center">
+                <PageCountIcon className="w-4 h-4" />
+                <span className="ml-1">{slideCount} 장</span>
               </div>
             </div>
 
