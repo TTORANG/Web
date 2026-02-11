@@ -43,4 +43,8 @@ export type InsightModel = {
   getThumb: (slideIndex: number) => string | undefined;
 
   recentCommentsData: ReadRecentCommentListResponseDto | undefined;
+
+  isLoading: boolean;
+  isError: boolean;
+  errorMessage: string | null;
 };

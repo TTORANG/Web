@@ -85,7 +85,7 @@ export default function CommentList({
       const target = document.getElementById(`comment-${scrollToCommentId}`);
       if (target) {
         lastScrolledIdRef.current = scrollToCommentId;
-        target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
 
