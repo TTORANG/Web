@@ -24,7 +24,7 @@ export default function HomePage() {
   const isLoggedIn = Boolean(accessToken);
   const [pendingThumbnailIds, setPendingThumbnailIds] = useState<string[]>([]);
   const pendingIdsRef = useRef<string[]>([]);
-  const [thumbVersion, setThumvVersion] = useState<Record<string, number>>({});
+  const [thumbVersion, setThumbVersion] = useState<Record<string, number>>({});
 
   // 파일 업로드
   const onFileSelected = async (file: File) => {
@@ -122,7 +122,7 @@ export default function HomePage() {
       if (cancelled) return;
 
       if (doneIds.length > 0) {
-        setThumvVersion((prev) => {
+        setThumbVersion((prev) => {
           const next = { ...prev };
           doneIds.forEach((id) => {
             next[id] = (next[id] ?? 0) + 1; // 폴링에서 doneIds가 나오면 버전 증가

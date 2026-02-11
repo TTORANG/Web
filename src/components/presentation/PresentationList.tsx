@@ -17,6 +17,7 @@ import type { VideoPresentation } from '@/types/video';
 import { formatRelativeTime } from '@/utils/format';
 
 import { Dropdown, type DropdownItem } from '../common/Dropdown';
+import ProcessingOverlay from '../common/ProcessingOverlay';
 import DeletePresentationModal from './DeletePresentationModal';
 import RenamePresentationModal from './RenamePresentationModal';
 
@@ -98,10 +99,9 @@ function PresentationList(props: Props) {
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
     usePresentationDeletion(projectId);
 
-  const resolvedSrc =
-    !isThumbnailPending && thumbnailUrl
-      ? `${thumbnailUrl}${thumbnailUrl.includes('?') ? '&' : '?'}v=${thumbnailVersion}`
-      : null;
+  const resolvedSrc = thumbnailUrl
+    ? `${thumbnailUrl}${thumbnailUrl.includes('?') ? '&' : '?'}v=${thumbnailVersion}`
+    : null;
 
   const {
     isRenameModalOpen,
@@ -160,15 +160,14 @@ function PresentationList(props: Props) {
     <>
       <article
         onClick={handleListClick}
-        className="flex w-full items-center justify-between bg-white px-5 py-4 rounded-2xl border border-gray-200 transition-shadow cursor-pointer hover:shadow-lg"
+        className="relative flex w-full items-center justify-between bg-white px-5 py-4 rounded-2xl border border-gray-200 transition-shadow cursor-pointer hover:shadow-lg overflow-hidden"
       >
         {/* 썸네일 */}
-        <div className="w-35 h-19.5 shrink-0 overflow-hidden rounded-lg bg-transparent">
+        <div className="relative w-35 h-19.5 shrink-0 overflow-hidden rounded-lg bg-transparent">
           <ThumbnailImage
-            key={projectId}
+            key={`${projectId}-${thumbnailVersion ?? 0}`}
             src={resolvedSrc}
             alt={displayTitle}
-            pending={isThumbnailPending}
             className="h-full w-full object-cover"
           />
         </div>
@@ -237,6 +236,12 @@ function PresentationList(props: Props) {
             />
           </div>
         </div>
+
+        <ProcessingOverlay
+          visible={Boolean(isThumbnailPending)}
+          variant="list"
+          className="rounded-2xl"
+        />
       </article>
 
       {/* 프레젠테이션 삭제 모달 (onDelete가 없을 때만) */}

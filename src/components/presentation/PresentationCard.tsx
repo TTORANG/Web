@@ -18,6 +18,7 @@ import { formatRelativeTime } from '@/utils/format';
 import { Dropdown } from '../common';
 import type { DropdownItem } from '../common/Dropdown';
 import { HighlightText } from '../common/HighlightText';
+import ProcessingOverlay from '../common/ProcessingOverlay';
 import DeletePresentationModal from './DeletePresentationModal';
 import RenamePresentationModal from './RenamePresentationModal';
 
@@ -77,8 +78,6 @@ function PresentationCardSkeleton() {
   );
 }
 
-// Using shared ThumbnailImage component from components/common
-
 function PresentationCard(props: Props) {
   const {
     projectId,
@@ -99,10 +98,9 @@ function PresentationCard(props: Props) {
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
     usePresentationDeletion(projectId);
 
-  const resolvedSrc =
-    !isThumbnailPending && thumbnailUrl
-      ? `${thumbnailUrl}${thumbnailUrl.includes('?') ? '&' : '?'}v=${thumbnailVersion}`
-      : null;
+  const resolvedSrc = thumbnailUrl
+    ? `${thumbnailUrl}${thumbnailUrl.includes('?') ? '&' : '?'}v=${thumbnailVersion}`
+    : null;
 
   const {
     isRenameModalOpen,
@@ -160,14 +158,13 @@ function PresentationCard(props: Props) {
     <>
       <article
         onClick={handleCardClick}
-        className="rounded-2xl border-none bg-white transition-shadow cursor-pointer hover:shadow-lg"
+        className="relative rounded-2xl border-none bg-white transition-shadow cursor-pointer hover:shadow-lg overflow-hidden"
       >
         <div className="aspect-video w-full overflow-hidden rounded-t-2xl bg-transparent">
           <ThumbnailImage
-            key={projectId}
+            key={`${projectId}-${thumbnailVersion ?? 0}`}
             src={resolvedSrc}
             alt={displayTitle}
-            pending={isThumbnailPending}
             className="h-full w-full object-cover"
           />
         </div>
@@ -235,6 +232,12 @@ function PresentationCard(props: Props) {
             </div>
           </div>
         </div>
+
+        <ProcessingOverlay
+          visible={Boolean(isThumbnailPending)}
+          variant="card"
+          className="rounded-2xl"
+        />
       </article>
 
       {/* 프레젠테이션 삭제 모달 (onDelete가 없을 때만) */}

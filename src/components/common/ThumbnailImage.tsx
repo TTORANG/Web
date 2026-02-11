@@ -5,23 +5,22 @@ import clsx from 'clsx';
 type Props = {
   src: string | null;
   alt: string;
-  pending?: boolean;
   className?: string;
 };
 
-export default function ThumbnailImage({ src, alt, pending, className }: Props) {
+export default function ThumbnailImage({ src, alt, className }: Props) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
 
-  const showSkeleton = pending || (src && !isLoaded) || hasError;
-  const showImage = src && !pending && !hasError;
+  const showSkeleton = !src || (src && !isLoaded) || hasError;
+  const showImage = Boolean(src) && !hasError;
 
   return (
     <>
       {showSkeleton && <div className="h-full w-full bg-gray-200 animate-pulse" />}
       {showImage && (
         <img
-          src={src}
+          src={src!}
           alt={alt}
           onLoad={() => setIsLoaded(true)}
           onError={() => setHasError(true)}
