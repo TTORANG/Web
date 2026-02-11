@@ -147,7 +147,7 @@ export default function CommentList({
 
   if (isLoading) {
     return (
-      <div className="mt-2 flex-1 space-y-2 overflow-y-auto">
+      <div className="mt-2 min-h-0 flex-1 space-y-2 overflow-y-auto">
         {skeletonContentWidths.map((width, index) => (
           <div key={index} className="flex gap-3 py-3 pr-4 pl-4 bg-gray-100">
             {/* 프로필 사진 */}
@@ -182,7 +182,7 @@ export default function CommentList({
 
   return (
     <CommentProvider value={contextValue}>
-      <div className="mt-2 flex-1 space-y-2 overflow-y-auto">
+      <div className="mt-2 min-h-0 flex-1 space-y-2 overflow-y-auto">
         {comments.map((comment) => (
           <Comment key={comment.commentId} comment={comment} />
         ))}

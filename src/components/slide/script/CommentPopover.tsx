@@ -80,7 +80,7 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
       </div>
 
       {/* 의견 목록 */}
-      <div className="h-80">
+      <div className="h-80 flex flex-col">
         <CommentList
           comments={treeComments}
           onAddReply={addReply}
