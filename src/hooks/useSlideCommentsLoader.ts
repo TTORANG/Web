@@ -25,7 +25,7 @@ export type CommentsPaginationState = {
   isLoading: boolean;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
-  fetchNextPage: (options?: FetchNextPageOptions) => Promise<InfiniteQueryObserverResult>;
+  fetchNextPage: (options?: FetchNextPageOptions) => Promise<InfiniteQueryObserverResult | null>;
 };
 
 export function useSlideCommentsLoader(
@@ -74,6 +74,6 @@ export function useSlideCommentsLoader(
     isLoading: isEnabled ? isLoading : false,
     hasNextPage: isEnabled ? hasNextPage : false,
     isFetchingNextPage: isEnabled ? isFetchingNextPage : false,
-    fetchNextPage: isEnabled ? fetchNextPage : async () => ({}) as InfiniteQueryObserverResult,
+    fetchNextPage: isEnabled ? fetchNextPage : async () => Promise.resolve(null),
   };
 }
