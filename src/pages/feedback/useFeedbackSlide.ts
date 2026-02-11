@@ -9,6 +9,7 @@ import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
 import { useSlideCommentsLoader } from '@/hooks/useSlideCommentsLoader';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
 import { useSlideReactions } from '@/hooks/useSlideReactions';
+import { useAuthStore } from '@/stores/authStore';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
 import type { SharedProjectComment, SharedProjectSlide } from '@/types/share';
@@ -52,6 +53,7 @@ type UseFeedbackSlideOptions = {
   sharedComments?: SharedProjectComment[];
   shareToken?: string;
   projectId?: string;
+  sessionId?: string;
   onShareExitSnapshotChange?: (snapshot: ShareExitSnapshot) => void;
 };
 
@@ -59,6 +61,7 @@ export const useFeedbackSlide = ({
   sharedSlides,
   sharedComments,
   shareToken,
+  sessionId,
   onShareExitSnapshotChange,
 }: UseFeedbackSlideOptions = {}) => {
   const isShared = true;
@@ -70,7 +73,11 @@ export const useFeedbackSlide = ({
 
   const currentSlide = slides?.[slideIndex];
 
-  const sharedCommentsQuery = useSharedComments(shareToken ?? '', {
+  const authUserSessionId = useAuthStore((state) => state.user?.sessionId);
+  const authAnonymousSessionId = useAuthStore((state) => state.anonymousSessionId);
+  const resolvedSessionId = sessionId ?? authUserSessionId ?? authAnonymousSessionId ?? '';
+
+  const sharedCommentsQuery = useSharedComments(shareToken ?? '', resolvedSessionId, {
     initialData: sharedComments ? { comments: sharedComments } : undefined,
   });
   const sharedCommentsSource = sharedCommentsQuery.data?.comments ?? sharedComments;
@@ -87,6 +94,16 @@ export const useFeedbackSlide = ({
     },
     onCreateError: () => {
       setIsCommentSubmitting(false);
+    },
+    onDeleteSuccess: async () => {
+      if (hasSharedComments) {
+        await sharedCommentsQuery.refetch();
+      }
+    },
+    onUpdateSuccess: async () => {
+      if (hasSharedComments) {
+        await sharedCommentsQuery.refetch();
+      }
     },
   });
   const { reactions, addReaction } = useSlideReactions();
@@ -225,10 +242,11 @@ export const useFeedbackSlide = ({
           commentId: comment.commentId,
           serverId: comment.commentId,
           slideId: comment.targetId,
-          userId: comment.writer,
+          userId: comment.userId ?? comment.writer,
+          userName: comment.writer,
           content: comment.content,
           createdAt: comment.createdAt,
-          isMine: false,
+          isMine: comment.isMine ?? false,
           parentId: comment.parentId ?? undefined,
           isReply: Boolean(comment.parentId),
           ref: meta ? ({ kind: 'slide' as const, index: meta.index } as const) : undefined,
@@ -264,8 +282,8 @@ export const useFeedbackSlide = ({
     fetchNextPage: commentsFetchNextPage,
   } = useSlideCommentsLoader(currentSlide?.slideId, {
     mapComments,
-    enabled: !hasSharedComments,
-    resetOnSlideChange: !hasSharedComments,
+    enabled: !hasSharedComments && !shareToken,
+    resetOnSlideChange: !hasSharedComments && !shareToken,
   });
 
   useEffect(() => {

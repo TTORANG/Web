@@ -8,10 +8,14 @@ type UseSharedCommentsOptions = {
   initialData?: ReadSharedCommentsData;
 };
 
-export function useSharedComments(shareToken: string, options: UseSharedCommentsOptions = {}) {
+export function useSharedComments(
+  shareToken: string,
+  sessionId?: string,
+  options: UseSharedCommentsOptions = {},
+) {
   return useQuery({
-    queryKey: queryKeys.shares.comments(shareToken),
-    queryFn: () => getSharedComments(shareToken),
+    queryKey: queryKeys.shares.comments(shareToken, sessionId),
+    queryFn: () => getSharedComments(shareToken, sessionId),
     enabled: !!shareToken,
     initialData: options.initialData,
   });

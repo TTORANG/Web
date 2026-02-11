@@ -2,6 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 
 import { queryKeys } from '@/api';
 import { createShareLink, getShareableVideos, getSharedContent } from '@/api/endpoints/shares';
+import { useAuthStore } from '@/stores/authStore';
 import type { CreateShareLinkRequest } from '@/types/share';
 
 /**
@@ -41,9 +42,13 @@ export function useCreateShareLink() {
  * @param shareToken - 공유 토큰
  */
 export function useSharedContent(shareToken: string | undefined) {
+  const userSessionId = useAuthStore((state) => state.user?.sessionId);
+  const anonymousSessionId = useAuthStore((state) => state.anonymousSessionId);
+  const sessionId = userSessionId ?? anonymousSessionId ?? '';
+
   return useQuery({
-    queryKey: queryKeys.shares.content(shareToken ?? ''),
-    queryFn: () => getSharedContent(shareToken!),
+    queryKey: queryKeys.shares.content(shareToken ?? '', sessionId),
+    queryFn: () => getSharedContent(shareToken!, sessionId),
     enabled: !!shareToken,
   });
 }

@@ -77,6 +77,8 @@ const EMPTY_COMMENTS: Comment[] = [];
 type SlideCommentsActionOptions = {
   onCreateSuccess?: (commentId: string) => void;
   onCreateError?: () => void;
+  onDeleteSuccess?: () => void;
+  onUpdateSuccess?: () => void;
 };
 
 export function useSlideCommentsActions(options: SlideCommentsActionOptions = {}) {
@@ -210,6 +212,7 @@ export function useSlideCommentsActions(options: SlideCommentsActionOptions = {}
           queryClient.invalidateQueries({
             queryKey: queryKeys.comments.list(targetSlideId),
           });
+          options.onDeleteSuccess?.();
           showToast.success('댓글이 삭제되었습니다.');
         },
         onError: () => {
@@ -246,6 +249,7 @@ export function useSlideCommentsActions(options: SlideCommentsActionOptions = {}
           queryClient.invalidateQueries({
             queryKey: queryKeys.comments.list(targetSlideId),
           });
+          options.onUpdateSuccess?.();
         },
         onError: () => {
           setComments(previousComments);

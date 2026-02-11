@@ -74,6 +74,8 @@ export type SharedProjectCommentTargetType = 'video' | 'slide';
 export interface SharedProjectComment {
   commentId: string;
   content: string;
+  userId: string;
+  isMine: boolean;
   writer: string;
   targetType: SharedProjectCommentTargetType;
   targetId: string;
