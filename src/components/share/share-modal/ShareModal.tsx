@@ -135,10 +135,6 @@ export function ShareModal() {
       showToast.error('공유 링크 생성에 실패했습니다.');
     }
   };
-  const handleClose = () => {
-    close();
-  };
-
   const shareTypeItems: DropdownItem[] = [
     {
       id: 'slide_script',
@@ -401,7 +397,7 @@ export function ShareModal() {
         </div>
         <button
           type="button"
-          onClick={handleClose}
+          onClick={close}
           className="h-14 w-full rounded-lg bg-gray-100 text-body-m-bold text-main"
         >
           닫기
@@ -412,7 +408,7 @@ export function ShareModal() {
   return (
     <Modal
       isOpen={isOpen}
-      onClose={handleClose}
+      onClose={close}
       onAfterClose={resetForm}
       title="발표 자료 공유"
       className="w-148.5 max-w-[calc(100vw-32px)]"
