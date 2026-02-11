@@ -41,10 +41,6 @@ export default function VideoDetailPage() {
   });
 
   const duration = videoData?.video.durationSeconds || 0;
-  const { segmentHighlights } = useVideoReactionHighlights(videoId, duration, {
-    intervalMs: 5000,
-    topN: 10,
-  });
 
   // 1. 데이터 로드 로직
   useEffect(() => {
