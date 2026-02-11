@@ -96,6 +96,20 @@ export function useSlideCommentsActions() {
   const comments = useMemo(() => {
     if (!flatComments) return EMPTY_COMMENTS;
     const sorted = [...flatComments].sort((a, b) => {
+      const aOptimistic = !a.serverId;
+      const bOptimistic = !b.serverId;
+      if (aOptimistic !== bOptimistic) return aOptimistic ? 1 : -1;
+
+      const aIndex =
+        a.ref?.kind === 'slide' && typeof a.ref.index === 'number'
+          ? a.ref.index
+          : Number.MAX_SAFE_INTEGER;
+      const bIndex =
+        b.ref?.kind === 'slide' && typeof b.ref.index === 'number'
+          ? b.ref.index
+          : Number.MAX_SAFE_INTEGER;
+      if (aIndex !== bIndex) return aIndex - bIndex;
+
       const at = Date.parse(a.createdAt);
       const bt = Date.parse(b.createdAt);
       if (Number.isNaN(at) || Number.isNaN(bt)) return 0;
@@ -105,7 +119,7 @@ export function useSlideCommentsActions() {
   }, [flatComments]);
 
   const addComment = (content: string, currentSlideIndex: number) => {
-    if (!slideId) return;
+    if (!slideId) return undefined;
 
     const previousComments = flatComments ?? [];
     const newComment = addCommentStore(content, currentSlideIndex);
@@ -127,6 +141,8 @@ export function useSlideCommentsActions() {
         },
       },
     );
+
+    return newComment;
   };
 
   const addReply = (parentId: string, content: string) => {

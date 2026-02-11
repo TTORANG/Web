@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { recordPageView, slideView } from '@/api/endpoints/analytics';
 import { createDefaultReactions } from '@/constants/reaction';
-import { useHotkey, useSlideActions } from '@/hooks';
+import { useHotkey, useSlideActions, useSlideComments } from '@/hooks';
 import { useScript } from '@/hooks/queries/useScript';
 import { useExitTracker } from '@/hooks/useExitTracker';
 import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
@@ -11,7 +11,7 @@ import { useSlideNavigation } from '@/hooks/useSlideNavigation';
 import { useSlideReactions } from '@/hooks/useSlideReactions';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
-import type { SharedProjectSlide } from '@/types/share';
+import type { SharedProjectComment, SharedProjectSlide } from '@/types/share';
 import type { SlideDetail } from '@/types/slide';
 
 import type { ShareExitSnapshot } from './useFeedbackVideo';
@@ -49,6 +49,7 @@ function normalizeSharedSlides(rawSlides: SharedProjectSlide[]): SlideDetail[] {
 
 type UseFeedbackSlideOptions = {
   sharedSlides?: SharedProjectSlide[];
+  sharedComments?: SharedProjectComment[];
   shareToken?: string;
   projectId?: string;
   onShareExitSnapshotChange?: (snapshot: ShareExitSnapshot) => void;
@@ -56,6 +57,7 @@ type UseFeedbackSlideOptions = {
 
 export const useFeedbackSlide = ({
   sharedSlides,
+  sharedComments,
   shareToken,
   onShareExitSnapshotChange,
 }: UseFeedbackSlideOptions = {}) => {
@@ -74,6 +76,8 @@ export const useFeedbackSlide = ({
 
   const script = useSlideStore((state) => state.slide?.script ?? '');
   const initSlide = useSlideStore((state) => state.initSlide);
+  const setComments = useSlideStore((state) => state.setComments);
+  const storedComments = useSlideComments();
   const reactionHistory = useSlideStore((state) => state.reactionHistory);
   const reactionCounts = useSlideStore((state) => state.reactionCounts);
 
@@ -81,10 +85,16 @@ export const useFeedbackSlide = ({
   const { data: scriptData } = useScript(isShared ? '' : (currentSlide?.slideId ?? ''));
 
   const [commentDraft, setCommentDraft] = useState('');
+  const [scrollToCommentId, setScrollToCommentId] = useState<string | null>(null);
+
+  const hasSharedComments = sharedComments != null;
 
   const handleAddComment = () => {
     if (!commentDraft.trim()) return;
-    addComment(commentDraft, slideIndex);
+    const newComment = addComment(commentDraft, slideIndex);
+    if (newComment?.commentId) {
+      setScrollToCommentId(newComment.commentId);
+    }
     setCommentDraft('');
   };
 
@@ -157,6 +167,7 @@ export const useFeedbackSlide = ({
       initSlide({
         ...currentSlide,
         emojiReactions: initialReactions,
+        comments: hasSharedComments ? storedComments : currentSlide.comments,
       });
       if (isShared) {
         updateScript(currentSlide.script ?? '');
@@ -164,7 +175,52 @@ export const useFeedbackSlide = ({
         updateScript('');
       }
     }
-  }, [currentSlide, initSlide, updateScript, reactionHistory, reactionCounts, isShared]);
+  }, [
+    currentSlide,
+    initSlide,
+    updateScript,
+    reactionHistory,
+    reactionCounts,
+    isShared,
+    hasSharedComments,
+    storedComments,
+  ]);
+  const sharedSlideMeta = useMemo(() => {
+    return new Map(
+      slides.map((slide, index) => [
+        slide.slideId,
+        { index, label: `Slide ${slide.slideNum ?? index + 1}` },
+      ]),
+    );
+  }, [slides]);
+
+  const sharedSlideComments = useMemo(() => {
+    if (!hasSharedComments) return null;
+
+    return (sharedComments ?? [])
+      .filter((comment) => comment.targetType === 'slide')
+      .map((comment) => {
+        const meta = sharedSlideMeta.get(comment.targetId);
+        return {
+          commentId: comment.commentId,
+          serverId: comment.commentId,
+          slideId: comment.targetId,
+          userId: comment.writer,
+          content: comment.content,
+          createdAt: comment.createdAt,
+          isMine: false,
+          parentId: comment.parentId ?? undefined,
+          isReply: Boolean(comment.parentId),
+          ref: meta ? ({ kind: 'slide' as const, index: meta.index } as const) : undefined,
+          slideRef: meta?.label,
+        };
+      });
+  }, [hasSharedComments, sharedComments, sharedSlideMeta]);
+
+  useEffect(() => {
+    if (!sharedSlideComments) return;
+    setComments(sharedSlideComments);
+  }, [sharedSlideComments, setComments]);
 
   const {
     isLoading: isCommentsLoading,
@@ -173,6 +229,8 @@ export const useFeedbackSlide = ({
     fetchNextPage: commentsFetchNextPage,
   } = useSlideCommentsLoader(currentSlide?.slideId, {
     mapComments,
+    enabled: !hasSharedComments,
+    resetOnSlideChange: !hasSharedComments,
   });
 
   useEffect(() => {
@@ -217,6 +275,7 @@ export const useFeedbackSlide = ({
       script,
       comments,
       commentDraft,
+      scrollToCommentId,
       reactions,
       isLoading: false,
       isCommentsLoading,

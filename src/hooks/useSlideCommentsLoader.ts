@@ -17,6 +17,8 @@ import { useSlideActions } from './useSlideSelectors';
 
 type UseSlideCommentsLoaderOptions = {
   mapComments?: (comments: Comment[]) => Comment[];
+  enabled?: boolean;
+  resetOnSlideChange?: boolean;
 };
 
 export type CommentsPaginationState = {
@@ -30,6 +32,8 @@ export function useSlideCommentsLoader(
   slideId?: string,
   options?: UseSlideCommentsLoaderOptions,
 ): CommentsPaginationState {
+  const isEnabled = options?.enabled ?? true;
+  const resetOnSlideChange = options?.resetOnSlideChange ?? true;
   const { setComments } = useSlideActions();
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useSlideCommentsInfiniteQuery(slideId);
@@ -37,15 +41,17 @@ export function useSlideCommentsLoader(
 
   // slideId가 변경되면 댓글 초기화
   useEffect(() => {
+    if (!isEnabled || !resetOnSlideChange) return;
     if (prevSlideIdRef.current !== slideId) {
       prevSlideIdRef.current = slideId;
       setComments([]);
     }
-  }, [slideId, setComments]);
+  }, [slideId, setComments, isEnabled, resetOnSlideChange]);
 
   // 서버 데이터가 변경될 때마다 store에 동기화
   // 낙관적 댓글(serverId 없는 top-level)과 답글(isReply/parentId)은 보존
   useEffect(() => {
+    if (!isEnabled) return;
     if (!data) return;
 
     const serverComments = data.pages.flatMap((p) => p.comments);
@@ -62,12 +68,12 @@ export function useSlideCommentsLoader(
     if (isSameOrderAndIdentity) return;
 
     setComments(mergedComments);
-  }, [data, options?.mapComments, setComments]);
+  }, [data, options?.mapComments, setComments, isEnabled]);
 
   return {
-    isLoading,
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
+    isLoading: isEnabled ? isLoading : false,
+    hasNextPage: isEnabled ? hasNextPage : false,
+    isFetchingNextPage: isEnabled ? isFetchingNextPage : false,
+    fetchNextPage: isEnabled ? fetchNextPage : async () => ({}) as InfiniteQueryObserverResult,
   };
 }
