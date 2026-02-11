@@ -8,7 +8,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Skeleton, Spinner } from '@/components/common';
+import { Modal, Skeleton, Spinner } from '@/components/common';
 import type { Comment as CommentType } from '@/types/comment';
 
 import Comment from './Comment';
@@ -43,6 +43,7 @@ export default function CommentList({
   const [replyDraft, setReplyDraft] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState('');
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -112,6 +113,24 @@ export default function CommentList({
     [editDraft, onUpdateComment],
   );
 
+  const requestDelete = useCallback(
+    (id: string) => {
+      if (!onDeleteComment) return;
+      setDeleteTargetId(id);
+    },
+    [onDeleteComment],
+  );
+
+  const closeDeleteModal = useCallback(() => {
+    setDeleteTargetId(null);
+  }, []);
+
+  const confirmDelete = useCallback(() => {
+    if (!deleteTargetId || !onDeleteComment) return;
+    onDeleteComment(deleteTargetId);
+    setDeleteTargetId(null);
+  }, [deleteTargetId, onDeleteComment]);
+
   const contextValue = useMemo(
     () => ({
       replyingToId,
@@ -126,7 +145,7 @@ export default function CommentList({
       startEdit,
       cancelEdit,
       submitEdit,
-      deleteComment: onDeleteComment,
+      deleteComment: onDeleteComment ? requestDelete : undefined,
       goToRef: onGoToRef,
     }),
     [
@@ -136,6 +155,7 @@ export default function CommentList({
       submitReply,
       cancelReply,
       onDeleteComment,
+      requestDelete,
       editingId,
       editDraft,
       startEdit,
@@ -181,21 +201,43 @@ export default function CommentList({
   }
 
   return (
-    <CommentProvider value={contextValue}>
-      <div className="mt-2 min-h-0 flex-1 space-y-2 overflow-y-auto">
-        {comments.map((comment) => (
-          <Comment key={comment.commentId} comment={comment} />
-        ))}
+    <>
+      <CommentProvider value={contextValue}>
+        <div className="mt-2 min-h-0 flex-1 space-y-2 overflow-y-auto">
+          {comments.map((comment) => (
+            <Comment key={comment.commentId} comment={comment} />
+          ))}
 
-        {/* sentinel: 뷰포트 진입 시 다음 페이지 로드 */}
-        {hasNextPage && <div ref={sentinelRef} className="h-1" />}
+          {/* sentinel: 뷰포트 진입 시 다음 페이지 로드 */}
+          {hasNextPage && <div ref={sentinelRef} className="h-1" />}
 
-        {isFetchingNextPage && (
-          <div className="flex justify-center py-3">
-            <Spinner size={24} />
-          </div>
-        )}
-      </div>
-    </CommentProvider>
+          {isFetchingNextPage && (
+            <div className="flex justify-center py-3">
+              <Spinner size={24} />
+            </div>
+          )}
+        </div>
+      </CommentProvider>
+
+      <Modal isOpen={!!deleteTargetId} onClose={closeDeleteModal} title="댓글 삭제" size="sm">
+        <p className="text-body-m">댓글을 삭제하시겠습니까?</p>
+        <div className="mt-7 flex gap-3">
+          <button
+            className="flex-1 rounded-md bg-gray-100 py-3 font-bold text-gray-600 transition-colors hover:bg-gray-200"
+            type="button"
+            onClick={closeDeleteModal}
+          >
+            취소
+          </button>
+          <button
+            className="flex-1 rounded-md bg-error py-3 font-bold text-white transition-colors hover:bg-error/90"
+            type="button"
+            onClick={confirmDelete}
+          >
+            삭제
+          </button>
+        </div>
+      </Modal>
+    </>
   );
 }
