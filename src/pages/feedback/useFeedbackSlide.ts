@@ -199,8 +199,23 @@ export const useFeedbackSlide = ({
 
   useEffect(() => {
     if (!sharedSlideComments) return;
-    setComments(sharedSlideComments);
-  }, [sharedSlideComments, setComments]);
+    const sharedServerIds = new Set(
+      sharedSlideComments
+        .map((comment) => comment.serverId ?? comment.commentId)
+        .filter((id): id is string => Boolean(id)),
+    );
+    const localOnlyComments = storedComments.filter((comment) => {
+      if (!comment.serverId) return true;
+      return !sharedServerIds.has(comment.serverId);
+    });
+    const mergedComments = [...localOnlyComments, ...sharedSlideComments];
+    const isSameLength = storedComments.length === mergedComments.length;
+    const isSameOrderAndIdentity =
+      isSameLength && storedComments.every((comment, index) => comment === mergedComments[index]);
+
+    if (isSameOrderAndIdentity) return;
+    setComments(mergedComments);
+  }, [sharedSlideComments, setComments, storedComments]);
 
   const {
     isLoading: isCommentsLoading,
