@@ -75,7 +75,7 @@ function hasCommentId(flat: Comment[], commentId: string) {
 
 function getCurrentCommentAuthorId(): string {
   const user = useAuthStore.getState().user;
-  return user?.id ?? user?.name ?? 'anonymous';
+  return user?.id ?? 'anonymous';
 }
 
 // function getAllComments(feedbacks: any[]): Comment[] {

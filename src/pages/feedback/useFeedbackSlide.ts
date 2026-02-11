@@ -69,7 +69,7 @@ export const useFeedbackSlide = ({
 
   const { comments, addComment, addReply, deleteComment, updateComment } =
     useSlideCommentsActions();
-  const { reactions, toggleReaction } = useSlideReactions();
+  const { reactions, addReaction } = useSlideReactions();
 
   const script = useSlideStore((state) => state.slide?.script ?? '');
   const initSlide = useSlideStore((state) => state.initSlide);
@@ -146,7 +146,12 @@ export const useFeedbackSlide = ({
     }
   }, [currentSlide, initSlide, updateScript, reactionHistory, reactionCounts, isShared]);
 
-  const { isLoading: isCommentsLoading } = useSlideCommentsLoader(currentSlide?.slideId, {
+  const {
+    isLoading: isCommentsLoading,
+    hasNextPage: commentsHasNextPage,
+    isFetchingNextPage: commentsIsFetchingNextPage,
+    fetchNextPage: commentsFetchNextPage,
+  } = useSlideCommentsLoader(currentSlide?.slideId, {
     mapComments,
   });
 
@@ -188,6 +193,8 @@ export const useFeedbackSlide = ({
       reactions,
       isLoading: false,
       isCommentsLoading,
+      commentsHasNextPage,
+      commentsIsFetchingNextPage,
       isFirst: navigation.isFirst,
       isLast: navigation.isLast,
     },
@@ -200,7 +207,8 @@ export const useFeedbackSlide = ({
       addReply,
       deleteComment,
       updateComment,
-      toggleReaction,
+      addReaction,
+      commentsFetchNextPage,
     },
   };
 };

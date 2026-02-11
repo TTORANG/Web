@@ -40,10 +40,10 @@ export default function InsightPage() {
             isVideo={m.retentionIsVideo}
           />
 
-          <div className="flex flex-wrap items-start justify-between gap-6 py-4">
+          <div className="grid grid-cols-1 gap-12 py-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
             <FeedbackDistributionSection projectId={m.projectIdStr ?? ''} />
 
-            <div className="flex min-w-80 flex-1 basis-160 flex-col gap-6">
+            <div className="flex flex-col gap-6">
               <h3 className="text-body-l-bold text-gray-800">가장 많은 피드백을 받은 슬라이드</h3>
               <div className="flex flex-wrap items-start gap-4">
                 {m.topSlides.map(({ slideId, slide, slideIndex, title }, index) => {

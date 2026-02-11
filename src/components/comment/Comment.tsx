@@ -18,9 +18,11 @@ import { UserAvatar } from '@/components/common';
 import { useAuthStore } from '@/stores/authStore';
 import type { Comment as CommentType } from '@/types/comment';
 import { formatRelativeTime, formatVideoTimestamp } from '@/utils/format';
+import { getUserDisplayName } from '@/utils/user';
 
 import { useCommentContext } from './CommentContext';
 import CommentInput from './CommentInput';
+import CommentReplies from './CommentReplies';
 
 interface CommentProps {
   /** 댓글 데이터 */
@@ -57,8 +59,7 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
     goToRef,
   } = useCommentContext();
   const currentUser = useAuthStore((state) => state.user);
-  const fallbackName =
-    currentUser?.name ?? currentUser?.email?.split('@')[0] ?? currentUser?.id ?? '알 수 없음';
+  const fallbackName = getUserDisplayName(currentUser, '알 수 없음');
   const authorName =
     comment.userName ?? (comment.isMine ? fallbackName : (comment.userId ?? fallbackName));
   const authorProfileImage =
@@ -225,17 +226,12 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
         />
       )}
 
-      {comment.replies && Array.isArray(comment.replies) && comment.replies.length > 0 && (
-        <div>
-          {comment.replies.map((reply, index) => (
-            <Comment
-              key={reply.commentId ?? `reply-${comment.commentId}-${index}`}
-              comment={reply}
-              isIndented
-              rootCommentId={resolvedRootId}
-            />
-          ))}
-        </div>
+      {!isIndented && (
+        <CommentReplies
+          serverId={comment.serverId}
+          localReplies={comment.replies ?? []}
+          rootCommentId={resolvedRootId}
+        />
       )}
     </div>
   );
