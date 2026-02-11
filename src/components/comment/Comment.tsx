@@ -18,6 +18,7 @@ import { UserAvatar } from '@/components/common';
 import { useAuthStore } from '@/stores/authStore';
 import type { Comment as CommentType } from '@/types/comment';
 import { formatRelativeTime, formatVideoTimestamp } from '@/utils/format';
+import { getUserDisplayName } from '@/utils/user';
 
 import { useCommentContext } from './CommentContext';
 import CommentInput from './CommentInput';
@@ -58,8 +59,7 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
     goToRef,
   } = useCommentContext();
   const currentUser = useAuthStore((state) => state.user);
-  const fallbackName =
-    currentUser?.name ?? currentUser?.email?.split('@')[0] ?? currentUser?.id ?? '알 수 없음';
+  const fallbackName = getUserDisplayName(currentUser, '알 수 없음');
   const authorName =
     comment.userName ?? (comment.isMine ? fallbackName : (comment.userId ?? fallbackName));
   const authorProfileImage =

@@ -138,7 +138,7 @@ export const useSlideStore = create<SlideState>()(
         // 항상 최상위 부모 댓글에 답글을 달도록 rootParentId를 찾음
         const rootParentId = findRootParentId(currentState.slide.comments ?? [], parentId);
         const currentUser = useAuthStore.getState().user;
-        const authorId = currentUser?.id ?? currentUser?.name ?? 'anonymous';
+        const authorId = currentUser?.id ?? 'anonymous';
 
         const { comments, newComment } = addReplyToFlat(
           currentState.slide.comments ?? [],
@@ -195,7 +195,7 @@ export const useSlideStore = create<SlideState>()(
         const trimmed = content.trim();
         if (!trimmed) return undefined;
         const currentUser = useAuthStore.getState().user;
-        const authorId = currentUser?.id ?? currentUser?.name ?? 'anonymous';
+        const authorId = currentUser?.id ?? 'anonymous';
 
         const newComment = createComment({
           content: trimmed,

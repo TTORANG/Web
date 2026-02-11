@@ -31,7 +31,6 @@ export function useSlideCommentsLoader(
   options?: UseSlideCommentsLoaderOptions,
 ): CommentsPaginationState {
   const { setComments } = useSlideActions();
-  const localComments = useSlideStore((state) => state.slide?.comments ?? []);
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useSlideCommentsInfiniteQuery(slideId);
   const prevSlideIdRef = useRef<string | undefined>(undefined);
@@ -53,8 +52,14 @@ export function useSlideCommentsLoader(
     const mappedServerComments = options?.mapComments
       ? options.mapComments(serverComments)
       : serverComments;
+    const localComments = useSlideStore.getState().slide?.comments ?? [];
     const optimisticComments = localComments.filter((comment) => !comment.serverId);
     const mergedComments = [...optimisticComments, ...mappedServerComments];
+    const isSameLength = localComments.length === mergedComments.length;
+    const isSameOrderAndIdentity =
+      isSameLength && localComments.every((comment, index) => comment === mergedComments[index]);
+
+    if (isSameOrderAndIdentity) return;
 
     setComments(mergedComments);
   }, [data, options?.mapComments, setComments]);
