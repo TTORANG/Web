@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { recordPageView, slideView } from '@/api/endpoints/analytics';
+import { useQueryClient } from '@tanstack/react-query';
+
+import { slideView } from '@/api/endpoints/analytics';
+import { queryKeys } from '@/api/queryClient';
 import { createDefaultReactions } from '@/constants/reaction';
-import { useHotkey, useSlideActions, useSlideComments } from '@/hooks';
+import { useHotkey, useSharedComments, useSlideActions, useSlideComments } from '@/hooks';
 import { useScript } from '@/hooks/queries/useScript';
-import { useExitTracker } from '@/hooks/useExitTracker';
 import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
 import { useSlideCommentsLoader } from '@/hooks/useSlideCommentsLoader';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
 import { useSlideReactions } from '@/hooks/useSlideReactions';
+import { useAuthStore } from '@/stores/authStore';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
 import type { SharedProjectComment, SharedProjectSlide } from '@/types/share';
@@ -36,7 +39,7 @@ function normalizeSharedSlides(rawSlides: SharedProjectSlide[]): SlideDetail[] {
       return {
         slideId: slide.slideId,
         projectId: SHARED_PROJECT_ID,
-        title: `슬라이드 ${slideNum}`,
+        title: slide.title ?? '슬라이드 ' + slideNum,
         slideNum,
         imageUrl: slide.imageUrl,
         createdAt: now,
@@ -52,6 +55,7 @@ type UseFeedbackSlideOptions = {
   sharedComments?: SharedProjectComment[];
   shareToken?: string;
   projectId?: string;
+  sessionId?: string;
   onShareExitSnapshotChange?: (snapshot: ShareExitSnapshot) => void;
 };
 
@@ -59,6 +63,7 @@ export const useFeedbackSlide = ({
   sharedSlides,
   sharedComments,
   shareToken,
+  sessionId,
   onShareExitSnapshotChange,
 }: UseFeedbackSlideOptions = {}) => {
   const isShared = true;
@@ -70,8 +75,64 @@ export const useFeedbackSlide = ({
 
   const currentSlide = slides?.[slideIndex];
 
-  const { comments, addComment, addReply, deleteComment, updateComment } =
-    useSlideCommentsActions();
+  const authUserSessionId = useAuthStore((state) => state.user?.sessionId);
+  const authAnonymousSessionId = useAuthStore((state) => state.anonymousSessionId);
+  const resolvedSessionId = sessionId ?? authUserSessionId ?? authAnonymousSessionId ?? '';
+  const queryClient = useQueryClient();
+
+  const sharedCommentsQuery = useSharedComments(shareToken ?? '', resolvedSessionId, {
+    initialData: sharedComments ? { comments: sharedComments } : undefined,
+  });
+  const sharedCommentsSource = sharedCommentsQuery.data?.comments ?? sharedComments;
+  const hasSharedComments = sharedCommentsSource != null;
+
+  const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
+  const updateSharedCommentsCache = useCallback(
+    (updater: (items: SharedProjectComment[]) => SharedProjectComment[]) => {
+      if (!shareToken) return;
+      queryClient.setQueryData<{ comments: SharedProjectComment[] }>(
+        queryKeys.shares.comments(shareToken, resolvedSessionId),
+        (prev) => {
+          if (!prev) return prev;
+          return { ...prev, comments: updater(prev.comments) };
+        },
+      );
+    },
+    [queryClient, resolvedSessionId, shareToken],
+  );
+
+  const { comments, addComment, addReply, deleteComment, updateComment } = useSlideCommentsActions({
+    onCreateSuccess: async (commentId) => {
+      if (hasSharedComments) {
+        await sharedCommentsQuery.refetch();
+        setScrollToCommentId(commentId);
+      }
+      setIsCommentSubmitting(false);
+    },
+    onCreateError: () => {
+      setIsCommentSubmitting(false);
+    },
+    onDeleteSuccess: async (commentId) => {
+      if (hasSharedComments) {
+        updateSharedCommentsCache((items) =>
+          items.filter(
+            (comment) => comment.commentId !== commentId && comment.parentId !== commentId,
+          ),
+        );
+        await sharedCommentsQuery.refetch();
+      }
+    },
+    onUpdateSuccess: async (commentId, content) => {
+      if (hasSharedComments) {
+        updateSharedCommentsCache((items) =>
+          items.map((comment) =>
+            comment.commentId === commentId ? { ...comment, content } : comment,
+          ),
+        );
+        await sharedCommentsQuery.refetch();
+      }
+    },
+  });
   const { reactions, addReaction } = useSlideReactions();
 
   const script = useSlideStore((state) => state.slide?.script ?? '');
@@ -87,12 +148,15 @@ export const useFeedbackSlide = ({
   const [commentDraft, setCommentDraft] = useState('');
   const [scrollToCommentId, setScrollToCommentId] = useState<string | null>(null);
 
-  const hasSharedComments = sharedComments != null;
-
   const handleAddComment = () => {
     if (!commentDraft.trim()) return;
+    setIsCommentSubmitting(true);
     const newComment = addComment(commentDraft, slideIndex);
-    if (newComment?.commentId) {
+    if (!newComment) {
+      setIsCommentSubmitting(false);
+      return;
+    }
+    if (newComment?.commentId && !hasSharedComments) {
       setScrollToCommentId(newComment.commentId);
     }
     setCommentDraft('');
@@ -113,25 +177,6 @@ export const useFeedbackSlide = ({
   );
 
   useHotkey({ ArrowLeft: goPrev, ArrowRight: goNext }, { enabled: slides.length > 0 });
-
-  const buildExitPayload = () => {
-    if (!shareToken) return null;
-
-    const payload: { shareToken: string; lastSlideId?: number } = {
-      shareToken,
-    };
-
-    if (currentSlide?.slideId) {
-      const slideIdNum = Number(currentSlide.slideId);
-      if (Number.isFinite(slideIdNum)) {
-        payload.lastSlideId = slideIdNum;
-      }
-    }
-
-    return payload;
-  };
-
-  useExitTracker(buildExitPayload);
 
   const lastExitSnapshotSlideIdRef = useRef<string | null>(null);
   useEffect(() => {
@@ -197,7 +242,7 @@ export const useFeedbackSlide = ({
   const sharedSlideComments = useMemo(() => {
     if (!hasSharedComments) return null;
 
-    return (sharedComments ?? [])
+    return (sharedCommentsSource ?? [])
       .filter((comment) => comment.targetType === 'slide')
       .map((comment) => {
         const meta = sharedSlideMeta.get(comment.targetId);
@@ -205,29 +250,24 @@ export const useFeedbackSlide = ({
           commentId: comment.commentId,
           serverId: comment.commentId,
           slideId: comment.targetId,
-          userId: comment.writer,
+          userId: comment.userId ?? comment.writer,
+          userName: comment.writer,
           content: comment.content,
           createdAt: comment.createdAt,
-          isMine: false,
+          isMine: comment.isMine ?? false,
           parentId: comment.parentId ?? undefined,
           isReply: Boolean(comment.parentId),
           ref: meta ? ({ kind: 'slide' as const, index: meta.index } as const) : undefined,
           slideRef: meta?.label,
         };
       });
-  }, [hasSharedComments, sharedComments, sharedSlideMeta]);
+  }, [hasSharedComments, sharedCommentsSource, sharedSlideMeta]);
 
   useEffect(() => {
     if (!sharedSlideComments) return;
-    const sharedServerIds = new Set(
-      sharedSlideComments
-        .map((comment) => comment.serverId ?? comment.commentId)
-        .filter((id): id is string => Boolean(id)),
-    );
-    const localOnlyComments = storedComments.filter((comment) => {
-      if (!comment.serverId) return true;
-      return !sharedServerIds.has(comment.serverId);
-    });
+    // Only keep optimistic local comments (no serverId).
+    // If a serverId is missing from shared data, it should be treated as deleted.
+    const localOnlyComments = storedComments.filter((comment) => !comment.serverId);
     const mergedComments = [...localOnlyComments, ...sharedSlideComments];
     const isSameLength = storedComments.length === mergedComments.length;
     const isSameOrderAndIdentity =
@@ -244,8 +284,8 @@ export const useFeedbackSlide = ({
     fetchNextPage: commentsFetchNextPage,
   } = useSlideCommentsLoader(currentSlide?.slideId, {
     mapComments,
-    enabled: !hasSharedComments,
-    resetOnSlideChange: !hasSharedComments,
+    enabled: !hasSharedComments && !shareToken,
+    resetOnSlideChange: !hasSharedComments && !shareToken,
   });
 
   useEffect(() => {
@@ -261,13 +301,6 @@ export const useFeedbackSlide = ({
     },
     [goToIndex],
   );
-
-  const pageViewSentRef = useRef(false);
-  useEffect(() => {
-    if (!shareToken || pageViewSentRef.current) return;
-    pageViewSentRef.current = true;
-    void recordPageView({ shareToken });
-  }, [shareToken]);
 
   const lastSlideViewIdRef = useRef<string | null>(null);
   useEffect(() => {
@@ -290,6 +323,7 @@ export const useFeedbackSlide = ({
       script,
       comments,
       commentDraft,
+      isCommentSubmitting,
       scrollToCommentId,
       reactions,
       isLoading: false,

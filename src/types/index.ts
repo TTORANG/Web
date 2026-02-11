@@ -36,6 +36,8 @@ export type {
   SharedProjectCommentTargetType,
   ReadSharedContentData,
   ReadSharedContentResponse,
+  ReadSharedCommentsData,
+  ReadSharedCommentsResponse,
 } from './share';
 
 // Slide

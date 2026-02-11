@@ -74,7 +74,14 @@ const EMPTY_COMMENTS: Comment[] = [];
  * @returns deleteComment - 댓글 삭제 (optimistic)
  * @returns updateComment - 댓글 수정 (optimistic)
  */
-export function useSlideCommentsActions() {
+type SlideCommentsActionOptions = {
+  onCreateSuccess?: (commentId: string) => void;
+  onCreateError?: () => void;
+  onDeleteSuccess?: (commentId: string) => void;
+  onUpdateSuccess?: (commentId: string, content: string) => void;
+};
+
+export function useSlideCommentsActions(options: SlideCommentsActionOptions = {}) {
   const { projectId = '' } = useParams<{ projectId: string }>();
   const slideId = useSlideStore((state) => state.slide?.slideId);
   const queryClient = useQueryClient();
@@ -131,6 +138,7 @@ export function useSlideCommentsActions() {
           if (newComment) {
             updateCommentServerIdStore(newComment.commentId, response.commentId);
           }
+          options.onCreateSuccess?.(response.commentId);
           queryClient.invalidateQueries({
             queryKey: queryKeys.comments.list(slideId),
           });
@@ -138,6 +146,7 @@ export function useSlideCommentsActions() {
         onError: () => {
           setComments(previousComments);
           showToast.error('댓글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+          options.onCreateError?.();
         },
       },
     );
@@ -203,6 +212,9 @@ export function useSlideCommentsActions() {
           queryClient.invalidateQueries({
             queryKey: queryKeys.comments.list(targetSlideId),
           });
+          if (targetServerId) {
+            options.onDeleteSuccess?.(targetServerId);
+          }
           showToast.success('댓글이 삭제되었습니다.');
         },
         onError: () => {
@@ -239,6 +251,9 @@ export function useSlideCommentsActions() {
           queryClient.invalidateQueries({
             queryKey: queryKeys.comments.list(targetSlideId),
           });
+          if (targetServerId) {
+            options.onUpdateSuccess?.(targetServerId, content);
+          }
         },
         onError: () => {
           setComments(previousComments);

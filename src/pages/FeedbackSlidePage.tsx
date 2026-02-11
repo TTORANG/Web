@@ -34,6 +34,7 @@ export default function FeedbackSlidePage({
   const { state, actions } = useFeedbackSlide({
     sharedSlides: sharedContent?.projectContent?.slides,
     sharedComments: sharedContent?.projectContent?.comments,
+    sessionId: sharedContent?.sessionInfo?.sessionId,
     shareToken,
     onShareExitSnapshotChange,
   });
