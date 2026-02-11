@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import { recordVideoEvent } from '@/api/endpoints/analytics';
-import { getSharedContent } from '@/api/endpoints/shares';
+import { getSharedComments } from '@/api/endpoints/shares';
 import { videosApi } from '@/api/endpoints/videos';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useVideoComments } from '@/hooks/useVideoComments';
@@ -21,7 +21,6 @@ import type {
 } from '@/types/share';
 import type { SlideDetail } from '@/types/slide';
 import type { VideoTimestampFeedback } from '@/types/video';
-import { userFromAccessToken } from '@/utils/auth';
 import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
 
@@ -160,8 +159,6 @@ function toNumericId(value: string | number | null | undefined): number | null {
 
 function mapSharedCommentsToFeedbacks(
   rawComments: SharedProjectComment[],
-  currentUserId?: string,
-  currentUserName?: string,
 ): VideoTimestampFeedback[] {
   if (!rawComments.length) return [];
 
@@ -172,7 +169,9 @@ function mapSharedCommentsToFeedbacks(
     const fallbackId = `shared-comment-${timestampMs}-${index}`;
     const commentId = sharedComment.commentId || fallbackId;
     const parentId = sharedComment.parentId ?? undefined;
-    const userId = sharedComment.writer.trim() || 'unknown';
+    const userId = sharedComment.userId || sharedComment.writer?.trim() || 'unknown';
+    // writer가 비어있거나 없으면 undefined (Comment 컴포넌트에서 fallback 처리)
+    const userName = sharedComment.writer?.trim() || undefined;
 
     const mappedComment: Comment = {
       commentId,
@@ -181,11 +180,10 @@ function mapSharedCommentsToFeedbacks(
       isReply: Boolean(parentId),
       replies: parentId ? undefined : [],
       userId,
+      userName,
       content: sharedComment.content,
       createdAt: sharedComment.createdAt,
-      isMine:
-        (Boolean(currentUserId) && userId === currentUserId) ||
-        (Boolean(currentUserName) && userId === currentUserName),
+      isMine: sharedComment.isMine,
       ref: { kind: 'video', seconds: timestampMs / 1000 },
     };
 
@@ -224,10 +222,13 @@ export function useFeedbackVideo(
   const currentTime = useVideoFeedbackStore((s) => s.currentTime);
   const updateCurrentTime = useVideoFeedbackStore((s) => s.updateCurrentTime);
   const requestSeek = useVideoFeedbackStore((s) => s.requestSeek);
+  const updateFeedbacks = useVideoFeedbackStore((s) => s.updateFeedbacks);
 
   const { comments, addComment, addReply, deleteComment, updateComment } = useVideoComments();
-  const { reactions, toggleReaction } = useVideoReactions();
+  const { reactions, addReaction } = useVideoReactions();
   const [commentDraft, setCommentDraft] = useState('');
+  const [scrollToCommentId, setScrollToCommentId] = useState<string | undefined>(undefined);
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   const timestampPrefix = useMemo(() => `${formatVideoTimestamp(currentTime)} `, [currentTime]);
   // 비디오 이벤트 기록 API는 number videoId를 사용합니다.
@@ -236,11 +237,51 @@ export function useFeedbackVideo(
     return Number.isFinite(parsed) ? parsed : null;
   }, [video?.videoId]);
 
-  const handleAddComment = useCallback(() => {
+  // 서버에서 최신 댓글 목록을 가져와서 store 업데이트
+  const reloadComments = useCallback(async () => {
+    if (!shareToken) return null;
+
+    try {
+      const { user } = useAuthStore.getState();
+      const sessionId = user?.sessionId;
+      const data = await getSharedComments(shareToken, sessionId);
+      const sharedFeedbacks = mapSharedCommentsToFeedbacks(data.comments);
+      updateFeedbacks(sharedFeedbacks);
+      return data.comments;
+    } catch {
+      return null;
+    }
+  }, [shareToken, updateFeedbacks]);
+
+  const handleAddComment = useCallback(async () => {
     if (!commentDraft.trim()) return;
-    addComment(commentDraft, currentTime);
-    setCommentDraft('');
-  }, [addComment, commentDraft, currentTime]);
+
+    setIsSubmittingComment(true);
+
+    try {
+      // 1. POST 요청으로 댓글 작성
+      const newCommentServerId = await addComment(commentDraft, currentTime);
+      setCommentDraft('');
+
+      // 2. 서버에서 최신 댓글 목록 가져오기 (다른 사용자의 댓글도 반영)
+      const latestComments = await reloadComments();
+
+      // 3. 방금 작성한 댓글로 스크롤
+      if (newCommentServerId && latestComments) {
+        // 서버에서 받은 댓글 목록에서 방금 작성한 댓글 찾기
+        const newComment = latestComments.find(
+          (c: SharedProjectComment) => c.commentId === newCommentServerId,
+        );
+        if (newComment) {
+          setScrollToCommentId(newComment.commentId);
+          // 스크롤 후 상태 초기화 (다음 댓글 작성 시 중복 스크롤 방지)
+          setTimeout(() => setScrollToCommentId(undefined), 500);
+        }
+      }
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  }, [addComment, commentDraft, currentTime, reloadComments]);
 
   const handleGoToTimeRef = useCallback(
     (ref: NonNullable<Comment['ref']>) => {
@@ -305,33 +346,16 @@ export function useFeedbackVideo(
     projectSlides,
     slideChangeTimes,
   ]);
+
   useEffect(() => {
     let cancelled = false;
 
     const loadFromSharedContent = async (content: ReadSharedContentData) => {
-      let { user } = useAuthStore.getState();
-      const sessionId = user?.sessionId;
-
-      if (!sessionId) {
-        const accessToken = content.sessionInfo.tokens.accessToken;
-        const refreshToken = content.sessionInfo.tokens.refreshToken;
-        const anonymousSessionId = content.sessionInfo.sessionId;
-        if (accessToken && refreshToken) {
-          const store = useAuthStore.getState();
-          const derivedUser = userFromAccessToken(accessToken, anonymousSessionId);
-          store.setAuth({
-            user: derivedUser,
-            accessToken,
-            refreshToken,
-            anonymousSessionId: anonymousSessionId ?? null,
-          });
-          ({ user } = useAuthStore.getState());
-        }
-      }
+      // 인증 처리는 SharePage에서 수행 (중복 제거)
 
       const sharedSlides = normalizeSharedSlides(content.projectContent.slides);
       const sharedComments = content.projectContent.comments;
-      const sharedFeedbacks = mapSharedCommentsToFeedbacks(sharedComments, user?.id, user?.name);
+      const sharedFeedbacks = mapSharedCommentsToFeedbacks(sharedComments);
       const fallbackTimelineSlides = content.projectContent.slides
         .filter(
           (slide) =>
@@ -395,18 +419,13 @@ export function useFeedbackVideo(
       setSlideChangeTimes(mapped.slideChangeTimes);
     };
 
-    const loadFromShareToken = async () => {
-      const content = await getSharedContent(shareToken);
-      if (cancelled) return;
-      await loadFromSharedContent(content);
-    };
-
     const load = async () => {
       try {
         if (sharedContent) {
           await loadFromSharedContent(sharedContent);
-        } else if (shareToken) {
-          await loadFromShareToken();
+        } else {
+          // SharePage를 통하지 않고 직접 접근한 경우
+          throw new Error('공유 콘텐츠 데이터가 필요합니다.');
         }
       } catch {
         if (cancelled) return;
@@ -445,6 +464,8 @@ export function useFeedbackVideo(
     reactions,
     commentDraft,
     timestampPrefix,
+    scrollToCommentId,
+    isSubmittingComment,
 
     updateCurrentTime,
     requestSeek,
@@ -455,7 +476,7 @@ export function useFeedbackVideo(
     addReply,
     deleteComment,
     updateComment,
-    toggleReaction,
+    addReaction,
 
     webcamVideoUrl: video?.videoUrl || '',
   };

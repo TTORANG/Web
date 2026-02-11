@@ -37,7 +37,16 @@ export default function CommentReplies({
     // 낙관적 답글 = serverId가 없거나 서버에서 아직 반환되지 않은 답글
     const optimisticOnly = localReplies.filter((r) => !r.serverId || !serverIds.has(r.serverId));
 
-    return [...serverReplies, ...optimisticOnly];
+    const combined = [...serverReplies, ...optimisticOnly];
+
+    // 답글을 작성시간 기준 내림차순 정렬 (최신 답글이 위로)
+    combined.sort((a, b) => {
+      const aTime = new Date(a.createdAt).getTime();
+      const bTime = new Date(b.createdAt).getTime();
+      return bTime - aTime;
+    });
+
+    return combined;
   }, [data?.replies, localReplies]);
 
   if (mergedReplies.length === 0 && !hasNextPage) return null;
