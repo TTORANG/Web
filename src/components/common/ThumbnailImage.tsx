@@ -12,7 +12,7 @@ export default function ThumbnailImage({ src, alt, className }: Props) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
 
-  const showSkeleton = !src || (src && !isLoaded) || hasError;
+  const showSkeleton = !src || !isLoaded || hasError;
   const showImage = Boolean(src) && !hasError;
 
   return (
