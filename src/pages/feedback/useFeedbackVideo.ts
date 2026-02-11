@@ -160,8 +160,6 @@ function toNumericId(value: string | number | null | undefined): number | null {
 
 function mapSharedCommentsToFeedbacks(
   rawComments: SharedProjectComment[],
-  currentUserId?: string,
-  currentUserName?: string,
 ): VideoTimestampFeedback[] {
   if (!rawComments.length) return [];
 
@@ -172,7 +170,8 @@ function mapSharedCommentsToFeedbacks(
     const fallbackId = `shared-comment-${timestampMs}-${index}`;
     const commentId = sharedComment.commentId || fallbackId;
     const parentId = sharedComment.parentId ?? undefined;
-    const userId = sharedComment.writer.trim() || 'unknown';
+    const userId = sharedComment.userId || sharedComment.writer.trim() || 'unknown';
+    const userName = sharedComment.writer.trim() || undefined;
 
     const mappedComment: Comment = {
       commentId,
@@ -181,11 +180,10 @@ function mapSharedCommentsToFeedbacks(
       isReply: Boolean(parentId),
       replies: parentId ? undefined : [],
       userId,
+      userName,
       content: sharedComment.content,
       createdAt: sharedComment.createdAt,
-      isMine:
-        (Boolean(currentUserId) && userId === currentUserId) ||
-        (Boolean(currentUserName) && userId === currentUserName),
+      isMine: sharedComment.isMine,
       ref: { kind: 'video', seconds: timestampMs / 1000 },
     };
 
@@ -245,8 +243,7 @@ export function useFeedbackVideo(
 
     try {
       const data = await getSharedComments(shareToken);
-      const { user } = useAuthStore.getState();
-      const sharedFeedbacks = mapSharedCommentsToFeedbacks(data.comments, user?.id, user?.name);
+      const sharedFeedbacks = mapSharedCommentsToFeedbacks(data.comments);
       updateFeedbacks(sharedFeedbacks);
       return data.comments;
     } catch {
@@ -373,7 +370,7 @@ export function useFeedbackVideo(
 
       const sharedSlides = normalizeSharedSlides(content.projectContent.slides);
       const sharedComments = content.projectContent.comments;
-      const sharedFeedbacks = mapSharedCommentsToFeedbacks(sharedComments, user?.id, user?.name);
+      const sharedFeedbacks = mapSharedCommentsToFeedbacks(sharedComments);
       const fallbackTimelineSlides = content.projectContent.slides
         .filter(
           (slide) =>
