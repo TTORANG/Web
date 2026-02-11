@@ -13,7 +13,7 @@ import FeedbackHeaderLeft from '@/components/feedback/FeedbackHeaderLeft';
 import {
   DevTestPage,
   FdSlidePage,
-  FeedbackVideoPage,
+  FeedbackVideoPageRoute,
   HomePage,
   InsightPage,
   OAuthCallbackPage,
@@ -77,7 +77,7 @@ export const router = createBrowserRouter([
     path: '/feedback/video/:projectId',
     element: (
       <Layout theme="dark" left={<FeedbackHeaderLeft />} center={<FeedbackHeaderCenter />}>
-        <FeedbackVideoPage />
+        <FeedbackVideoPageRoute />
       </Layout>
     ),
   },

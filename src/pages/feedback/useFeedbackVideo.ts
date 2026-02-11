@@ -169,7 +169,7 @@ function mapSharedCommentsToFeedbacks(
 }
 
 export function useFeedbackVideo(
-  sharedContent?: ReadSharedContentData,
+  sharedContent: ReadSharedContentData,
   options: UseFeedbackVideoOptions = {},
 ) {
   const { onShareExitSnapshotChange } = options;
@@ -388,12 +388,7 @@ export function useFeedbackVideo(
 
     const load = async () => {
       try {
-        if (sharedContent) {
-          await loadFromSharedContent(sharedContent);
-        } else {
-          // SharePage를 통하지 않고 직접 접근한 경우
-          throw new Error('공유 콘텐츠 데이터가 필요합니다.');
-        }
+        await loadFromSharedContent(sharedContent);
       } catch {
         if (cancelled) return;
 
