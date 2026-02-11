@@ -25,7 +25,7 @@ import RenamePresentationModal from './RenamePresentationModal';
 type Props = (Presentation | VideoPresentation) & {
   highlightQuery?: string;
   mode?: 'slide' | 'videos';
-  isThumbnailPending?: boolean;
+  isPresentationPending?: boolean;
   thumbnailVersion?: number;
   onDelete?: () => void;
 };
@@ -89,7 +89,7 @@ function PresentationCard(props: Props) {
     feedbackCount,
     thumbnailUrl,
     mode = 'slide',
-    isThumbnailPending,
+    isPresentationPending = false,
     thumbnailVersion,
     onDelete,
   } = props;
@@ -101,6 +101,7 @@ function PresentationCard(props: Props) {
   const resolvedSrc = thumbnailUrl
     ? `${thumbnailUrl}${thumbnailUrl.includes('?') ? '&' : '?'}v=${thumbnailVersion}`
     : null;
+  const isProcessing = Boolean(isPresentationPending);
 
   const {
     isRenameModalOpen,
@@ -158,7 +159,7 @@ function PresentationCard(props: Props) {
     <>
       <article
         onClick={handleCardClick}
-        className="relative rounded-2xl border-none bg-white transition-shadow cursor-pointer hover:shadow-lg overflow-hidden"
+        className="relative rounded-2xl border-none bg-white transition-shadow cursor-pointer hover:shadow-lg"
       >
         <div className="aspect-video w-full overflow-hidden rounded-t-2xl bg-transparent">
           <ThumbnailImage
@@ -202,7 +203,13 @@ function PresentationCard(props: Props) {
             </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-x-1 gap-y-2 text-caption text-gray-600">
+          <div
+            className={clsx(
+              'mt-5 flex flex-wrap items-center justify-between gap-x-1 gap-y-2 text-caption text-gray-600',
+              isProcessing && 'invisible',
+            )}
+            aria-hidden={isProcessing}
+          >
             <div className="flex items-center gap-3 shrink-0">
               <div className="flex items-center gap-1">
                 <RecentIcon className="w-4 h-4" />
@@ -234,7 +241,7 @@ function PresentationCard(props: Props) {
         </div>
 
         <ProcessingOverlay
-          visible={Boolean(isThumbnailPending)}
+          visible={Boolean(isPresentationPending)}
           variant="card"
           className="rounded-2xl"
         />
