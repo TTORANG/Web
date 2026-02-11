@@ -9,6 +9,7 @@ import PageCountIcon from '@/assets/icons/icon-page-count.svg?react';
 import ReactionCountIcon from '@/assets/icons/icon-reaction-count.svg?react';
 import RecentIcon from '@/assets/icons/icon-recent.svg?react';
 import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
+import ThumbnailImage from '@/components/common/ThumbnailImage';
 import { getTabPath } from '@/constants/navigation';
 import { usePresentationDeletion } from '@/hooks/usePresentationDeletion';
 import { useRename } from '@/hooks/useRename';
@@ -75,39 +76,6 @@ function PresentationListSkeleton() {
         </div>
       </div>
     </article>
-  );
-}
-
-function ThumbnailImage({
-  src,
-  alt,
-  pending,
-  className,
-}: {
-  src: string | null;
-  alt: string;
-  pending?: boolean;
-  className?: string;
-}) {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
-
-  const showSkeleton = pending || (src && !isLoaded) || hasError;
-  const showImage = src && !pending && !hasError;
-
-  return (
-    <>
-      {showSkeleton && <div className="h-full w-full bg-gray-200 animate-pulse" />}
-      {showImage && (
-        <img
-          src={src}
-          alt={alt}
-          onLoad={() => setIsLoaded(true)}
-          onError={() => setHasError(true)}
-          className={clsx(className, !isLoaded && 'hidden')}
-        />
-      )}
-    </>
   );
 }
 

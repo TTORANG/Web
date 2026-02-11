@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -23,6 +23,7 @@ export default function HomePage() {
   const accessToken = useAuthStore((state) => state.accessToken);
   const isLoggedIn = Boolean(accessToken);
   const [pendingThumbnailIds, setPendingThumbnailIds] = useState<string[]>([]);
+  const pendingIdsRef = useRef<string[]>([]);
   const [thumbVersion, setThumvVersion] = useState<Record<string, number>>({});
 
   // 파일 업로드
@@ -87,22 +88,29 @@ export default function HomePage() {
   const filteredCount = filteredData?.total ?? 0;
   const isEmpty = !isLoading && totalCount === 0;
 
+  // pendingThumbnailIds 최신값을 ref에 동기화
+  useEffect(() => {
+    pendingIdsRef.current = pendingThumbnailIds;
+  }, [pendingThumbnailIds]);
   useEffect(() => {
     if (pendingThumbnailIds.length === 0) return;
 
-    const timer = setInterval(async () => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let cancelled = false;
+
+    const poll = async () => {
+      const ids = pendingIdsRef.current;
+      if (cancelled || ids.length === 0) return;
+
       const doneIds: string[] = [];
 
       await Promise.all(
-        pendingThumbnailIds.map(async (id) => {
+        ids.map(async (id) => {
           try {
             const status = await getConversionStatus(id);
             const thumb = status.progress?.thumbnail ?? status.status;
 
-            if (thumb === 'completed') {
-              doneIds.push(id);
-            }
-            if (thumb === 'failed') {
+            if (thumb === 'completed' || thumb === 'failed') {
               doneIds.push(id);
             }
           } catch {
@@ -110,6 +118,9 @@ export default function HomePage() {
           }
         }),
       );
+
+      if (cancelled) return;
+
       if (doneIds.length > 0) {
         setThumvVersion((prev) => {
           const next = { ...prev };
@@ -121,10 +132,22 @@ export default function HomePage() {
         setPendingThumbnailIds((prev) => prev.filter((id) => !doneIds.includes(id)));
         void queryClient.invalidateQueries({ queryKey: queryKeys.presentations.lists() });
       }
-    }, 3000);
 
-    return () => clearInterval(timer);
-  }, [pendingThumbnailIds, queryClient]);
+      // 아직 남아있으면 다음 폴링 예약
+      if (pendingIdsRef.current.length > 0) {
+        timeoutId = setTimeout(poll, 3000);
+      }
+    };
+    // 첫 폴링 시작
+    timeoutId = setTimeout(poll, 3000);
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [pendingThumbnailIds]);
 
   return (
     <main className="mx-auto min-h-screen max-w-4xl px-6 py-8">

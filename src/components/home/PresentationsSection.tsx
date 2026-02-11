@@ -156,7 +156,7 @@ export default function PresentationsSection({
               renderInfo={(item) => (
                 <PresentationList
                   {...item}
-                  isThumbnailPending={pendingSet.has(item.projectId)}
+                  isThumbnailPending={pendingSet.has(item.projectId) || !item.thumbnailUrl}
                   thumbnailVersion={thumbVersion[item.projectId] ?? 0}
                 />
               )}
