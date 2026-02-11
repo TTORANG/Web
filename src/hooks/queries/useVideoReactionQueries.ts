@@ -77,6 +77,7 @@ const buildHighlightsFromBuckets = (
     })
     .filter((item): item is SegmentHighlight => item !== null);
 
+  // totalCount가 같을 때, 앞에 있는 버킷을 우선시 한다.
   return highlights
     .slice()
     .sort((a, b) => b.totalCount - a.totalCount || a.startTime - b.startTime)
