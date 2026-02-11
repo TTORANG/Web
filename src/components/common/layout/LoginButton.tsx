@@ -6,6 +6,7 @@
  * 로그인 상태: 사용자 이름 + 프로필 이미지 (클릭 시 로그아웃/회원탈퇴 드롭다운)
  */
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -25,6 +26,7 @@ import { HeaderButton } from './HeaderButton';
 
 export function LoginButton() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const accessToken = useAuthStore((s) => s.accessToken);
   const user = useAuthStore((s) => s.user);
   const openLoginModal = useAuthStore((s) => s.openLoginModal);
@@ -43,6 +45,7 @@ export function LoginButton() {
     queryClient.clear();
     resetHome();
     showToast.success('로그아웃 완료');
+    navigate('/', { replace: true });
     window.scrollTo({ top: 0 });
   };
   // 로그인 전 (게스트)
