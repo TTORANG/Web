@@ -33,6 +33,7 @@ export default function FeedbackSlidePage({
   const { shareToken } = useParams<{ shareToken: string }>();
   const { state, actions } = useFeedbackSlide({
     sharedSlides: sharedContent?.projectContent?.slides,
+    sharedComments: sharedContent?.projectContent?.comments,
     shareToken,
     onShareExitSnapshotChange,
   });
@@ -44,6 +45,7 @@ export default function FeedbackSlidePage({
     script,
     comments,
     commentDraft,
+    scrollToCommentId,
     reactions,
     isLoading,
     isCommentsLoading,
@@ -92,6 +94,7 @@ export default function FeedbackSlidePage({
           <div className="flex-1 min-h-0 overflow-y-auto">
             <CommentList
               comments={comments}
+              scrollToCommentId={scrollToCommentId ?? undefined}
               onAddReply={addReply}
               onGoToRef={handleGoToRef}
               onDeleteComment={deleteComment}
@@ -169,6 +172,7 @@ export default function FeedbackSlidePage({
             <div className="flex-1 min-h-0 overflow-y-auto">
               <CommentList
                 comments={comments}
+                scrollToCommentId={scrollToCommentId ?? undefined}
                 onAddReply={addReply}
                 onGoToRef={handleGoToRef}
                 onDeleteComment={deleteComment}
