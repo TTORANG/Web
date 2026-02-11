@@ -2,13 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import type { ReadVideoDetailResponseDto } from '@/api/dto/video.dto';
-import { updateComment } from '@/api/endpoints/comments';
-import {
-  createCommentReply,
-  createVideoComment,
-  deleteVideoComment,
-  videosApi,
-} from '@/api/endpoints/videos';
+import { createVideoComment, videosApi } from '@/api/endpoints/videos';
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
 import FeedbackMobileLayout from '@/components/feedback/FeedbackMobileLayout';
@@ -188,17 +182,18 @@ export default function VideoDetailPage() {
     }
   }, [commentDraft, currentTime, videoId, currentUser]);
 
-  const addReply = useCallback(
-    async (id: string, c: string) => {
-      /* 생략 */
-    },
-    [currentUser],
-  );
-  const handleDeleteComment = useCallback(async (id: string) => {
-    /* 생략 */
+  const handleReplyComment = useCallback(async (_id: string, _content: string) => {
+    console.log('Reply comment - not implemented');
   }, []);
-  const handleUpdateComment = useCallback(async (id: string, c: string) => {
-    /* 생략 */
+
+  // 197번 줄
+  const handleDeleteComment = useCallback(async (_id: string) => {
+    console.log('Delete comment - not implemented');
+  }, []);
+
+  // 200번 줄
+  const handleUpdateComment = useCallback(async (_id: string, _content: string) => {
+    console.log('Update comment - not implemented');
   }, []);
 
   const handleBack = () => navigate(`/${projectId}/videos`);
@@ -264,7 +259,7 @@ export default function VideoDetailPage() {
           <div className="min-h-0 flex-1 overflow-y-auto">
             <CommentList
               comments={comments}
-              onAddReply={addReply}
+              onAddReply={handleReplyComment}
               onGoToRef={handleGoToTimeRef}
               onDeleteComment={handleDeleteComment}
               onUpdateComment={handleUpdateComment}
@@ -301,7 +296,7 @@ export default function VideoDetailPage() {
               <div className="min-h-0 flex-1 overflow-y-auto">
                 <CommentList
                   comments={comments}
-                  onAddReply={addReply}
+                  onAddReply={handleReplyComment}
                   onGoToRef={handleGoToTimeRef}
                   onDeleteComment={handleDeleteComment}
                   onUpdateComment={handleUpdateComment}
