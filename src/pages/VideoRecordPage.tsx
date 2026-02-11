@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Layout, Logo, Modal } from '@/components/common';
 import { DeviceTestSection, RecordingSection, StopButton } from '@/components/video';
 import { usePresentation } from '@/hooks/queries/usePresentations';
+import { useSlides } from '@/hooks/queries/useSlides';
 import { useVideoUpload } from '@/hooks/useVideoUpload';
 
 type RecordStep = 'TEST' | 'RECORDING';
@@ -15,6 +16,7 @@ export default function VideoRecordPage() {
   const navigate = useNavigate();
 
   const { data: presentation } = usePresentation(projectId!);
+  const { data: slidesData } = useSlides(projectId!);
 
   const [step, setStep] = useState<RecordStep>('TEST');
   const [camStream, setCamStream] = useState<MediaStream | null>(null);
@@ -46,7 +48,6 @@ export default function VideoRecordPage() {
     }
   }, [progress]);
 
-  // 컴포넌트 언마운트 시 토스트 정리
   useEffect(() => {
     return () => {
       if (uploadToastRef.current) {
@@ -69,7 +70,12 @@ export default function VideoRecordPage() {
     }
 
     if (!videoBlob || videoBlob.size === 0) {
-      toast.error('녹화된 영상이 없습니다.');
+      toast.error('녹화된 영상 데이터가 생성되지 않았습니다.');
+      return;
+    }
+
+    if (!slidesData || slidesData.length === 0) {
+      toast.error('슬라이드 정보를 불러올 수 없어 업로드를 중단합니다.');
       return;
     }
 
@@ -77,36 +83,42 @@ export default function VideoRecordPage() {
       const numericProjectId = projectId ? parseInt(projectId.replace(/\D/g, ''), 10) : 1;
       const title = presentation?.title || '제목 없음';
 
+      let accumulatedMs = 0;
       const slideLogs = Object.entries(durations)
         .sort(([a], [b]) => Number(a) - Number(b))
-        .map(([pageNum], index, arr) => {
-          const previousDuration = arr
-            .slice(0, index)
-            .reduce((sum, [, dur]) => sum + Number(dur), 0);
+        .map(([pageNum]) => {
+          const pageIdx = Number(pageNum) - 1;
+          const slideId = slidesData[pageIdx]?.slideId;
 
-          return {
-            slideId: Number(pageNum),
-            timestampMs: Math.round(previousDuration * 1000),
+          if (!slideId) return null;
+
+          const log = {
+            slideId: parseInt(slideId, 10),
+            timestampMs: accumulatedMs,
           };
-        });
 
-      console.log('[VideoRecordPage] slideLogs:', slideLogs);
+          accumulatedMs += Math.round(durations[Number(pageNum)] * 1000);
+
+          return log;
+        })
+        .filter((log): log is { slideId: number; timestampMs: number } => log !== null);
+
+      if (slideLogs.length === 0) {
+        toast.error('슬라이드 기록이 올바르지 않습니다.');
+        return;
+      }
 
       const videoId = await uploadVideo(videoBlob, numericProjectId, title, slideLogs);
 
-      // 업로드 성공 시 토스트 dismiss 후 이동
-      toast.dismiss(UPLOAD_TOAST_ID);
-
       if (videoId) {
-        // 약간의 딜레이 후 이동 (토스트가 완전히 사라지도록)
+        toast.success('영상이 성공적으로 저장되었습니다!');
         setTimeout(() => {
           navigate(`/${projectId}/videos`, { state: { uploadSuccess: true } });
-        }, 100);
+        }, 500);
       }
     } catch (err: unknown) {
-      toast.dismiss(UPLOAD_TOAST_ID);
       console.error('[VideoRecordPage] Upload error:', err);
-      toast.error('업로드 실패', { description: (err as Error).message });
+      toast.error('업로드 중 오류가 발생했습니다.');
     }
   };
 
@@ -145,14 +157,12 @@ export default function VideoRecordPage() {
           </div>
         ) : (
           camStream && (
-            <>
-              <RecordingSection
-                projectId={projectId!}
-                initialStream={camStream}
-                onFinish={handleRecordingFinish}
-                onExitClick={handleExitClick}
-              />
-            </>
+            <RecordingSection
+              projectId={projectId!}
+              initialStream={camStream}
+              onFinish={handleRecordingFinish}
+              onExitClick={handleExitClick}
+            />
           )
         )}
 
@@ -162,7 +172,7 @@ export default function VideoRecordPage() {
           title={step === 'RECORDING' ? '녹화 중단' : '테스트 종료'}
           size="sm"
         >
-          <p className="text-body-m">
+          <div className="text-body-m">
             {step === 'RECORDING' ? (
               <>
                 녹화를 중단하시겠습니까?
@@ -172,7 +182,7 @@ export default function VideoRecordPage() {
             ) : (
               '테스트를 종료하시겠습니까?'
             )}
-          </p>
+          </div>
           <div className="mt-7 flex gap-3">
             <button
               onClick={() => setIsExitModalOpen(false)}

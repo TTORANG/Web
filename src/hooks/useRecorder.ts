@@ -1,14 +1,10 @@
 import { useCallback, useRef, useState } from 'react';
 
-/**
- * 카메라 영상 녹화 훅
- *
- * 카메라 영상만 WebM으로 녹화합니다.
- */
 export const useRecorder = () => {
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
 
+  const chunksRef = useRef<Blob[]>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -30,11 +26,7 @@ export const useRecorder = () => {
   }, []);
 
   const startRecording = useCallback(
-    async (
-      camStream: MediaStream,
-      slideImgRef: React.MutableRefObject<HTMLImageElement | null>,
-      onChunk?: (blob: Blob) => void,
-    ) => {
+    async (camStream: MediaStream) => {
       if (!camStream.active) return;
 
       const camVideo = document.createElement('video');
@@ -71,9 +63,9 @@ export const useRecorder = () => {
         if (!isVideoReady) throw new Error('Video timeout');
 
         setIsRecording(true);
+        chunksRef.current = [];
         setRecordedChunks([]);
 
-        // Canvas 합성 제거 - 캠 스트림만 직접 녹화
         const mimeType = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find(
           (type) => MediaRecorder.isTypeSupported(type),
         );
@@ -82,8 +74,8 @@ export const useRecorder = () => {
 
         recorder.ondataavailable = (e) => {
           if (e.data.size > 0) {
+            chunksRef.current.push(e.data);
             setRecordedChunks((prev) => [...prev, e.data]);
-            if (onChunk) onChunk(e.data);
           }
         };
 
@@ -96,10 +88,16 @@ export const useRecorder = () => {
     [stopRecording],
   );
 
+  const getRecordedBlob = useCallback(() => {
+    if (chunksRef.current.length === 0) return null;
+    return new Blob(chunksRef.current, { type: 'video/webm' });
+  }, []);
+
   return {
     isRecording,
     recordedChunks,
     startRecording,
     stopRecording,
+    getRecordedBlob,
   };
 };

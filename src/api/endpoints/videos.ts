@@ -58,6 +58,11 @@ export const videosApi = {
     const numericId = normalizeVideoId(videoId);
     return apiClient.get<ApiResponse<ReadVideoSlidesResponseDto>>(`/videos/${numericId}/slides`);
   },
+  // DELETE /videos/{videoId} - 영상 삭제
+  deleteVideo: (videoId: string) => {
+    const numericId = normalizeVideoId(videoId);
+    return apiClient.delete<ApiResponse<{ videoId: string }>>(`/videos/${numericId}`);
+  },
 
   getProjectVideos: (
     projectId: string,
