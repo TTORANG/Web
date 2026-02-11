@@ -100,6 +100,7 @@ export function TitleEditorPopover({
             disabled={isPending}
             aria-label={ariaLabel}
             className="h-9 flex-1 text-sm"
+            spellCheck={false}
           />
           <button
             type="button"

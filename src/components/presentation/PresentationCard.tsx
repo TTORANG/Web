@@ -7,6 +7,7 @@ import MoreIcon from '@/assets/icons/icon-more.svg?react';
 import ReactionCountIcon from '@/assets/icons/icon-reaction-count.svg?react';
 import RecentIcon from '@/assets/icons/icon-recent.svg?react';
 import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
+import ThumbnailImage from '@/components/common/ThumbnailImage';
 import { getTabPath } from '@/constants/navigation';
 import { usePresentationDeletion } from '@/hooks/usePresentationDeletion';
 import { useRename } from '@/hooks/useRename';
@@ -17,12 +18,15 @@ import { formatRelativeTime } from '@/utils/format';
 import { Dropdown } from '../common';
 import type { DropdownItem } from '../common/Dropdown';
 import { HighlightText } from '../common/HighlightText';
+import ProcessingOverlay from '../common/ProcessingOverlay';
 import DeletePresentationModal from './DeletePresentationModal';
 import RenamePresentationModal from './RenamePresentationModal';
 
 type Props = (Presentation | VideoPresentation) & {
   highlightQuery?: string;
   mode?: 'slide' | 'videos';
+  isThumbnailPending?: boolean;
+  thumbnailVersion?: number;
   onDelete?: () => void;
 };
 
@@ -85,12 +89,18 @@ function PresentationCard(props: Props) {
     feedbackCount,
     thumbnailUrl,
     mode = 'slide',
+    isThumbnailPending,
+    thumbnailVersion,
     onDelete,
   } = props;
 
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
     usePresentationDeletion(projectId);
+
+  const resolvedSrc = thumbnailUrl
+    ? `${thumbnailUrl}${thumbnailUrl.includes('?') ? '&' : '?'}v=${thumbnailVersion}`
+    : null;
 
   const {
     isRenameModalOpen,
@@ -148,16 +158,15 @@ function PresentationCard(props: Props) {
     <>
       <article
         onClick={handleCardClick}
-        className="rounded-2xl border-none bg-white transition-shadow cursor-pointer hover:shadow-lg"
+        className="relative rounded-2xl border-none bg-white transition-shadow cursor-pointer hover:shadow-lg overflow-hidden"
       >
-        <div className="aspect-video w-full overflow-hidden rounded-t-2xl bg-gray-200">
-          {thumbnailUrl && (
-            <img
-              className="h-full w-full object-contain outline-none"
-              src={thumbnailUrl}
-              alt={`${displayTitle}`}
-            />
-          )}
+        <div className="aspect-video w-full overflow-hidden rounded-t-2xl bg-transparent">
+          <ThumbnailImage
+            key={`${projectId}-${thumbnailVersion ?? 0}`}
+            src={resolvedSrc}
+            alt={displayTitle}
+            className="h-full w-full object-cover"
+          />
         </div>
 
         <div className="p-4">
@@ -223,6 +232,12 @@ function PresentationCard(props: Props) {
             </div>
           </div>
         </div>
+
+        <ProcessingOverlay
+          visible={Boolean(isThumbnailPending)}
+          variant="card"
+          className="rounded-2xl"
+        />
       </article>
 
       {/* 프레젠테이션 삭제 모달 (onDelete가 없을 때만) */}
