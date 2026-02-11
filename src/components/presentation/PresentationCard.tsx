@@ -29,50 +29,17 @@ type Props = (Presentation | VideoPresentation) & {
   isPresentationPending?: boolean;
   thumbnailVersion?: number;
   onDelete?: () => void;
+  onUpdateTitle?: (newTitle: string) => Promise<void>;
 };
 
 function PresentationCardSkeleton() {
   return (
     <article className="rounded-2xl border-none bg-white">
       <div className="aspect-video w-full overflow-hidden rounded-t-2xl bg-gray-200 animate-pulse" />
-
       <div className="p-4">
         <div className="min-h-18">
-          <div className="flex justify-between gap-2">
-            <div className="flex-1">
-              <div className="h-5 w-3/4 rounded bg-gray-200 animate-pulse" />
-            </div>
-            <div className="shrink-0 mt-1">
-              <div className="p-2 -m-2">
-                <MoreIcon className="text-gray-400" />
-              </div>
-            </div>
-          </div>
+          <div className="h-5 w-3/4 rounded bg-gray-200 animate-pulse" />
           <div className="mt-1 h-4 w-16 rounded bg-gray-200 animate-pulse" />
-        </div>
-
-        <div className="mt-5 flex items-center justify-between text-caption text-gray-600">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <RecentIcon />
-              <div className="h-3 w-6 rounded bg-gray-200 animate-pulse" />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1">
-              <CommentCountIcon />
-              <div className="h-3 w-3 rounded bg-gray-200 animate-pulse" />
-            </div>
-            <div className="flex items-center gap-1">
-              <ReactionCountIcon />
-              <div className="h-3 w-3 rounded bg-gray-200 animate-pulse" />
-            </div>
-            <div className="flex items-center gap-1">
-              <ViewCountIcon />
-              <div className="h-3 w-3 rounded bg-gray-200 animate-pulse" />
-            </div>
-          </div>
         </div>
       </div>
     </article>
@@ -93,6 +60,7 @@ function PresentationCard(props: Props) {
     isPresentationPending = false,
     thumbnailVersion,
     onDelete,
+    onUpdateTitle,
   } = props;
 
   const navigate = useNavigate();
@@ -117,7 +85,7 @@ function PresentationCard(props: Props) {
     setNewTitle,
     openRenameModal,
     closeRenameModal,
-    confirmRename,
+    confirmRename: originalConfirmRename,
   } = useRename({ projectId, initialTitle: title });
 
   const isVideo = 'reactionCount' in props && 'viewCount' in props;
@@ -126,39 +94,34 @@ function PresentationCard(props: Props) {
   const viewCount = isVideo ? (props as VideoPresentation).viewCount : 0;
   const isRenaming = isRenameModalOpen && isRenamePending;
 
+  const handleConfirmRename = async () => {
+    if (mode === 'videos' && onUpdateTitle) {
+      try {
+        await onUpdateTitle(newTitle);
+
+        closeRenameModal();
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      await originalConfirmRename();
+    }
+  };
+
   const handleCardClick = () => {
-    if (isRenaming) return;
+    // 모달이 열려있으면 이동 안함
+    if (isRenameModalOpen || isRenaming || isDeleteModalOpen || isPending) return;
 
     if (mode === 'videos' && 'videoId' in props) {
-      const videoId = (props as VideoPresentation).videoId;
-      navigate(`/${projectId}/videos/${videoId}`);
+      navigate(`/${projectId}/videos/${(props as VideoPresentation).videoId}`);
     } else {
       navigate(getTabPath(projectId, mode));
     }
   };
 
-  const handleDeleteClick = () => {
-    // onDelete prop이 있으면 그것을 사용 (비디오 삭제)
-    // 없으면 기본 프레젠테이션 삭제 모달 열기
-    if (onDelete) {
-      onDelete();
-    } else {
-      openDeleteModal();
-    }
-  };
-
   const dropdownItems: DropdownItem[] = [
-    {
-      id: 'rename',
-      label: '이름 변경',
-      onClick: openRenameModal,
-    },
-    {
-      id: 'delete',
-      label: '삭제',
-      variant: 'danger',
-      onClick: handleDeleteClick,
-    },
+    { id: 'rename', label: '이름 변경', onClick: openRenameModal },
+    { id: 'delete', label: '삭제', variant: 'danger', onClick: onDelete || openDeleteModal },
   ];
 
   return (
@@ -177,7 +140,7 @@ function PresentationCard(props: Props) {
         </div>
 
         <div className="p-4">
-          <div className="min-h-18">
+          <div className="min-h-18 text-left">
             <div className="flex justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <h3 className="text-body-m-bold text-gray-800 line-clamp-2">
@@ -190,22 +153,24 @@ function PresentationCard(props: Props) {
                 <p className="mt-1 text-body-s text-gray-400">{formatRelativeTime(updatedAt)}</p>
               </div>
 
-              {!isRenaming && (
-                <div onClick={(e) => e.stopPropagation()} className="shrink-0 mt-1">
-                  <Dropdown
-                    trigger={({ isOpen }) => (
-                      <div className="p-2 -m-2">
-                        <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-400')} />
-                      </div>
-                    )}
-                    items={dropdownItems}
-                    position="bottom"
-                    align="end"
-                    ariaLabel="더보기"
-                    menuClassName="w-32"
-                  />
-                </div>
-              )}
+              {/* ✅ 여기가 핵심: Dropdown 자체를 감싸는 div에서 stopPropagation을 겁니다. */}
+              {/* mousedown을 쓰는 이유는 클릭 이벤트보다 먼저 발생하여 확실히 차단하기 위함입니다. */}
+              <div
+                className="shrink-0 mt-1"
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <Dropdown
+                  trigger={({ isOpen }) => (
+                    <div className="p-2 -m-2">
+                      <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-400')} />
+                    </div>
+                  )}
+                  items={dropdownItems}
+                  position="bottom"
+                  align="end"
+                />
+              </div>
             </div>
           </div>
 
@@ -228,13 +193,11 @@ function PresentationCard(props: Props) {
                 <span className="ml-1">{slideCount} 장</span>
               </div>
             </div>
-
             <div className="flex items-center gap-2 shrink-0">
               <div className="flex items-center gap-1">
                 <CommentCountIcon className="w-4 h-4" />
                 <span>{totalCommentCount ?? 0}</span>
               </div>
-
               {isVideo && (
                 <>
                   <div className="flex items-center gap-1">
@@ -254,9 +217,9 @@ function PresentationCard(props: Props) {
         <ProcessingOverlay visible={isProcessing} variant="card" className="rounded-2xl" />
       </article>
 
-      {/* 프레젠테이션 삭제 모달 (onDelete가 없을 때만) */}
-      {!onDelete && (
-        <div onClick={(e) => e.stopPropagation()}>
+      {/* 모달 전파 차단 */}
+      <div onClick={(e) => e.stopPropagation()}>
+        {!onDelete && (
           <DeletePresentationModal
             isOpen={isDeleteModalOpen}
             presentationTitle={title}
@@ -264,17 +227,14 @@ function PresentationCard(props: Props) {
             onClose={closeDeleteModal}
             onConfirm={confirmDelete}
           />
-        </div>
-      )}
+        )}
 
-      {/* 이름 변경 모달 */}
-      <div onClick={(e) => e.stopPropagation()}>
         <RenamePresentationModal
           isOpen={isRenameModalOpen}
           currentTitle={newTitle}
           isPending={isRenamePending}
           onClose={closeRenameModal}
-          onConfirm={confirmRename}
+          onConfirm={handleConfirmRename}
           onTitleChange={setNewTitle}
         />
       </div>
@@ -283,5 +243,4 @@ function PresentationCard(props: Props) {
 }
 
 PresentationCard.Skeleton = PresentationCardSkeleton;
-
 export default PresentationCard;
