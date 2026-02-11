@@ -26,6 +26,7 @@ interface CommentListProps {
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
   onLoadMore?: () => void;
+  onDeleteModalOpenChange?: (isOpen: boolean) => void;
 }
 
 const skeletonContentWidths = ['90%', '70%', '85%', '60%'];
@@ -41,6 +42,7 @@ export default function CommentList({
   hasNextPage = false,
   isFetchingNextPage = false,
   onLoadMore,
+  onDeleteModalOpenChange,
 }: CommentListProps) {
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
@@ -168,6 +170,10 @@ export default function CommentList({
     onDeleteComment(deleteTargetId);
     setDeleteTargetId(null);
   }, [deleteTargetId, onDeleteComment]);
+
+  useEffect(() => {
+    onDeleteModalOpenChange?.(Boolean(deleteTargetId));
+  }, [deleteTargetId, onDeleteModalOpenChange]);
 
   const contextValue = useMemo(
     () => ({

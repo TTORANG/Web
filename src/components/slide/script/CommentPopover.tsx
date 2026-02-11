@@ -5,6 +5,8 @@
  * 대본에 대한 팀원들의 의견을 보여주고, 답글을 달 수 있습니다.
  * 무한 스크롤로 다음 페이지를 로드합니다.
  */
+import { useCallback, useState } from 'react';
+
 import clsx from 'clsx';
 
 import CommentList from '@/components/comment/CommentList';
@@ -32,9 +34,21 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
     isFetchingNextPage,
     fetchNextPage,
   } = useSlideCommentsInfiniteQuery(slideId);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const handleOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen && isDeleteModalOpen) return;
+      setIsPopoverOpen(nextOpen);
+    },
+    [isDeleteModalOpen],
+  );
 
   return (
     <Popover
+      isOpen={isPopoverOpen}
+      onOpenChange={handleOpenChange}
       trigger={({ isOpen }) => (
         <button
           type="button"
@@ -93,6 +107,7 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
           onLoadMore={() => {
             void fetchNextPage();
           }}
+          onDeleteModalOpenChange={setIsDeleteModalOpen}
         />
       </div>
     </Popover>
