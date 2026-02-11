@@ -215,7 +215,7 @@ function PresentationList(props: Props) {
                 {minutes !== null && (
                   <span className="flex items-center gap-1.5">
                     <RecentIcon className="w-4 h-4" />
-                    {Math.ceil(durationSeconds / 60)}분
+                    {minutes}분
                   </span>
                 )}
 
