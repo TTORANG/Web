@@ -14,20 +14,16 @@ import { useVideoReactions } from '@/hooks/useVideoReactions';
 import { useAuthStore } from '@/stores/authStore';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Comment } from '@/types/comment';
-import type {
-  ReadSharedContentData,
-  SharedProjectComment,
-  SharedProjectSlide,
-} from '@/types/share';
+import type { ReadSharedContentData, SharedProjectComment } from '@/types/share';
 import type { SlideDetail } from '@/types/slide';
 import type { VideoTimestampFeedback } from '@/types/video';
 import { formatVideoTimestamp } from '@/utils/format';
+import { SHARED_PROJECT_ID, normalizeSharedSlides } from '@/utils/sharedContent';
 import { getSlideIndexFromTime } from '@/utils/video';
 
 const DEFAULT_VIDEO_ID = '34';
 const FALLBACK_SLIDE_DURATION_SECONDS = 10;
 const FALLBACK_VIDEO_DURATION_SECONDS = 9;
-const SHARED_PROJECT_ID = 'shared';
 
 export interface ShareExitSnapshot {
   lastSlideId?: number;
@@ -59,35 +55,6 @@ function toPlayableVideoUrl(url?: string | null): string {
   }
 
   return publicUrl;
-}
-
-function toNumber(value: string | number | undefined, fallback: number): number {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  if (typeof value === 'string') {
-    const parsed = Number(value);
-    if (Number.isFinite(parsed)) return parsed;
-  }
-  return fallback;
-}
-
-function normalizeSharedSlides(rawSlides: SharedProjectSlide[]): SlideDetail[] {
-  const now = new Date().toISOString();
-
-  return rawSlides
-    .map((slide, index) => {
-      const slideNum = toNumber(slide.slideNum, index + 1);
-      return {
-        slideId: slide.slideId,
-        projectId: SHARED_PROJECT_ID,
-        title: `슬라이드 ${slideNum}`,
-        slideNum,
-        imageUrl: slide.imageUrl,
-        createdAt: now,
-        updatedAt: now,
-        script: slide.scriptText,
-      };
-    })
-    .sort((a, b) => a.slideNum - b.slideNum);
 }
 
 function mapSlidesByTimeline(
