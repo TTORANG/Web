@@ -4,7 +4,6 @@ import { recordPageView, slideView } from '@/api/endpoints/analytics';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useHotkey, useSlideActions } from '@/hooks';
 import { useScript } from '@/hooks/queries/useScript';
-import { useExitTracker } from '@/hooks/useExitTracker';
 import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
 import { useSlideCommentsLoader } from '@/hooks/useSlideCommentsLoader';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
@@ -103,25 +102,6 @@ export const useFeedbackSlide = ({
   );
 
   useHotkey({ ArrowLeft: goPrev, ArrowRight: goNext }, { enabled: slides.length > 0 });
-
-  const buildExitPayload = () => {
-    if (!shareToken) return null;
-
-    const payload: { shareToken: string; lastSlideId?: number } = {
-      shareToken,
-    };
-
-    if (currentSlide?.slideId) {
-      const slideIdNum = Number(currentSlide.slideId);
-      if (Number.isFinite(slideIdNum)) {
-        payload.lastSlideId = slideIdNum;
-      }
-    }
-
-    return payload;
-  };
-
-  useExitTracker(buildExitPayload);
 
   const lastExitSnapshotSlideIdRef = useRef<string | null>(null);
   useEffect(() => {
