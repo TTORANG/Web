@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import clsx from 'clsx';
@@ -22,6 +23,8 @@ import RenamePresentationModal from './RenamePresentationModal';
 type Props = (Presentation | VideoPresentation) & {
   highlightQuery?: string;
   mode?: 'slide' | 'videos';
+  isThumbnailPending?: boolean;
+  thumbnailVersion?: number;
 };
 
 function PresentationListSkeleton() {
@@ -75,6 +78,39 @@ function PresentationListSkeleton() {
   );
 }
 
+function ThumbnailImage({
+  src,
+  alt,
+  pending,
+  className,
+}: {
+  src: string | null;
+  alt: string;
+  pending?: boolean;
+  className?: string;
+}) {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  const showSkeleton = pending || (src && !isLoaded) || hasError;
+  const showImage = src && !pending && !hasError;
+
+  return (
+    <>
+      {showSkeleton && <div className="h-full w-full bg-gray-200 animate-pulse" />}
+      {showImage && (
+        <img
+          src={src}
+          alt={alt}
+          onLoad={() => setIsLoaded(true)}
+          onError={() => setHasError(true)}
+          className={clsx(className, !isLoaded && 'hidden')}
+        />
+      )}
+    </>
+  );
+}
+
 function PresentationList(props: Props) {
   const {
     projectId,
@@ -85,11 +121,18 @@ function PresentationList(props: Props) {
     feedbackCount,
     thumbnailUrl,
     mode = 'slide',
+    isThumbnailPending,
+    thumbnailVersion,
   } = props;
 
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
     usePresentationDeletion(projectId);
+
+  const resolvedSrc =
+    !isThumbnailPending && thumbnailUrl
+      ? `${thumbnailUrl}${thumbnailUrl.includes('?') ? '&' : '?'}v=${thumbnailVersion}`
+      : null;
 
   const {
     isRenameModalOpen,
@@ -135,14 +178,14 @@ function PresentationList(props: Props) {
         className="flex w-full items-center justify-between bg-white px-5 py-4 rounded-2xl border border-gray-200 transition-shadow cursor-pointer hover:shadow-lg"
       >
         {/* 썸네일 */}
-        <div className="w-35 h-19.5 shrink-0 overflow-hidden rounded-lg bg-gray-200">
-          {thumbnailUrl && (
-            <img
-              className="h-full w-full object-cover"
-              src={thumbnailUrl}
-              alt={`${displayTitle}`}
-            />
-          )}
+        <div className="w-35 h-19.5 shrink-0 overflow-hidden rounded-lg bg-transparent">
+          <ThumbnailImage
+            key={resolvedSrc ?? 'empty'}
+            src={resolvedSrc}
+            alt={displayTitle}
+            pending={isThumbnailPending}
+            className="h-full w-full object-cover"
+          />
         </div>
 
         {/* 본문 */}

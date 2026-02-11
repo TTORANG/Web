@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import clsx from 'clsx';
@@ -23,6 +24,8 @@ import RenamePresentationModal from './RenamePresentationModal';
 type Props = (Presentation | VideoPresentation) & {
   highlightQuery?: string;
   mode?: 'slide' | 'videos';
+  isThumbnailPending?: boolean;
+  thumbnailVersion?: number;
 };
 
 function PresentationCardSkeleton() {
@@ -73,6 +76,39 @@ function PresentationCardSkeleton() {
   );
 }
 
+function ThumbnailImage({
+  src,
+  alt,
+  pending,
+  className,
+}: {
+  src: string | null;
+  alt: string;
+  pending?: boolean;
+  className?: string;
+}) {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  const showSkeleton = pending || (src && !isLoaded) || hasError;
+  const showImage = src && !pending && !hasError;
+
+  return (
+    <>
+      {showSkeleton && <div className="h-full w-full bg-gray-200 animate-pulse" />}
+      {showImage && (
+        <img
+          src={src}
+          alt={alt}
+          onLoad={() => setIsLoaded(true)}
+          onError={() => setHasError(true)}
+          className={className}
+        />
+      )}
+    </>
+  );
+}
+
 function PresentationCard(props: Props) {
   const {
     projectId,
@@ -84,11 +120,18 @@ function PresentationCard(props: Props) {
     feedbackCount,
     thumbnailUrl,
     mode = 'slide',
+    isThumbnailPending,
+    thumbnailVersion,
   } = props;
 
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
     usePresentationDeletion(projectId);
+
+  const resolvedSrc =
+    !isThumbnailPending && thumbnailUrl
+      ? `${thumbnailUrl}${thumbnailUrl.includes('?') ? '&' : '?'}v=${thumbnailVersion}`
+      : null;
 
   const {
     isRenameModalOpen,
@@ -132,14 +175,14 @@ function PresentationCard(props: Props) {
         onClick={handleCardClick}
         className="rounded-2xl border-none bg-white transition-shadow cursor-pointer hover:shadow-lg"
       >
-        <div className="aspect-video w-full overflow-hidden rounded-t-2xl bg-gray-200">
-          {thumbnailUrl && (
-            <img
-              className="h-full w-full object-contain outline-none"
-              src={thumbnailUrl}
-              alt={`${displayTitle}`}
-            />
-          )}
+        <div className="aspect-video w-full overflow-hidden rounded-t-2xl bg-transparent">
+          <ThumbnailImage
+            key={resolvedSrc ?? 'empty'}
+            src={resolvedSrc}
+            alt={displayTitle}
+            pending={isThumbnailPending}
+            className="h-full w-full object-cover"
+          />
         </div>
 
         <div className="p-4">
