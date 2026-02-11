@@ -17,6 +17,8 @@ type SlideCommentsPageLike = {
 };
 
 export function mapDtoToComment(dto: CommentWithUserDto, currentUserId?: string): Comment {
+  const parentId = dto.parentId ?? dto.parentCommentId ?? undefined;
+
   return {
     commentId: dto.commentId,
     serverId: dto.commentId,
@@ -25,6 +27,8 @@ export function mapDtoToComment(dto: CommentWithUserDto, currentUserId?: string)
     content: dto.content,
     createdAt: dto.createdAt,
     isMine: currentUserId ? dto.user.userId === currentUserId : false,
+    parentId: parentId ?? undefined,
+    isReply: Boolean(parentId),
   };
 }
 

@@ -146,9 +146,8 @@ export function useSlideCommentsActions() {
           if (newReply) {
             updateCommentServerIdStore(newReply.commentId, response.replyId);
           }
-          queryClient.invalidateQueries({
-            queryKey: queryKeys.comments.list(targetSlideId),
-          });
+          // 답글은 부모 댓글의 replies 쿼리만 갱신합니다.
+          // list 쿼리 재조회는 서버 응답 형태에 따라 답글이 최상위로 보이는 문제를 유발할 수 있습니다.
           queryClient.invalidateQueries({
             queryKey: queryKeys.comments.replies(targetServerId),
           });

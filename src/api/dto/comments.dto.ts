@@ -15,6 +15,10 @@ export interface CommentWithUserDto {
   user: CommentUserDto;
   createdAt: string;
   updatedAt: string;
+  /** 서버가 답글 정보를 함께 내려주는 경우 사용 */
+  parentId?: string | null;
+  /** 서버가 답글 정보를 함께 내려주는 경우 사용 */
+  parentCommentId?: string | null;
 }
 
 /**
