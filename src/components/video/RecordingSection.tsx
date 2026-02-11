@@ -190,8 +190,8 @@ export const RecordingSection = ({
         </div>
       </header>
 
-      <main className="mt-15 flex h-[calc(100vh-60px)]">
-        <section className="relative flex flex-1 flex-col bg-white">
+      <main className="mt-15 flex">
+        <section className="relative  h-[calc(60vh-60px)] flex flex-1 flex-col bg-white">
           <div className="relative flex flex-1 items-center justify-center px-5 py-4">
             <div className="relative h-full w-full max-w-[1024px]">
               <div className="h-full w-full rounded-lg bg-gray-900 flex items-center justify-center overflow-hidden">
@@ -206,7 +206,7 @@ export const RecordingSection = ({
                 )}
               </div>
 
-              <div className="absolute right-5 bottom-28 w-48 h-27 rounded-xl overflow-hidden shadow-2xl border-2 border-white/20 bg-black z-10">
+              <div className="absolute right-5 bottom-28 w-48 h-27 rounded-xl overflow-hidden shadow-2xl bg-black z-10">
                 <video
                   ref={camVideoRef}
                   autoPlay
@@ -250,7 +250,7 @@ export const RecordingSection = ({
           </p>
         </section>
 
-        <aside className="flex w-96 shrink-0 flex-col gap-6 bg-gray-100 px-4 py-6">
+        <aside className="flex w-96 h-[calc(100vh-60px)] shrink-0 flex-col gap-6 bg-gray-100 px-4 py-6">
           <div className="flex flex-col gap-2">
             <h3 className="text-body-s-bold text-gray-800">다음 슬라이드</h3>
             <div className="h-[197px] w-full overflow-hidden rounded-lg bg-gray-400">

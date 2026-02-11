@@ -79,7 +79,7 @@ export const useRecorder = () => {
           }
         };
 
-        recorder.start(1000);
+        recorder.start(5000);
         mediaRecorderRef.current = recorder;
       } catch {
         stopRecording();

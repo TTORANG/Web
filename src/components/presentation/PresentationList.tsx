@@ -27,6 +27,8 @@ type Props = (Presentation | VideoPresentation) & {
   isThumbnailPending?: boolean;
   thumbnailVersion?: number;
   onDelete?: () => void;
+  // 비디오 전용 제목 수정 함수 추가
+  onUpdateTitle?: (newTitle: string) => Promise<void>;
 };
 
 function PresentationListSkeleton() {
@@ -93,6 +95,7 @@ function PresentationList(props: Props) {
     isThumbnailPending,
     thumbnailVersion,
     onDelete,
+    onUpdateTitle,
   } = props;
 
   const navigate = useNavigate();
@@ -111,7 +114,7 @@ function PresentationList(props: Props) {
     setNewTitle,
     openRenameModal,
     closeRenameModal,
-    confirmRename,
+    confirmRename: originalConfirmRename,
   } = useRename({ projectId, initialTitle: title });
 
   const isVideo = 'reactionCount' in props && 'viewCount' in props;
@@ -120,6 +123,20 @@ function PresentationList(props: Props) {
   const viewCount = isVideo ? (props as VideoPresentation).viewCount : 0;
 
   const isRenaming = isRenameModalOpen && isRenamePending;
+
+  // 이름 변경 확인 핸들러 (비디오 모드 분기 처리)
+  const handleConfirmRename = async () => {
+    if (mode === 'videos' && onUpdateTitle) {
+      try {
+        await onUpdateTitle(newTitle);
+        closeRenameModal();
+      } catch (error) {
+        console.error('Rename failed:', error);
+      }
+    } else {
+      await originalConfirmRename();
+    }
+  };
 
   const handleListClick = () => {
     if (isRenaming) return;
@@ -133,8 +150,6 @@ function PresentationList(props: Props) {
   };
 
   const handleDeleteClick = () => {
-    // onDelete prop이 있으면 그것을 사용 (비디오 삭제)
-    // 없으면 기본 프레젠테이션 삭제 모달 열기
     if (onDelete) {
       onDelete();
     } else {
@@ -264,7 +279,7 @@ function PresentationList(props: Props) {
           currentTitle={newTitle}
           isPending={isRenamePending}
           onClose={closeRenameModal}
-          onConfirm={confirmRename}
+          onConfirm={handleConfirmRename} // 래핑된 핸들러로 교체
           onTitleChange={setNewTitle}
         />
       </div>
