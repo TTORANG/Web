@@ -3,8 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { toast } from 'sonner';
 
-import { Layout, Logo, Modal } from '@/components/common';
-import { DeviceTestSection, RecordingSection, StopButton } from '@/components/video';
+import { Layout, Logo } from '@/components/common';
+import {
+  DeviceTestSection,
+  RecordExitModal,
+  RecordingSection,
+  StopButton,
+} from '@/components/video';
 import { usePresentation } from '@/hooks/queries/usePresentations';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { useVideoUpload } from '@/hooks/useVideoUpload';
@@ -167,40 +172,12 @@ export default function VideoRecordPage() {
           )
         )}
 
-        <Modal
+        <RecordExitModal
           isOpen={isExitModalOpen}
           onClose={() => setIsExitModalOpen(false)}
-          title={step === 'RECORDING' ? '녹화 중단' : '테스트 종료'}
-          size="sm"
-        >
-          <div className="text-body-m">
-            {step === 'RECORDING' ? (
-              <>
-                녹화를 중단하시겠습니까?
-                <br />
-                저장되지 않은 데이터는 삭제됩니다.
-              </>
-            ) : (
-              '테스트를 종료하시겠습니까?'
-            )}
-          </div>
-          <div className="mt-7 flex gap-3">
-            <button
-              onClick={() => setIsExitModalOpen(false)}
-              className="flex-1 rounded-md bg-gray-100 py-3 font-bold text-gray-600 hover:bg-gray-200 transition-colors"
-              type="button"
-            >
-              취소
-            </button>
-            <button
-              onClick={handleConfirmExit}
-              className="flex-1 rounded-md bg-error py-3 font-bold text-white hover:bg-error/90 transition-colors"
-              type="button"
-            >
-              종료
-            </button>
-          </div>
-        </Modal>
+          step={step}
+          onConfirm={handleConfirmExit}
+        />
       </div>
     </Layout>
   );

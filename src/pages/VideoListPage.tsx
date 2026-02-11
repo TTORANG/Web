@@ -4,12 +4,12 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { videosApi } from '@/api/endpoints/videos';
-import { CardView, ListView, Modal } from '@/components/common';
+import { CardView, ListView } from '@/components/common';
 import ProcessingOverlay from '@/components/common/ProcessingOverlay';
 import PresentationCard from '@/components/presentation/PresentationCard';
 import PresentationHeader from '@/components/presentation/PresentationHeader';
 import PresentationList from '@/components/presentation/PresentationList';
-import { RecordingEmptySection } from '@/components/video/RecordingEmptySection';
+import { DeleteVideoModal, RecordingEmptySection } from '@/components/video';
 import { useProjectVideos } from '@/hooks/useProjectVideos';
 import type { FilterMode, SortMode, ViewMode } from '@/types/home';
 
@@ -197,40 +197,15 @@ export default function VideoListPage() {
       )}
 
       {/* 삭제 확인 모달 */}
-      <Modal
+      <DeleteVideoModal
         isOpen={deleteModalOpen}
         onClose={() => {
           setDeleteModalOpen(false);
           setVideoToDelete(null);
         }}
-        title="영상 삭제"
-        size="sm"
-      >
-        <p className="text-body-m mb-6">
-          <span className="font-bold">{videoToDelete?.title}</span> 영상을 삭제하시겠습니까?
-          <br />
-          <span className="text-gray-600 text-sm">삭제된 영상은 복구할 수 없습니다.</span>
-        </p>
-        <div className="flex gap-3">
-          <button
-            onClick={() => {
-              setDeleteModalOpen(false);
-              setVideoToDelete(null);
-            }}
-            className="flex-1 rounded-md bg-gray-100 py-3 font-bold text-gray-600 hover:bg-gray-200 transition-colors"
-            type="button"
-          >
-            취소
-          </button>
-          <button
-            onClick={handleConfirmDelete}
-            className="flex-1 rounded-md bg-error py-3 font-bold text-white hover:bg-error/90 transition-colors"
-            type="button"
-          >
-            삭제
-          </button>
-        </div>
-      </Modal>
+        title={videoToDelete?.title}
+        onConfirm={handleConfirmDelete}
+      />
 
       {!isLoading && totalCount === 0 && !hasAppliedQuery ? (
         <div className="flex h-full items-center justify-center">

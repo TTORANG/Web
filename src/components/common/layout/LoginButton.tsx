@@ -14,7 +14,6 @@ import { apiClient } from '@/api/client';
 import LoginIcon from '@/assets/icons/icon-login.svg?react';
 import LogoutIcon from '@/assets/icons/icon-logout.svg?react';
 import { Dropdown } from '@/components/common/Dropdown';
-import { Modal } from '@/components/common/Modal';
 import { UserAvatar } from '@/components/common/UserAvatar';
 import { useAuthStore } from '@/stores/authStore';
 import { useHomeStore } from '@/stores/homeStore';
@@ -23,6 +22,7 @@ import { showToast } from '@/utils/toast';
 import { getUserDisplayName } from '@/utils/user';
 
 import { HeaderButton } from './HeaderButton';
+import { WithdrawConfirmModal } from './WithdrawConfirmModal';
 
 export function LoginButton() {
   const queryClient = useQueryClient();
@@ -116,38 +116,12 @@ export function LoginButton() {
         ]}
       />
 
-      <Modal
+      <WithdrawConfirmModal
         isOpen={isWithdrawModalOpen}
         onClose={() => setIsWithdrawModalOpen(false)}
-        title="회원 탈퇴"
-        size="sm"
-        closeOnBackdropClick={!isWithdrawing}
-        closeOnEscape={!isWithdrawing}
-      >
-        <p className="text-body-m">
-          탈퇴하면 모든 데이터가 삭제되며 복구할 수 없습니다.
-          <br />
-          정말 탈퇴하시겠습니까?
-        </p>
-        <div className="mt-7 flex gap-3">
-          <button
-            className="flex-1 rounded-md bg-gray-100 py-3 font-bold text-gray-600 transition-colors hover:bg-gray-200 disabled:opacity-50"
-            type="button"
-            onClick={() => setIsWithdrawModalOpen(false)}
-            disabled={isWithdrawing}
-          >
-            취소
-          </button>
-          <button
-            className="flex-1 rounded-md bg-error py-3 font-bold text-white transition-colors hover:bg-error/90 disabled:opacity-50"
-            type="button"
-            onClick={handleWithdraw}
-            disabled={isWithdrawing}
-          >
-            {isWithdrawing ? '탈퇴 중...' : '탈퇴'}
-          </button>
-        </div>
-      </Modal>
+        onConfirm={handleWithdraw}
+        isPending={isWithdrawing}
+      />
     </>
   );
 }
