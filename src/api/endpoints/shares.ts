@@ -75,6 +75,7 @@ export async function createShareLink(
  * 공유 토큰으로 공유 콘텐츠 조회
  *
  * @param shareToken - 공유 토큰
+
  * @param sessionId - 현재 로그인된 세션 ID (익명 세션 포함)
  * @returns 공유된 프로젝트 콘텐츠(슬라이드/영상)
  */

@@ -2,6 +2,8 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { isAxiosError } from 'axios';
+
 import type {
   SlideAnalyticsDto,
   SlideRetentionDto,
@@ -40,16 +42,22 @@ export function useInsightPageModel(): InsightModel {
   const projectIdStr = projectId ?? '';
   const projectIdNum = projectIdStr ? Number(projectIdStr) : 0;
 
-  const { data: slides } = useSlides(projectIdStr);
-  const { data: slideAnalytics } = useSlideAnalytics(projectIdNum);
-  const { data: summaryAnalytics } = useProjectAnalyticsSummary(projectIdNum);
-  const { data: recentCommentsData } = useRecentComments(projectIdNum);
+  const slidesQuery = useSlides(projectIdStr);
+  const slideAnalyticsQuery = useSlideAnalytics(projectIdNum);
+  const summaryAnalyticsQuery = useProjectAnalyticsSummary(projectIdNum);
+  const recentCommentsQuery = useRecentComments(projectIdNum);
+
+  const { data: slides } = slidesQuery;
+  const { data: slideAnalytics } = slideAnalyticsQuery;
+  const { data: summaryAnalytics } = summaryAnalyticsQuery;
+  const { data: recentCommentsData } = recentCommentsQuery;
 
   const videoIdStr = summaryAnalytics?.videoIds?.[0] ?? '';
   const videoIdNum = videoIdStr ? Number(videoIdStr) : 0;
   const hasVideo = !!videoIdNum;
 
-  const { data: videoExitAnalytics } = useVideoAnalytics(videoIdNum);
+  const videoAnalyticsQuery = useVideoAnalytics(videoIdNum);
+  const { data: videoExitAnalytics } = videoAnalyticsQuery;
 
   // ---- Summary stats ----
   const computedSummaryStats = useMemo<SummaryStat[]>(() => {
@@ -121,7 +129,8 @@ export function useInsightPageModel(): InsightModel {
   }, [slideAnalytics, slideDataMaps]);
 
   const topSlideIds = useMemo(() => topSlides.map((item) => item.slideId), [topSlides]);
-  const { data: topSlideReactionSummaries } = useSlideReactionSummaries(topSlideIds);
+  const topSlideReactionSummariesQuery = useSlideReactionSummaries(topSlideIds);
+  const { data: topSlideReactionSummaries } = topSlideReactionSummariesQuery;
 
   // ---- Drop-off ----
   const slideChangeTimes = useMemo(() => {
@@ -180,8 +189,10 @@ export function useInsightPageModel(): InsightModel {
   }, [videoExitAnalytics, slideChangeTimes, slides]);
 
   // ---- Retention(잔존율) ----
-  const { data: videoRetentionRes } = useVideoRetention(videoIdNum);
-  const { data: slideRetentionRes } = useSlideRetention(projectIdNum);
+  const videoRetentionQuery = useVideoRetention(videoIdNum);
+  const slideRetentionQuery = useSlideRetention(projectIdNum);
+  const { data: videoRetentionRes } = videoRetentionQuery;
+  const { data: slideRetentionRes } = slideRetentionQuery;
 
   const videoChartData = useMemo<ChartDataPoint[]>(() => {
     if (!videoRetentionRes?.videoRetention) return [];
@@ -207,6 +218,28 @@ export function useInsightPageModel(): InsightModel {
   const retentionTitle = hasVideo ? '영상 시청 잔존률' : '슬라이드별 청중 잔존률';
   const retentionData = hasVideo ? videoChartData : slideChartData;
 
+  const queryStates = [
+    slidesQuery,
+    slideAnalyticsQuery,
+    summaryAnalyticsQuery,
+    recentCommentsQuery,
+    videoAnalyticsQuery,
+    videoRetentionQuery,
+    slideRetentionQuery,
+    topSlideReactionSummariesQuery,
+  ];
+
+  const isLoading = queryStates.some(
+    (query) => query.isLoading || (query.isFetching && !query.data),
+  );
+  const firstError = queryStates.find((query) => query.isError)?.error;
+  const isError = Boolean(firstError);
+  const errorMessage = isAxiosError(firstError)
+    ? (firstError.response?.data?.message ?? firstError.message)
+    : firstError instanceof Error
+      ? firstError.message
+      : null;
+
   return {
     projectIdStr,
     projectIdNum,
@@ -227,5 +260,9 @@ export function useInsightPageModel(): InsightModel {
     getThumb,
 
     recentCommentsData,
+
+    isLoading,
+    isError,
+    errorMessage,
   };
 }

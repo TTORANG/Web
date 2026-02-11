@@ -1,3 +1,5 @@
+import { useParams } from 'react-router-dom';
+
 import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { getReplies } from '@/api/endpoints/comments';
@@ -36,6 +38,7 @@ function mapDtoToReply(
  */
 export function useCommentRepliesInfiniteQuery(commentId?: string) {
   const userId = useAuthStore((state) => state.user?.id);
+  const { shareToken } = useParams<{ shareToken?: string }>();
 
   return useInfiniteQuery({
     queryKey: queryKeys.comments.replies(commentId ?? ''),
@@ -59,6 +62,6 @@ export function useCommentRepliesInfiniteQuery(commentId?: string) {
       ),
       pageParams: data.pageParams,
     }),
-    enabled: !!commentId,
+    enabled: !!commentId && !shareToken,
   });
 }
