@@ -8,7 +8,7 @@
 export interface Presentation {
   projectId: string;
   title: string;
-  status: 'queued' | 'processing' | 'failed' | 'completed' | 'partial_done';
+  status: PresentationStatus;
   thumbnailUrl?: string;
   slideCount: number;
   feedbackCount: number;
@@ -20,6 +20,14 @@ export interface Presentation {
   updatedAt: string;
 }
 
+export type PresentationStatus =
+  | 'queued'
+  | 'processing'
+  | 'failed'
+  | 'completed'
+  | 'partial_done'
+  | 'ready' // 아래 두개는 video 쪽
+  | 'uploading';
 /**
  * API 응답 타입: 프로젝트 생성 응답
  */
