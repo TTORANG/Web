@@ -101,7 +101,12 @@ function PresentationCard(props: Props) {
   const resolvedSrc = thumbnailUrl
     ? `${thumbnailUrl}${thumbnailUrl.includes('?') ? '&' : '?'}v=${thumbnailVersion}`
     : null;
-  const isProcessing = Boolean(isPresentationPending);
+  const isProcessing =
+    isPresentationPending ||
+    props.status === 'queued' ||
+    props.status === 'processing' ||
+    props.status === 'partial_done';
+  const minutes = durationSeconds > 0 ? Math.ceil(durationSeconds / 60) : null;
 
   const {
     isRenameModalOpen,
@@ -206,15 +211,15 @@ function PresentationCard(props: Props) {
           <div
             className={clsx(
               'mt-5 flex flex-wrap items-center justify-between gap-x-1 gap-y-2 text-caption text-gray-600',
-              isProcessing && 'invisible',
+              isProcessing && 'invisible pointer-events-none',
             )}
             aria-hidden={isProcessing}
           >
             <div className="flex items-center gap-3 shrink-0">
               <div className="flex items-center gap-1">
-                <RecentIcon className="w-4 h-4" />
-                <span>{Math.ceil(durationSeconds / 60)}분</span>
-                <span className="ml-1">{slideCount}페이지</span>
+                {minutes !== null && <RecentIcon className="w-4 h-4" />}
+                {minutes !== null && <span>{minutes}분</span>}
+                <span className={clsx(minutes !== null && 'ml-1')}>{slideCount}페이지</span>
               </div>
             </div>
 
@@ -240,11 +245,7 @@ function PresentationCard(props: Props) {
           </div>
         </div>
 
-        <ProcessingOverlay
-          visible={Boolean(isPresentationPending)}
-          variant="card"
-          className="rounded-2xl"
-        />
+        <ProcessingOverlay visible={isProcessing} variant="card" className="rounded-2xl" />
       </article>
 
       {/* 프레젠테이션 삭제 모달 (onDelete가 없을 때만) */}

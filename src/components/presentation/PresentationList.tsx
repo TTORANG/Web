@@ -102,7 +102,12 @@ function PresentationList(props: Props) {
   const resolvedSrc = thumbnailUrl
     ? `${thumbnailUrl}${thumbnailUrl.includes('?') ? '&' : '?'}v=${thumbnailVersion}`
     : null;
-  const isProcessing = Boolean(isPresentationPending);
+  const isProcessing =
+    isPresentationPending ||
+    props.status === 'queued' ||
+    props.status === 'processing' ||
+    props.status === 'partial_done';
+  const minutes = durationSeconds > 0 ? Math.ceil(durationSeconds / 60) : null;
 
   const {
     isRenameModalOpen,
@@ -192,10 +197,12 @@ function PresentationList(props: Props) {
                 aria-hidden={isProcessing}
               >
                 {/* 소요 시간 */}
-                <span className="flex items-center gap-1.5">
-                  <RecentIcon className="w-4 h-4" />
-                  {Math.ceil(durationSeconds / 60)}분
-                </span>
+                {minutes !== null && (
+                  <span className="flex items-center gap-1.5">
+                    <RecentIcon className="w-4 h-4" />
+                    {Math.ceil(durationSeconds / 60)}분
+                  </span>
+                )}
 
                 {/* 구분선 */}
                 <span className="h-3.5 w-px bg-gray-200" />
@@ -247,11 +254,7 @@ function PresentationList(props: Props) {
           </div>
         </div>
 
-        <ProcessingOverlay
-          visible={Boolean(isPresentationPending)}
-          variant="list"
-          className="rounded-2xl"
-        />
+        <ProcessingOverlay visible={isProcessing} variant="list" className="rounded-2xl" />
       </article>
 
       {/* 프레젠테이션 삭제 모달 (onDelete가 없을 때만) */}

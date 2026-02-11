@@ -8,6 +8,7 @@
 export interface Presentation {
   projectId: string;
   title: string;
+  status: 'queued' | 'processing' | 'failed' | 'completed' | 'partial_done';
   thumbnailUrl?: string;
   slideCount: number;
   feedbackCount: number;
