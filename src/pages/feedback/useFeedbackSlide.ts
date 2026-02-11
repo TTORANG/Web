@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { recordPageView, slideView } from '@/api/endpoints/analytics';
 import { createDefaultReactions } from '@/constants/reaction';
-import { useHotkey, useSlideActions, useSlideComments } from '@/hooks';
+import { useHotkey, useSharedComments, useSlideActions, useSlideComments } from '@/hooks';
 import { useScript } from '@/hooks/queries/useScript';
 import { useExitTracker } from '@/hooks/useExitTracker';
 import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
@@ -70,8 +70,25 @@ export const useFeedbackSlide = ({
 
   const currentSlide = slides?.[slideIndex];
 
-  const { comments, addComment, addReply, deleteComment, updateComment } =
-    useSlideCommentsActions();
+  const sharedCommentsQuery = useSharedComments(shareToken ?? '', {
+    initialData: sharedComments ? { comments: sharedComments } : undefined,
+  });
+  const sharedCommentsSource = sharedCommentsQuery.data?.comments ?? sharedComments;
+  const hasSharedComments = sharedCommentsSource != null;
+
+  const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
+  const { comments, addComment, addReply, deleteComment, updateComment } = useSlideCommentsActions({
+    onCreateSuccess: async (commentId) => {
+      if (hasSharedComments) {
+        await sharedCommentsQuery.refetch();
+        setScrollToCommentId(commentId);
+      }
+      setIsCommentSubmitting(false);
+    },
+    onCreateError: () => {
+      setIsCommentSubmitting(false);
+    },
+  });
   const { reactions, addReaction } = useSlideReactions();
 
   const script = useSlideStore((state) => state.slide?.script ?? '');
@@ -87,12 +104,15 @@ export const useFeedbackSlide = ({
   const [commentDraft, setCommentDraft] = useState('');
   const [scrollToCommentId, setScrollToCommentId] = useState<string | null>(null);
 
-  const hasSharedComments = sharedComments != null;
-
   const handleAddComment = () => {
     if (!commentDraft.trim()) return;
+    setIsCommentSubmitting(true);
     const newComment = addComment(commentDraft, slideIndex);
-    if (newComment?.commentId) {
+    if (!newComment) {
+      setIsCommentSubmitting(false);
+      return;
+    }
+    if (newComment?.commentId && !hasSharedComments) {
       setScrollToCommentId(newComment.commentId);
     }
     setCommentDraft('');
@@ -197,7 +217,7 @@ export const useFeedbackSlide = ({
   const sharedSlideComments = useMemo(() => {
     if (!hasSharedComments) return null;
 
-    return (sharedComments ?? [])
+    return (sharedCommentsSource ?? [])
       .filter((comment) => comment.targetType === 'slide')
       .map((comment) => {
         const meta = sharedSlideMeta.get(comment.targetId);
@@ -215,7 +235,7 @@ export const useFeedbackSlide = ({
           slideRef: meta?.label,
         };
       });
-  }, [hasSharedComments, sharedComments, sharedSlideMeta]);
+  }, [hasSharedComments, sharedCommentsSource, sharedSlideMeta]);
 
   useEffect(() => {
     if (!sharedSlideComments) return;
@@ -290,6 +310,7 @@ export const useFeedbackSlide = ({
       script,
       comments,
       commentDraft,
+      isCommentSubmitting,
       scrollToCommentId,
       reactions,
       isLoading: false,

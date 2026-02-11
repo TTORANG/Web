@@ -8,6 +8,8 @@
 import type {
   CreateShareLinkRequest,
   CreateShareLinkResponse,
+  ReadSharedCommentsData,
+  ReadSharedCommentsResponse,
   ReadSharedContentData,
   ReadSharedContentResponse,
   ShareableVideosResponse,
@@ -77,6 +79,22 @@ export async function createShareLink(
  */
 export async function getSharedContent(shareToken: string): Promise<ReadSharedContentData> {
   const response = await apiClient.get<ReadSharedContentResponse>(`/shares/${shareToken}`);
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
+}
+
+/**
+ * 공유 댓글 목록 조회
+ *
+ * @param shareToken - 공유 토큰
+ */
+export async function getSharedComments(shareToken: string): Promise<ReadSharedCommentsData> {
+  const response = await apiClient.get<ReadSharedCommentsResponse>(
+    `/shares/${shareToken}/comments`,
+  );
 
   if (response.data.resultType === 'SUCCESS') {
     return response.data.success;

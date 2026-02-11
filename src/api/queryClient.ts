@@ -89,6 +89,7 @@ export const queryKeys = {
     all: ['shares'] as const,
     videos: (projectId: string) => [...queryKeys.shares.all, 'videos', projectId] as const,
     content: (shareToken: string) => [...queryKeys.shares.all, 'content', shareToken] as const,
+    comments: (shareToken: string) => [...queryKeys.shares.all, 'comments', shareToken] as const,
   },
   comments: {
     all: ['comments'] as const,

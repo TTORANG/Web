@@ -105,3 +105,9 @@ export interface ReadSharedContentData {
 }
 
 export type ReadSharedContentResponse = ApiResponse<ReadSharedContentData>;
+
+export interface ReadSharedCommentsData {
+  comments: SharedProjectComment[];
+}
+
+export type ReadSharedCommentsResponse = ApiResponse<ReadSharedCommentsData>;
