@@ -81,6 +81,14 @@ export default function SharePage() {
   // 공유 페이지의 `/analytics/exit`는 이 위치에서만 전송합니다.
   useExitTracker(buildExitPayload);
 
+  const handleShareExitSnapshotChange = useCallback(
+    (snapshot: ShareExitSnapshot) => {
+      if (!shareToken) return;
+      setExitSnapshotState({ shareToken, snapshot });
+    },
+    [shareToken],
+  );
+
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">

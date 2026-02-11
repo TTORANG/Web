@@ -2,52 +2,18 @@
  * @file VideoPlaybackBar.tsx
  * @description Playback controls and progress UI.
  */
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
 
 import pauseIcon from '@/assets/playbackBar-icons/pause-icon.webp';
 import playIcon from '@/assets/playbackBar-icons/play-icon.webp';
 import fullscreenIcon from '@/assets/playbackBar-icons/sizeupdown-icon.webp';
 import ProgressBar from '@/components/feedback/ProgressBar';
 import VolumeControl from '@/components/feedback/video/VolumeControl';
-import { useVideoReactionTimeline } from '@/hooks/queries/useVideoReactionQueries';
+import { useVideoReactionHighlights } from '@/hooks/queries/useVideoReactionQueries';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
-import type { ReactionType } from '@/types/script';
 import type { SlideListItem } from '@/types/slide';
-import type { SegmentHighlight } from '@/types/video';
 
 const MAX_HIGHLIGHTS = 10;
-
-const buildHighlightsFromTimeline = (
-  timeline: {
-    intervalMs: number;
-    markers: Array<{ timestampMs: number; emojiType: ReactionType; count: number }>;
-  },
-  duration: number,
-  topN: number,
-): SegmentHighlight[] => {
-  if (!timeline.markers.length || duration <= 0) return [];
-
-  const intervalSec = timeline.intervalMs / 1000;
-  const highlights = timeline.markers
-    .map((marker) => {
-      const startTime = marker.timestampMs / 1000;
-      const endTime = Math.min(startTime + intervalSec, duration);
-      return {
-        startTime,
-        endTime,
-        topReactionType: marker.emojiType,
-        count: marker.count,
-        totalCount: marker.count,
-      } as SegmentHighlight;
-    })
-    .filter((item) => item.totalCount > 0);
-
-  return highlights
-    .slice()
-    .sort((a, b) => b.totalCount - a.totalCount)
-    .slice(0, topN)
-    .sort((a, b) => a.startTime - b.startTime);
-};
 
 interface VideoPlaybackBarProps {
   videoElement: HTMLVideoElement | null;
@@ -73,15 +39,14 @@ export default function VideoPlaybackBar({
   const updateCurrentTime = useVideoFeedbackStore((s) => s.updateCurrentTime);
   const videoId = useVideoFeedbackStore((s) => s.video?.videoId);
 
-  const { data: reactionTimeline } = useVideoReactionTimeline(videoId, 5000);
+  // 최다리액션버킷상위10개의 대표이모지만 보여주기
+  const { segmentHighlights } = useVideoReactionHighlights(videoId, duration, {
+    intervalMs: 5000,
+    topN: MAX_HIGHLIGHTS,
+  });
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
-
-  const segmentHighlights = useMemo(() => {
-    if (!reactionTimeline) return [];
-    return buildHighlightsFromTimeline(reactionTimeline, duration, MAX_HIGHLIGHTS);
-  }, [reactionTimeline, duration]);
 
   useEffect(() => {
     if (!videoElement) return;
