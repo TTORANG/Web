@@ -11,6 +11,7 @@ function mapDtoToComment(dto: CommentWithUserDto, currentUserId?: string): Comme
     commentId: dto.commentId,
     serverId: dto.commentId,
     userId: dto.user.userId,
+    userName: dto.user.nickName,
     content: dto.content,
     createdAt: dto.createdAt,
     isMine: currentUserId ? dto.user.userId === currentUserId : false,
