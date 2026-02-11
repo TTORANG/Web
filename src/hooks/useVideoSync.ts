@@ -38,6 +38,7 @@ export function useVideoSync(options: UseVideoSyncOptions = {}): UseVideoSyncRet
 
   const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(null);
   const [duration, setDuration] = useState(0);
+  const [hasRestoredTime, setHasRestoredTime] = useState(false);
 
   const currentTime = useVideoFeedbackStore((s) => s.currentTime);
   const updateCurrentTime = useVideoFeedbackStore((s) => s.updateCurrentTime);
@@ -46,7 +47,9 @@ export function useVideoSync(options: UseVideoSyncOptions = {}): UseVideoSyncRet
 
   // 콜백 ref - 비디오 요소가 마운트/언마운트될 때 호출
   const setVideoRef = useCallback((el: HTMLVideoElement | null) => {
+    console.log('[useVideoSync] setVideoRef called:', el ? 'video element' : 'null');
     setVideoElement(el);
+    setHasRestoredTime(false); // 비디오가 바뀌면 복원 플래그 리셋
   }, []);
 
   // 네이티브 controls 사용 시 onTimeUpdate 핸들러
@@ -60,15 +63,29 @@ export function useVideoSync(options: UseVideoSyncOptions = {}): UseVideoSyncRet
     if (useNativeControls) return;
     if (!videoElement) return;
 
+    console.log('[useVideoSync] Setting up video event listeners');
+
     const onLoadedMetadata = () => {
       const d = Number.isFinite(videoElement.duration) ? videoElement.duration : 0;
+      console.log('[useVideoSync] Video metadata loaded, duration:', d);
       setDuration(d);
 
-      // 비디오가 로드되면 store의 currentTime으로 복원 (뷰포트 전환 시)
-      const storedTime = useVideoFeedbackStore.getState().currentTime;
-      if (storedTime > 0 && Math.abs(videoElement.currentTime - storedTime) > 0.5) {
-        // eslint-disable-next-line react-hooks/immutability -- DOM API
-        videoElement.currentTime = storedTime;
+      // 최초 1회만 복원 (비디오 전환 시 이전 시간으로 복원)
+      if (!hasRestoredTime) {
+        const storedTime = useVideoFeedbackStore.getState().currentTime;
+        console.log(
+          '[useVideoSync] Stored time:',
+          storedTime,
+          'Video time:',
+          videoElement.currentTime,
+        );
+
+        if (storedTime > 0 && Math.abs(videoElement.currentTime - storedTime) > 0.5) {
+          console.log('[useVideoSync] Restoring time to:', storedTime);
+          // eslint-disable-next-line react-hooks/immutability -- DOM API
+          videoElement.currentTime = storedTime;
+        }
+        setHasRestoredTime(true);
       }
     };
 
@@ -76,31 +93,56 @@ export function useVideoSync(options: UseVideoSyncOptions = {}): UseVideoSyncRet
       updateCurrentTime(videoElement.currentTime);
     };
 
+    const onError = (e: Event) => {
+      console.error('[useVideoSync] Video error:', {
+        error: videoElement.error,
+        code: videoElement.error?.code,
+        message: videoElement.error?.message,
+      });
+    };
+
     videoElement.addEventListener('loadedmetadata', onLoadedMetadata);
     videoElement.addEventListener('timeupdate', onTimeUpdate);
+    videoElement.addEventListener('error', onError);
 
     // 이미 로드된 경우 duration 설정 및 시간 복원
     if (videoElement.readyState >= 1 && Number.isFinite(videoElement.duration)) {
+      console.log('[useVideoSync] Video already loaded, duration:', videoElement.duration);
       setDuration(videoElement.duration);
 
-      // 이미 로드된 경우에도 store의 currentTime으로 복원
-      const storedTime = useVideoFeedbackStore.getState().currentTime;
-      if (storedTime > 0 && Math.abs(videoElement.currentTime - storedTime) > 0.5) {
-        // eslint-disable-next-line react-hooks/immutability -- DOM API
-        videoElement.currentTime = storedTime;
+      // 최초 1회만 복원
+      if (!hasRestoredTime) {
+        const storedTime = useVideoFeedbackStore.getState().currentTime;
+        console.log(
+          '[useVideoSync] Already loaded - Stored time:',
+          storedTime,
+          'Video time:',
+          videoElement.currentTime,
+        );
+
+        if (storedTime > 0 && Math.abs(videoElement.currentTime - storedTime) > 0.5) {
+          console.log('[useVideoSync] Already loaded - Restoring time to:', storedTime);
+          // eslint-disable-next-line react-hooks/immutability -- DOM API
+          videoElement.currentTime = storedTime;
+        }
+        setHasRestoredTime(true);
       }
     }
 
     return () => {
+      console.log('[useVideoSync] Cleaning up video event listeners');
       videoElement.removeEventListener('loadedmetadata', onLoadedMetadata);
       videoElement.removeEventListener('timeupdate', onTimeUpdate);
+      videoElement.removeEventListener('error', onError);
     };
-  }, [useNativeControls, updateCurrentTime, videoElement]);
+  }, [useNativeControls, updateCurrentTime, videoElement, hasRestoredTime]);
 
   // store.seekTo 요청 처리
   useEffect(() => {
     if (!videoElement) return;
     if (seekTo == null) return;
+
+    console.log('[useVideoSync] Seeking to:', seekTo);
 
     // eslint-disable-next-line react-hooks/immutability -- DOM API
     videoElement.currentTime = seekTo;

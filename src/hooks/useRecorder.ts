@@ -74,12 +74,20 @@ export const useRecorder = () => {
 
         recorder.ondataavailable = (e) => {
           if (e.data.size > 0) {
+            // 현재까지 쌓인 청크 개수를 인덱스로 활용
+            const chunkIndex = chunksRef.current.length;
+
+            // [추가] 콘솔에 청크 정보 출력
+            console.log(
+              `[Recorder] Chunk #${chunkIndex} generated | Size: ${(e.data.size / 1024).toFixed(2)} KB`,
+            );
+
             chunksRef.current.push(e.data);
             setRecordedChunks((prev) => [...prev, e.data]);
           }
         };
 
-        recorder.start(1000);
+        recorder.start(3000);
         mediaRecorderRef.current = recorder;
       } catch {
         stopRecording();

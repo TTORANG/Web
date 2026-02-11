@@ -50,6 +50,7 @@ export default function VideoDetailPage() {
     const loadVideoDetail = async () => {
       if (!videoId) return;
       setIsLoading(true);
+      useVideoFeedbackStore.setState({ currentTime: 0, seekTo: null });
 
       try {
         const numericVideoId = parseInt(videoId, 10);
