@@ -312,14 +312,6 @@ export default function SlideWebcamStage({
             />
           </MediaBox>
         )}
-
-        {/* 개발단계 확인용: 슬라이드 제목 배지는 슬라이드가 메인일 때만 보여주기 */}
-        {/* {isSlideMain && (
-            <div className="absolute left-4 top-4 rounded-md bg-[#000000]/55 px-3 py-1 text-[#ffffff] text-sm">
-              {activeIndex + 1}. {activeSlide.title}
-            </div>
-          )} */}
-
         {/* "슬라이드가 PiP일 때"만 hover 디밍 + 클릭 토글이 가능해야 함 */}
         {/* 2. 웹캠 영역 - 슬라이드가 없으면 항상 메인으로 표시 */}
         <MediaBox
