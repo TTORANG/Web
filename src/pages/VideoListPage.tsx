@@ -312,7 +312,15 @@ export default function VideoListPage() {
                       const isDeleting = deletingVideoIds.has(item.videoId?.toString() || '');
 
                       return (
-                        <div className="relative">
+                        <div
+                          className="relative"
+                          onClick={() =>
+                            handleVideoClick(
+                              item.videoId?.toString() || '',
+                              isStuck ? 'failed' : item.status,
+                            )
+                          }
+                        >
                           <PresentationCard
                             {...item}
                             mode="videos"
@@ -332,12 +340,7 @@ export default function VideoListPage() {
                           )}
 
                           {isFailed && !isDeleting && (
-                            <div
-                              className="absolute inset-0 bg-black/70 rounded-2xl flex items-center justify-center z-10 cursor-pointer"
-                              onClick={() =>
-                                handleDeleteClick(item.videoId?.toString() || '', item.title)
-                              }
-                            >
+                            <div className="absolute inset-0 bg-black/70 rounded-2xl flex items-center justify-center z-10">
                               <div className="text-center">
                                 <svg
                                   className="h-12 w-12 text-red-500 mx-auto mb-3"
@@ -387,13 +390,19 @@ export default function VideoListPage() {
                     getKey={(item) => item.videoId?.toString() || ''}
                     className="flex flex-col gap-3"
                     renderInfo={(item) => (
-                      <PresentationList
-                        {...item}
-                        mode="videos"
-                        onDelete={() =>
-                          handleDeleteClick(item.videoId?.toString() || '', item.title)
+                      <div
+                        onClick={() =>
+                          handleVideoClick(item.videoId?.toString() || '', item.status)
                         }
-                      />
+                      >
+                        <PresentationList
+                          {...item}
+                          mode="videos"
+                          onDelete={() =>
+                            handleDeleteClick(item.videoId?.toString() || '', item.title)
+                          }
+                        />
+                      </div>
                     )}
                     empty={null}
                   />
