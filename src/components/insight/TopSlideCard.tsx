@@ -1,4 +1,4 @@
-import { REACTION_CONFIG } from '@/constants/reaction';
+﻿import { REACTION_CONFIG } from '@/constants/reaction';
 import type { Reaction } from '@/types/script';
 
 interface TopSlideCardProps {
