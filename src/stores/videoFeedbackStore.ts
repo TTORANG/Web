@@ -8,7 +8,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
-import { createDefaultReactions, getExclusiveCounterpart } from '@/constants/reaction';
+import { createDefaultReactions } from '@/constants/reaction';
 import { FEEDBACK_WINDOW } from '@/constants/video';
 import { useAuthStore } from '@/stores/authStore';
 import type { Comment } from '@/types/comment';
@@ -58,8 +58,8 @@ interface VideoFeedbackState {
   requestSeek: (time: number) => void;
   clearSeek: () => void;
 
-  /** 리액션 관련 - feedbacks의 reactions 업데이트 */
-  toggleReaction: (type: ReactionType) => void;
+  /** 리액션 관련 - feedbacks의 reactions 업데이트 (카운트 +1) */
+  addReaction: (type: ReactionType) => void;
 
   /** 댓글 관련 메서드들 - feedbacks의 comments 업데이트 */
   addComment: (content: string, seconds: number) => Comment | null;
@@ -96,7 +96,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
 
     clearSeek: () => set({ seekTo: null }, false, 'video/clearSeek'),
 
-    toggleReaction: (type) =>
+    addReaction: (type) =>
       set(
         (state) => {
           if (!state.video) return state;
@@ -106,23 +106,10 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
             state.currentTime,
           );
 
-          const targetReaction = targetFeedback.reactions.find((r) => r.type === type);
-          const isActivating = !targetReaction?.active;
-
-          // exclusive 그룹에서 반대 타입 찾기
-          const counterpart = getExclusiveCounterpart(type);
-
           const updatedReactions = targetFeedback.reactions.map((r: Reaction) => {
-            // 토글 대상: active만 변경, count는 optimisticDelta가 담당
             if (r.type === type) {
-              return { ...r, active: !r.active };
+              return { ...r, count: r.count + 1 };
             }
-
-            // 활성화 시 exclusive 반대 타입 비활성화
-            if (isActivating && counterpart && r.type === counterpart && r.active) {
-              return { ...r, active: false };
-            }
-
             return r;
           });
 
@@ -137,7 +124,7 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
           };
         },
         false,
-        'video/toggleReaction',
+        'video/addReaction',
       ),
 
     addComment: (content, seconds) => {

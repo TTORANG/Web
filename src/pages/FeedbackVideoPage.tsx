@@ -48,7 +48,7 @@ export default function FeedbackVideoPage({
     addReply,
     deleteComment,
     updateComment,
-    toggleReaction,
+    addReaction,
   } = ctx;
 
   // 비디오 위치 계산을 위한 refs
@@ -143,11 +143,7 @@ export default function FeedbackVideoPage({
               className="items-end w-86"
               initialValueOnFocus={timestampPrefix}
             />
-            <ReactionButtons
-              reactions={reactions}
-              onToggleReaction={toggleReaction}
-              layout="grid-2"
-            />
+            <ReactionButtons reactions={reactions} onToggleReaction={addReaction} layout="grid-2" />
           </div>
         </aside>
       </div>
@@ -156,11 +152,7 @@ export default function FeedbackVideoPage({
       <FeedbackMobileLayout
         mediaSlot={<div ref={mobilePlaceholderRef} className="w-full aspect-video" />}
         reactionSlot={
-          <ReactionButtons
-            reactions={reactions}
-            onToggleReaction={toggleReaction}
-            showLabel={false}
-          />
+          <ReactionButtons reactions={reactions} onToggleReaction={addReaction} showLabel={false} />
         }
         scriptTabContent={
           <ScriptSection

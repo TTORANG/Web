@@ -226,7 +226,7 @@ export function useFeedbackVideo(
   const requestSeek = useVideoFeedbackStore((s) => s.requestSeek);
 
   const { comments, addComment, addReply, deleteComment, updateComment } = useVideoComments();
-  const { reactions, toggleReaction } = useVideoReactions();
+  const { reactions, addReaction } = useVideoReactions();
   const [commentDraft, setCommentDraft] = useState('');
 
   const timestampPrefix = useMemo(() => `${formatVideoTimestamp(currentTime)} `, [currentTime]);
@@ -455,7 +455,7 @@ export function useFeedbackVideo(
     addReply,
     deleteComment,
     updateComment,
-    toggleReaction,
+    addReaction,
 
     webcamVideoUrl: video?.videoUrl || '',
   };
