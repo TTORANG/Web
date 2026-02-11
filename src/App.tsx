@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { isAxiosError } from 'axios';
 
 import { queryKeys } from '@/api/queryClient';
 import { DevFab } from '@/components/common/DevFab';
@@ -72,15 +71,8 @@ function App() {
               mergeResponse.error?.reason ?? '잠시 후 다시 시도해주세요.',
             );
           }
-        } catch (err: unknown) {
-          let reason = '세션 병합 중 오류가 발생했어요.';
-
-          if (isAxiosError(err)) {
-            reason = err.response?.data?.error?.reason || err.message || reason;
-          } else if (err instanceof Error) {
-            reason = err.message || reason;
-          }
-          showToast.warning('로그인은 완료됐지만 익명 데이터 병합은 실패했어요.', reason);
+        } catch {
+          /** intentionally ignored */
         }
       }
 

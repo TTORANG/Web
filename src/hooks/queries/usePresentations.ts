@@ -18,7 +18,7 @@ import { showToast } from '@/utils/toast';
  */
 export function usePresentations(options?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: queryKeys.presentations.list(),
+    queryKey: queryKeys.presentations.lists(),
     queryFn: () => getPresentations(),
     enabled: options?.enabled ?? true,
   });

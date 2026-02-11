@@ -8,6 +8,7 @@ import PageCountIcon from '@/assets/icons/icon-page-count.svg?react';
 import ReactionCountIcon from '@/assets/icons/icon-reaction-count.svg?react';
 import RecentIcon from '@/assets/icons/icon-recent.svg?react';
 import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
+import ThumbnailImage from '@/components/common/ThumbnailImage';
 import { getTabPath } from '@/constants/navigation';
 import { usePresentationDeletion } from '@/hooks/usePresentationDeletion';
 import { useRename } from '@/hooks/useRename';
@@ -16,12 +17,15 @@ import type { VideoPresentation } from '@/types/video';
 import { formatRelativeTime } from '@/utils/format';
 
 import { Dropdown, type DropdownItem } from '../common/Dropdown';
+import ProcessingOverlay from '../common/ProcessingOverlay';
 import DeletePresentationModal from './DeletePresentationModal';
 import RenamePresentationModal from './RenamePresentationModal';
 
 type Props = (Presentation | VideoPresentation) & {
   highlightQuery?: string;
   mode?: 'slide' | 'videos';
+  isThumbnailPending?: boolean;
+  thumbnailVersion?: number;
   onDelete?: () => void;
 };
 
@@ -86,12 +90,18 @@ function PresentationList(props: Props) {
     feedbackCount,
     thumbnailUrl,
     mode = 'slide',
+    isThumbnailPending,
+    thumbnailVersion,
     onDelete,
   } = props;
 
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
     usePresentationDeletion(projectId);
+
+  const resolvedSrc = thumbnailUrl
+    ? `${thumbnailUrl}${thumbnailUrl.includes('?') ? '&' : '?'}v=${thumbnailVersion}`
+    : null;
 
   const {
     isRenameModalOpen,
@@ -150,17 +160,16 @@ function PresentationList(props: Props) {
     <>
       <article
         onClick={handleListClick}
-        className="flex w-full items-center justify-between bg-white px-5 py-4 rounded-2xl border border-gray-200 transition-shadow cursor-pointer hover:shadow-lg"
+        className="relative flex w-full items-center justify-between bg-white px-5 py-4 rounded-2xl border border-gray-200 transition-shadow cursor-pointer hover:shadow-lg overflow-hidden"
       >
         {/* 썸네일 */}
-        <div className="w-35 h-19.5 shrink-0 overflow-hidden rounded-lg bg-gray-200">
-          {thumbnailUrl && (
-            <img
-              className="h-full w-full object-cover"
-              src={thumbnailUrl}
-              alt={`${displayTitle}`}
-            />
-          )}
+        <div className="relative w-35 h-19.5 shrink-0 overflow-hidden rounded-lg bg-transparent">
+          <ThumbnailImage
+            key={`${projectId}-${thumbnailVersion ?? 0}`}
+            src={resolvedSrc}
+            alt={displayTitle}
+            className="h-full w-full object-cover"
+          />
         </div>
 
         {/* 본문 */}
@@ -227,6 +236,12 @@ function PresentationList(props: Props) {
             />
           </div>
         </div>
+
+        <ProcessingOverlay
+          visible={Boolean(isThumbnailPending)}
+          variant="list"
+          className="rounded-2xl"
+        />
       </article>
 
       {/* 프레젠테이션 삭제 모달 (onDelete가 없을 때만) */}

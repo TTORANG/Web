@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 
 import { videosApi } from '@/api/endpoints/videos';
 import { CardView, ListView, Modal } from '@/components/common';
+import ProcessingOverlay from '@/components/common/ProcessingOverlay';
 import PresentationCard from '@/components/presentation/PresentationCard';
 import PresentationHeader from '@/components/presentation/PresentationHeader';
 import PresentationList from '@/components/presentation/PresentationList';
@@ -330,13 +331,7 @@ export default function VideoListPage() {
                           />
 
                           {isProcessing && (
-                            <div className="absolute inset-0 bg-black/70 rounded-2xl flex items-center justify-center z-10 pointer-events-none">
-                              <div className="text-center">
-                                <div className="h-10 w-10 animate-spin rounded-full border-4 border-white border-t-transparent mx-auto mb-3" />
-                                <p className="text-white text-sm font-bold">처리 중</p>
-                                <p className="text-white/80 text-xs mt-1">잠시만 기다려주세요</p>
-                              </div>
-                            </div>
+                            <ProcessingOverlay visible variant="card" className="rounded-2xl" />
                           )}
 
                           {isFailed && !isDeleting && (
