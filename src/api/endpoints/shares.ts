@@ -8,6 +8,8 @@
 import type {
   CreateShareLinkRequest,
   CreateShareLinkResponse,
+  ReadSharedCommentsData,
+  ReadSharedCommentsResponse,
   ReadSharedContentData,
   ReadSharedContentResponse,
   ShareableVideosResponse,
@@ -77,6 +79,26 @@ export async function createShareLink(
  */
 export async function getSharedContent(shareToken: string): Promise<ReadSharedContentData> {
   const response = await apiClient.get<ReadSharedContentResponse>(`/shares/${shareToken}`);
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
+}
+
+/**
+ * 공유 토큰으로 공유 댓글 목록 조회
+ *
+ * 외부 공유된 프로젝트의 댓글/답글 전체 목록을 조회합니다. (인증 불필요)
+ * 조회수(viewCount) 및 페이지뷰를 증가시키지 않습니다.
+ *
+ * @param shareToken - 공유 토큰
+ * @returns 공유 댓글 목록
+ */
+export async function getSharedComments(shareToken: string): Promise<ReadSharedCommentsData> {
+  const response = await apiClient.get<ReadSharedCommentsResponse>(
+    `/shares/${shareToken}/comments`,
+  );
 
   if (response.data.resultType === 'SUCCESS') {
     return response.data.success;

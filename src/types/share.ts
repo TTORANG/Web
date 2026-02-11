@@ -106,3 +106,10 @@ export interface ReadSharedContentData {
 }
 
 export type ReadSharedContentResponse = ApiResponse<ReadSharedContentData>;
+
+/** 6. 공유 댓글 목록 조회 */
+export interface ReadSharedCommentsData {
+  comments: SharedProjectComment[];
+}
+
+export type ReadSharedCommentsResponse = ApiResponse<ReadSharedCommentsData>;
