@@ -52,14 +52,7 @@ export function LoginButton() {
 
   // 익명 사용자
   if (isAnon || !user) {
-    return (
-      <HeaderButton
-        text="익명 사용자(로그인)"
-        icon={null}
-        onClick={openLoginModal}
-        className="hover:bg-gray-50"
-      />
-    );
+    return <HeaderButton text="익명 사용자(로그인)" icon={null} onClick={openLoginModal} />;
   }
 
   // 소셜이 아닌데 여기까지 왔다면(비정상 상태) 방어

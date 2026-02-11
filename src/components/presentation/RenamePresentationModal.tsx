@@ -51,6 +51,7 @@ export default function RenamePresentationModal({
         onKeyDown={handleKeyDown}
         disabled={isPending}
         placeholder="발표 제목을 입력하세요"
+        spellCheck={false}
       />
       <div className="mt-7 flex gap-3">
         <button
