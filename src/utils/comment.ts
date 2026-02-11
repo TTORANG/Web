@@ -16,6 +16,8 @@ export function createComment(input: CreateCommentInput): Comment {
   return {
     commentId: generateCommentId(),
     userId: input.userId ?? 'unknown',
+    userName: input.userName,
+    userProfileImage: input.userProfileImage,
     content: input.content.trim(),
     createdAt: new Date().toISOString(),
     isMine: true,
