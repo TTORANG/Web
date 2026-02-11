@@ -12,12 +12,11 @@ import { REACTION_TYPES } from '@/constants/reaction';
 import { REACTION_COUNT_WINDOW } from '@/constants/video';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Reaction, ReactionType } from '@/types/script';
-import { showToast } from '@/utils/toast';
 
 import { useCreateVideoReaction, useVideoReactionWindow } from './queries/useVideoReactionQueries';
 
 const ACTIVE_FLASH_MS = 500;
-const QUERY_TIMESTAMP_STEP_MS = 1000;
+const QUERY_TIMESTAMP_STEP_MS = 5000;
 // useSldieReaction의 Lock개념 그대로 적용
 const OPTIMISTIC_LOCK_DURATION = 2000;
 
@@ -145,9 +144,12 @@ export function useVideoReactions() {
             setOptimisticDeltas({});
           }
         },
-        onError: () => {
-          showToast.error('반응을 반영하지 못했습니다.');
-          // 실패 시 delta 롤백
+        onError: (error) => {
+          // 글로벌 에러 핸들러의 토스트 방지 (isHandled 플래그 설정)
+          if (error && typeof error === 'object' && 'isHandled' in error) {
+            (error as Record<string, unknown>).isHandled = true;
+          }
+          // 정확한 숫자보다 즉각적인 반응 경험이 중요하므로 delta만 롤백
           setOptimisticDeltas((prev) => ({
             ...prev,
             [type]: (prev[type] || 0) - 1,
