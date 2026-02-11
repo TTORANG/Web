@@ -10,7 +10,6 @@ import CommentList from '@/components/comment/CommentList';
 import ScriptSection from '@/components/feedback/ScriptSection';
 import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
 import { useSlides } from '@/hooks/queries/useSlides';
-import { useVideoReactionHighlights } from '@/hooks/queries/useVideoReactionQueries';
 import { useAuthStore } from '@/stores/authStore';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { SlideListItem } from '@/types';
@@ -39,8 +38,6 @@ export default function VideoDetailPage() {
     position: 'fixed',
     opacity: 0,
   });
-
-  const duration = videoData?.video.durationSeconds || 0;
 
   // 1. 데이터 로드 로직
   useEffect(() => {
