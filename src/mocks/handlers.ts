@@ -1234,6 +1234,31 @@ const shareHandlers = [
       },
     });
   }),
+
+  // 공유 댓글 목록 조회 (인증 불필요)
+  http.get(`${BASE_URL}/shares/:shareToken/comments`, async ({ params }) => {
+    await delay(150);
+    const { shareToken } = params as { shareToken: string };
+    const link = shareLinks.get(shareToken);
+    if (!link) return fail(404, 'SH001', '공유 링크를 찾을 수 없습니다.');
+
+    const sharedComments = link.videoId
+      ? (videoComments.get(link.videoId) ?? []).map((comment) => ({
+          commentId: comment.commentId,
+          content: comment.content,
+          writer: comment.userName,
+          targetType: 'video' as const,
+          targetId: link.videoId ?? '',
+          parentId: undefined,
+          timestampMs: comment.timestampMs,
+          createdAt: comment.createdAt,
+        }))
+      : [];
+
+    return ok({
+      comments: sharedComments,
+    });
+  }),
 ];
 
 // ═══════════════════════════════════════════════════════════════

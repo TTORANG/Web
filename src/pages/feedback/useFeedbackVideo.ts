@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import { recordVideoEvent } from '@/api/endpoints/analytics';
-import { getSharedContent } from '@/api/endpoints/shares';
+import { getSharedComments, getSharedContent } from '@/api/endpoints/shares';
 import { videosApi } from '@/api/endpoints/videos';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useVideoComments } from '@/hooks/useVideoComments';
@@ -224,11 +224,13 @@ export function useFeedbackVideo(
   const currentTime = useVideoFeedbackStore((s) => s.currentTime);
   const updateCurrentTime = useVideoFeedbackStore((s) => s.updateCurrentTime);
   const requestSeek = useVideoFeedbackStore((s) => s.requestSeek);
+  const updateFeedbacks = useVideoFeedbackStore((s) => s.updateFeedbacks);
 
   const { comments, addComment, addReply, deleteComment, updateComment } = useVideoComments();
   const { reactions, addReaction } = useVideoReactions();
   const [commentDraft, setCommentDraft] = useState('');
   const [scrollToCommentId, setScrollToCommentId] = useState<string | undefined>(undefined);
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   const timestampPrefix = useMemo(() => `${formatVideoTimestamp(currentTime)} `, [currentTime]);
   // 비디오 이벤트 기록 API는 number videoId를 사용합니다.
@@ -237,18 +239,50 @@ export function useFeedbackVideo(
     return Number.isFinite(parsed) ? parsed : null;
   }, [video?.videoId]);
 
+  // 서버에서 최신 댓글 목록을 가져와서 store 업데이트
+  const reloadComments = useCallback(async () => {
+    if (!shareToken) return null;
+
+    try {
+      const data = await getSharedComments(shareToken);
+      const { user } = useAuthStore.getState();
+      const sharedFeedbacks = mapSharedCommentsToFeedbacks(data.comments, user?.id, user?.name);
+      updateFeedbacks(sharedFeedbacks);
+      return data.comments;
+    } catch {
+      return null;
+    }
+  }, [shareToken, updateFeedbacks]);
+
   const handleAddComment = useCallback(async () => {
     if (!commentDraft.trim()) return;
-    const newCommentId = await addComment(commentDraft, currentTime);
-    setCommentDraft('');
 
-    // 새로 작성한 댓글로 자동 스크롤
-    if (newCommentId) {
-      setScrollToCommentId(newCommentId);
-      // 스크롤 후 상태 초기화 (다음 댓글 작성 시 중복 스크롤 방지)
-      setTimeout(() => setScrollToCommentId(undefined), 500);
+    setIsSubmittingComment(true);
+
+    try {
+      // 1. POST 요청으로 댓글 작성
+      const newCommentServerId = await addComment(commentDraft, currentTime);
+      setCommentDraft('');
+
+      // 2. 서버에서 최신 댓글 목록 가져오기 (다른 사용자의 댓글도 반영)
+      const latestComments = await reloadComments();
+
+      // 3. 방금 작성한 댓글로 스크롤
+      if (newCommentServerId && latestComments) {
+        // 서버에서 받은 댓글 목록에서 방금 작성한 댓글 찾기
+        const newComment = latestComments.find(
+          (c: SharedProjectComment) => c.commentId === newCommentServerId,
+        );
+        if (newComment) {
+          setScrollToCommentId(newComment.commentId);
+          // 스크롤 후 상태 초기화 (다음 댓글 작성 시 중복 스크롤 방지)
+          setTimeout(() => setScrollToCommentId(undefined), 500);
+        }
+      }
+    } finally {
+      setIsSubmittingComment(false);
     }
-  }, [addComment, commentDraft, currentTime]);
+  }, [addComment, commentDraft, currentTime, reloadComments]);
 
   const handleGoToTimeRef = useCallback(
     (ref: NonNullable<Comment['ref']>) => {
@@ -454,6 +488,7 @@ export function useFeedbackVideo(
     commentDraft,
     timestampPrefix,
     scrollToCommentId,
+    isSubmittingComment,
 
     updateCurrentTime,
     requestSeek,

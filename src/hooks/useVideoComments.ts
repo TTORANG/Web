@@ -30,7 +30,6 @@ export function useVideoComments() {
   const video = useVideoFeedbackStore((state) => state.video);
   const videoId = video?.videoId;
 
-  const addCommentStore = useVideoFeedbackStore((state) => state.addComment);
   const addReplyStore = useVideoFeedbackStore((state) => state.addReply);
   const deleteCommentStore = useVideoFeedbackStore((state) => state.deleteComment);
   const updateCommentStore = useVideoFeedbackStore((state) => state.updateComment);
@@ -64,16 +63,13 @@ export function useVideoComments() {
    *
    * @param content - 댓글 내용
    * @param seconds - 댓글이 달릴 영상 타임스탬프 (초)
-   * @returns 생성된 댓글 ID (스크롤용)
+   * @returns 서버에서 받은 댓글 ID (스크롤용)
    */
   const addComment = async (content: string, seconds: number): Promise<string | null> => {
     if (!videoId) {
       showToast.error('비디오 정보를 찾을 수 없습니다.');
       return null;
     }
-
-    // Optimistic update
-    const tempComment = addCommentStore(content, seconds);
 
     try {
       // content에서 타임스탬프 제거 (있으면)
@@ -86,15 +82,16 @@ export function useVideoComments() {
         timestampMs: Math.floor(seconds * 1000),
       });
 
-      // 서버 ID 저장 (Model에서 serverId 추출)
-      if (model && tempComment) {
-        updateCommentServerId(tempComment.commentId, model.serverId);
+      // 서버에서 받은 commentId 반환
+      if (model?.serverId) {
+        return model.serverId;
       }
+
+      return null;
     } catch {
       showToast.error('댓글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+      return null;
     }
-
-    return tempComment?.commentId ?? null;
   };
 
   /**

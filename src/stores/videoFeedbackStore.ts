@@ -67,6 +67,9 @@ interface VideoFeedbackState {
   deleteComment: (commentId: string) => void;
   updateComment: (commentId: string, content: string) => void;
   updateCommentServerId: (commentId: string, serverId: string) => void;
+
+  /** 댓글 목록 전체 업데이트 (서버에서 다시 가져온 데이터로 교체) */
+  updateFeedbacks: (feedbacks: VideoTimestampFeedback[]) => void;
 }
 
 function hasCommentId(flat: Comment[], commentId: string) {
@@ -297,6 +300,19 @@ export const useVideoFeedbackStore = create<VideoFeedbackState>()(
         },
         false,
         'video/updateCommentServerId',
+      ),
+
+    updateFeedbacks: (feedbacks) =>
+      set(
+        (state) => {
+          if (!state.video) return state;
+
+          return {
+            video: { ...state.video, feedbacks },
+          };
+        },
+        false,
+        'video/updateFeedbacks',
       ),
   })),
 );
