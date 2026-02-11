@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { recordPageView, slideView } from '@/api/endpoints/analytics';
+import { slideView } from '@/api/endpoints/analytics';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useHotkey, useSlideActions } from '@/hooks';
 import { useScript } from '@/hooks/queries/useScript';
@@ -163,13 +163,6 @@ export const useFeedbackSlide = ({
     },
     [goToIndex],
   );
-
-  const pageViewSentRef = useRef(false);
-  useEffect(() => {
-    if (!shareToken || pageViewSentRef.current) return;
-    pageViewSentRef.current = true;
-    void recordPageView({ shareToken });
-  }, [shareToken]);
 
   const lastSlideViewIdRef = useRef<string | null>(null);
   useEffect(() => {
