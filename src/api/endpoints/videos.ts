@@ -82,6 +82,25 @@ export const videosApi = {
 
     return apiClient.get<ApiResponse<ReadProjectVideosResponseDto>>(url);
   },
+  /**
+   * 영상 제목 및 생성일 조회
+   */
+  async getVideoTitle(videoId: string) {
+    const response = await apiClient.get<
+      ApiResponse<{ videoId: string; title: string; createdAt: string }>
+    >(`/videos/${videoId}/title`);
+    return response.data;
+  },
+
+  /**
+   * 영상 제목 수정
+   */
+  async updateVideoTitle(videoId: string, title: string) {
+    const response = await apiClient.patch<
+      ApiResponse<{ videoId: string; title: string; updatedAt: string }>
+    >(`/videos/${videoId}`, { title });
+    return response.data;
+  },
 };
 
 export async function createVideoComment(

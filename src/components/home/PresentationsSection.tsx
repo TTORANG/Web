@@ -142,7 +142,7 @@ export default function PresentationsSection({
               renderCard={(item) => (
                 <PresentationCard
                   {...item}
-                  isThumbnailPending={pendingSet.has(item.projectId) || !item.thumbnailUrl}
+                  isPresentationPending={pendingSet.has(item.projectId) || !item.thumbnailUrl}
                   thumbnailVersion={thumbVersion[item.projectId] ?? 0}
                 />
               )}
@@ -156,7 +156,7 @@ export default function PresentationsSection({
               renderInfo={(item) => (
                 <PresentationList
                   {...item}
-                  isThumbnailPending={pendingSet.has(item.projectId) || !item.thumbnailUrl}
+                  isPresentationPending={pendingSet.has(item.projectId) || !item.thumbnailUrl}
                   thumbnailVersion={thumbVersion[item.projectId] ?? 0}
                 />
               )}

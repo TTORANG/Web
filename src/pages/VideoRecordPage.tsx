@@ -123,7 +123,6 @@ export default function VideoRecordPage() {
         }, 500);
       }
     } catch (err: unknown) {
-      console.error('[VideoRecordPage] Upload error:', err);
       toast.error('업로드 중 오류가 발생했습니다.');
     }
   };

@@ -1,6 +1,6 @@
 /**
  * @file SlideWebcamStage.tsx
- * @description (FD_VID_01 - 2a/2b) 슬라이드(메인) + 웹캠 녹화본(PiP) 스테이지
+ * @description (FD_VID_01 - 2a/2b, PD_VID_04) 슬라이드(메인) + 웹캠 녹화본(PiP) 스테이지
  *
  * - currentTime(초)에 따라 slideChangeTimes 기준으로 슬라이드 자동 전환
  * - 웹캠 녹화본은 webcamVideoUrl(MOCK_VIDEO.videoUrl)을 사용
@@ -114,15 +114,13 @@ export default function SlideWebcamStage({
   // HLS를 지원하는 비디오 ref 콜백
   const setVideoRef = useCallback(
     (el: HTMLVideoElement | null) => {
+      // useVideoSync에 video 요소 전달
+      setVideoRefSync(el);
       // 기존 HLS 인스턴스 정리
       if (hlsInstanceRef.current) {
         hlsInstanceRef.current.destroy();
         hlsInstanceRef.current = null;
       }
-
-      // useVideoSync에 video 요소 전달
-      setVideoRefSync(el);
-
       if (!el || !webcamVideoUrl) return;
 
       // HLS(.m3u8) URL인지 확인
@@ -314,14 +312,6 @@ export default function SlideWebcamStage({
             />
           </MediaBox>
         )}
-
-        {/* 개발단계 확인용: 슬라이드 제목 배지는 슬라이드가 메인일 때만 보여주기 */}
-        {/* {isSlideMain && (
-            <div className="absolute left-4 top-4 rounded-md bg-[#000000]/55 px-3 py-1 text-[#ffffff] text-sm">
-              {activeIndex + 1}. {activeSlide.title}
-            </div>
-          )} */}
-
         {/* "슬라이드가 PiP일 때"만 hover 디밍 + 클릭 토글이 가능해야 함 */}
         {/* 2. 웹캠 영역 - 슬라이드가 없으면 항상 메인으로 표시 */}
         <MediaBox
