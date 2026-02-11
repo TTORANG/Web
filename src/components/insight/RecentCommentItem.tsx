@@ -1,7 +1,10 @@
+import { UserAvatar } from '@/components/common';
+
 import SlideThumb from './SlideThumb';
 
 interface RecentCommentItemProps {
   user: string;
+  userProfileImage?: string;
   slideLabel: string;
   time: string;
   text: string;
@@ -11,6 +14,7 @@ interface RecentCommentItemProps {
 
 export default function RecentCommentItem({
   user,
+  userProfileImage,
   slideLabel,
   time,
   text,
@@ -31,15 +35,7 @@ export default function RecentCommentItem({
         <div className="flex flex-1 flex-col gap-1">
           {/* 유저 정보 */}
           <div className="flex items-center gap-2">
-            {/* 아바타 */}
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-300">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z"
-                  fill="var(--color-gray-600)"
-                />
-              </svg>
-            </div>
+            <UserAvatar src={userProfileImage} alt={user} size={32} />
             <span className="text-body-m-bold text-gray-800">{user}</span>
             <span className="text-body-s text-gray-600">{slideLabel}</span>
           </div>

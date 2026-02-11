@@ -1,132 +1,72 @@
 /**
  * @file FeedbackSlidePage
- * @description 피드백 슬라이드 페이지
+ * @description 슬라이드 피드백 페이지
  *
  * 슬라이드 뷰어, 댓글 목록, 리액션 버튼을 포함합니다.
- * 좌우 화살표 키로 슬라이드 이동이 가능합니다.
+ * 좌우 키로 슬라이드 이동이 가능합니다.
  */
-import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
 import { Spinner } from '@/components/common';
-import WebSocketDebug from '@/components/common/WebSocketDebug';
 import FeedbackMobileLayout from '@/components/feedback/FeedbackMobileLayout';
 import ReactionButtons from '@/components/feedback/ReactionButtons';
 import SlideNavigation from '@/components/feedback/SlideNavigation';
 import SlideViewer from '@/components/feedback/SlideViewer';
 import SlideTitle from '@/components/slide/script/SlideTitle';
 import { createDefaultReactions } from '@/constants/reaction';
-import { useHotkey, useSlideActions, useSlideScript } from '@/hooks';
-import { useScript } from '@/hooks/queries/useScript';
-import { useSlides } from '@/hooks/queries/useSlides';
-import { useExitTracker } from '@/hooks/useExitTracker';
-import { useFeedbackWebSocket } from '@/hooks/useFeedbackWebSocket';
-import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
-import { useSlideCommentsLoader } from '@/hooks/useSlideCommentsLoader';
-import { useSlideNavigation } from '@/hooks/useSlideNavigation';
-import { useSlideReactions } from '@/hooks/useSlideReactions';
-import { useSlideStore } from '@/stores/slideStore';
-import type { Comment } from '@/types/comment';
+import type { ReadSharedContentData } from '@/types/share';
 
-export default function FeedbackSlidePage() {
-  const { projectId } = useParams<{ projectId: string }>();
-  const { data: slides, isLoading } = useSlides(projectId ?? '');
+import { useFeedbackSlide } from './feedback/useFeedbackSlide';
+import type { ShareExitSnapshot } from './feedback/useFeedbackVideo';
 
-  // 웹소켓 연결
-  const { isConnected, currentRooms, joinProject, leaveProject, getRooms } = useFeedbackWebSocket({
-    projectId: projectId ?? '',
-    enabled: !!projectId,
+interface FeedbackSlidePageProps {
+  sharedContent?: ReadSharedContentData;
+  onShareExitSnapshotChange?: (snapshot: ShareExitSnapshot) => void;
+}
+
+export default function FeedbackSlidePage({
+  sharedContent,
+  onShareExitSnapshotChange,
+}: FeedbackSlidePageProps = {}) {
+  const { shareToken } = useParams<{ shareToken: string }>();
+  const { state, actions } = useFeedbackSlide({
+    sharedSlides: sharedContent?.projectContent?.slides,
+    sharedComments: sharedContent?.projectContent?.comments,
+    shareToken,
+    onShareExitSnapshotChange,
   });
 
-  const totalSlides = slides?.length ?? 0;
-  const navigation = useSlideNavigation(totalSlides);
-  const { slideIndex, goPrev, goNext, isFirst, isLast, goToIndex } = navigation;
+  const {
+    currentSlide,
+    totalSlides,
+    slideIndex,
+    script,
+    comments,
+    commentDraft,
+    scrollToCommentId,
+    reactions,
+    isLoading,
+    isCommentsLoading,
+    commentsHasNextPage,
+    commentsIsFetchingNextPage,
+    isFirst,
+    isLast,
+  } = state;
 
-  const currentSlide = slides?.[slideIndex];
-
-  const { comments, addComment, addReply, deleteComment, updateComment } =
-    useSlideCommentsActions();
-  const { reactions, toggleReaction } = useSlideReactions();
-  const script = useSlideScript();
-  const initSlide = useSlideStore((state) => state.initSlide);
-  const { updateScript } = useSlideActions();
-  const { data: scriptData } = useScript(currentSlide?.slideId ?? '');
-
-  const [commentDraft, setCommentDraft] = useState('');
-
-  const handleAddComment = () => {
-    if (!commentDraft.trim()) return;
-    addComment(commentDraft, slideIndex);
-    setCommentDraft('');
-  };
-
-  const mapComments = useCallback(
-    (comments: Comment[]) => {
-      if (!currentSlide) return comments;
-      const slideLabel = `Slide ${slideIndex + 1}`;
-      return comments.map((comment) => ({
-        ...comment,
-        slideId: currentSlide.slideId,
-        ref: { kind: 'slide' as const, index: slideIndex },
-        slideRef: slideLabel,
-      }));
-    },
-    [currentSlide, slideIndex],
-  );
-
-  useHotkey({ ArrowLeft: goPrev, ArrowRight: goNext }, { enabled: !isLoading });
-
-  const buildExitPayload = useCallback(() => {
-    if (!projectId) return null;
-    const projectIdNum = Number(projectId);
-    if (!Number.isFinite(projectIdNum)) return null;
-
-    const payload: { projectId: number; lastSlideId?: number } = {
-      projectId: projectIdNum,
-    };
-
-    if (currentSlide?.slideId) {
-      const slideIdNum = Number(currentSlide.slideId);
-      if (Number.isFinite(slideIdNum)) {
-        payload.lastSlideId = slideIdNum;
-      }
-    }
-
-    return payload;
-  }, [projectId, currentSlide]);
-
-  useExitTracker(buildExitPayload);
-
-  /** 슬라이드 변경 시 store 초기화 */
-  useEffect(() => {
-    if (!currentSlide) return;
-
-    initSlide({
-      ...currentSlide,
-      emojiReactions: createDefaultReactions(),
-    });
-    updateScript('');
-  }, [slideIndex, currentSlide, initSlide, updateScript]);
-
-  const { isLoading: isCommentsLoading } = useSlideCommentsLoader(currentSlide?.slideId, {
-    mapComments,
-  });
-
-  useEffect(() => {
-    if (scriptData) {
-      updateScript(scriptData.scriptText);
-    }
-  }, [scriptData, updateScript]);
-
-  const handleGoToRef = useCallback(
-    (ref: NonNullable<Comment['ref']>) => {
-      if (ref.kind !== 'slide') return;
-      goToIndex(ref.index);
-    },
-    [goToIndex],
-  );
+  const {
+    goPrev,
+    goNext,
+    handleGoToRef,
+    setCommentDraft,
+    handleAddComment,
+    addReply,
+    deleteComment,
+    updateComment,
+    addReaction,
+    commentsFetchNextPage,
+  } = actions;
 
   if (isLoading) {
     return (
@@ -154,11 +94,15 @@ export default function FeedbackSlidePage() {
           <div className="flex-1 min-h-0 overflow-y-auto">
             <CommentList
               comments={comments}
+              scrollToCommentId={scrollToCommentId ?? undefined}
               onAddReply={addReply}
               onGoToRef={handleGoToRef}
               onDeleteComment={deleteComment}
               onUpdateComment={updateComment}
               isLoading={isLoading || isCommentsLoading}
+              hasNextPage={commentsHasNextPage}
+              isFetchingNextPage={commentsIsFetchingNextPage}
+              onLoadMore={commentsFetchNextPage}
             />
           </div>
 
@@ -172,7 +116,7 @@ export default function FeedbackSlidePage() {
             />
             <ReactionButtons
               reactions={reactions.length > 0 ? reactions : createDefaultReactions()}
-              onToggleReaction={toggleReaction}
+              onToggleReaction={addReaction}
               layout="grid-2"
               buttonClassName="w-42.25"
             />
@@ -180,7 +124,6 @@ export default function FeedbackSlidePage() {
         </aside>
       </div>
 
-      {/* 모바일 뷰 */}
       <FeedbackMobileLayout
         mediaSlot={
           currentSlide ? (
@@ -190,7 +133,7 @@ export default function FeedbackSlidePage() {
               className="max-h-full max-w-full"
             />
           ) : (
-            <div className="py-20 text-black">슬라이드를 불러오는 중...</div>
+            <div className="py-20 text-black">슬라이드를 불러올 수 없습니다...</div>
           )
         }
         navigationSlot={
@@ -207,7 +150,7 @@ export default function FeedbackSlidePage() {
         reactionSlot={
           <ReactionButtons
             reactions={reactions.length > 0 ? reactions : createDefaultReactions()}
-            onToggleReaction={toggleReaction}
+            onToggleReaction={addReaction}
             showLabel={false}
           />
         }
@@ -229,11 +172,15 @@ export default function FeedbackSlidePage() {
             <div className="flex-1 min-h-0 overflow-y-auto">
               <CommentList
                 comments={comments}
+                scrollToCommentId={scrollToCommentId ?? undefined}
                 onAddReply={addReply}
                 onGoToRef={handleGoToRef}
                 onDeleteComment={deleteComment}
                 onUpdateComment={updateComment}
                 isLoading={isLoading}
+                hasNextPage={commentsHasNextPage}
+                isFetchingNextPage={commentsIsFetchingNextPage}
+                onLoadMore={commentsFetchNextPage}
               />
             </div>
             <div className="shrink-0 px-4 py-3">
@@ -248,16 +195,6 @@ export default function FeedbackSlidePage() {
           </>
         }
         commentCount={comments.length}
-      />
-
-      {/* WebSocket 디버그 UI (개발 환경에서만) */}
-      <WebSocketDebug
-        isConnected={isConnected}
-        currentRooms={currentRooms}
-        projectId={projectId}
-        onJoinProject={joinProject}
-        onLeaveProject={leaveProject}
-        onGetRooms={getRooms}
       />
     </div>
   );

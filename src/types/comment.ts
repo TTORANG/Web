@@ -5,6 +5,8 @@ export interface Comment {
   /** 의견이 속한 슬라이드 ID (피드백 화면에서 필요) */
   slideId?: string;
   userId: string;
+  userName?: string;
+  userProfileImage?: string;
   content: string;
   createdAt: string;
   /** true면 삭제/수정 가능 (본인 작성) */
@@ -26,6 +28,8 @@ export interface Comment {
 export interface CreateCommentInput {
   content: string;
   userId?: string;
+  userName?: string;
+  userProfileImage?: string;
   ref?: Comment['ref'];
   parentId?: string;
 }

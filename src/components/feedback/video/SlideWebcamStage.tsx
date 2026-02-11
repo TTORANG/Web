@@ -83,6 +83,7 @@ type SlideWebcamStageProps = {
   slideChangeTimes: number[];
   webcamVideoUrl: string;
   onTimeUpdate?: (time: number) => void;
+  onVideoEvent?: (eventType: 'play' | 'pause' | 'seek', timeSeconds: number) => void;
   disablePip?: boolean;
   showLayoutToggle?: boolean;
   layoutToggleLabel?: ReactNode;
@@ -93,6 +94,7 @@ export default function SlideWebcamStage({
   slideChangeTimes,
   webcamVideoUrl,
   onTimeUpdate,
+  onVideoEvent,
   disablePip = false,
   showLayoutToggle = false,
   layoutToggleLabel = (
@@ -198,6 +200,28 @@ export default function SlideWebcamStage({
   useEffect(() => {
     onTimeUpdate?.(currentTime);
   }, [currentTime, onTimeUpdate]);
+
+  useEffect(() => {
+    if (!videoElement || !onVideoEvent) return;
+
+    const emit = (eventType: 'play' | 'pause' | 'seek') => {
+      onVideoEvent(eventType, videoElement.currentTime ?? 0);
+    };
+
+    const handlePlay = () => emit('play');
+    const handlePause = () => emit('pause');
+    const handleSeeked = () => emit('seek');
+
+    videoElement.addEventListener('play', handlePlay);
+    videoElement.addEventListener('pause', handlePause);
+    videoElement.addEventListener('seeked', handleSeeked);
+
+    return () => {
+      videoElement.removeEventListener('play', handlePlay);
+      videoElement.removeEventListener('pause', handlePause);
+      videoElement.removeEventListener('seeked', handleSeeked);
+    };
+  }, [onVideoEvent, videoElement]);
 
   // currentTime -> slideIndex 계산
   const activeIndex = useMemo(() => {

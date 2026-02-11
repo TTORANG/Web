@@ -4,18 +4,16 @@
  */
 import type { ApiResponse } from './api';
 
-/** 공유 범위 타입 (API에서 사용하는 값) */
+/** 공유 범위 타입(API에서 사용하는 값) */
 export type ShareScope = 'slides_script' | 'slides_script_video';
 
-/** 1. 공유링크생성**/
-/** 공유 링크 생성 요청 */
+/** 1. 공유링크 생성 */
 export interface CreateShareLinkRequest {
   scope: ShareScope;
   videoId?: string;
   expiredAt?: string;
 }
 
-/** 공유된 콘텐츠 요약 정보 */
 export interface SharedContentSummary {
   scope: ShareScope;
   projectTitle: string;
@@ -24,7 +22,6 @@ export interface SharedContentSummary {
   thumbnailUrl?: string;
 }
 
-/** 공유 링크 생성 성공 데이터 */
 export interface CreateShareLinkData {
   projectId: string;
   scope: ShareScope;
@@ -34,11 +31,9 @@ export interface CreateShareLinkData {
   createdAt: string;
 }
 
-/** 공유 링크 생성 응답 */
 export type CreateShareLinkResponse = ApiResponse<CreateShareLinkData>;
 
-/** 4. 공유 가능 영상 목록 조회(무한스크롤) */
-/** 공유 가능한 영상 아이템 */
+/** 4. 공유 가능 영상 목록 조회 */
 export interface ShareableVideo {
   id: string;
   title: string;
@@ -46,18 +41,67 @@ export interface ShareableVideo {
   createdAt: string;
 }
 
-/** 공유 가능 영상 목록 페이지네이션 */
 export interface ShareableVideosPagination {
   currentPage: number;
   totalCount: number;
   hasNext: boolean;
 }
 
-/** 공유 가능 영상 목록 데이터 */
 export interface ShareableVideosData {
   videos: ShareableVideo[];
   pagination: ShareableVideosPagination;
 }
 
-/** 공유 가능 영상 목록 응답 */
 export type ShareableVideosResponse = ApiResponse<ShareableVideosData>;
+
+/** 5. 공유 콘텐츠 조회 */
+export interface SharedProjectSlide {
+  slideId: string;
+  slideNum: number;
+  imageUrl: string;
+  scriptText: string;
+  timestampMs: number;
+}
+
+export interface SharedProjectVideo {
+  videoId: string;
+  videoUrl: string | null;
+  thumbnailUrl: string | null;
+}
+
+export type SharedProjectCommentTargetType = 'video' | 'slide';
+
+export interface SharedProjectComment {
+  commentId: string;
+  content: string;
+  writer: string;
+  targetType: SharedProjectCommentTargetType;
+  targetId: string;
+  parentId: string | null;
+  timestampMs: number;
+  createdAt: string;
+}
+
+export interface ReadSharedContentData {
+  message: string;
+  sessionInfo: {
+    sessionId: string;
+    tokens: {
+      accessToken: string;
+      refreshToken: string;
+    };
+  };
+  shareInfo: {
+    shareToken: string;
+    scope: ShareScope;
+    createdAt: string;
+  };
+  projectContent: {
+    title: string;
+    slides: SharedProjectSlide[];
+    video: SharedProjectVideo | null;
+    comments: SharedProjectComment[];
+  };
+}
+
+export type ReadSharedContentResponse = ApiResponse<ReadSharedContentData>;

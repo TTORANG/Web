@@ -91,10 +91,7 @@ export function useInsightPageModel(): InsightModel {
     return { slideIndexById, slideById };
   }, [slideList]);
 
-  const convertGcsToHttpUrl = (gcsUrl?: string) =>
-    gcsUrl?.startsWith('gs://') ? `https://storage.googleapis.com/${gcsUrl.slice(5)}` : gcsUrl;
-
-  const getThumb = (slideIndex: number) => convertGcsToHttpUrl(slideList[slideIndex]?.imageUrl);
+  const getThumb = (slideIndex: number) => slideList[slideIndex]?.imageUrl;
 
   // ---- Top slides ----
   const topSlides = useMemo<InsightTopSlide[]>(() => {

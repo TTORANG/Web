@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import type { CreateCommentRequestDto } from '@/api';
+import type { CreateCommentResponseDto, CreateReplyCommentResponseDto } from '@/api/dto';
 import {
   createReply,
   createSlideComment,
@@ -82,6 +83,7 @@ export function useSlideCommentsActions() {
   const addReplyStore = useSlideStore((state) => state.addReply);
   const deleteCommentStore = useSlideStore((state) => state.deleteComment);
   const updateCommentStore = useSlideStore((state) => state.updateComment);
+  const updateCommentServerIdStore = useSlideStore((state) => state.updateCommentServerId);
   const setComments = useSlideStore((state) => state.setComments);
 
   const { mutate: createCommentMutate } = useCreateCommentMutation();
@@ -94,6 +96,20 @@ export function useSlideCommentsActions() {
   const comments = useMemo(() => {
     if (!flatComments) return EMPTY_COMMENTS;
     const sorted = [...flatComments].sort((a, b) => {
+      const aOptimistic = !a.serverId;
+      const bOptimistic = !b.serverId;
+      if (aOptimistic !== bOptimistic) return aOptimistic ? 1 : -1;
+
+      const aIndex =
+        a.ref?.kind === 'slide' && typeof a.ref.index === 'number'
+          ? a.ref.index
+          : Number.MAX_SAFE_INTEGER;
+      const bIndex =
+        b.ref?.kind === 'slide' && typeof b.ref.index === 'number'
+          ? b.ref.index
+          : Number.MAX_SAFE_INTEGER;
+      if (aIndex !== bIndex) return aIndex - bIndex;
+
       const at = Date.parse(a.createdAt);
       const bt = Date.parse(b.createdAt);
       if (Number.isNaN(at) || Number.isNaN(bt)) return 0;
@@ -103,15 +119,18 @@ export function useSlideCommentsActions() {
   }, [flatComments]);
 
   const addComment = (content: string, currentSlideIndex: number) => {
-    if (!slideId) return;
+    if (!slideId) return undefined;
 
     const previousComments = flatComments ?? [];
-    addCommentStore(content, currentSlideIndex);
+    const newComment = addCommentStore(content, currentSlideIndex);
 
     createCommentMutate(
       { slideId, projectId, data: { content } },
       {
-        onSuccess: () => {
+        onSuccess: (response: CreateCommentResponseDto) => {
+          if (newComment) {
+            updateCommentServerIdStore(newComment.commentId, response.commentId);
+          }
           queryClient.invalidateQueries({
             queryKey: queryKeys.comments.list(slideId),
           });
@@ -122,6 +141,8 @@ export function useSlideCommentsActions() {
         },
       },
     );
+
+    return newComment;
   };
 
   const addReply = (parentId: string, content: string) => {
@@ -132,14 +153,19 @@ export function useSlideCommentsActions() {
 
     // 최상위 부모에게 답글 달기 (slideStore의 addReply가 rootParentId를 찾음)
     const previousComments = flatComments ?? [];
-    addReplyStore(parentId, content);
+    const newReply = addReplyStore(parentId, content);
 
     createReplyMutate(
       { commentId: targetServerId, slideId: targetSlideId, projectId, data: { content } },
       {
-        onSuccess: () => {
+        onSuccess: (response: CreateReplyCommentResponseDto) => {
+          if (newReply) {
+            updateCommentServerIdStore(newReply.commentId, response.replyId);
+          }
+          // 답글은 부모 댓글의 replies 쿼리만 갱신합니다.
+          // list 쿼리 재조회는 서버 응답 형태에 따라 답글이 최상위로 보이는 문제를 유발할 수 있습니다.
           queryClient.invalidateQueries({
-            queryKey: queryKeys.comments.list(targetSlideId),
+            queryKey: queryKeys.comments.replies(targetServerId),
           });
         },
         onError: () => {

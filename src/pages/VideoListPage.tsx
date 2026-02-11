@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { CardView, ListView } from '@/components/common';
+import { toast } from 'sonner';
+
+import { videosApi } from '@/api/endpoints/videos';
+import { CardView, ListView, Modal } from '@/components/common';
 import PresentationCard from '@/components/presentation/PresentationCard';
 import PresentationHeader from '@/components/presentation/PresentationHeader';
 import PresentationList from '@/components/presentation/PresentationList';
@@ -23,8 +26,13 @@ export default function VideoListPage() {
   const [sort, setSort] = useState<SortMode>('recent');
   const [filter, setFilter] = useState<FilterMode>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('card');
+  const [deletingVideoIds, setDeletingVideoIds] = useState<Set<string>>(new Set());
 
-  const { data, isLoading, error } = useProjectVideos({
+  // 삭제 확인 모달 상태
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [videoToDelete, setVideoToDelete] = useState<{ id: string; title: string } | null>(null);
+
+  const { data, isLoading, error, refetch } = useProjectVideos({
     projectId: projectId!,
     search: appliedQuery,
     filter,
@@ -38,15 +46,35 @@ export default function VideoListPage() {
   const hasAppliedQuery = appliedQuery.trim().length > 0;
   const hasResults = videos.length > 0;
 
+  const hasProcessingVideos = videos.some((video) => {
+    if (video.status !== 'uploading' && video.status !== 'processing') return false;
+
+    const createdAt = new Date(video.createdAt);
+    const now = new Date();
+    const hoursSinceCreated = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+
+    return hoursSinceCreated < 1;
+  });
+
   useEffect(() => {
     if (location.state?.uploadSuccess) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowSuccessToast(true);
       navigate(location.pathname, { replace: true, state: {} });
+      refetch();
       const timer = setTimeout(() => setShowSuccessToast(false), 3000);
       return () => clearTimeout(timer);
     }
-  }, [location, navigate]);
+  }, [location, navigate, refetch]);
+
+  useEffect(() => {
+    if (!hasProcessingVideos) return;
+
+    const interval = setInterval(() => {
+      refetch();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [hasProcessingVideos, refetch]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -59,6 +87,60 @@ export default function VideoListPage() {
   const handleStartRecording = () => {
     navigate(`/${projectId}/video/record`);
   };
+
+  const handleVideoClick = (videoId: string, status: string) => {
+    if (status === 'uploading' || status === 'processing') {
+      toast.info('영상을 처리 중입니다', {
+        description: '잠시만 기다려주세요. 처리가 완료되면 확인하실 수 있습니다.',
+      });
+      return;
+    }
+
+    if (status === 'failed') {
+      toast.error('영상 처리에 실패했습니다', {
+        description: '다시 녹화해주세요.',
+      });
+      return;
+    }
+
+    navigate(`/${projectId}/videos/${videoId}`);
+  };
+
+  const handleDeleteClick = (videoId: string, title: string) => {
+    setVideoToDelete({ id: videoId, title });
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!videoToDelete) return;
+
+    setDeleteModalOpen(false);
+    setDeletingVideoIds((prev) => new Set(prev).add(videoToDelete.id));
+
+    try {
+      const response = await videosApi.deleteVideo(videoToDelete.id);
+
+      if (response.data.resultType === 'SUCCESS') {
+        toast.success('영상이 삭제되었습니다');
+        refetch();
+      } else {
+        throw new Error(response.data.error?.reason || '삭제 실패');
+      }
+    } catch (err) {
+      console.error('[VideoListPage] Delete error:', err);
+      toast.error('삭제 실패', {
+        description: err instanceof Error ? err.message : '영상을 삭제할 수 없습니다',
+      });
+    } finally {
+      setDeletingVideoIds((prev) => {
+        const next = new Set(prev);
+        next.delete(videoToDelete.id);
+        return next;
+      });
+      setVideoToDelete(null);
+    }
+  };
+
   if (!projectId) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -99,7 +181,7 @@ export default function VideoListPage() {
       aria-labelledby="tab-video"
       className="relative h-full w-full overflow-y-auto bg-gray-100"
     >
-      {/* 업로드 성공 토스트 */}
+      {/* 성공 토스트 */}
       {showSuccessToast && (
         <div className="fixed right-4 top-4 z-50 flex animate-slide-in items-center gap-2 rounded-lg bg-success px-6 py-3 shadow-lg">
           <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -113,20 +195,53 @@ export default function VideoListPage() {
         </div>
       )}
 
-      {/* 메인 컨텐츠 */}
+      {/* 삭제 확인 모달 */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setVideoToDelete(null);
+        }}
+        title="영상 삭제"
+        size="sm"
+      >
+        <p className="text-body-m mb-6">
+          <span className="font-bold">{videoToDelete?.title}</span> 영상을 삭제하시겠습니까?
+          <br />
+          <span className="text-gray-600 text-sm">삭제된 영상은 복구할 수 없습니다.</span>
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              setDeleteModalOpen(false);
+              setVideoToDelete(null);
+            }}
+            className="flex-1 rounded-md bg-gray-100 py-3 font-bold text-gray-600 hover:bg-gray-200 transition-colors"
+            type="button"
+          >
+            취소
+          </button>
+          <button
+            onClick={handleConfirmDelete}
+            className="flex-1 rounded-md bg-error py-3 font-bold text-white hover:bg-error/90 transition-colors"
+            type="button"
+          >
+            삭제
+          </button>
+        </div>
+      </Modal>
+
       {!isLoading && totalCount === 0 && !hasAppliedQuery ? (
         <div className="flex h-full items-center justify-center">
           <RecordingEmptySection onStart={handleStartRecording} />
         </div>
       ) : (
         <main className="flex h-full flex-col px-18 py-8">
-          {/* 헤더 */}
           <div className="mb-6">
             <h1 className="text-body-l-bold text-gray-800 mb-1">녹화된 영상</h1>
             <p className="text-body-s text-gray-600">발표 연습 영상을 선택해서 확인하세요</p>
           </div>
 
-          {/* 영상 녹화하기 버튼 */}
           <div className="mb-4 flex justify-end">
             <button
               onClick={handleStartRecording}
@@ -136,7 +251,7 @@ export default function VideoListPage() {
               영상 녹화하기
             </button>
           </div>
-          {/* 검색/필터 헤더 */}
+
           <div className="mb-4">
             <PresentationHeader
               value={query}
@@ -150,7 +265,6 @@ export default function VideoListPage() {
             />
           </div>
 
-          {/* 콘텐츠 영역 */}
           <section className="flex-1">
             {isLoading || isDebouncing ? (
               viewMode === 'card' ? (
@@ -179,17 +293,117 @@ export default function VideoListPage() {
                 {viewMode === 'card' ? (
                   <CardView
                     items={videos}
-                    getKey={(item) => item.projectId}
+                    getKey={(item) => item.videoId?.toString() || ''}
                     className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-3"
-                    renderCard={(item) => <PresentationCard {...item} mode="videos" />}
+                    renderCard={(item) => {
+                      const now = new Date();
+                      const createdAt = new Date(item.createdAt);
+                      const hoursSinceCreated =
+                        (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+
+                      const isStuck =
+                        (item.status === 'uploading' || item.status === 'processing') &&
+                        hoursSinceCreated > 1;
+
+                      const isProcessing =
+                        (item.status === 'uploading' || item.status === 'processing') && !isStuck;
+
+                      const isFailed = item.status === 'failed' || isStuck;
+                      const isDeleting = deletingVideoIds.has(item.videoId?.toString() || '');
+
+                      return (
+                        <div
+                          className="relative"
+                          onClick={() =>
+                            handleVideoClick(
+                              item.videoId?.toString() || '',
+                              isStuck ? 'failed' : item.status,
+                            )
+                          }
+                        >
+                          <PresentationCard
+                            {...item}
+                            mode="videos"
+                            onDelete={() =>
+                              handleDeleteClick(item.videoId?.toString() || '', item.title)
+                            }
+                          />
+
+                          {isProcessing && (
+                            <div className="absolute inset-0 bg-black/70 rounded-2xl flex items-center justify-center z-10 pointer-events-none">
+                              <div className="text-center">
+                                <div className="h-10 w-10 animate-spin rounded-full border-4 border-white border-t-transparent mx-auto mb-3" />
+                                <p className="text-white text-sm font-bold">처리 중</p>
+                                <p className="text-white/80 text-xs mt-1">잠시만 기다려주세요</p>
+                              </div>
+                            </div>
+                          )}
+
+                          {isFailed && !isDeleting && (
+                            <div className="absolute inset-0 bg-black/70 rounded-2xl flex items-center justify-center z-10">
+                              <div className="text-center">
+                                <svg
+                                  className="h-12 w-12 text-red-500 mx-auto mb-3"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                  />
+                                </svg>
+                                <p className="text-white text-sm font-bold mb-3">
+                                  {isStuck ? '처리 시간 초과' : '처리 실패'}
+                                </p>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteClick(item.videoId?.toString() || '', item.title);
+                                  }}
+                                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                                >
+                                  삭제
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {isDeleting && (
+                            <div className="absolute inset-0 bg-black/70 rounded-2xl flex items-center justify-center z-10 pointer-events-none">
+                              <div className="text-center">
+                                <div className="h-10 w-10 animate-spin rounded-full border-4 border-white border-t-transparent mx-auto mb-3" />
+                                <p className="text-white text-sm font-bold">삭제 중...</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }}
                     empty={null}
                   />
                 ) : (
                   <ListView
                     items={videos}
-                    getKey={(item) => item.projectId}
+                    getKey={(item) => item.videoId?.toString() || ''}
                     className="flex flex-col gap-3"
-                    renderInfo={(item) => <PresentationList {...item} mode="videos" />}
+                    renderInfo={(item) => (
+                      <div
+                        onClick={() =>
+                          handleVideoClick(item.videoId?.toString() || '', item.status)
+                        }
+                      >
+                        <PresentationList
+                          {...item}
+                          mode="videos"
+                          onDelete={() =>
+                            handleDeleteClick(item.videoId?.toString() || '', item.title)
+                          }
+                        />
+                      </div>
+                    )}
                     empty={null}
                   />
                 )}

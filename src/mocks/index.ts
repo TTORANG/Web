@@ -1,2 +1,2 @@
-export { MOCK_SLIDES } from './slides';
-export { handlers } from './handlers';
+// export { MOCK_SLIDES } from './slides';
+// export { handlers } from './handlers';

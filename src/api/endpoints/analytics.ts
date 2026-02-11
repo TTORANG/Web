@@ -10,6 +10,13 @@ import type {
   ReadSlideRetentionResponseDto,
   ReadVideoExitAnalyticsResponseDto,
   ReadVideoRetentionResponseDto,
+  RecordAnalyticsEventResponseDto,
+  RecordExitRequestDto,
+  RecordExitResponseDto,
+  RecordPageViewRequestDto,
+  RecordSlideViewRequestDto,
+  RecordSlideViewResponseDto,
+  RecordVideoEventRequestDto,
 } from '@/api/dto/analytics.dto';
 import type { ApiResponse } from '@/types/api';
 
@@ -53,30 +60,54 @@ export async function getProjectAnalyticsSummary(
   return response.data.success;
 }
 
-export interface RecordExitRequest {
-  projectId: number;
-  lastSlideId?: number;
-  lastVideoId?: number;
-  lastVideoTimeMs?: number;
+/**
+ * 이탈 기록
+ */
+export function recordExit(data: RecordExitRequestDto) {
+  // keepalive 옵션이 필요 없으므로 apiClient로 통일
+  return apiClient.post<ApiResponse<RecordExitResponseDto>>('/analytics/exit', data);
 }
 
-export function recordExit(data: RecordExitRequest) {
-  // try-catch 블록을 제거하세요!
-
-  const baseURL = apiClient.defaults.baseURL ?? '';
-  // baseURL 처리 (기존 로직 유지)
-  const fullUrl = baseURL ? new URL('/analytics/exit', baseURL).toString() : '/analytics/exit';
-
-  // return fetch(...)를 바로 반환하여 Promise가 끊기지 않게 합니다.
-  return fetch(fullUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-    keepalive: true,
-  });
+/**
+ * 슬라이드 조회 기록
+ */
+export function slideView(data: RecordSlideViewRequestDto) {
+  return apiClient.post<ApiResponse<RecordSlideViewResponseDto>>('/analytics/slide-view', data);
 }
+/**
+ * 페이지 조회 기록
+ */
+export async function recordPageView(
+  data: RecordPageViewRequestDto,
+): Promise<RecordAnalyticsEventResponseDto> {
+  const response = await apiClient.post<ApiResponse<RecordAnalyticsEventResponseDto>>(
+    '/analytics/pageview',
+    data,
+  );
+  if (!response.data.success) {
+    throw new Error('페이지 조회 기록 전송에 실패했습니다.');
+  }
+  return response.data.success;
+}
+
+/**
+ * 영상 이벤트 기록
+ */
+export async function recordVideoEvent(
+  data: RecordVideoEventRequestDto,
+): Promise<RecordAnalyticsEventResponseDto> {
+  const response = await apiClient.post<ApiResponse<RecordAnalyticsEventResponseDto>>(
+    '/analytics/video-event',
+    data,
+  );
+  if (!response.data.success) {
+    throw new Error('영상 이벤트 기록 전송에 실패했습니다.');
+  }
+  return response.data.success;
+}
+
+// 기존 코드와의 호환을 위한 별칭 타입
+export type RecordExitRequest = RecordExitRequestDto;
 
 // 슬라이드별 청중 잔존률 api 연동
 export async function getSlideRetention(projectId: number): Promise<ReadSlideRetentionResponseDto> {

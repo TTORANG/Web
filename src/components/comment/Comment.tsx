@@ -14,12 +14,15 @@ import FileIcon from '@/assets/icons/icon-document.svg?react';
 import EditIcon from '@/assets/icons/icon-edit.svg?react';
 import RemoveIcon from '@/assets/icons/icon-remove.svg?react';
 import ReplyIcon from '@/assets/icons/icon-reply.svg?react';
-import { MOCK_USERS } from '@/mocks/users';
+import { UserAvatar } from '@/components/common';
+import { useAuthStore } from '@/stores/authStore';
 import type { Comment as CommentType } from '@/types/comment';
 import { formatRelativeTime, formatVideoTimestamp } from '@/utils/format';
+import { getUserDisplayName } from '@/utils/user';
 
 import { useCommentContext } from './CommentContext';
 import CommentInput from './CommentInput';
+import CommentReplies from './CommentReplies';
 
 interface CommentProps {
   /** 댓글 데이터 */
@@ -55,14 +58,12 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
     submitEdit,
     goToRef,
   } = useCommentContext();
-
-  // 서버가 userId를 숫자로 반환하는 경우 user-{id} 형식으로 변환하여 매칭
-  const normalizedUserId = comment.userId?.startsWith('user-')
-    ? comment.userId
-    : `user-${comment.userId}`;
-  const user = MOCK_USERS.find((u) => u.id === normalizedUserId || u.id === comment.userId);
-  const authorName = user?.name ?? '알 수 없음';
-  const authorProfileImage = user?.profileImage;
+  const currentUser = useAuthStore((state) => state.user);
+  const fallbackName = getUserDisplayName(currentUser, '알 수 없음');
+  const authorName =
+    comment.userName ?? (comment.isMine ? fallbackName : (comment.userId ?? fallbackName));
+  const authorProfileImage =
+    comment.userProfileImage ?? (comment.isMine ? currentUser?.profileImage : undefined);
 
   const isActive = replyingToId === comment.commentId;
   const isEditing = editingId === comment.commentId;
@@ -96,14 +97,17 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
   }, [comment.ref, goToRef]);
 
   // ref에서 표시할 라벨 생성
-  const refLabel = comment.ref
-    ? comment.ref.kind === 'slide'
-      ? `슬라이드 ${comment.ref.index + 1}`
-      : formatVideoTimestamp(comment.ref.seconds)
+  const commentRef = comment.ref;
+  const refLabel = commentRef
+    ? commentRef.kind === 'slide'
+      ? `슬라이드 ${commentRef.index + 1}`
+      : formatVideoTimestamp(commentRef.seconds)
     : null;
 
+  const shouldShowRef = !!commentRef && !comment.isReply && !comment.parentId;
+
   return (
-    <div>
+    <div id={`comment-${comment.commentId}`}>
       <div
         className={clsx(
           'flex gap-3 py-3 pr-4 transition-colors',
@@ -112,15 +116,7 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
         )}
       >
         <div className="w-8 shrink-0">
-          {authorProfileImage ? (
-            <img
-              src={authorProfileImage}
-              alt={authorName}
-              className="h-8 w-8 rounded-full object-cover"
-            />
-          ) : (
-            <div className="h-8 w-8 rounded-full bg-gray-400" />
-          )}
+          <UserAvatar src={authorProfileImage} alt={authorName} size={32} />
         </div>
 
         <div className="flex flex-1 flex-col gap-1 pt-1.5 min-w-0">
@@ -174,24 +170,22 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
               />
             ) : (
               <div className="text-body-s text-black">
-                {comment.ref && (
+                {shouldShowRef && commentRef && (
                   <button
                     type="button"
                     onClick={handleGoToRef}
                     className={clsx(
                       'mr-2 inline-flex items-center align-middle rounded text-body-s-bold hover:underline focus-visible:outline-2 focus-visible:outline-main',
-                      comment.ref.kind === 'slide' ? 'text-main-variant1' : 'text-main',
+                      commentRef.kind === 'slide' ? 'text-main-variant1' : 'text-main',
                     )}
                     aria-label={
-                      comment.ref.kind === 'slide'
-                        ? `${refLabel}로 이동`
-                        : `영상 ${refLabel}로 이동`
+                      commentRef.kind === 'slide' ? `${refLabel}로 이동` : `영상 ${refLabel}로 이동`
                     }
                   >
-                    {comment.ref.kind === 'slide' && (
+                    {commentRef.kind === 'slide' && (
                       <FileIcon className="text-main-variant1" aria-hidden="true" />
                     )}
-                    {comment.ref.kind === 'slide' ? <>&nbsp;</> : null}
+                    {commentRef.kind === 'slide' ? <>&nbsp;</> : null}
                     {refLabel}
                   </button>
                 )}
@@ -233,17 +227,12 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
         />
       )}
 
-      {comment.replies && Array.isArray(comment.replies) && comment.replies.length > 0 && (
-        <div>
-          {comment.replies.map((reply, index) => (
-            <Comment
-              key={reply.commentId ?? `reply-${comment.commentId}-${index}`}
-              comment={reply}
-              isIndented
-              rootCommentId={resolvedRootId}
-            />
-          ))}
-        </div>
+      {!isIndented && (
+        <CommentReplies
+          serverId={comment.serverId}
+          localReplies={comment.replies ?? []}
+          rootCommentId={resolvedRootId}
+        />
       )}
     </div>
   );

@@ -9,8 +9,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
-import { getExclusiveCounterpart } from '@/constants/reaction';
-import { MOCK_CURRENT_USER } from '@/mocks/users';
+import { useAuthStore } from '@/stores/authStore';
 import type { Comment } from '@/types/comment';
 import type { ReactionType } from '@/types/script';
 import type { SlideDetail } from '@/types/slide';
@@ -24,22 +23,29 @@ import {
 
 interface SlideState {
   slide: SlideDetail | null;
+  reactionHistory: Record<string, ReactionType[]>;
+  reactionCounts: Record<string, Record<string, number>>;
 
   initSlide: (slide: SlideDetail) => void;
   updateSlide: (updates: Partial<SlideDetail>) => void;
+  setReactionCounts: (slideId: string, counts: Record<string, number>) => void;
   updateScript: (script: string) => void;
   deleteComment: (id: string) => void;
   updateComment: (id: string, content: string) => void;
-  addReply: (parentId: string, content: string) => void;
-  toggleReaction: (type: ReactionType) => void;
-  addComment: (content: string, slideIndex: number) => void;
+  updateCommentServerId: (localId: string, serverId: string) => void;
+  addReply: (parentId: string, content: string) => Comment | undefined;
+  addReaction: (type: ReactionType) => void;
+  addComment: (content: string, slideIndex: number) => Comment | undefined;
   setComments: (comments: Comment[]) => void;
 }
 
 export const useSlideStore = create<SlideState>()(
   devtools(
-    (set) => ({
+    (set, get) => ({
       slide: null,
+
+      reactionHistory: {},
+      reactionCounts: {},
 
       initSlide: (slide) => {
         set({ slide }, false, 'slide/initSlide');
@@ -52,6 +58,19 @@ export const useSlideStore = create<SlideState>()(
           }),
           false,
           'slide/updateSlide',
+        );
+      },
+
+      setReactionCounts: (slideId, counts) => {
+        set(
+          (state) => ({
+            reactionCounts: {
+              ...state.reactionCounts,
+              [slideId]: { ...counts },
+            },
+          }),
+          false,
+          'slide/setReactionCounts',
         );
       },
 
@@ -95,58 +114,88 @@ export const useSlideStore = create<SlideState>()(
         );
       },
 
-      addReply: (parentId, content) => {
+      updateCommentServerId: (localId, serverId) => {
         set(
-          (state) => {
-            if (!state.slide) return state;
-
-            // 항상 최상위 부모 댓글에 답글을 달도록 rootParentId를 찾음
-            const rootParentId = findRootParentId(state.slide.comments ?? [], parentId);
-
-            const { comments } = addReplyToFlat(state.slide.comments ?? [], rootParentId, {
-              content,
-              userId: MOCK_CURRENT_USER.id,
-            });
-
-            return {
-              slide: {
-                ...state.slide,
-                comments,
-              },
-            };
-          },
+          (state) => ({
+            slide: state.slide
+              ? {
+                  ...state.slide,
+                  comments: (state.slide.comments ?? []).map((c) =>
+                    c.commentId === localId ? { ...c, serverId } : c,
+                  ),
+                }
+              : null,
+          }),
           false,
-          'slide/addReply',
+          'slide/updateCommentServerId',
         );
       },
 
-      toggleReaction: (type) => {
+      addReply: (parentId, content) => {
+        const currentState = get();
+        if (!currentState.slide) return undefined;
+
+        // 항상 최상위 부모 댓글에 답글을 달도록 rootParentId를 찾음
+        const rootParentId = findRootParentId(currentState.slide.comments ?? [], parentId);
+        const rootParentComment = (currentState.slide.comments ?? []).find(
+          (comment) => comment.commentId === rootParentId,
+        );
+        const currentUser = useAuthStore.getState().user;
+        const authorId = currentUser?.id ?? 'anonymous';
+
+        const { comments, newComment } = addReplyToFlat(
+          currentState.slide.comments ?? [],
+          rootParentId,
+          {
+            content,
+            userId: authorId,
+            userName: currentUser?.name,
+            userProfileImage: currentUser?.profileImage,
+            ref: rootParentComment?.ref,
+          },
+        );
+
+        const updatedComments = rootParentComment?.slideId
+          ? comments.map((comment) =>
+              comment.commentId === newComment.commentId
+                ? {
+                    ...comment,
+                    slideId: rootParentComment.slideId,
+                    slideRef: rootParentComment.slideRef,
+                  }
+                : comment,
+            )
+          : comments;
+
+        set(
+          { slide: { ...currentState.slide, comments: updatedComments } },
+          false,
+          'slide/addReply',
+        );
+
+        return newComment;
+      },
+
+      addReaction: (type) => {
         set(
           (state) => {
             if (!state.slide) return state;
 
+            const slideId = state.slide.slideId;
             const currentReactions = state.slide.emojiReactions || [];
-            const targetReaction = currentReactions.find((r) => r.type === type);
-            const isActivating = !targetReaction?.active;
 
-            // exclusive 그룹에서 반대 타입 찾기
-            const counterpart = getExclusiveCounterpart(type);
-
+            // 카운트 1 증가 (토글 아님, 항상 +1)
             const newReactions = currentReactions.map((r) => {
-              // 토글 대상
               if (r.type === type) {
-                if (r.active) {
-                  return { ...r, active: false, count: Math.max(0, r.count - 1) };
-                }
-                return { ...r, active: true, count: r.count + 1 };
+                return { ...r, count: r.count + 1 };
               }
-
-              // 활성화 시 exclusive 반대 타입 비활성화
-              if (isActivating && counterpart && r.type === counterpart && r.active) {
-                return { ...r, active: false, count: Math.max(0, r.count - 1) };
-              }
-
               return r;
+            });
+
+            const currentCounts = state.reactionCounts[slideId] || {};
+            const newCounts = { ...currentCounts };
+            newReactions.forEach((r) => {
+              newCounts[r.type] = r.count;
             });
 
             return {
@@ -154,20 +203,26 @@ export const useSlideStore = create<SlideState>()(
                 ...state.slide,
                 emojiReactions: newReactions,
               },
+              reactionCounts: { ...state.reactionCounts, [slideId]: newCounts },
             };
           },
           false,
-          'slide/toggleReaction',
+          'slide/addReaction',
         );
       },
 
       addComment: (content, slideIndex) => {
         const trimmed = content.trim();
-        if (!trimmed) return;
+        if (!trimmed) return undefined;
+        const currentSlideId = get().slide?.slideId;
+        const currentUser = useAuthStore.getState().user;
+        const authorId = currentUser?.id ?? 'anonymous';
 
         const newComment = createComment({
           content: trimmed,
-          userId: MOCK_CURRENT_USER.id,
+          userId: authorId,
+          userName: currentUser?.name,
+          userProfileImage: currentUser?.profileImage,
           ref: { kind: 'slide', index: slideIndex },
         });
 
@@ -176,13 +231,22 @@ export const useSlideStore = create<SlideState>()(
             slide: state.slide
               ? {
                   ...state.slide,
-                  comments: [newComment, ...(state.slide.comments ?? [])],
+                  comments: [
+                    {
+                      ...newComment,
+                      slideId: currentSlideId,
+                      slideRef: `Slide ${slideIndex + 1}`,
+                    },
+                    ...(state.slide.comments ?? []),
+                  ],
                 }
               : null,
           }),
           false,
           'slide/addComment',
         );
+
+        return newComment;
       },
 
       setComments: (comments) => {

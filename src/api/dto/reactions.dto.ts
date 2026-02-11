@@ -1,17 +1,20 @@
 import type { ReactionType } from '@/types/script';
 
 /**
- * 슬라이드 리액션 토글 요청 DTO
+ * 슬라이드 리액션 생성 요청 DTO
  */
-export interface ToggleSlideReactionDto {
+export interface CreateSlideReactionDto {
   emojiType: ReactionType;
 }
 
 /**
- * 슬라이드 리액션 토글 응답 DTO
+ * 슬라이드 리액션 생성 응답 DTO
  */
-export interface ToggleSlideReactionResponseDto {
-  active: boolean;
+export interface CreateSlideReactionResponseDto {
+  reactionId: string;
+  slideId: string;
+  emojiType: ReactionType;
+  createdAt: string;
 }
 
 /**
@@ -62,6 +65,23 @@ export interface ReadVideoReactionTimelineMarkerDto {
 export interface ReadVideoReactionTimelineResponseDto {
   intervalMs: number;
   markers: ReadVideoReactionTimelineMarkerDto[];
+}
+
+/**
+ * 타임라인 버킷별 리액션 항목 Dto
+ */
+export interface ReadVideoReactionBucketDto {
+  timestampMs: number;
+  totalCount: number;
+  reactions: Record<ReactionType, number>;
+}
+
+/**
+ * 타임라인 버킷별 전체 리액션 조회 응답 Dto
+ */
+export interface ReadVideoReactionBucketsResponseDto {
+  intervalMs: number;
+  buckets: ReadVideoReactionBucketDto[];
 }
 
 /**

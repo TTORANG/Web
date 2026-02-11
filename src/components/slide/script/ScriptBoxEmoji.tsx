@@ -3,17 +3,22 @@
  * @description 이모지 반응 표시 및 더보기 팝오버
  *
  * 대본에 대한 이모지 반응을 표시하고, 더보기 버튼으로 전체 목록을 볼 수 있습니다.
- * Zustand store를 통해 이모지 반응 데이터를 읽습니다.
+ * React Query를 통해 서버에서 리액션 집계를 직접 조회합니다.
  */
 import { Popover } from '@/components/common';
-import { REACTION_CONFIG } from '@/constants/reaction';
-import { useSlideEmojis } from '@/hooks';
+import { REACTION_CONFIG, REACTION_TYPES } from '@/constants/reaction';
+import { useSlideId } from '@/hooks';
+import { useSlideReactionSummary } from '@/hooks/queries/useReaction';
 
 export default function ScriptBoxEmoji() {
-  const emojiReactions = useSlideEmojis();
+  const slideId = useSlideId();
+  const { data: reactionSummary } = useSlideReactionSummary(slideId);
 
-  // count가 0보다 큰 리액션만 필터링
-  const activeReactions = emojiReactions.filter((r) => r.count > 0);
+  const activeReactions = reactionSummary
+    ? REACTION_TYPES.map((type) => ({ type, count: reactionSummary[type] ?? 0 })).filter(
+        (r) => r.count > 0,
+      )
+    : [];
 
   const mainEmojis = activeReactions.slice(0, 2);
   const extendedEmojis = activeReactions.slice(2);

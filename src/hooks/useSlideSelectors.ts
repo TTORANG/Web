@@ -7,11 +7,9 @@ import { useShallow } from 'zustand/shallow';
 
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
-import type { Reaction } from '@/types/script';
 
 // 빈 배열 상수 (참조 안정성을 위해)
 const EMPTY_COMMENTS: Comment[] = [];
-const EMPTY_EMOJIS: Reaction[] = [];
 
 /** 슬라이드 ID 구독 */
 export const useSlideId = () => useSlideStore((state) => state.slide?.slideId ?? '');
@@ -28,10 +26,6 @@ export const useSlideScript = () => useSlideStore((state) => state.slide?.script
 /** 댓글 목록 구독 */
 export const useSlideComments = () =>
   useSlideStore((state) => state.slide?.comments ?? EMPTY_COMMENTS);
-
-/** 이모지 반응 목록 구독 */
-export const useSlideEmojis = () =>
-  useSlideStore((state) => state.slide?.emojiReactions ?? EMPTY_EMOJIS);
 
 /** 슬라이드 스토어 액션들 (참조 안정적) */
 export const useSlideActions = () =>
