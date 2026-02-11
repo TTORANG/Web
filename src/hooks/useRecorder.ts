@@ -1,83 +1,16 @@
 import { useCallback, useRef, useState } from 'react';
 
-/**
- * 캔버스 기반 녹화 훅
- *
- * 슬라이드 이미지와 카메라 영상을 캔버스에 합성하여 WebM으로 녹화합니다.
- *
- * @returns canvasRef - 합성에 사용할 캔버스 ref
- * @returns isRecording - 녹화 진행 중 여부
- * @returns recordedChunks - 녹화된 Blob 청크 배열
- * @returns startRecording - 녹화 시작 함수
- * @returns stopRecording - 녹화 중지 함수
- */
 export const useRecorder = () => {
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const chunksRef = useRef<Blob[]>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const requestRef = useRef<number | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-
-  const drawCanvas = useCallback(
-    (camEl: HTMLVideoElement, slideImgRef: React.MutableRefObject<HTMLImageElement | null>) => {
-      const canvas = canvasRef.current;
-      const ctx = canvas?.getContext('2d');
-      if (!canvas || !ctx) return;
-
-      const render = () => {
-        ctx.fillStyle = '#1A1A1A';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        if (slideImgRef.current?.complete) {
-          const slideW = canvas.width * 0.82;
-          const slideH = (slideImgRef.current.height / slideImgRef.current.width) * slideW;
-          ctx.drawImage(
-            slideImgRef.current,
-            (canvas.width - slideW) / 2,
-            (canvas.height - slideH) / 2,
-            slideW,
-            slideH,
-          );
-        }
-
-        if (camEl.readyState >= 2 && camEl.videoWidth > 0) {
-          const camW = canvas.width * 0.22;
-          const camH = (camEl.videoHeight / camEl.videoWidth) * camW;
-          const margin = canvas.width * 0.04;
-          const camX = canvas.width - camW - margin;
-          const camY = canvas.height - camH - margin;
-
-          ctx.save();
-          ctx.shadowColor = 'rgba(0,0,0,0.5)';
-          ctx.shadowBlur = 30 * (canvas.width / 1920);
-
-          ctx.beginPath();
-          const radius = 24 * (canvas.width / 1920);
-          ctx.roundRect(camX, camY, camW, camH, radius);
-          ctx.clip();
-
-          ctx.drawImage(camEl, camX, camY, camW, camH);
-          ctx.restore();
-        }
-
-        requestRef.current = requestAnimationFrame(render);
-      };
-
-      render();
-    },
-    [],
-  );
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current?.state !== 'inactive') {
       mediaRecorderRef.current?.stop();
-    }
-
-    if (requestRef.current) {
-      cancelAnimationFrame(requestRef.current);
-      requestRef.current = null;
     }
 
     if (videoRef.current) {
@@ -93,12 +26,8 @@ export const useRecorder = () => {
   }, []);
 
   const startRecording = useCallback(
-    async (
-      camStream: MediaStream,
-      slideImgRef: React.MutableRefObject<HTMLImageElement | null>,
-      onChunk?: (blob: Blob) => void,
-    ) => {
-      if (!canvasRef.current || !camStream.active) return;
+    async (camStream: MediaStream) => {
+      if (!camStream.active) return;
 
       const camVideo = document.createElement('video');
       camVideo.srcObject = camStream;
@@ -134,22 +63,19 @@ export const useRecorder = () => {
         if (!isVideoReady) throw new Error('Video timeout');
 
         setIsRecording(true);
+        chunksRef.current = [];
         setRecordedChunks([]);
-        drawCanvas(camVideo, slideImgRef);
-
-        const canvasStream = canvasRef.current.captureStream(30);
-        camStream.getAudioTracks().forEach((track) => canvasStream.addTrack(track));
 
         const mimeType = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find(
           (type) => MediaRecorder.isTypeSupported(type),
         );
 
-        const recorder = new MediaRecorder(canvasStream, { mimeType });
+        const recorder = new MediaRecorder(camStream, { mimeType });
 
         recorder.ondataavailable = (e) => {
           if (e.data.size > 0) {
+            chunksRef.current.push(e.data);
             setRecordedChunks((prev) => [...prev, e.data]);
-            if (onChunk) onChunk(e.data);
           }
         };
 
@@ -159,14 +85,19 @@ export const useRecorder = () => {
         stopRecording();
       }
     },
-    [drawCanvas, stopRecording],
+    [stopRecording],
   );
 
+  const getRecordedBlob = useCallback(() => {
+    if (chunksRef.current.length === 0) return null;
+    return new Blob(chunksRef.current, { type: 'video/webm' });
+  }, []);
+
   return {
-    canvasRef,
     isRecording,
     recordedChunks,
     startRecording,
     stopRecording,
+    getRecordedBlob,
   };
 };

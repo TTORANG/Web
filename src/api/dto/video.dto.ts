@@ -14,6 +14,7 @@ export type VideoStatus = 'processing' | 'ready' | 'failed';
  * 영상 목록 항목 (간략 정보)
  */
 export interface VideoListItemDto {
+  feedbackCount: number;
   viewCount: number;
   reactionCount: number;
   replyCount: number;
