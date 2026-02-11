@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import type { ReadVideoDetailResponseDto } from '@/api/dto/video.dto';
+import { createReply, deleteComment, updateComment } from '@/api/endpoints/comments';
 import { createVideoComment, videosApi } from '@/api/endpoints/videos';
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
@@ -15,7 +16,6 @@ import type { Comment as CommentType } from '@/types/comment';
 
 export default function VideoDetailPage() {
   const { projectId, videoId } = useParams<{ projectId: string; videoId: string }>();
-  const navigate = useNavigate();
   const currentUser = useAuthStore((state) => state.user);
   const requestSeekAction = useVideoFeedbackStore((s) => s.requestSeek);
 
@@ -98,8 +98,6 @@ export default function VideoDetailPage() {
     setProjectSlides(ordered);
   }, [slidesData, slideIdOrder]);
 
-  // VideoDetailPage.tsx 내 위치 계산 useEffect 수정
-
   useEffect(() => {
     const updatePosition = () => {
       // 0. 로딩 중일 때는 계산하지 않음
@@ -117,13 +115,12 @@ export default function VideoDetailPage() {
         width: rect.width,
         height: rect.height,
         zIndex: 20,
-        opacity: 1, // 계산 완료 후 노출
-        transition: 'all 0.15s ease-out', // 부드러운 전환 추가
+        opacity: 1,
+        transition: 'all 0.15s ease-out',
       });
     };
 
     // 2. 초기 렌더링 시점에 브라우저 레이아웃이 잡힐 때까지 여러 번 재시도
-    // (한 번만 하면 DOM이 로드되기 전일 수 있음)
     const timers = [0, 100, 300, 500].map((delay) => setTimeout(updatePosition, delay));
 
     // 3. ResizeObserver는 요소의 크기 변화를 실시간 감지
@@ -171,7 +168,92 @@ export default function VideoDetailPage() {
     }
   }, [commentDraft, currentTime, videoId, currentUser]);
 
-  const handleBack = () => navigate(`/${projectId}/videos`);
+  const handleReplyComment = useCallback(
+    async (parentId: string, content: string) => {
+      if (!content.trim()) return;
+
+      try {
+        // API 호출: 부모 댓글 ID를 경로 파라미터로 사용
+        const result = await createReply(parentId, { content });
+
+        // 로컬 상태 업데이트
+        setComments((prev) =>
+          prev.map((comment) => {
+            if (comment.commentId === parentId) {
+              return {
+                ...comment,
+                replies: [
+                  ...(comment.replies || []),
+                  {
+                    commentId: result.replyId,
+                    content: result.content,
+                    createdAt: result.createdAt,
+                    userId: currentUser?.id || 'me',
+                    isMine: true,
+                    isReply: true,
+                    parentId: parentId,
+                  },
+                ],
+              };
+            }
+            return comment;
+          }),
+        );
+      } catch (err) {
+        console.error('답글 작성 실패:', err);
+        alert('답글 작성 중 오류가 발생했습니다.');
+      }
+    },
+    [currentUser],
+  );
+
+  // 2. 댓글/답글 수정 핸들러
+  const handleUpdateComment = useCallback(async (commentId: string, content: string) => {
+    if (!content.trim()) return;
+
+    try {
+      const result = await updateComment(commentId, { content });
+
+      setComments((prev) =>
+        prev.map((c) => {
+          // 부모 댓글인 경우
+          if (c.commentId === commentId) return { ...c, content: result.content };
+
+          // 답글 중 하나인 경우
+          return {
+            ...c,
+            replies: c.replies?.map((r) =>
+              r.commentId === commentId ? { ...r, content: result.content } : r,
+            ),
+          };
+        }),
+      );
+    } catch (err) {
+      console.error('수정 실패:', err);
+      alert('수정 중 오류가 발생했습니다.');
+    }
+  }, []);
+
+  // 3. 댓글/답글 삭제 핸들러
+  const handleDeleteComment = useCallback(async (commentId: string) => {
+    if (!window.confirm('정말 삭제하시겠습니까?')) return;
+
+    try {
+      await deleteComment({ commentId });
+
+      setComments((prev) =>
+        prev
+          .filter((c) => c.commentId !== commentId) // 부모 댓글 필터링
+          .map((c) => ({
+            ...c,
+            replies: c.replies?.filter((r) => r.commentId !== commentId), // 답글 필터링
+          })),
+      );
+    } catch (err) {
+      console.error('삭제 실패:', err);
+      alert('삭제 중 오류가 발생했습니다.');
+    }
+  }, []);
 
   if (isLoading)
     return <div className="flex h-screen items-center justify-center bg-gray-100">로딩 중...</div>;
@@ -179,12 +261,13 @@ export default function VideoDetailPage() {
   return (
     <div className="flex h-full w-full bg-gray-100 overflow-hidden">
       <div className="flex flex-1 flex-col px-6 py-6 md:px-12">
-        <div className="mb-6 mt-10 flex items-center gap-4">
-          {/* 비디오 Placeholder */}
-          <div ref={placeholderRef} className="aspect-video w-70% bg-black rounded-xl shadow-lg" />
+        <div className="mb-6 flex items-center gap-4"></div>
+
+        <div className="flex flex-1 flex-col gap-6 min-h-0 items-center">
+          <div ref={placeholderRef} className="aspect-video w-[80%] bg-black" />
 
           {/* 스크립트 섹션 */}
-          <div className="flex-1 min-h-0">
+          <div className="w-[85%] flex-1 min-h-0">
             <ScriptSection
               slides={projectSlides}
               slideChangeTimes={slideChangeTimes}
@@ -195,23 +278,23 @@ export default function VideoDetailPage() {
         </div>
       </div>
 
-      {/* 우측 사이드바 (댓글 전용 - 리액션 제거됨) */}
-      <aside className="hidden w-96 shrink-0 flex-col border-l border-gray-200 bg-white lg:flex">
+      <aside className="hidden w-100 shrink-0 flex-col border border-gray-200 bg-white lg:flex my-2 mr-20 shadow-sm">
+        {/* 댓글 목록 영역 */}
         <div className="flex-1 min-h-0 overflow-y-auto">
-          <div className="p-4 border-b">
-            <h2 className="text-lg font-bold">피드백 ({comments.length})</h2>
+          <div className="mt-4 p-3 border-b">
+            <h3 className="text-gray-950 font-bold">의견 ({comments.length})</h3>
           </div>
           <CommentList
             comments={comments}
             onGoToRef={(ref) => ref.kind === 'video' && requestSeek(ref.seconds)}
-            onAddReply={function (targetId: string, content: string): void {
-              throw new Error('Function not implemented.');
-            }}
+            onAddReply={handleReplyComment}
+            onDeleteComment={handleDeleteComment}
+            onUpdateComment={handleUpdateComment}
           />
         </div>
 
-        {/* 댓글 입력창 */}
-        <div className="shrink-0 border-t border-gray-200 p-4 bg-gray-50">
+        {/* 댓글 입력창 영역 */}
+        <div className="shrink-0 border-t border-gray-200 p-4 rounded-b-2xl">
           <CommentInput
             value={commentDraft}
             onChange={setCommentDraft}
@@ -223,7 +306,6 @@ export default function VideoDetailPage() {
           />
         </div>
       </aside>
-
       {/* 실제 비디오 렌더링 (CSS 포지셔닝) */}
       <div style={videoStyle} className="pointer-events-auto">
         <SlideWebcamStage
