@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import { recordVideoEvent } from '@/api/endpoints/analytics';
-import { getSharedComments, getSharedContent } from '@/api/endpoints/shares';
+import { getSharedComments } from '@/api/endpoints/shares';
 import { videosApi } from '@/api/endpoints/videos';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useVideoComments } from '@/hooks/useVideoComments';
@@ -170,8 +170,9 @@ function mapSharedCommentsToFeedbacks(
     const fallbackId = `shared-comment-${timestampMs}-${index}`;
     const commentId = sharedComment.commentId || fallbackId;
     const parentId = sharedComment.parentId ?? undefined;
-    const userId = sharedComment.userId || sharedComment.writer.trim() || 'unknown';
-    const userName = sharedComment.writer.trim() || undefined;
+    const userId = sharedComment.userId || sharedComment.writer?.trim() || 'unknown';
+    // writer가 비어있거나 없으면 undefined (Comment 컴포넌트에서 fallback 처리)
+    const userName = sharedComment.writer?.trim() || undefined;
 
     const mappedComment: Comment = {
       commentId,
@@ -242,7 +243,9 @@ export function useFeedbackVideo(
     if (!shareToken) return null;
 
     try {
-      const data = await getSharedComments(shareToken);
+      const { user } = useAuthStore.getState();
+      const sessionId = user?.sessionId;
+      const data = await getSharedComments(shareToken, sessionId);
       const sharedFeedbacks = mapSharedCommentsToFeedbacks(data.comments);
       updateFeedbacks(sharedFeedbacks);
       return data.comments;
@@ -434,18 +437,13 @@ export function useFeedbackVideo(
       setSlideChangeTimes(mapped.slideChangeTimes);
     };
 
-    const loadFromShareToken = async () => {
-      const content = await getSharedContent(shareToken);
-      if (cancelled) return;
-      await loadFromSharedContent(content);
-    };
-
     const load = async () => {
       try {
         if (sharedContent) {
           await loadFromSharedContent(sharedContent);
-        } else if (shareToken) {
-          await loadFromShareToken();
+        } else {
+          // SharePage를 통하지 않고 직접 접근한 경우
+          throw new Error('공유 콘텐츠 데이터가 필요합니다.');
         }
       } catch {
         if (cancelled) return;
