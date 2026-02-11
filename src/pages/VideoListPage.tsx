@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { videosApi } from '@/api/endpoints/videos';
@@ -17,6 +18,7 @@ const SKELETON_CARD_COUNT = 6;
 const SKELETON_LIST_COUNT = 4;
 
 export default function VideoListPage() {
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
   const { projectId } = useParams<{ projectId: string }>();
@@ -57,6 +59,45 @@ export default function VideoListPage() {
     return hoursSinceCreated < 1;
   });
 
+  const handleUpdateTitle = useCallback(
+    async (videoId: string, newTitle: string) => {
+      if (!newTitle.trim()) {
+        toast.error('제목을 입력해주세요.');
+        return;
+      }
+
+      try {
+        const response = await videosApi.updateVideoTitle(videoId, newTitle);
+
+        if (response.resultType === 'SUCCESS') {
+          // 3. 쿼리 무효화: 이 작업이 완료될 때까지 await로 대기
+          await queryClient.invalidateQueries({
+            queryKey: ['videos', projectId],
+            exact: false,
+          });
+
+          toast.success('영상의 제목이 수정되었습니다.');
+        } else {
+          // 실패 시 에러 메시지 처리
+          throw new Error(response.error?.reason || '수정 실패');
+        }
+      } catch (err) {
+        console.error('[VideoListPage] Rename error:', err);
+        const errorMessage = err instanceof Error ? err.message : '알 수 없는 에러가 발생했습니다.';
+
+        toast.error('제목 수정 실패', {
+          description: errorMessage,
+        });
+
+        // 에러 발생 시에도 혹시 모를 데이터 불일치를 위해 새로고침 시도
+        await queryClient.invalidateQueries({
+          queryKey: ['videos', projectId],
+          exact: false,
+        });
+      }
+    },
+    [projectId, queryClient],
+  );
   useEffect(() => {
     if (location.state?.uploadSuccess) {
       setShowSuccessToast(true);
@@ -128,7 +169,6 @@ export default function VideoListPage() {
         throw new Error(response.data.error?.reason || '삭제 실패');
       }
     } catch (err) {
-      console.error('[VideoListPage] Delete error:', err);
       toast.error('삭제 실패', {
         description: err instanceof Error ? err.message : '영상을 삭제할 수 없습니다',
       });
@@ -182,7 +222,6 @@ export default function VideoListPage() {
       aria-labelledby="tab-video"
       className="relative h-full w-full overflow-y-auto bg-gray-100"
     >
-      {/* 성공 토스트 */}
       {showSuccessToast && (
         <div className="fixed right-4 top-4 z-50 flex animate-slide-in items-center gap-2 rounded-lg bg-success px-6 py-3 shadow-lg">
           <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -196,7 +235,6 @@ export default function VideoListPage() {
         </div>
       )}
 
-      {/* 삭제 확인 모달 */}
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => {
@@ -315,6 +353,7 @@ export default function VideoListPage() {
                       return (
                         <div
                           className="relative"
+                          key={item.videoId}
                           onClick={() =>
                             handleVideoClick(
                               item.videoId?.toString() || '',
@@ -327,6 +366,10 @@ export default function VideoListPage() {
                             mode="videos"
                             onDelete={() =>
                               handleDeleteClick(item.videoId?.toString() || '', item.title)
+                            }
+                            // [수정] 제목 수정 핸들러 추가
+                            onUpdateTitle={(newTitle: string) =>
+                              handleUpdateTitle(item.videoId?.toString() || '', newTitle)
                             }
                           />
 
@@ -386,6 +429,7 @@ export default function VideoListPage() {
                     className="flex flex-col gap-3"
                     renderInfo={(item) => (
                       <div
+                        key={item.videoId}
                         onClick={() =>
                           handleVideoClick(item.videoId?.toString() || '', item.status)
                         }
@@ -395,6 +439,10 @@ export default function VideoListPage() {
                           mode="videos"
                           onDelete={() =>
                             handleDeleteClick(item.videoId?.toString() || '', item.title)
+                          }
+                          // [수정] 리스트 형태에도 제목 수정 핸들러 추가
+                          onUpdateTitle={(newTitle: string) =>
+                            handleUpdateTitle(item.videoId?.toString() || '', newTitle)
                           }
                         />
                       </div>
