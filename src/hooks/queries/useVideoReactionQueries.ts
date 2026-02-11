@@ -110,6 +110,7 @@ export function useVideoReactionWindow(
     queryKey: queryKeys.reactions.video.window(videoId ?? '', timestampMs ?? 0, windowMs),
     queryFn: () => getVideoReactions(videoId!, { timestampMs: timestampMs!, windowMs }),
     placeholderData: (previousData) => previousData,
+    staleTime: 1000, // 같은 1초 구간 내 리렌더 시 중복 리패치 방지
     enabled: !!videoId && Number.isFinite(timestampMs),
   });
 }
