@@ -6,7 +6,6 @@ import type { ReadVideoReactionBucketsResponseDto } from '@/api/dto/reactions.dt
 import {
   type ToggleVideoReactionRequest,
   getVideoReactionBuckets,
-  getVideoReactionTimeline,
   getVideoReactions,
   toggleVideoReaction,
 } from '@/api/endpoints/videoReactions';
