@@ -6,7 +6,7 @@
  * CommentProvider로 상태를 공유하여 Comment의 props를 최소화합니다.
  * 무한 스크롤: 하단 sentinel이 뷰포트에 진입하면 다음 페이지를 로드합니다.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Modal, Skeleton, Spinner } from '@/components/common';
 import type { Comment as CommentType } from '@/types/comment';
@@ -16,6 +16,7 @@ import { CommentProvider } from './CommentContext';
 
 interface CommentListProps {
   comments: CommentType[];
+  scrollToCommentId?: string;
   onAddReply: (targetId: string, content: string) => void;
   onGoToRef: (ref: NonNullable<CommentType['ref']>) => void;
   onDeleteComment?: (commentId: string) => void;
@@ -30,6 +31,7 @@ const skeletonContentWidths = ['90%', '70%', '85%', '60%'];
 
 export default function CommentList({
   comments,
+  scrollToCommentId,
   onAddReply,
   onGoToRef,
   onDeleteComment,
@@ -44,6 +46,8 @@ export default function CommentList({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState('');
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const lastScrolledIdRef = useRef<string | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -70,6 +74,39 @@ export default function CommentList({
 
     return () => observer.disconnect();
   }, [handleObserver]);
+
+  useLayoutEffect(() => {
+    if (!scrollToCommentId) return;
+    if (lastScrolledIdRef.current === scrollToCommentId) return;
+    let cancelled = false;
+
+    const scrollToTarget = () => {
+      if (cancelled) return;
+      const target = document.getElementById(`comment-${scrollToCommentId}`);
+      if (target) {
+        lastScrolledIdRef.current = scrollToCommentId;
+        target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
+      }
+
+      // Fallback: scroll to bottom if target not mounted yet
+      if (listRef.current) {
+        listRef.current.scrollTo({
+          top: listRef.current.scrollHeight,
+          behavior: 'smooth',
+        });
+      }
+    };
+
+    const rafId = requestAnimationFrame(scrollToTarget);
+    const timeoutId = window.setTimeout(scrollToTarget, 50);
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(rafId);
+      window.clearTimeout(timeoutId);
+    };
+  }, [scrollToCommentId, comments.length]);
 
   const submitReply = useCallback(
     (targetId: string) => {
@@ -203,7 +240,7 @@ export default function CommentList({
   return (
     <>
       <CommentProvider value={contextValue}>
-        <div className="mt-2 min-h-0 flex-1 space-y-2 overflow-y-auto">
+        <div ref={listRef} className="mt-2 min-h-0 flex-1 space-y-2 overflow-y-auto">
           {comments.map((comment) => (
             <Comment key={comment.commentId} comment={comment} />
           ))}

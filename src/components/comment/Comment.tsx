@@ -97,14 +97,17 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
   }, [comment.ref, goToRef]);
 
   // ref에서 표시할 라벨 생성
-  const refLabel = comment.ref
-    ? comment.ref.kind === 'slide'
-      ? `슬라이드 ${comment.ref.index + 1}`
-      : formatVideoTimestamp(comment.ref.seconds)
+  const commentRef = comment.ref;
+  const refLabel = commentRef
+    ? commentRef.kind === 'slide'
+      ? `슬라이드 ${commentRef.index + 1}`
+      : formatVideoTimestamp(commentRef.seconds)
     : null;
 
+  const shouldShowRef = !!commentRef && !comment.isReply && !comment.parentId;
+
   return (
-    <div>
+    <div id={`comment-${comment.commentId}`}>
       <div
         className={clsx(
           'flex gap-3 py-3 pr-4 transition-colors',
@@ -167,24 +170,22 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
               />
             ) : (
               <div className="text-body-s text-black">
-                {comment.ref && (
+                {shouldShowRef && commentRef && (
                   <button
                     type="button"
                     onClick={handleGoToRef}
                     className={clsx(
                       'mr-2 inline-flex items-center align-middle rounded text-body-s-bold hover:underline focus-visible:outline-2 focus-visible:outline-main',
-                      comment.ref.kind === 'slide' ? 'text-main-variant1' : 'text-main',
+                      commentRef.kind === 'slide' ? 'text-main-variant1' : 'text-main',
                     )}
                     aria-label={
-                      comment.ref.kind === 'slide'
-                        ? `${refLabel}로 이동`
-                        : `영상 ${refLabel}로 이동`
+                      commentRef.kind === 'slide' ? `${refLabel}로 이동` : `영상 ${refLabel}로 이동`
                     }
                   >
-                    {comment.ref.kind === 'slide' && (
+                    {commentRef.kind === 'slide' && (
                       <FileIcon className="text-main-variant1" aria-hidden="true" />
                     )}
-                    {comment.ref.kind === 'slide' ? <>&nbsp;</> : null}
+                    {commentRef.kind === 'slide' ? <>&nbsp;</> : null}
                     {refLabel}
                   </button>
                 )}

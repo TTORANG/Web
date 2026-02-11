@@ -137,6 +137,9 @@ export const useSlideStore = create<SlideState>()(
 
         // 항상 최상위 부모 댓글에 답글을 달도록 rootParentId를 찾음
         const rootParentId = findRootParentId(currentState.slide.comments ?? [], parentId);
+        const rootParentComment = (currentState.slide.comments ?? []).find(
+          (comment) => comment.commentId === rootParentId,
+        );
         const currentUser = useAuthStore.getState().user;
         const authorId = currentUser?.id ?? 'anonymous';
 
@@ -148,10 +151,27 @@ export const useSlideStore = create<SlideState>()(
             userId: authorId,
             userName: currentUser?.name,
             userProfileImage: currentUser?.profileImage,
+            ref: rootParentComment?.ref,
           },
         );
 
-        set({ slide: { ...currentState.slide, comments } }, false, 'slide/addReply');
+        const updatedComments = rootParentComment?.slideId
+          ? comments.map((comment) =>
+              comment.commentId === newComment.commentId
+                ? {
+                    ...comment,
+                    slideId: rootParentComment.slideId,
+                    slideRef: rootParentComment.slideRef,
+                  }
+                : comment,
+            )
+          : comments;
+
+        set(
+          { slide: { ...currentState.slide, comments: updatedComments } },
+          false,
+          'slide/addReply',
+        );
 
         return newComment;
       },
@@ -194,6 +214,7 @@ export const useSlideStore = create<SlideState>()(
       addComment: (content, slideIndex) => {
         const trimmed = content.trim();
         if (!trimmed) return undefined;
+        const currentSlideId = get().slide?.slideId;
         const currentUser = useAuthStore.getState().user;
         const authorId = currentUser?.id ?? 'anonymous';
 
@@ -210,7 +231,14 @@ export const useSlideStore = create<SlideState>()(
             slide: state.slide
               ? {
                   ...state.slide,
-                  comments: [newComment, ...(state.slide.comments ?? [])],
+                  comments: [
+                    {
+                      ...newComment,
+                      slideId: currentSlideId,
+                      slideRef: `Slide ${slideIndex + 1}`,
+                    },
+                    ...(state.slide.comments ?? []),
+                  ],
                 }
               : null,
           }),
