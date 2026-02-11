@@ -22,6 +22,7 @@ import {
   VideoListPage,
   VideoRecordPage,
 } from '@/pages';
+import VideoDetailPage from '@/pages/VideoDetailPage';
 
 export const router = createBrowserRouter([
   {
@@ -61,6 +62,7 @@ export const router = createBrowserRouter([
       { path: 'slide', element: <SlidePage /> },
       { path: 'insight', element: <InsightPage /> },
       { path: 'videos', element: <VideoListPage /> },
+      { path: 'videos/:videoId', element: <VideoDetailPage /> },
     ],
   },
   {
@@ -82,13 +84,6 @@ export const router = createBrowserRouter([
   {
     path: '/:projectId/video/record',
     element: <VideoRecordPage />,
-  },
-  {
-    path: '/feedback/video/:projectId',
-    element: (
-      <Layout theme="dark" left={<FeedbackHeaderLeft />} center={<FeedbackHeaderCenter />} />
-    ),
-    children: [{ index: true, element: <FeedbackVideoPage /> }],
   },
 
   {
