@@ -70,7 +70,7 @@ export const useFeedbackSlide = ({
 
   const { comments, addComment, addReply, deleteComment, updateComment } =
     useSlideCommentsActions();
-  const { reactions, toggleReaction } = useSlideReactions();
+  const { reactions, addReaction } = useSlideReactions();
 
   const script = useSlideStore((state) => state.slide?.script ?? '');
   const initSlide = useSlideStore((state) => state.initSlide);
@@ -227,7 +227,7 @@ export const useFeedbackSlide = ({
       addReply,
       deleteComment,
       updateComment,
-      toggleReaction,
+      addReaction,
     },
   };
 };

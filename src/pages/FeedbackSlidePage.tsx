@@ -60,7 +60,7 @@ export default function FeedbackSlidePage({
     addReply,
     deleteComment,
     updateComment,
-    toggleReaction,
+    addReaction,
   } = actions;
 
   if (isLoading) {
@@ -107,7 +107,7 @@ export default function FeedbackSlidePage({
             />
             <ReactionButtons
               reactions={reactions.length > 0 ? reactions : createDefaultReactions()}
-              onToggleReaction={toggleReaction}
+              onToggleReaction={addReaction}
               layout="grid-2"
               buttonClassName="w-42.25"
             />
@@ -141,7 +141,7 @@ export default function FeedbackSlidePage({
         reactionSlot={
           <ReactionButtons
             reactions={reactions.length > 0 ? reactions : createDefaultReactions()}
-            onToggleReaction={toggleReaction}
+            onToggleReaction={addReaction}
             showLabel={false}
           />
         }
