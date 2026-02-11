@@ -46,14 +46,12 @@ export default function ReactionButtons({
     ? `grid grid-cols-2 gap-2 justify-items-center ${className ?? ''}`
     : `flex gap-2 ${showLabel ? 'flex-wrap' : 'flex-nowrap justify-center overflow-hidden'} ${className ?? ''}`;
 
-  const handleToggle = (type: ReactionType, isCurrentlyActive: boolean) => {
-    // 활성화될 때만 confetti 효과 트리거
-    if (!isCurrentlyActive) {
-      setConfettiTriggers((prev) => ({
-        ...prev,
-        [type]: (prev[type] || 0) + 1,
-      }));
-    }
+  const handleToggle = (type: ReactionType) => {
+    // 클릭할 때마다 confetti 효과 트리거
+    setConfettiTriggers((prev) => ({
+      ...prev,
+      [type]: (prev[type] || 0) + 1,
+    }));
     onToggleReaction(type);
   };
 
@@ -69,14 +67,10 @@ export default function ReactionButtons({
         return (
           <button
             key={reaction.type}
-            onClick={() => handleToggle(reaction.type, reaction.active ?? false)}
+            onClick={() => handleToggle(reaction.type)}
             className={`${baseBtn} ${buttonClassName ?? ''} ${
               isLastOdd ? 'col-span-2 justify-self-start' : ''
-            } ${
-              reaction.active
-                ? 'bg-gray-900 border-main-variant1 text-main-variant2 text-body-m-bold'
-                : 'bg-gray-200 border-gray-400 text-black hover:border-gray-600'
-            } relative`}
+            } bg-gray-200 border-gray-400 text-black hover:border-gray-600 active:bg-gray-900 active:border-main-variant1 active:text-main-variant2 active:text-body-m-bold relative`}
           >
             {showLabel ? (
               <>
