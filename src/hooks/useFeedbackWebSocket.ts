@@ -46,17 +46,6 @@ export function useFeedbackWebSocket({ projectId, enabled = true }: UseFeedbackW
         return;
       }
 
-      // WebSocket 페이로드에서 직접 Store 업데이트
-      const currentVideo = useVideoFeedbackStore.getState().video;
-      if (currentVideo && data.videoId === currentVideo.videoId) {
-        // console.log('🔄 [Feedback WebSocket] Adding comment to store from WebSocket data...');
-
-        // WebSocket 데이터에서 받은 정보로 댓글 추가
-        // 서버가 이미 초 단위로 전송
-        const timestampSeconds = data.timestamp ?? 0;
-        useVideoFeedbackStore.getState().addComment(data.content, timestampSeconds);
-      }
-
       // TanStack Query 캐시 무효화
       if (data.videoId) {
         void queryClient.invalidateQueries({

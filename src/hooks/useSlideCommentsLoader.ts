@@ -3,7 +3,6 @@
  *
  * - slideId 변경 시 서버에서 댓글 로드 (무한 스크롤)
  * - 모든 페이지를 flatten하여 Zustand store에 동기화
- * - 낙관적 댓글(서버 미확인)은 보존
  */
 import { useEffect, useRef } from 'react';
 
@@ -49,7 +48,6 @@ export function useSlideCommentsLoader(
   }, [slideId, setComments, isEnabled, resetOnSlideChange]);
 
   // 서버 데이터가 변경될 때마다 store에 동기화
-  // 낙관적 댓글(serverId 없는 top-level)과 답글(isReply/parentId)은 보존
   useEffect(() => {
     if (!isEnabled) return;
     if (!data) return;
@@ -59,15 +57,14 @@ export function useSlideCommentsLoader(
       ? options.mapComments(serverComments)
       : serverComments;
     const localComments = useSlideStore.getState().slide?.comments ?? [];
-    const optimisticComments = localComments.filter((comment) => !comment.serverId);
-    const mergedComments = [...optimisticComments, ...mappedServerComments];
-    const isSameLength = localComments.length === mergedComments.length;
+    const isSameLength = localComments.length === mappedServerComments.length;
     const isSameOrderAndIdentity =
-      isSameLength && localComments.every((comment, index) => comment === mergedComments[index]);
+      isSameLength &&
+      localComments.every((comment, index) => comment === mappedServerComments[index]);
 
     if (isSameOrderAndIdentity) return;
 
-    setComments(mergedComments);
+    setComments(mappedServerComments);
   }, [data, options?.mapComments, setComments, isEnabled]);
 
   return {

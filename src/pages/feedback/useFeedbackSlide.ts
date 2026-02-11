@@ -46,11 +46,11 @@ export const useFeedbackSlide = ({
   const [commentDraft, setCommentDraft] = useState('');
   const [scrollToCommentId, setScrollToCommentId] = useState<string | null>(null);
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!commentDraft.trim()) return;
-    const newComment = addComment(commentDraft, slideIndex);
-    if (newComment?.commentId) {
-      setScrollToCommentId(newComment.commentId);
+    const serverId = await addComment(commentDraft);
+    if (serverId) {
+      setScrollToCommentId(serverId);
     }
     setCommentDraft('');
   };

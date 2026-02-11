@@ -16,24 +16,27 @@ function getServerCommentId(comment: Comment): string | null {
   return null;
 }
 
+type UseVideoCommentsOptions = {
+  onMutationSuccess?: () => void;
+};
+
 /**
  * 영상 댓글 관리 훅
  *
  * video.feedbacks 전체에서 댓글을 합산하여 트리 구조로 반환합니다.
+ * mutation 성공 시 onMutationSuccess 콜백을 호출하여 최신 데이터를 반영합니다.
  *
  * @returns comments - 트리 구조 댓글 목록
  * @returns addComment - 새 댓글 추가 (타임스탬프 지정)
  * @returns addReply - 답글 추가
  * @returns deleteComment - 댓글 삭제
  */
-export function useVideoComments() {
+export function useVideoComments(options?: UseVideoCommentsOptions) {
   const video = useVideoFeedbackStore((state) => state.video);
   const videoId = video?.videoId;
 
-  const addReplyStore = useVideoFeedbackStore((state) => state.addReply);
   const deleteCommentStore = useVideoFeedbackStore((state) => state.deleteComment);
   const updateCommentStore = useVideoFeedbackStore((state) => state.updateComment);
-  const updateCommentServerId = useVideoFeedbackStore((state) => state.updateCommentServerId);
 
   // 전체 feedbacks의 comments를 합쳐서 반환
   const flatComments = useMemo(() => {
@@ -98,8 +101,6 @@ export function useVideoComments() {
    * 답글 추가
    */
   const addReply = async (parentId: string, content: string) => {
-    const tempReply = addReplyStore(parentId, content);
-
     try {
       // parentId로 부모 댓글 찾기 (serverId 필요)
       const allComments = video?.feedbacks.flatMap((f) => f.comments) || [];
@@ -119,12 +120,8 @@ export function useVideoComments() {
         showToast.error('답글 등록에 실패했습니다.', '잘못된 댓글 ID입니다.');
         return;
       }
-      const model = await createCommentReply(parentServerId, { content: contentToSend });
-
-      // 서버 ID 저장 (Model에서 serverId 추출)
-      if (model && tempReply) {
-        updateCommentServerId(tempReply.commentId, model.serverId);
-      }
+      await createCommentReply(parentServerId, { content: contentToSend });
+      options?.onMutationSuccess?.();
     } catch {
       showToast.error('답글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
     }
@@ -154,12 +151,10 @@ export function useVideoComments() {
       return;
     }
 
-    // Optimistic update
-    deleteCommentStore(commentId);
-
     try {
       await deleteVideoComment(targetServerId);
       showToast.success('댓글이 삭제되었습니다.');
+      options?.onMutationSuccess?.();
     } catch {
       showToast.error('댓글 삭제에 실패했습니다.', '잠시 후 다시 시도해주세요.');
     }
@@ -180,12 +175,9 @@ export function useVideoComments() {
     }
 
     if (!targetComment.serverId) {
-      showToast.error('서버에 저장되지 않은 댓글은 수정할 수 없습니다.');
+      updateCommentStore(commentId, content);
       return;
     }
-
-    // Optimistic update
-    updateCommentStore(commentId, content);
 
     try {
       // content에서 타임스탬프 제거 (있으면)
@@ -199,6 +191,7 @@ export function useVideoComments() {
       }
       await updateCommentApi(String(commentIdNum), { content: contentToSend });
       showToast.success('댓글이 수정되었습니다.');
+      options?.onMutationSuccess?.();
     } catch {
       showToast.error('댓글 수정에 실패했습니다.', '잠시 후 다시 시도해주세요.');
     }

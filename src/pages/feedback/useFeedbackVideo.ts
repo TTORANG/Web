@@ -191,7 +191,6 @@ export function useFeedbackVideo(
   const requestSeek = useVideoFeedbackStore((s) => s.requestSeek);
   const updateFeedbacks = useVideoFeedbackStore((s) => s.updateFeedbacks);
 
-  const { comments, addComment, addReply, deleteComment, updateComment } = useVideoComments();
   const { reactions, addReaction } = useVideoReactions();
   const [commentDraft, setCommentDraft] = useState('');
   const [scrollToCommentId, setScrollToCommentId] = useState<string | undefined>(undefined);
@@ -219,6 +218,10 @@ export function useFeedbackVideo(
       return null;
     }
   }, [shareToken, updateFeedbacks]);
+
+  const { comments, addComment, addReply, deleteComment, updateComment } = useVideoComments({
+    onMutationSuccess: () => void reloadComments(),
+  });
 
   const handleAddComment = useCallback(async () => {
     if (!commentDraft.trim()) return;

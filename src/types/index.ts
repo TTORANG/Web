@@ -5,7 +5,7 @@ export type { ApiErrorResponse, ApiResponse, PaginatedData } from './api';
 export type { AuthProvider, User } from './auth';
 
 // Comment
-export type { Comment, CreateCommentInput } from './comment';
+export type { Comment } from './comment';
 
 // Home
 export type { SortMode, ViewMode, FilterMode } from './home';

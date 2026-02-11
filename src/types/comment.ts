@@ -21,15 +21,3 @@ export interface Comment {
   /** 자식 댓글 목록 - 중첩 구조에서 답글 관계 표현 */
   replies?: Comment[];
 }
-
-/**
- * 새 댓글 생성 시 필요한 최소 정보
- */
-export interface CreateCommentInput {
-  content: string;
-  userId?: string;
-  userName?: string;
-  userProfileImage?: string;
-  ref?: Comment['ref'];
-  parentId?: string;
-}

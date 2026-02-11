@@ -10,14 +10,15 @@ import { useCallback, useMemo, useState } from 'react';
 import clsx from 'clsx';
 
 import { Popover } from '@/components/common';
-import { useSlideActions, useSlideComments } from '@/hooks';
+import { useSlideComments } from '@/hooks';
+import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
 
 import Comment from './Comment';
 import { CommentProvider } from './CommentContext';
 
 export default function CommentPopover() {
   const comments = useSlideComments();
-  const { deleteComment, updateComment, addReply } = useSlideActions();
+  const { deleteComment, updateComment, addReply } = useSlideCommentsActions();
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);

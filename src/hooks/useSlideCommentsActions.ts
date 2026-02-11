@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import type { CreateCommentRequestDto } from '@/api';
-import type { CreateCommentResponseDto, CreateReplyCommentResponseDto } from '@/api/dto';
+import type { CreateCommentResponseDto } from '@/api/dto';
 import {
   createReply,
   createSlideComment,
@@ -58,48 +58,40 @@ function useDeleteCommentMutation() {
   });
 }
 
-// ── Optimistic UI 훅 ───────────────────────────────────────
+// ── 슬라이드 댓글 통합 훅 ───────────────────────────────────
 
 const EMPTY_COMMENTS: Comment[] = [];
 
 /**
  * 슬라이드 댓글 통합 훅
  *
- * TanStack Query(API 호출) + Zustand(Optimistic UI)를 결합합니다.
- * 로컬 store 즉시 업데이트 후 서버 API를 호출하고, 실패 시 롤백합니다.
+ * API 호출 후 query invalidation으로 서버 데이터를 동기화합니다.
+ * useSlideCommentsLoader가 서버 데이터를 store에 반영합니다.
  *
  * @returns comments - 트리 구조 댓글 목록 (최신순 정렬)
- * @returns addComment - 댓글 추가 (optimistic)
- * @returns addReply - 답글 추가 (optimistic)
- * @returns deleteComment - 댓글 삭제 (optimistic)
- * @returns updateComment - 댓글 수정 (optimistic)
+ * @returns addComment - 댓글 추가
+ * @returns addReply - 답글 추가
+ * @returns deleteComment - 댓글 삭제
+ * @returns updateComment - 댓글 수정
  */
 export function useSlideCommentsActions() {
   const { projectId = '' } = useParams<{ projectId: string }>();
   const slideId = useSlideStore((state) => state.slide?.slideId);
   const queryClient = useQueryClient();
   const flatComments = useSlideStore((state) => state.slide?.comments);
-  const addCommentStore = useSlideStore((state) => state.addComment);
-  const addReplyStore = useSlideStore((state) => state.addReply);
   const deleteCommentStore = useSlideStore((state) => state.deleteComment);
   const updateCommentStore = useSlideStore((state) => state.updateComment);
-  const updateCommentServerIdStore = useSlideStore((state) => state.updateCommentServerId);
-  const setComments = useSlideStore((state) => state.setComments);
 
-  const { mutate: createCommentMutate } = useCreateCommentMutation();
-  const { mutate: createReplyMutate } = useCreateReplyMutation();
-  const { mutate: deleteCommentMutate } = useDeleteCommentMutation();
-  const { mutate: updateCommentMutate } = useUpdateCommentMutation();
+  const { mutateAsync: createCommentMutateAsync } = useCreateCommentMutation();
+  const { mutateAsync: createReplyMutateAsync } = useCreateReplyMutation();
+  const { mutateAsync: deleteCommentMutateAsync } = useDeleteCommentMutation();
+  const { mutateAsync: updateCommentMutateAsync } = useUpdateCommentMutation();
 
   const findComment = (commentId: string) => flatComments?.find((c) => c.commentId === commentId);
 
   const comments = useMemo(() => {
     if (!flatComments) return EMPTY_COMMENTS;
     const sorted = [...flatComments].sort((a, b) => {
-      const aOptimistic = !a.serverId;
-      const bOptimistic = !b.serverId;
-      if (aOptimistic !== bOptimistic) return aOptimistic ? 1 : -1;
-
       const aIndex =
         a.ref?.kind === 'slide' && typeof a.ref.index === 'number'
           ? a.ref.index
@@ -118,65 +110,47 @@ export function useSlideCommentsActions() {
     return flatToTree(sorted);
   }, [flatComments]);
 
-  const addComment = (content: string, currentSlideIndex: number) => {
-    if (!slideId) return undefined;
+  const addComment = async (content: string): Promise<string | null> => {
+    if (!slideId) return null;
 
-    const previousComments = flatComments ?? [];
-    const newComment = addCommentStore(content, currentSlideIndex);
-
-    createCommentMutate(
-      { slideId, projectId, data: { content } },
-      {
-        onSuccess: (response: CreateCommentResponseDto) => {
-          if (newComment) {
-            updateCommentServerIdStore(newComment.commentId, response.commentId);
-          }
-          queryClient.invalidateQueries({
-            queryKey: queryKeys.comments.list(slideId),
-          });
-        },
-        onError: () => {
-          setComments(previousComments);
-          showToast.error('댓글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
-        },
-      },
-    );
-
-    return newComment;
+    try {
+      const response: CreateCommentResponseDto = await createCommentMutateAsync({
+        slideId,
+        projectId,
+        data: { content },
+      });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.comments.list(slideId),
+      });
+      return response.commentId;
+    } catch {
+      showToast.error('댓글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+      return null;
+    }
   };
 
-  const addReply = (parentId: string, content: string) => {
+  const addReply = async (parentId: string, content: string) => {
     const target = findComment(parentId);
     const targetSlideId = target?.slideId ?? slideId;
     const targetServerId = target?.serverId ?? parentId;
     if (!targetSlideId) return;
 
-    // 최상위 부모에게 답글 달기 (slideStore의 addReply가 rootParentId를 찾음)
-    const previousComments = flatComments ?? [];
-    const newReply = addReplyStore(parentId, content);
-
-    createReplyMutate(
-      { commentId: targetServerId, slideId: targetSlideId, projectId, data: { content } },
-      {
-        onSuccess: (response: CreateReplyCommentResponseDto) => {
-          if (newReply) {
-            updateCommentServerIdStore(newReply.commentId, response.replyId);
-          }
-          // 답글은 부모 댓글의 replies 쿼리만 갱신합니다.
-          // list 쿼리 재조회는 서버 응답 형태에 따라 답글이 최상위로 보이는 문제를 유발할 수 있습니다.
-          queryClient.invalidateQueries({
-            queryKey: queryKeys.comments.replies(targetServerId),
-          });
-        },
-        onError: () => {
-          setComments(previousComments);
-          showToast.error('답글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
-        },
-      },
-    );
+    try {
+      await createReplyMutateAsync({
+        commentId: targetServerId,
+        slideId: targetSlideId,
+        projectId,
+        data: { content },
+      });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.comments.replies(targetServerId),
+      });
+    } catch {
+      showToast.error('답글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+    }
   };
 
-  const deleteComment = (commentId: string) => {
+  const deleteComment = async (commentId: string) => {
     const target = findComment(commentId);
     const targetSlideId = target?.slideId ?? slideId;
     const targetServerId = target?.serverId;
@@ -193,27 +167,22 @@ export function useSlideCommentsActions() {
       return;
     }
 
-    const previousComments = flatComments ?? [];
-    deleteCommentStore(commentId);
-
-    deleteCommentMutate(
-      { commentId: targetServerId, slideId: targetSlideId, projectId },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: queryKeys.comments.list(targetSlideId),
-          });
-          showToast.success('댓글이 삭제되었습니다.');
-        },
-        onError: () => {
-          setComments(previousComments);
-          showToast.error('댓글 삭제에 실패했습니다.', '잠시 후 다시 시도해주세요.');
-        },
-      },
-    );
+    try {
+      await deleteCommentMutateAsync({
+        commentId: targetServerId,
+        slideId: targetSlideId,
+        projectId,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.comments.list(targetSlideId),
+      });
+      showToast.success('댓글이 삭제되었습니다.');
+    } catch {
+      showToast.error('댓글 삭제에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+    }
   };
 
-  const updateComment = (commentId: string, content: string) => {
+  const updateComment = async (commentId: string, content: string) => {
     const target = findComment(commentId);
     const targetSlideId = target?.slideId ?? slideId;
     const targetServerId = target?.serverId;
@@ -229,23 +198,19 @@ export function useSlideCommentsActions() {
       return;
     }
 
-    const previousComments = flatComments ?? [];
-    updateCommentStore(commentId, content);
-
-    updateCommentMutate(
-      { commentId: targetServerId, slideId: targetSlideId, projectId, data: { content } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: queryKeys.comments.list(targetSlideId),
-          });
-        },
-        onError: () => {
-          setComments(previousComments);
-          showToast.error('댓글 수정에 실패했습니다.', '잠시 후 다시 시도해주세요.');
-        },
-      },
-    );
+    try {
+      await updateCommentMutateAsync({
+        commentId: targetServerId,
+        slideId: targetSlideId,
+        projectId,
+        data: { content },
+      });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.comments.list(targetSlideId),
+      });
+    } catch {
+      showToast.error('댓글 수정에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+    }
   };
 
   return {
