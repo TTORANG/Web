@@ -40,7 +40,7 @@ export default function InsightPage() {
             isVideo={m.retentionIsVideo}
           />
 
-          <div className="grid grid-cols-1 gap-6 py-4 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-12 py-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
             <FeedbackDistributionSection projectId={m.projectIdStr ?? ''} />
 
             <div className="flex flex-col gap-6">
