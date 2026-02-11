@@ -4,10 +4,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type { ReadVideoReactionBucketsResponseDto } from '@/api/dto/reactions.dto';
 import {
-  type ToggleVideoReactionRequest,
+  type CreateVideoReactionRequest,
+  createVideoReaction,
   getVideoReactionBuckets,
   getVideoReactions,
-  toggleVideoReaction,
 } from '@/api/endpoints/videoReactions';
 import { queryKeys } from '@/api/queryClient';
 import type { ReactionType } from '@/types/script';
@@ -85,12 +85,12 @@ const buildHighlightsFromBuckets = (
     .sort((a, b) => a.startTime - b.startTime);
 };
 
-export function useToggleVideoReaction() {
+export function useCreateVideoReaction() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ videoId, data }: { videoId: string; data: ToggleVideoReactionRequest }) =>
-      toggleVideoReaction(videoId, data),
+    mutationFn: ({ videoId, data }: { videoId: string; data: CreateVideoReactionRequest }) =>
+      createVideoReaction(videoId, data),
     onSuccess: (_, { videoId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.reactions.video.all(videoId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.videos.detail(videoId) });
@@ -110,6 +110,7 @@ export function useVideoReactionWindow(
     queryKey: queryKeys.reactions.video.window(videoId ?? '', timestampMs ?? 0, windowMs),
     queryFn: () => getVideoReactions(videoId!, { timestampMs: timestampMs!, windowMs }),
     placeholderData: (previousData) => previousData,
+    staleTime: 5000, // 같은 1초 구간 내 리렌더 시 중복 리패치 방지
     enabled: !!videoId && Number.isFinite(timestampMs),
   });
 }

@@ -1225,17 +1225,6 @@
 //     const start = (page - 1) * pageSize;
 //     const paged = allVideos.slice(start, start + pageSize);
 
-//     return ok({
-//       videos: paged,
-//       pagination: {
-//         currentPage: page,
-//         totalCount: allVideos.length,
-//         hasNext: start + pageSize < allVideos.length,
-//       },
-//     });
-//   }),
-// ];
-
 // // ═══════════════════════════════════════════════════════════════
 // //  FILES — /files/upload
 // // ═══════════════════════════════════════════════════════════════

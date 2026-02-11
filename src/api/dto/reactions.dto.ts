@@ -18,20 +18,22 @@ export interface CreateSlideReactionResponseDto {
 }
 
 /**
- * 영상 리액션 토글 요청 DTO
+ * 영상 리액션 생성 요청 DTO
  */
-export interface ToggleVideoReactionDto {
+export interface CreateVideoReactionDto {
   emojiType: ReactionType;
   timestampMs: number;
 }
 
 /**
- * 영상 리액션 토글 응답 DTO
+ * 영상 리액션 생성 응답 DTO
  */
-export interface ToggleVideoReactionResponseDto {
+export interface CreateVideoReactionResponseDto {
   reactionId: string;
   videoId: string;
-  active: boolean;
+  emojiType: ReactionType;
+  timestampMs: number;
+  createdAt: string;
 }
 
 /**

@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { recordPageView, slideView } from '@/api/endpoints/analytics';
+import { slideView } from '@/api/endpoints/analytics';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useHotkey, useSlideActions, useSlideComments } from '@/hooks';
 import { useScript } from '@/hooks/queries/useScript';
-import { useExitTracker } from '@/hooks/useExitTracker';
 import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
 import { useSlideCommentsLoader } from '@/hooks/useSlideCommentsLoader';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
@@ -36,7 +35,7 @@ function normalizeSharedSlides(rawSlides: SharedProjectSlide[]): SlideDetail[] {
       return {
         slideId: slide.slideId,
         projectId: SHARED_PROJECT_ID,
-        title: `슬라이드 ${slideNum}`,
+        title: slide.title ?? '슬라이드 ' + slideNum,
         slideNum,
         imageUrl: slide.imageUrl,
         createdAt: now,
@@ -113,25 +112,6 @@ export const useFeedbackSlide = ({
   );
 
   useHotkey({ ArrowLeft: goPrev, ArrowRight: goNext }, { enabled: slides.length > 0 });
-
-  const buildExitPayload = () => {
-    if (!shareToken) return null;
-
-    const payload: { shareToken: string; lastSlideId?: number } = {
-      shareToken,
-    };
-
-    if (currentSlide?.slideId) {
-      const slideIdNum = Number(currentSlide.slideId);
-      if (Number.isFinite(slideIdNum)) {
-        payload.lastSlideId = slideIdNum;
-      }
-    }
-
-    return payload;
-  };
-
-  useExitTracker(buildExitPayload);
 
   const lastExitSnapshotSlideIdRef = useRef<string | null>(null);
   useEffect(() => {
@@ -261,13 +241,6 @@ export const useFeedbackSlide = ({
     },
     [goToIndex],
   );
-
-  const pageViewSentRef = useRef(false);
-  useEffect(() => {
-    if (!shareToken || pageViewSentRef.current) return;
-    pageViewSentRef.current = true;
-    void recordPageView({ shareToken });
-  }, [shareToken]);
 
   const lastSlideViewIdRef = useRef<string | null>(null);
   useEffect(() => {

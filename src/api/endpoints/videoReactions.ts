@@ -4,24 +4,25 @@
  */
 import { apiClient } from '@/api/client';
 import type {
+  CreateVideoReactionDto,
+  CreateVideoReactionResponseDto,
   ReadVideoReactionBucketsResponseDto,
   ReadVideoReactionSummaryItemDto,
   ReadVideoReactionTimelineResponseDto,
-  ToggleVideoReactionDto,
-  ToggleVideoReactionResponseDto,
 } from '@/api/dto/reactions.dto';
 import type { ApiResponse } from '@/types/api';
 
-export type { ToggleVideoReactionDto as ToggleVideoReactionRequest };
+export type { CreateVideoReactionDto as CreateVideoReactionRequest };
 
 /**
- * 영상타임스탬프 리액션 생성/상태 설정 Toggle a reaction at a specific video timestamp.
+ * 영상 타임스탬프 리액션 생성
+ * 요청 1회 = 카운트 1 증가 (토글 아님)
  */
-export async function toggleVideoReaction(
+export async function createVideoReaction(
   videoId: string,
-  data: ToggleVideoReactionDto,
-): Promise<ToggleVideoReactionResponseDto> {
-  const { data: response } = await apiClient.post<ApiResponse<ToggleVideoReactionResponseDto>>(
+  data: CreateVideoReactionDto,
+): Promise<CreateVideoReactionResponseDto> {
+  const { data: response } = await apiClient.post<ApiResponse<CreateVideoReactionResponseDto>>(
     `/videos/${videoId}/reactions`,
     data,
   );
