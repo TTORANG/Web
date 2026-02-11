@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useQueryClient } from '@tanstack/react-query';
+
 import { recordPageView, slideView } from '@/api/endpoints/analytics';
+import { queryKeys } from '@/api/queryClient';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useHotkey, useSharedComments, useSlideActions, useSlideComments } from '@/hooks';
 import { useScript } from '@/hooks/queries/useScript';
@@ -76,6 +79,7 @@ export const useFeedbackSlide = ({
   const authUserSessionId = useAuthStore((state) => state.user?.sessionId);
   const authAnonymousSessionId = useAuthStore((state) => state.anonymousSessionId);
   const resolvedSessionId = sessionId ?? authUserSessionId ?? authAnonymousSessionId ?? '';
+  const queryClient = useQueryClient();
 
   const sharedCommentsQuery = useSharedComments(shareToken ?? '', resolvedSessionId, {
     initialData: sharedComments ? { comments: sharedComments } : undefined,
@@ -84,6 +88,20 @@ export const useFeedbackSlide = ({
   const hasSharedComments = sharedCommentsSource != null;
 
   const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
+  const updateSharedCommentsCache = useCallback(
+    (updater: (items: SharedProjectComment[]) => SharedProjectComment[]) => {
+      if (!shareToken) return;
+      queryClient.setQueryData<{ comments: SharedProjectComment[] }>(
+        queryKeys.shares.comments(shareToken, resolvedSessionId),
+        (prev) => {
+          if (!prev) return prev;
+          return { ...prev, comments: updater(prev.comments) };
+        },
+      );
+    },
+    [queryClient, resolvedSessionId, shareToken],
+  );
+
   const { comments, addComment, addReply, deleteComment, updateComment } = useSlideCommentsActions({
     onCreateSuccess: async (commentId) => {
       if (hasSharedComments) {
@@ -95,13 +113,23 @@ export const useFeedbackSlide = ({
     onCreateError: () => {
       setIsCommentSubmitting(false);
     },
-    onDeleteSuccess: async () => {
+    onDeleteSuccess: async (commentId) => {
       if (hasSharedComments) {
+        updateSharedCommentsCache((items) =>
+          items.filter(
+            (comment) => comment.commentId !== commentId && comment.parentId !== commentId,
+          ),
+        );
         await sharedCommentsQuery.refetch();
       }
     },
-    onUpdateSuccess: async () => {
+    onUpdateSuccess: async (commentId, content) => {
       if (hasSharedComments) {
+        updateSharedCommentsCache((items) =>
+          items.map((comment) =>
+            comment.commentId === commentId ? { ...comment, content } : comment,
+          ),
+        );
         await sharedCommentsQuery.refetch();
       }
     },
@@ -262,10 +290,9 @@ export const useFeedbackSlide = ({
         .map((comment) => comment.serverId ?? comment.commentId)
         .filter((id): id is string => Boolean(id)),
     );
-    const localOnlyComments = storedComments.filter((comment) => {
-      if (!comment.serverId) return true;
-      return !sharedServerIds.has(comment.serverId);
-    });
+    // Only keep optimistic local comments (no serverId).
+    // If a serverId is missing from shared data, it should be treated as deleted.
+    const localOnlyComments = storedComments.filter((comment) => !comment.serverId);
     const mergedComments = [...localOnlyComments, ...sharedSlideComments];
     const isSameLength = storedComments.length === mergedComments.length;
     const isSameOrderAndIdentity =

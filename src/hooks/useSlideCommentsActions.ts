@@ -77,8 +77,8 @@ const EMPTY_COMMENTS: Comment[] = [];
 type SlideCommentsActionOptions = {
   onCreateSuccess?: (commentId: string) => void;
   onCreateError?: () => void;
-  onDeleteSuccess?: () => void;
-  onUpdateSuccess?: () => void;
+  onDeleteSuccess?: (commentId: string) => void;
+  onUpdateSuccess?: (commentId: string, content: string) => void;
 };
 
 export function useSlideCommentsActions(options: SlideCommentsActionOptions = {}) {
@@ -212,7 +212,9 @@ export function useSlideCommentsActions(options: SlideCommentsActionOptions = {}
           queryClient.invalidateQueries({
             queryKey: queryKeys.comments.list(targetSlideId),
           });
-          options.onDeleteSuccess?.();
+          if (targetServerId) {
+            options.onDeleteSuccess?.(targetServerId);
+          }
           showToast.success('댓글이 삭제되었습니다.');
         },
         onError: () => {
@@ -249,7 +251,9 @@ export function useSlideCommentsActions(options: SlideCommentsActionOptions = {}
           queryClient.invalidateQueries({
             queryKey: queryKeys.comments.list(targetSlideId),
           });
-          options.onUpdateSuccess?.();
+          if (targetServerId) {
+            options.onUpdateSuccess?.(targetServerId, content);
+          }
         },
         onError: () => {
           setComments(previousComments);
