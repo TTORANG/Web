@@ -4,6 +4,8 @@
  *
  * 영상의 특정 타임스탬프에 대한 댓글과 리액션을 관리합니다.
  */
+import type { Key } from 'react';
+
 import type { Comment } from './comment';
 import type { Presentation } from './presentation';
 import type { Reaction, ReactionType } from './script';
@@ -91,6 +93,7 @@ export interface MockVideo {
  * 영상 프레젠테이션 (Presentation 확장)
  */
 export interface VideoPresentation extends Presentation {
+  videoId: Key | null | undefined;
   commentCount: number;
   reactionCount: number;
   viewCount: number;

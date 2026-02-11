@@ -7,7 +7,6 @@ import { Layout, Logo, Modal } from '@/components/common';
 import { DeviceTestSection, RecordingSection, StopButton } from '@/components/video';
 import { usePresentation } from '@/hooks/queries/usePresentations';
 import { useVideoUpload } from '@/hooks/useVideoUpload';
-import { showToast } from '@/utils/toast';
 
 type RecordStep = 'TEST' | 'RECORDING';
 
@@ -22,7 +21,7 @@ export default function VideoRecordPage() {
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const { uploadVideo, progress, error } = useVideoUpload();
+  const { uploadVideo, progress } = useVideoUpload();
   const UPLOAD_TOAST_ID = 'video-upload';
 
   useEffect(() => {
@@ -59,7 +58,7 @@ export default function VideoRecordPage() {
     }
 
     if (!videoBlob || videoBlob.size === 0) {
-      showToast.error('녹화된 영상이 없습니다.');
+      toast.error('녹화된 영상이 없습니다.');
       return;
     }
 
@@ -80,44 +79,10 @@ export default function VideoRecordPage() {
       const videoId = await uploadVideo(videoBlob, numericProjectId, title, slideLogs);
 
       if (videoId) {
-        try {
-          const base64Video = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(videoBlob);
-          });
-
-          const videoData = {
-            id: videoId,
-            projectId: projectId || 'p1',
-            title,
-            createdAt: new Date().toISOString(),
-            durationSeconds: Object.values(durations).reduce((sum, d) => sum + d, 0),
-            slideCount: Object.keys(durations).length,
-            size: videoBlob.size,
-            videoData: base64Video,
-            durations,
-            status: 'ready',
-          };
-
-          const existingVideos = JSON.parse(localStorage.getItem('mockVideos') || '[]');
-          existingVideos.unshift(videoData);
-          localStorage.setItem('mockVideos', JSON.stringify(existingVideos));
-        } catch {
-          showToast.error('영상 저장 실패', '로컬 저장소에 영상을 저장하지 못했습니다.');
-        }
-
-        navigate(`/${projectId}/videos`, {
-          state: { uploadSuccess: true, videoId },
-          replace: true,
-        });
-      } else {
-        throw new Error(error || '업로드에 실패했습니다.');
+        navigate(`/${projectId}/videos`, { state: { uploadSuccess: true } });
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '영상 업로드에 실패했습니다.';
-      toast.error('업로드 실패', { id: UPLOAD_TOAST_ID, description: errorMessage });
+    } catch (err: unknown) {
+      toast.error('업로드 실패', { description: (err as Error).message });
     }
   };
 

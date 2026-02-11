@@ -59,6 +59,7 @@ export default function VideoListPage() {
   const handleStartRecording = () => {
     navigate(`/${projectId}/video/record`);
   };
+
   if (!projectId) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -136,6 +137,7 @@ export default function VideoListPage() {
               영상 녹화하기
             </button>
           </div>
+
           {/* 검색/필터 헤더 */}
           <div className="mb-4">
             <PresentationHeader
@@ -179,7 +181,7 @@ export default function VideoListPage() {
                 {viewMode === 'card' ? (
                   <CardView
                     items={videos}
-                    getKey={(item) => item.projectId}
+                    getKey={(item) => item.videoId?.toString() || ''}
                     className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-3"
                     renderCard={(item) => <PresentationCard {...item} mode="videos" />}
                     empty={null}
@@ -187,7 +189,7 @@ export default function VideoListPage() {
                 ) : (
                   <ListView
                     items={videos}
-                    getKey={(item) => item.projectId}
+                    getKey={(item) => item.videoId?.toString() || ''}
                     className="flex flex-col gap-3"
                     renderInfo={(item) => <PresentationList {...item} mode="videos" />}
                     empty={null}

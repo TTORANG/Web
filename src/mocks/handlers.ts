@@ -895,59 +895,59 @@ const reactionHandlers = [
 // ═══════════════════════════════════════════════════════════════
 
 const videoHandlers = [
-  // POST /videos/start - 영상 녹화 세션 생성
-  http.post(`${BASE_URL}/videos/start`, async ({ request }) => {
-    await delay(200);
-    await request.json();
-    const videoId = String(Date.now());
+  //   // POST /videos/start - 영상 녹화 세션 생성
+  //   http.post(`${BASE_URL}/videos/start`, async ({ request }) => {
+  //     await delay(200);
+  //     await request.json();
+  //     const videoId = String(Date.now());
 
-    return HttpResponse.json<ApiResponse<CreateStartVideoResponseDto>>({
-      resultType: 'SUCCESS',
-      success: {
-        videoId,
-      },
-      error: null,
-    });
-  }),
+  //     return HttpResponse.json<ApiResponse<CreateStartVideoResponseDto>>({
+  //       resultType: 'SUCCESS',
+  //       success: {
+  //         videoId,
+  //       },
+  //       error: null,
+  //     });
+  //   }),
 
-  // POST /videos/:videoId/chunks/:chunkIndex - 청크 업로드
-  http.post(`${BASE_URL}/videos/:videoId/chunks/:chunkIndex`, async ({ params }) => {
-    await delay(100);
-    const { videoId, chunkIndex } = params;
+  //   // POST /videos/:videoId/chunks/:chunkIndex - 청크 업로드
+  //   http.post(`${BASE_URL}/videos/:videoId/chunks/:chunkIndex`, async ({ params }) => {
+  //     await delay(100);
+  //     const { videoId, chunkIndex } = params;
 
-    console.log(`[MSW] Chunk ${chunkIndex} uploaded for video ${videoId}`);
+  //     console.log(`[MSW] Chunk ${chunkIndex} uploaded for video ${videoId}`);
 
-    return HttpResponse.json<ApiResponse<CreateChunkUploadResponseDto>>({
-      resultType: 'SUCCESS',
-      success: {
-        ok: true,
-      },
-      error: null,
-    });
-  }),
+  //     return HttpResponse.json<ApiResponse<CreateChunkUploadResponseDto>>({
+  //       resultType: 'SUCCESS',
+  //       success: {
+  //         ok: true,
+  //       },
+  //       error: null,
+  //     });
+  //   }),
 
-  // POST /videos/:videoId/finish - 녹화 종료
-  http.post(`${BASE_URL}/videos/:videoId/finish`, async ({ params, request }) => {
-    await delay(300);
-    const { videoId } = params;
-    const body = (await request.json()) as CreateFinishVideoRequestDto;
+  //   // POST /videos/:videoId/finish - 녹화 종료
+  //   http.post(`${BASE_URL}/videos/:videoId/finish`, async ({ params, request }) => {
+  //     await delay(300);
+  //     const { videoId } = params;
+  //     const body = (await request.json()) as CreateFinishVideoRequestDto;
 
-    return HttpResponse.json<ApiResponse<CreateFinishVideoResponseDto>>({
-      resultType: 'SUCCESS',
-      success: {
-        videoId: String(videoId),
-        status: 'processing',
-        slideCount: body.slideLogs.length,
-        slideDurations: body.slideLogs.map((log) => ({
-          slideId: String(log.slideId),
-          totalDurationMs: log.timestampMs,
-        })),
-      },
-      error: null,
-    });
-  }),
+  //     return HttpResponse.json<ApiResponse<CreateFinishVideoResponseDto>>({
+  //       resultType: 'SUCCESS',
+  //       success: {
+  //         videoId: String(videoId),
+  //         status: 'processing',
+  //         slideCount: body.slideLogs.length,
+  //         slideDurations: body.slideLogs.map((log) => ({
+  //           slideId: String(log.slideId),
+  //           totalDurationMs: log.timestampMs,
+  //         })),
+  //       },
+  //       error: null,
+  //     });
+  //   }),
 
-  // GET /presentations/:projectId/videos - 프로젝트별 영상 목록 조회
+  //GET /presentations/:projectId/videos - 프로젝트별 영상 목록 조회
   http.get(`${BASE_URL}/presentations/:projectId/videos`, async ({ request }) => {
     await delay(200);
     const url = new URL(request.url);
@@ -1033,51 +1033,51 @@ const videoHandlers = [
     });
   }),
 
-  // POST /videos/:videoId/comments - 댓글 작성
-  http.post(`${BASE_URL}/videos/:videoId/comments`, async ({ request }) => {
-    await delay(200);
-    const body = (await request.json()) as CreateCommentRequestDto & { timestampMs?: number };
+  //   // POST /videos/:videoId/comments - 댓글 작성
+  //   http.post(`${BASE_URL}/videos/:videoId/comments`, async ({ request }) => {
+  //     await delay(200);
+  //     const body = (await request.json()) as CreateCommentRequestDto & { timestampMs?: number };
 
-    return HttpResponse.json<ApiResponse<CreateCommentResponseDto>>({
-      resultType: 'SUCCESS',
-      success: {
-        commentId: `c${Date.now()}`,
-        content: body.content,
-        createdAt: new Date().toISOString(),
-        userId: MOCK_CURRENT_USER.id,
-      },
-      error: null,
-    });
-  }),
+  //     return HttpResponse.json<ApiResponse<CreateCommentResponseDto>>({
+  //       resultType: 'SUCCESS',
+  //       success: {
+  //         commentId: `c${Date.now()}`,
+  //         content: body.content,
+  //         createdAt: new Date().toISOString(),
+  //         userId: MOCK_CURRENT_USER.id,
+  //       },
+  //       error: null,
+  //     });
+  //   }),
 
-  // POST /comments/:commentId/replies - 답글 작성
-  http.post(`${BASE_URL}/comments/:commentId/replies`, async ({ params, request }) => {
-    await delay(200);
-    const { commentId } = params;
-    const body = (await request.json()) as CreateCommentRequestDto;
+  //   // POST /comments/:commentId/replies - 답글 작성
+  //   http.post(`${BASE_URL}/comments/:commentId/replies`, async ({ params, request }) => {
+  //     await delay(200);
+  //     const { commentId } = params;
+  //     const body = (await request.json()) as CreateCommentRequestDto;
 
-    return HttpResponse.json<ApiResponse<CreateReplyCommentResponseDto>>({
-      resultType: 'SUCCESS',
-      success: {
-        replyId: `r${Date.now()}`,
-        content: body.content,
-        createdAt: new Date().toISOString(),
-        userId: MOCK_CURRENT_USER.id,
-        parentCommentId: String(commentId),
-      },
-      error: null,
-    });
-  }),
+  //     return HttpResponse.json<ApiResponse<CreateReplyCommentResponseDto>>({
+  //       resultType: 'SUCCESS',
+  //       success: {
+  //         replyId: `r${Date.now()}`,
+  //         content: body.content,
+  //         createdAt: new Date().toISOString(),
+  //         userId: MOCK_CURRENT_USER.id,
+  //         parentCommentId: String(commentId),
+  //       },
+  //       error: null,
+  //     });
+  //   }),
 
-  // DELETE /comments/:commentId - 댓글 삭제
-  http.delete(`${BASE_URL}/comments/:commentId`, async () => {
-    await delay(150);
-    return HttpResponse.json<ApiResponse<null>>({
-      resultType: 'SUCCESS',
-      success: null,
-      error: null,
-    });
-  }),
+  //   // DELETE /comments/:commentId - 댓글 삭제
+  //   http.delete(`${BASE_URL}/comments/:commentId`, async () => {
+  //     await delay(150);
+  //     return HttpResponse.json<ApiResponse<null>>({
+  //       resultType: 'SUCCESS',
+  //       success: null,
+  //       error: null,
+  //     });
+  //   }),
 ];
 
 // ═══════════════════════════════════════════════════════════════
