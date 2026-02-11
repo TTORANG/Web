@@ -25,7 +25,11 @@ export default function ThumbnailImage({ src, alt, pending, className }: Props) 
           alt={alt}
           onLoad={() => setIsLoaded(true)}
           onError={() => setHasError(true)}
-          className={clsx(className, !isLoaded && 'hidden')}
+          className={clsx(
+            className,
+            'transition-opacity duration-500 ease-in-out',
+            isLoaded ? 'opacity-100' : 'opacity-0',
+          )}
         />
       )}
     </>

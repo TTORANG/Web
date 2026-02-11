@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import clsx from 'clsx';
@@ -148,7 +147,7 @@ function PresentationList(props: Props) {
         {/* 썸네일 */}
         <div className="w-35 h-19.5 shrink-0 overflow-hidden rounded-lg bg-transparent">
           <ThumbnailImage
-            key={resolvedSrc ?? 'empty'}
+            key={projectId}
             src={resolvedSrc}
             alt={displayTitle}
             pending={isThumbnailPending}

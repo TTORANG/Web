@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import clsx from 'clsx';
@@ -147,7 +146,7 @@ function PresentationCard(props: Props) {
       >
         <div className="aspect-video w-full overflow-hidden rounded-t-2xl bg-transparent">
           <ThumbnailImage
-            key={resolvedSrc ?? 'empty'}
+            key={projectId}
             src={resolvedSrc}
             alt={displayTitle}
             pending={isThumbnailPending}
