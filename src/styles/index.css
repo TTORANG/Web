@@ -109,6 +109,24 @@
   animation: confetti-burst 700ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
+/* Reaction button shake animation */
+@keyframes reaction-shake {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  10% { transform: translate(calc(-1px * var(--shake, 1)), calc(1px * var(--shake, 1))) rotate(calc(-1deg * var(--shake, 1))); }
+  20% { transform: translate(calc(2px * var(--shake, 1)), calc(-1px * var(--shake, 1))) rotate(calc(1deg * var(--shake, 1))); }
+  30% { transform: translate(calc(-2px * var(--shake, 1)), calc(0px)) rotate(calc(-0.5deg * var(--shake, 1))); }
+  40% { transform: translate(calc(1px * var(--shake, 1)), calc(1px * var(--shake, 1))) rotate(calc(0.5deg * var(--shake, 1))); }
+  50% { transform: translate(calc(-1px * var(--shake, 1)), calc(-1px * var(--shake, 1))) rotate(calc(-1deg * var(--shake, 1))); }
+  60% { transform: translate(calc(2px * var(--shake, 1)), calc(0px)) rotate(calc(1deg * var(--shake, 1))); }
+  70% { transform: translate(calc(-1px * var(--shake, 1)), calc(1px * var(--shake, 1))) rotate(calc(-0.5deg * var(--shake, 1))); }
+  80% { transform: translate(calc(1px * var(--shake, 1)), calc(-1px * var(--shake, 1))) rotate(calc(0.5deg * var(--shake, 1))); }
+  90% { transform: translate(calc(-2px * var(--shake, 1)), calc(1px * var(--shake, 1))) rotate(calc(-1deg * var(--shake, 1))); }
+}
+
+.animate-reaction-shake {
+  animation: reaction-shake 0.4s ease-in-out infinite;
+}
+
 body {
   background-color: var(--color-white);
   color: var(--color-black);
