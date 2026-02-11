@@ -7,7 +7,6 @@ import { queryKeys } from '@/api/queryClient';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Reaction, ReactionType } from '@/types/script';
-import { showToast } from '@/utils/toast';
 
 import { useCreateReaction, useSlideReactionSummary } from './queries/useReaction.ts';
 
@@ -125,7 +124,6 @@ export function useSlideReactions() {
       { slideId, data: { emojiType: type } },
       {
         onError: () => {
-          showToast.error('반응을 반영하지 못했습니다.');
           // 실패 시 서버 데이터로 리프레시
           void queryClient.invalidateQueries({ queryKey: queryKeys.reactions.summary(slideId) });
         },
