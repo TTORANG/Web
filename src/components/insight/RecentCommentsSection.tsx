@@ -25,6 +25,7 @@ export function RecentCommentsSection({
               <RecentCommentItem
                 key={comment.commentId}
                 user={comment.user.name}
+                userProfileImage={comment.user.profileImage}
                 slideLabel={`슬라이드 ${comment.slide.slideNum}`}
                 time={formatVideoTimestamp(comment.timestampMs / 1000)}
                 text={comment.content}
