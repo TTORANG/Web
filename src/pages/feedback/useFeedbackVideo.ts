@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
+import { recordVideoEvent } from '@/api/endpoints/analytics';
 import { getSharedContent } from '@/api/endpoints/shares';
 import { videosApi } from '@/api/endpoints/videos';
 import { createDefaultReactions } from '@/constants/reaction';
@@ -22,19 +23,27 @@ import type { SlideDetail } from '@/types/slide';
 import type { VideoTimestampFeedback } from '@/types/video';
 import { userFromAccessToken } from '@/utils/auth';
 import { formatVideoTimestamp } from '@/utils/format';
+import { getSlideIndexFromTime } from '@/utils/video';
 
 const DEFAULT_VIDEO_ID = '34';
 const FALLBACK_SLIDE_DURATION_SECONDS = 10;
 const FALLBACK_VIDEO_DURATION_SECONDS = 9;
 const SHARED_PROJECT_ID = 'shared';
 
-function toPublicUrl(url?: string | null): string {
-  if (!url) return '';
-  return url.startsWith('gs://') ? `https://storage.googleapis.com/${url.slice(5)}` : url;
+export interface ShareExitSnapshot {
+  lastSlideId?: number;
+  lastVideoId?: number;
+  lastVideoTimeMs?: number;
+}
+
+interface UseFeedbackVideoOptions {
+  // SharePage가 최신 시청 위치 스냅샷을 받을 때 사용하는 콜백입니다.
+  // 공유 플로우에서 /analytics/exit 실제 전송은 SharePage가 담당합니다.
+  onShareExitSnapshotChange?: (snapshot: ShareExitSnapshot) => void;
 }
 
 function toPlayableVideoUrl(url?: string | null): string {
-  const publicUrl = toPublicUrl(url);
+  const publicUrl = url ?? '';
   if (!publicUrl) return '';
 
   if (!import.meta.env.DEV) {
@@ -73,10 +82,10 @@ function normalizeSharedSlides(rawSlides: SharedProjectSlide[]): SlideDetail[] {
         projectId: SHARED_PROJECT_ID,
         title: `슬라이드 ${slideNum}`,
         slideNum,
-        imageUrl: toPublicUrl(slide.imageUrl),
+        imageUrl: slide.imageUrl,
         createdAt: now,
         updatedAt: now,
-        script: slide.scriptText ?? '',
+        script: slide.scriptText,
       };
     })
     .sort((a, b) => a.slideNum - b.slideNum);
@@ -138,6 +147,17 @@ function normalizeTimestampMs(value: number | null | undefined): number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
 }
 
+function toNumericId(value: string | number | null | undefined): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.trunc(value);
+  }
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? Math.trunc(parsed) : null;
+  }
+  return null;
+}
+
 function mapSharedCommentsToFeedbacks(
   rawComments: SharedProjectComment[],
   currentUserId?: string,
@@ -151,8 +171,8 @@ function mapSharedCommentsToFeedbacks(
     const timestampMs = normalizeTimestampMs(sharedComment.timestampMs);
     const fallbackId = `shared-comment-${timestampMs}-${index}`;
     const commentId = sharedComment.commentId || fallbackId;
-    const parentId = sharedComment.parentCommentId || undefined;
-    const userId = sharedComment.writer?.trim() || 'unknown';
+    const parentId = sharedComment.parentId ?? undefined;
+    const userId = sharedComment.writer.trim() || 'unknown';
 
     const mappedComment: Comment = {
       commentId,
@@ -161,8 +181,8 @@ function mapSharedCommentsToFeedbacks(
       isReply: Boolean(parentId),
       replies: parentId ? undefined : [],
       userId,
-      content: sharedComment.content ?? '',
-      createdAt: sharedComment.createdAt ?? new Date().toISOString(),
+      content: sharedComment.content,
+      createdAt: sharedComment.createdAt,
       isMine:
         (Boolean(currentUserId) && userId === currentUserId) ||
         (Boolean(currentUserName) && userId === currentUserName),
@@ -183,7 +203,11 @@ function mapSharedCommentsToFeedbacks(
     }));
 }
 
-export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
+export function useFeedbackVideo(
+  sharedContent?: ReadSharedContentData,
+  options: UseFeedbackVideoOptions = {},
+) {
+  const { onShareExitSnapshotChange } = options;
   const { shareToken: routeShareToken = '' } = useParams<{
     shareToken?: string;
   }>();
@@ -206,6 +230,11 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
   const [commentDraft, setCommentDraft] = useState('');
 
   const timestampPrefix = useMemo(() => `${formatVideoTimestamp(currentTime)} `, [currentTime]);
+  // 비디오 이벤트 기록 API는 number videoId를 사용합니다.
+  const videoIdNum = useMemo(() => {
+    const parsed = Number(video?.videoId);
+    return Number.isFinite(parsed) ? parsed : null;
+  }, [video?.videoId]);
 
   const handleAddComment = useCallback(() => {
     if (!commentDraft.trim()) return;
@@ -219,7 +248,63 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
     },
     [requestSeek],
   );
+  // 비디오 재생 이벤트(play/pause/seek)를 기록합니다.
+  const handleVideoPlaybackEvent = useCallback(
+    (eventType: 'play' | 'pause' | 'seek', timeSeconds: number) => {
+      if (videoIdNum == null) return;
+      const timestampMs = Math.max(0, Math.round(timeSeconds * 1000));
 
+      void recordVideoEvent({
+        videoId: videoIdNum,
+        eventType,
+        timestampMs,
+      }).catch(() => undefined);
+    },
+    [videoIdNum],
+  );
+  // SharePage가 중앙에서 exit를 전송할 수 있도록 최신 시청 위치를 부모로 보고합니다.
+  // (공유 플로우에서 이 훅은 /analytics/exit를 직접 전송하지 않습니다.)
+  useEffect(() => {
+    if (!onShareExitSnapshotChange) return;
+    // 초기 마운트/로딩 구간은 제외해서 0초 스냅샷 보고를 방지합니다.
+    if (!shareToken || !video || isLoading) return;
+
+    const safeCurrentTime = Number.isFinite(currentTime) && currentTime >= 0 ? currentTime : 0;
+    const snapshot: ShareExitSnapshot = {
+      lastVideoTimeMs: Math.round(safeCurrentTime * 1000),
+    };
+
+    if (videoIdNum != null) {
+      snapshot.lastVideoId = videoIdNum;
+    }
+
+    if (projectSlides.length > 0) {
+      const changeTimes =
+        slideChangeTimes.length > 0
+          ? slideChangeTimes
+          : projectSlides.map((_, index) => index * FALLBACK_SLIDE_DURATION_SECONDS);
+      const lastSlideIndex = getSlideIndexFromTime(
+        safeCurrentTime,
+        changeTimes,
+        projectSlides.length - 1,
+      );
+      const lastSlideId = toNumericId(projectSlides[lastSlideIndex]?.slideId);
+      if (lastSlideId != null) {
+        snapshot.lastSlideId = lastSlideId;
+      }
+    }
+
+    onShareExitSnapshotChange(snapshot);
+  }, [
+    onShareExitSnapshotChange,
+    shareToken,
+    video,
+    isLoading,
+    currentTime,
+    videoIdNum,
+    projectSlides,
+    slideChangeTimes,
+  ]);
   useEffect(() => {
     let cancelled = false;
 
@@ -228,9 +313,9 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
       const sessionId = user?.sessionId;
 
       if (!sessionId) {
-        const accessToken = content.sessionInfo?.tokens?.accessToken;
-        const refreshToken = content.sessionInfo?.tokens?.refreshToken;
-        const anonymousSessionId = content.sessionInfo?.sessionId;
+        const accessToken = content.sessionInfo.tokens.accessToken;
+        const refreshToken = content.sessionInfo.tokens.refreshToken;
+        const anonymousSessionId = content.sessionInfo.sessionId;
         if (accessToken && refreshToken) {
           const store = useAuthStore.getState();
           const derivedUser = userFromAccessToken(accessToken, anonymousSessionId);
@@ -244,10 +329,10 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
         }
       }
 
-      const sharedSlides = normalizeSharedSlides(content.projectContent?.slides ?? []);
-      const sharedComments = content.projectContent?.comments ?? [];
+      const sharedSlides = normalizeSharedSlides(content.projectContent.slides);
+      const sharedComments = content.projectContent.comments;
       const sharedFeedbacks = mapSharedCommentsToFeedbacks(sharedComments, user?.id, user?.name);
-      const fallbackTimelineSlides = (content.projectContent?.slides ?? [])
+      const fallbackTimelineSlides = content.projectContent.slides
         .filter(
           (slide) =>
             typeof slide.timestampMs === 'number' &&
@@ -259,10 +344,10 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
           timestampMs: normalizeTimestampMs(slide.timestampMs),
         }));
 
-      const videoId = content.projectContent?.video?.videoId ?? '';
+      const videoId = content.projectContent.video?.videoId ?? '';
       const normalizedVideoId = String(videoId || DEFAULT_VIDEO_ID);
-      let videoUrl = toPlayableVideoUrl(content.projectContent?.video?.videoUrl);
-      let videoTitle = content.projectContent?.title ?? '공유 영상';
+      let videoUrl = toPlayableVideoUrl(content.projectContent.video?.videoUrl);
+      let videoTitle = content.projectContent.title || '공유 영상';
       let duration = FALLBACK_VIDEO_DURATION_SECONDS;
       let timelineSlides: Array<{ slideId: string; timestampMs: number }> = fallbackTimelineSlides;
 
@@ -311,9 +396,7 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
     };
 
     const loadFromShareToken = async () => {
-      const { user } = useAuthStore.getState();
-      const sessionId = user?.sessionId;
-      const content = await getSharedContent(shareToken, sessionId);
+      const content = await getSharedContent(shareToken);
       if (cancelled) return;
       await loadFromSharedContent(content);
     };
@@ -325,8 +408,7 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
         } else if (shareToken) {
           await loadFromShareToken();
         }
-      } catch (error) {
-        console.error('[useFeedbackVideo] load failed:', error);
+      } catch {
         if (cancelled) return;
 
         initVideo({
@@ -369,6 +451,7 @@ export function useFeedbackVideo(sharedContent?: ReadSharedContentData) {
     setCommentDraft,
     handleAddComment,
     handleGoToTimeRef,
+    handleVideoPlaybackEvent,
     addReply,
     deleteComment,
     updateComment,
