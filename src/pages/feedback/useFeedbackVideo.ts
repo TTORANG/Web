@@ -21,7 +21,6 @@ import type {
 } from '@/types/share';
 import type { SlideDetail } from '@/types/slide';
 import type { VideoTimestampFeedback } from '@/types/video';
-import { userFromAccessToken } from '@/utils/auth';
 import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
 
@@ -347,29 +346,12 @@ export function useFeedbackVideo(
     projectSlides,
     slideChangeTimes,
   ]);
+
   useEffect(() => {
     let cancelled = false;
 
     const loadFromSharedContent = async (content: ReadSharedContentData) => {
-      let { user } = useAuthStore.getState();
-      const sessionId = user?.sessionId;
-
-      if (!sessionId) {
-        const accessToken = content.sessionInfo.tokens.accessToken;
-        const refreshToken = content.sessionInfo.tokens.refreshToken;
-        const anonymousSessionId = content.sessionInfo.sessionId;
-        if (accessToken && refreshToken) {
-          const store = useAuthStore.getState();
-          const derivedUser = userFromAccessToken(accessToken, anonymousSessionId);
-          store.setAuth({
-            user: derivedUser,
-            accessToken,
-            refreshToken,
-            anonymousSessionId: anonymousSessionId ?? null,
-          });
-          ({ user } = useAuthStore.getState());
-        }
-      }
+      // 인증 처리는 SharePage에서 수행 (중복 제거)
 
       const sharedSlides = normalizeSharedSlides(content.projectContent.slides);
       const sharedComments = content.projectContent.comments;
