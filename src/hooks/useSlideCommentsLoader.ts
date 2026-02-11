@@ -9,6 +9,7 @@ import { useEffect, useRef } from 'react';
 
 import type { FetchNextPageOptions, InfiniteQueryObserverResult } from '@tanstack/react-query';
 
+import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
 
 import { useSlideCommentsInfiniteQuery } from './queries/useSlideCommentsQuery';
@@ -30,6 +31,7 @@ export function useSlideCommentsLoader(
   options?: UseSlideCommentsLoaderOptions,
 ): CommentsPaginationState {
   const { setComments } = useSlideActions();
+  const localComments = useSlideStore((state) => state.slide?.comments ?? []);
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useSlideCommentsInfiniteQuery(slideId);
   const prevSlideIdRef = useRef<string | undefined>(undefined);
@@ -48,8 +50,13 @@ export function useSlideCommentsLoader(
     if (!data) return;
 
     const serverComments = data.pages.flatMap((p) => p.comments);
-    const mapped = options?.mapComments ? options.mapComments(serverComments) : serverComments;
-    setComments(mapped);
+    const mappedServerComments = options?.mapComments
+      ? options.mapComments(serverComments)
+      : serverComments;
+    const optimisticComments = localComments.filter((comment) => !comment.serverId);
+    const mergedComments = [...optimisticComments, ...mappedServerComments];
+
+    setComments(mergedComments);
   }, [data, options?.mapComments, setComments]);
 
   return {
