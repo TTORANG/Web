@@ -4,6 +4,7 @@ export { default as OAuthCallbackPage } from './OAuthCallbackPage';
 export { default as InsightPage } from './InsightPage';
 export { default as SlidePage } from './SlidePage';
 export { default as FdSlidePage } from './FeedbackSlidePage';
+export { default as FeedbackSlidePageRoute } from './FeedbackSlidePageRoute';
 export { default as FeedbackVideoPage } from './FeedbackVideoPage';
 export { default as FeedbackVideoPageRoute } from './FeedbackVideoPageRoute';
 export { default as VideoRecordPage } from './VideoRecordPage';
