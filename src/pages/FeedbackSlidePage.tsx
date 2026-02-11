@@ -22,18 +22,18 @@ import { useFeedbackSlide } from './feedback/useFeedbackSlide';
 import type { ShareExitSnapshot } from './feedback/useFeedbackVideo';
 
 interface FeedbackSlidePageProps {
-  sharedContent?: ReadSharedContentData;
-  onShareExitSnapshotChange?: (snapshot: ShareExitSnapshot) => void;
+  sharedContent: ReadSharedContentData;
+  onShareExitSnapshotChange: (snapshot: ShareExitSnapshot) => void;
 }
 
 export default function FeedbackSlidePage({
   sharedContent,
   onShareExitSnapshotChange,
-}: FeedbackSlidePageProps = {}) {
+}: FeedbackSlidePageProps) {
   const { shareToken } = useParams<{ shareToken: string }>();
   const { state, actions } = useFeedbackSlide({
-    sharedSlides: sharedContent?.projectContent?.slides,
-    sharedComments: sharedContent?.projectContent?.comments,
+    sharedSlides: sharedContent.projectContent.slides,
+    sharedComments: sharedContent.projectContent.comments,
     shareToken,
     onShareExitSnapshotChange,
   });

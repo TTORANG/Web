@@ -2,8 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { slideView } from '@/api/endpoints/analytics';
 import { createDefaultReactions } from '@/constants/reaction';
-import { useHotkey, useSlideActions, useSlideComments } from '@/hooks';
-import { useScript } from '@/hooks/queries/useScript';
+import { useHotkey, useSlideComments } from '@/hooks';
 import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
 import { useSlideCommentsLoader } from '@/hooks/useSlideCommentsLoader';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
@@ -47,10 +46,9 @@ function normalizeSharedSlides(rawSlides: SharedProjectSlide[]): SlideDetail[] {
 }
 
 type UseFeedbackSlideOptions = {
-  sharedSlides?: SharedProjectSlide[];
-  sharedComments?: SharedProjectComment[];
+  sharedSlides: SharedProjectSlide[];
+  sharedComments: SharedProjectComment[];
   shareToken?: string;
-  projectId?: string;
   onShareExitSnapshotChange?: (snapshot: ShareExitSnapshot) => void;
 };
 
@@ -59,34 +57,25 @@ export const useFeedbackSlide = ({
   sharedComments,
   shareToken,
   onShareExitSnapshotChange,
-}: UseFeedbackSlideOptions = {}) => {
-  const isShared = true;
-  const slides = useMemo(() => normalizeSharedSlides(sharedSlides ?? []), [sharedSlides]);
+}: UseFeedbackSlideOptions) => {
+  const slides = useMemo(() => normalizeSharedSlides(sharedSlides), [sharedSlides]);
 
-  const totalSlides = slides?.length ?? 0;
+  const totalSlides = slides.length;
   const navigation = useSlideNavigation(totalSlides);
   const { slideIndex, goPrev, goNext, goToIndex } = navigation;
 
-  const currentSlide = slides?.[slideIndex];
+  const currentSlide = slides[slideIndex];
 
   const { comments, addComment, addReply, deleteComment, updateComment } =
     useSlideCommentsActions();
   const { reactions, addReaction } = useSlideReactions();
 
-  const script = useSlideStore((state) => state.slide?.script ?? '');
   const initSlide = useSlideStore((state) => state.initSlide);
   const setComments = useSlideStore((state) => state.setComments);
   const storedComments = useSlideComments();
-  const reactionHistory = useSlideStore((state) => state.reactionHistory);
-  const reactionCounts = useSlideStore((state) => state.reactionCounts);
-
-  const { updateScript } = useSlideActions();
-  const { data: scriptData } = useScript(isShared ? '' : (currentSlide?.slideId ?? ''));
 
   const [commentDraft, setCommentDraft] = useState('');
   const [scrollToCommentId, setScrollToCommentId] = useState<string | null>(null);
-
-  const hasSharedComments = sharedComments != null;
 
   const handleAddComment = () => {
     if (!commentDraft.trim()) return;
@@ -113,6 +102,7 @@ export const useFeedbackSlide = ({
 
   useHotkey({ ArrowLeft: goPrev, ArrowRight: goNext }, { enabled: slides.length > 0 });
 
+  // SharePage에 exit snapshot 보고
   const lastExitSnapshotSlideIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (!onShareExitSnapshotChange) return;
@@ -127,6 +117,7 @@ export const useFeedbackSlide = ({
     onShareExitSnapshotChange({ lastSlideId: slideIdNum });
   }, [onShareExitSnapshotChange, shareToken, currentSlide?.slideId]);
 
+  // 슬라이드 전환 시 store 초기화
   const prevSlideIdRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -135,36 +126,15 @@ export const useFeedbackSlide = ({
     if (prevSlideIdRef.current !== currentSlide.slideId) {
       prevSlideIdRef.current = currentSlide.slideId;
 
-      const mySavedReactions = reactionHistory[currentSlide.slideId] || [];
-      const mySavedCounts = reactionCounts[currentSlide.slideId] || {};
-
-      const initialReactions = createDefaultReactions().map((reaction) => ({
-        ...reaction,
-        active: mySavedReactions.includes(reaction.type),
-        count: mySavedCounts[reaction.type] ?? reaction.count,
-      }));
-
       initSlide({
         ...currentSlide,
-        emojiReactions: initialReactions,
-        comments: hasSharedComments ? storedComments : currentSlide.comments,
+        emojiReactions: createDefaultReactions(),
+        comments: storedComments,
       });
-      if (isShared) {
-        updateScript(currentSlide.script ?? '');
-      } else {
-        updateScript('');
-      }
     }
-  }, [
-    currentSlide,
-    initSlide,
-    updateScript,
-    reactionHistory,
-    reactionCounts,
-    isShared,
-    hasSharedComments,
-    storedComments,
-  ]);
+  }, [currentSlide, initSlide, storedComments]);
+
+  // 공유 댓글 정규화
   const sharedSlideMeta = useMemo(() => {
     return new Map(
       slides.map((slide, index) => [
@@ -175,9 +145,7 @@ export const useFeedbackSlide = ({
   }, [slides]);
 
   const sharedSlideComments = useMemo(() => {
-    if (!hasSharedComments) return null;
-
-    return (sharedComments ?? [])
+    return sharedComments
       .filter((comment) => comment.targetType === 'slide')
       .map((comment) => {
         const meta = sharedSlideMeta.get(comment.targetId);
@@ -195,10 +163,12 @@ export const useFeedbackSlide = ({
           slideRef: meta?.label,
         };
       });
-  }, [hasSharedComments, sharedComments, sharedSlideMeta]);
+  }, [sharedComments, sharedSlideMeta]);
 
+  // 공유 댓글과 로컬 댓글 병합
   useEffect(() => {
-    if (!sharedSlideComments) return;
+    if (sharedSlideComments.length === 0 && storedComments.length === 0) return;
+
     const sharedServerIds = new Set(
       sharedSlideComments
         .map((comment) => comment.serverId ?? comment.commentId)
@@ -224,15 +194,9 @@ export const useFeedbackSlide = ({
     fetchNextPage: commentsFetchNextPage,
   } = useSlideCommentsLoader(currentSlide?.slideId, {
     mapComments,
-    enabled: !hasSharedComments,
-    resetOnSlideChange: !hasSharedComments,
+    enabled: false,
+    resetOnSlideChange: false,
   });
-
-  useEffect(() => {
-    if (scriptData) {
-      updateScript(scriptData.scriptText);
-    }
-  }, [scriptData, updateScript]);
 
   const handleGoToRef = useCallback(
     (ref: NonNullable<Comment['ref']>) => {
@@ -242,6 +206,7 @@ export const useFeedbackSlide = ({
     [goToIndex],
   );
 
+  // 슬라이드 조회 analytics
   const lastSlideViewIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (!currentSlide?.slideId) return;
@@ -253,6 +218,8 @@ export const useFeedbackSlide = ({
     lastSlideViewIdRef.current = currentSlide.slideId;
     void slideView({ slideId: slideIdNum });
   }, [currentSlide?.slideId]);
+
+  const script = currentSlide?.script ?? '';
 
   return {
     state: {
