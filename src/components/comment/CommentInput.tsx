@@ -30,6 +30,8 @@ interface CommentInputProps {
   textareaClassName?: string;
   /** 포커스 시 초기값 설정 (타임스탬프 등) */
   initialValueOnFocus?: string;
+  /** 로딩 중 비활성화 */
+  disabled?: boolean;
 }
 
 /**
@@ -54,6 +56,7 @@ export default function CommentInput({
   className,
   textareaClassName,
   initialValueOnFocus,
+  disabled = false,
 }: CommentInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -125,9 +128,11 @@ export default function CommentInput({
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         onFocus={handleFocus}
+        disabled={disabled}
         aria-label={placeholder}
         className={clsx(
           'w-full overflow-hidden resize-none bg-transparent border-b border-gray-600 pt-2 pb-2 outline-none placeholder:text-gray-600 focus:border-main transition-colors',
+          disabled && 'opacity-50 cursor-not-allowed',
           textareaClassName ?? 'text-body-m-bold text-black',
         )}
       />
@@ -136,7 +141,12 @@ export default function CommentInput({
         <button
           type="button"
           onClick={handleCancel}
-          className="px-3 py-1.5 rounded-full text-caption-bold text-gray-800 hover:opacity-80 transition focus-visible:outline-2 focus-visible:outline-main"
+          disabled={disabled}
+          className={clsx(
+            'px-3 py-1.5 rounded-full text-caption-bold transition focus-visible:outline-2 focus-visible:outline-main',
+            disabled ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80',
+            'text-gray-800',
+          )}
         >
           취소
         </button>
@@ -144,15 +154,15 @@ export default function CommentInput({
         <button
           type="button"
           onClick={onSubmit}
-          disabled={isEmpty}
+          disabled={isEmpty || disabled}
           className={clsx(
             'px-3 py-1.5 rounded-full text-caption-bold transition focus-visible:outline-2 focus-visible:outline-main',
-            isEmpty
+            isEmpty || disabled
               ? 'bg-white text-gray-400 cursor-not-allowed'
               : 'bg-main text-white hover:opacity-90',
           )}
         >
-          {submitLabel}
+          {disabled ? '전송 중...' : submitLabel}
         </button>
       </div>
     </div>

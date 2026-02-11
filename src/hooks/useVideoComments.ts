@@ -30,7 +30,6 @@ export function useVideoComments() {
   const video = useVideoFeedbackStore((state) => state.video);
   const videoId = video?.videoId;
 
-  const addCommentStore = useVideoFeedbackStore((state) => state.addComment);
   const addReplyStore = useVideoFeedbackStore((state) => state.addReply);
   const deleteCommentStore = useVideoFeedbackStore((state) => state.deleteComment);
   const updateCommentStore = useVideoFeedbackStore((state) => state.updateComment);
@@ -43,9 +42,12 @@ export function useVideoComments() {
     // 모든 타임스탬프의 댓글을 하나로 합침
     const merged = video.feedbacks.flatMap((f) => f.comments);
 
-    // 정렬(선택): 최신 댓글이 위로 오게 하고 싶으면 아래처럼
-    // createComment()가 timestamp를 ISO로 넣는 구조라 문자열 비교 가능
-    merged.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+    // 영상 타임스탬프 기준 오름차순 정렬 (타임스탬프가 앞쪽인 댓글이 위에 위치)
+    merged.sort((a, b) => {
+      const aSeconds = a.ref?.kind === 'video' ? a.ref.seconds : 0;
+      const bSeconds = b.ref?.kind === 'video' ? b.ref.seconds : 0;
+      return aSeconds - bSeconds;
+    });
 
     return merged;
   }, [video]);
@@ -61,15 +63,13 @@ export function useVideoComments() {
    *
    * @param content - 댓글 내용
    * @param seconds - 댓글이 달릴 영상 타임스탬프 (초)
+   * @returns 서버에서 받은 댓글 ID (스크롤용)
    */
-  const addComment = async (content: string, seconds: number) => {
+  const addComment = async (content: string, seconds: number): Promise<string | null> => {
     if (!videoId) {
       showToast.error('비디오 정보를 찾을 수 없습니다.');
-      return;
+      return null;
     }
-
-    // Optimistic update
-    const tempComment = addCommentStore(content, seconds);
 
     try {
       // content에서 타임스탬프 제거 (있으면)
@@ -82,12 +82,15 @@ export function useVideoComments() {
         timestampMs: Math.floor(seconds * 1000),
       });
 
-      // 서버 ID 저장 (Model에서 serverId 추출)
-      if (model && tempComment) {
-        updateCommentServerId(tempComment.commentId, model.serverId);
+      // 서버에서 받은 commentId 반환
+      if (model?.serverId) {
+        return model.serverId;
       }
+
+      return null;
     } catch {
       showToast.error('댓글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+      return null;
     }
   };
 
