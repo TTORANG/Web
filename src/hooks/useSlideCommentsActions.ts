@@ -12,6 +12,7 @@ import {
   updateComment as updateCommentApi,
 } from '@/api/endpoints/comments';
 import { queryKeys } from '@/api/queryClient';
+import { useAuthStore } from '@/stores/authStore';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
 import { flatToTree } from '@/utils/comment';
@@ -80,6 +81,7 @@ export function useSlideCommentsActions() {
   const queryClient = useQueryClient();
   const flatComments = useSlideStore((state) => state.slide?.comments);
   const deleteCommentStore = useSlideStore((state) => state.deleteComment);
+  const setComments = useSlideStore((state) => state.setComments);
   const updateCommentStore = useSlideStore((state) => state.updateComment);
 
   const { mutateAsync: createCommentMutateAsync } = useCreateCommentMutation();
@@ -112,13 +114,40 @@ export function useSlideCommentsActions() {
 
   const addComment = async (content: string): Promise<string | null> => {
     if (!slideId) return null;
+    const trimmedContent = content.trim();
+    if (!trimmedContent) return null;
 
     try {
       const response: CreateCommentResponseDto = await createCommentMutateAsync({
         slideId,
         projectId,
-        data: { content },
+        data: { content: trimmedContent },
       });
+      const currentUser = useAuthStore.getState().user;
+      const latestComments = useSlideStore.getState().slide?.comments ?? [];
+      const exists = latestComments.some(
+        (comment) =>
+          comment.serverId === response.commentId || comment.commentId === response.commentId,
+      );
+
+      if (!exists) {
+        setComments([
+          ...latestComments,
+          {
+            commentId: response.commentId,
+            serverId: response.commentId,
+            slideId,
+            userId: currentUser?.id ?? response.userId,
+            userName: currentUser?.name,
+            userProfileImage: currentUser?.profileImage,
+            content: trimmedContent,
+            createdAt: response.createdAt,
+            isMine: true,
+            isReply: false,
+          },
+        ]);
+      }
+
       await queryClient.invalidateQueries({
         queryKey: queryKeys.comments.list(slideId),
       });
@@ -134,14 +163,58 @@ export function useSlideCommentsActions() {
     const targetSlideId = target?.slideId ?? slideId;
     const targetServerId = target?.serverId ?? parentId;
     if (!targetSlideId) return;
+    const trimmedContent = content.trim();
+    if (!trimmedContent) return;
 
     try {
-      await createReplyMutateAsync({
+      const response = await createReplyMutateAsync({
         commentId: targetServerId,
         slideId: targetSlideId,
         projectId,
-        data: { content },
+        data: { content: trimmedContent },
       });
+      const currentUser = useAuthStore.getState().user;
+      const latestComments = useSlideStore.getState().slide?.comments ?? [];
+      const exists = latestComments.some(
+        (comment) =>
+          comment.serverId === response.replyId || comment.commentId === response.replyId,
+      );
+
+      if (!exists) {
+        const localParent =
+          latestComments.find(
+            (comment) =>
+              comment.commentId === parentId ||
+              comment.serverId === targetServerId ||
+              comment.commentId === targetServerId,
+          ) ?? null;
+        const resolvedParentId = localParent?.commentId ?? parentId;
+        const parentIndex = latestComments.findIndex(
+          (comment) => comment.commentId === resolvedParentId,
+        );
+        const newReply: Comment = {
+          commentId: response.replyId,
+          serverId: response.replyId,
+          slideId: targetSlideId,
+          userId: currentUser?.id ?? response.userId,
+          userName: currentUser?.name,
+          userProfileImage: currentUser?.profileImage,
+          content: trimmedContent,
+          createdAt: response.createdAt,
+          isMine: true,
+          parentId: resolvedParentId,
+          isReply: true,
+        };
+
+        if (parentIndex === -1) {
+          setComments([...latestComments, newReply]);
+        } else {
+          const next = [...latestComments];
+          next.splice(parentIndex + 1, 0, newReply);
+          setComments(next);
+        }
+      }
+
       await queryClient.invalidateQueries({
         queryKey: queryKeys.comments.replies(targetServerId),
       });
@@ -154,15 +227,18 @@ export function useSlideCommentsActions() {
     const target = findComment(commentId);
     const targetSlideId = target?.slideId ?? slideId;
     const targetServerId = target?.serverId;
+    const previousComments = useSlideStore.getState().slide?.comments ?? [];
 
     if (!targetSlideId) {
       showToast.error('댓글 삭제에 실패했습니다.', '슬라이드 정보를 찾을 수 없습니다.');
       return;
     }
 
+    // 낙관적 업데이트: UI에서 즉시 제거
+    deleteCommentStore(commentId);
+
     // 서버에 저장되지 않은 댓글은 로컬에서만 삭제
     if (!targetServerId) {
-      deleteCommentStore(commentId);
       showToast.success('댓글이 삭제되었습니다.');
       return;
     }
@@ -178,6 +254,8 @@ export function useSlideCommentsActions() {
       });
       showToast.success('댓글이 삭제되었습니다.');
     } catch {
+      // 실패 시 롤백
+      setComments(previousComments);
       showToast.error('댓글 삭제에 실패했습니다.', '잠시 후 다시 시도해주세요.');
     }
   };
