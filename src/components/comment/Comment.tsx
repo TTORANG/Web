@@ -60,8 +60,20 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
   } = useCommentContext();
   const currentUser = useAuthStore((state) => state.user);
   const fallbackName = getUserDisplayName(currentUser, '알 수 없음');
+
+  // userId가 익명 세션 ID 형식인지 체크 (anon_xxx 또는 UUID 형식)
+  const isAnonymousId = (id?: string) => {
+    if (!id) return false;
+    return id.startsWith('anon_') || /^[0-9a-f-]{36}$/i.test(id);
+  };
+
   const authorName =
-    comment.userName ?? (comment.isMine ? fallbackName : (comment.userId ?? fallbackName));
+    comment.userName ??
+    (comment.isMine
+      ? fallbackName
+      : isAnonymousId(comment.userId)
+        ? '익명 사용자'
+        : comment.userId);
   const authorProfileImage =
     comment.userProfileImage ?? (comment.isMine ? currentUser?.profileImage : undefined);
 

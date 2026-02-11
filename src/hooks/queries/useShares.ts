@@ -42,9 +42,7 @@ export function useCreateShareLink() {
  * @param shareToken - 공유 토큰
  */
 export function useSharedContent(shareToken: string | undefined) {
-  const userSessionId = useAuthStore((state) => state.user?.sessionId);
-  const anonymousSessionId = useAuthStore((state) => state.anonymousSessionId);
-  const sessionId = userSessionId ?? anonymousSessionId ?? '';
+  const sessionId = useAuthStore((s) => s.user?.sessionId);
 
   return useQuery({
     queryKey: queryKeys.shares.content(shareToken ?? '', sessionId),

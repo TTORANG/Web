@@ -75,7 +75,8 @@ export async function createShareLink(
  * 공유 토큰으로 공유 콘텐츠 조회
  *
  * @param shareToken - 공유 토큰
- * @param sessionId - 현재 로그인된 세션 ID
+
+ * @param sessionId - 현재 로그인된 세션 ID (익명 세션 포함)
  * @returns 공유된 프로젝트 콘텐츠(슬라이드/영상)
  */
 export async function getSharedContent(
@@ -83,7 +84,7 @@ export async function getSharedContent(
   sessionId?: string,
 ): Promise<ReadSharedContentData> {
   const response = await apiClient.get<ReadSharedContentResponse>(
-    `/shares/${shareToken}` + (sessionId ? `?sessionId=${sessionId}` : ''),
+    `/shares/${shareToken}${sessionId ? `?sessionId=${sessionId}` : ''}`,
   );
 
   if (response.data.resultType === 'SUCCESS') {
@@ -93,19 +94,21 @@ export async function getSharedContent(
 }
 
 /**
- * 공유 댓글 목록 조회
+ * 공유 토큰으로 공유 댓글 목록 조회
+ *
+ * 외부 공유된 프로젝트의 댓글/답글 전체 목록을 조회합니다.
+ * 조회수(viewCount) 및 페이지뷰를 증가시키지 않습니다.
  *
  * @param shareToken - 공유 토큰
+ * @param sessionId - 현재 로그인된 세션 ID (isMine 계산에 필요)
+ * @returns 공유 댓글 목록
  */
 export async function getSharedComments(
   shareToken: string,
   sessionId?: string,
 ): Promise<ReadSharedCommentsData> {
   const response = await apiClient.get<ReadSharedCommentsResponse>(
-    `/shares/${shareToken}/comments`,
-    {
-      params: sessionId ? { sessionId } : undefined,
-    },
+    `/shares/${shareToken}/comments${sessionId ? `?sessionId=${sessionId}` : ''}`,
   );
 
   if (response.data.resultType === 'SUCCESS') {

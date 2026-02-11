@@ -28,8 +28,8 @@ export type {
   ReadVideoReactionTimelineMarkerDto,
   CreateSlideReactionDto,
   CreateSlideReactionResponseDto,
-  ToggleVideoReactionDto,
-  ToggleVideoReactionResponseDto,
+  CreateVideoReactionDto,
+  CreateVideoReactionResponseDto,
 } from './reactions.dto';
 export type { RestoreScriptRequestDto } from './analytics.dto';
 export type {

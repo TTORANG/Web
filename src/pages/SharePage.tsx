@@ -13,6 +13,8 @@ import { Spinner } from '@/components/common';
 import { useSharedContent } from '@/hooks/queries/useShares';
 import { useExitTracker } from '@/hooks/useExitTracker';
 import type { ShareExitSnapshot } from '@/pages/feedback/useFeedbackVideo';
+import { useAuthStore } from '@/stores/authStore';
+import { userFromAccessToken } from '@/utils/auth';
 
 import FeedbackSlidePage from './FeedbackSlidePage';
 import FeedbackVideoPage from './FeedbackVideoPage';
@@ -46,6 +48,28 @@ export default function SharePage() {
     },
     [shareToken],
   );
+
+  // 공유 페이지 진입 시 익명 세션 초기화
+  useEffect(() => {
+    if (!data?.sessionInfo) return;
+
+    const { user } = useAuthStore.getState();
+    // 이미 세션이 있으면 스킵 (새로고침 등)
+    if (user?.sessionId) return;
+
+    const { sessionId, tokens } = data.sessionInfo;
+    const { accessToken, refreshToken } = tokens;
+
+    if (!accessToken || !refreshToken) return;
+
+    const derivedUser = userFromAccessToken(accessToken, sessionId);
+    useAuthStore.getState().setAuth({
+      user: derivedUser,
+      accessToken,
+      refreshToken,
+      anonymousSessionId: sessionId ?? null,
+    });
+  }, [data]);
 
   useEffect(() => {
     if (!shareToken || !data) return;

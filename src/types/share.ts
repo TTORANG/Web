@@ -58,6 +58,7 @@ export type ShareableVideosResponse = ApiResponse<ShareableVideosData>;
 export interface SharedProjectSlide {
   slideId: string;
   slideNum: number;
+  title: string;
   imageUrl: string;
   scriptText: string;
   timestampMs: number;
@@ -108,6 +109,7 @@ export interface ReadSharedContentData {
 
 export type ReadSharedContentResponse = ApiResponse<ReadSharedContentData>;
 
+/** 6. 공유 댓글 목록 조회 */
 export interface ReadSharedCommentsData {
   comments: SharedProjectComment[];
 }
