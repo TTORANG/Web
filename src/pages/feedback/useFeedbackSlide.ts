@@ -36,7 +36,7 @@ function normalizeSharedSlides(rawSlides: SharedProjectSlide[]): SlideDetail[] {
       return {
         slideId: slide.slideId,
         projectId: SHARED_PROJECT_ID,
-        title: `슬라이드 ${slideNum}`,
+        title: slide.title || `슬라이드 ${slideNum}`,
         slideNum,
         imageUrl: slide.imageUrl,
         createdAt: now,
