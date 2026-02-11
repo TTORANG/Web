@@ -123,6 +123,7 @@ export const useFeedbackSlide = ({
           serverId: comment.commentId,
           slideId: comment.targetId,
           userId: comment.writer,
+          userProfileImage: comment.profileImageUrl ?? undefined,
           content: comment.content,
           createdAt: comment.createdAt,
           isMine: false,

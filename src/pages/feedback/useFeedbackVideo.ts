@@ -148,6 +148,7 @@ function mapSharedCommentsToFeedbacks(
       replies: parentId ? undefined : [],
       userId,
       userName,
+      userProfileImage: sharedComment.profileImageUrl ?? undefined,
       content: sharedComment.content,
       createdAt: sharedComment.createdAt,
       isMine: sharedComment.isMine,

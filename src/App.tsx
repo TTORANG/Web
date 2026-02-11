@@ -16,6 +16,9 @@ import { showToast } from './utils/toast';
 function App() {
   useThemeListener();
   const queryClient = useQueryClient();
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const user = useAuthStore((state) => state.user);
+  const updateUser = useAuthStore((state) => state.updateUser);
 
   useEffect(() => {
     const handleMessage = async (event: MessageEvent) => {
@@ -35,12 +38,32 @@ function App() {
       // 로그인 전 익명 세션이 있었다면 병합 대상으로 기억
       const prevAnonymousSessionId = store.anonymousSessionId;
 
-      const user = userFromAccessToken(accessToken, sessionIdFromCallback);
+      let nextAccessToken = accessToken;
+      let nextUser = userFromAccessToken(accessToken, sessionIdFromCallback);
+
+      // 백엔드 콜백 파라미터 확장 없이도 최신 사용자 정보(프로필 이미지 포함)를 동기화
+      try {
+        const reissueResponse = await sessionApi.reissueToken();
+        if (reissueResponse.resultType === 'SUCCESS') {
+          const serverUser = reissueResponse.success.user;
+          const reissuedAccessToken = reissueResponse.success.tokens.accessToken;
+          nextAccessToken = reissuedAccessToken || nextAccessToken;
+          nextUser = {
+            id: serverUser.id || nextUser.id,
+            email: serverUser.email || nextUser.email,
+            name: serverUser.name || nextUser.name,
+            sessionId: serverUser.sessionId || nextUser.sessionId,
+            profileImage: serverUser.profileImageUrl ?? nextUser.profileImage,
+          };
+        }
+      } catch {
+        /** intentionally ignored */
+      }
 
       // store 저장
       store.setAuth({
-        user,
-        accessToken,
+        user: nextUser,
+        accessToken: nextAccessToken,
         refreshToken: null,
       });
 
@@ -48,7 +71,7 @@ function App() {
       store.closeLoginModal();
 
       // 소셜 로그인이라면 익명 세션 병합
-      const isSocialNow = !isAnonymousEmail(user.email);
+      const isSocialNow = !isAnonymousEmail(nextUser.email);
 
       if (isSocialNow && prevAnonymousSessionId) {
         try {
@@ -85,6 +108,36 @@ function App() {
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, [queryClient]);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    if (!user) return;
+    if (isAnonymousEmail(user.email)) return;
+    if (user.profileImage) return;
+
+    let isCancelled = false;
+
+    void sessionApi
+      .reissueToken()
+      .then((response) => {
+        if (isCancelled) return;
+        if (response.resultType !== 'SUCCESS') return;
+
+        const serverUser = response.success.user;
+        updateUser({
+          name: serverUser.name || undefined,
+          sessionId: serverUser.sessionId || user.sessionId,
+          profileImage: serverUser.profileImageUrl ?? undefined,
+        });
+      })
+      .catch(() => {
+        /** intentionally ignored */
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [accessToken, user, updateUser]);
 
   return (
     <>
