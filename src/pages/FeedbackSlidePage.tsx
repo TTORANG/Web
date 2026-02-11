@@ -47,6 +47,8 @@ export default function FeedbackSlidePage({
     reactions,
     isLoading,
     isCommentsLoading,
+    commentsHasNextPage,
+    commentsIsFetchingNextPage,
     isFirst,
     isLast,
   } = state;
@@ -61,6 +63,7 @@ export default function FeedbackSlidePage({
     deleteComment,
     updateComment,
     addReaction,
+    commentsFetchNextPage,
   } = actions;
 
   if (isLoading) {
@@ -94,6 +97,9 @@ export default function FeedbackSlidePage({
               onDeleteComment={deleteComment}
               onUpdateComment={updateComment}
               isLoading={isLoading || isCommentsLoading}
+              hasNextPage={commentsHasNextPage}
+              isFetchingNextPage={commentsIsFetchingNextPage}
+              onLoadMore={commentsFetchNextPage}
             />
           </div>
 
@@ -168,6 +174,9 @@ export default function FeedbackSlidePage({
                 onDeleteComment={deleteComment}
                 onUpdateComment={updateComment}
                 isLoading={isLoading}
+                hasNextPage={commentsHasNextPage}
+                isFetchingNextPage={commentsIsFetchingNextPage}
+                onLoadMore={commentsFetchNextPage}
               />
             </div>
             <div className="shrink-0 px-4 py-3">

@@ -21,6 +21,7 @@ import { formatRelativeTime, formatVideoTimestamp } from '@/utils/format';
 
 import { useCommentContext } from './CommentContext';
 import CommentInput from './CommentInput';
+import CommentReplies from './CommentReplies';
 
 interface CommentProps {
   /** 댓글 데이터 */
@@ -225,17 +226,12 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
         />
       )}
 
-      {comment.replies && Array.isArray(comment.replies) && comment.replies.length > 0 && (
-        <div>
-          {comment.replies.map((reply, index) => (
-            <Comment
-              key={reply.commentId ?? `reply-${comment.commentId}-${index}`}
-              comment={reply}
-              isIndented
-              rootCommentId={resolvedRootId}
-            />
-          ))}
-        </div>
+      {!isIndented && (
+        <CommentReplies
+          serverId={comment.serverId}
+          localReplies={comment.replies ?? []}
+          rootCommentId={resolvedRootId}
+        />
       )}
     </div>
   );

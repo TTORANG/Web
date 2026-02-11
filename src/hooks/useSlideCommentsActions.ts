@@ -149,6 +149,9 @@ export function useSlideCommentsActions() {
           queryClient.invalidateQueries({
             queryKey: queryKeys.comments.list(targetSlideId),
           });
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.comments.replies(targetServerId),
+          });
         },
         onError: () => {
           setComments(previousComments);

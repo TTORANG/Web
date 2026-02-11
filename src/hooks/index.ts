@@ -15,4 +15,5 @@ export * from './useSlideReactions';
 export * from './queries/usePresentations';
 export * from './queries/useScript';
 export * from './queries/useSlides';
+export * from './queries/useCommentRepliesQuery';
 export * from './useRename';

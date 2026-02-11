@@ -4,10 +4,11 @@
  *
  * 댓글 리스트 렌더링과 답글 입력 상태를 관리합니다.
  * CommentProvider로 상태를 공유하여 Comment의 props를 최소화합니다.
+ * 무한 스크롤: 하단 sentinel이 뷰포트에 진입하면 다음 페이지를 로드합니다.
  */
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Skeleton } from '@/components/common';
+import { Skeleton, Spinner } from '@/components/common';
 import type { Comment as CommentType } from '@/types/comment';
 
 import Comment from './Comment';
@@ -20,6 +21,9 @@ interface CommentListProps {
   onDeleteComment?: (commentId: string) => void;
   onUpdateComment?: (commentId: string, content: string) => void;
   isLoading?: boolean;
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
+  onLoadMore?: () => void;
 }
 
 const skeletonContentWidths = ['90%', '70%', '85%', '60%'];
@@ -31,11 +35,40 @@ export default function CommentList({
   onDeleteComment,
   onUpdateComment,
   isLoading = false,
+  hasNextPage = false,
+  isFetchingNextPage = false,
+  onLoadMore,
 }: CommentListProps) {
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState('');
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // IntersectionObserver로 무한 스크롤
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [target] = entries;
+      if (target.isIntersecting && hasNextPage && !isFetchingNextPage && onLoadMore) {
+        onLoadMore();
+      }
+    },
+    [hasNextPage, isFetchingNextPage, onLoadMore],
+  );
+
+  useEffect(() => {
+    const element = sentinelRef.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(handleObserver, {
+      threshold: 0.5,
+    });
+
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [handleObserver]);
 
   const submitReply = useCallback(
     (targetId: string) => {
@@ -153,6 +186,15 @@ export default function CommentList({
         {comments.map((comment) => (
           <Comment key={comment.commentId} comment={comment} />
         ))}
+
+        {/* sentinel: 뷰포트 진입 시 다음 페이지 로드 */}
+        {hasNextPage && <div ref={sentinelRef} className="h-1" />}
+
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-3">
+            <Spinner size={24} />
+          </div>
+        )}
       </div>
     </CommentProvider>
   );
