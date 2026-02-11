@@ -28,6 +28,24 @@ export default function SharePage() {
   // 하위 페이지(FeedbackVideo/FeedbackSlide)가 보고하는 마지막 시청 위치를 저장합니다.
   // 실제 `/analytics/exit` 전송은 SharePage 한 곳에서만 담당합니다.
   const [exitSnapshotState, setExitSnapshotState] = useState<ShareExitSnapshotState | null>(null);
+  const handleShareExitSnapshotChange = useCallback(
+    (snapshot: ShareExitSnapshot) => {
+      if (!shareToken) return;
+      setExitSnapshotState((prev) => {
+        const prevSnapshot = prev?.shareToken === shareToken ? prev.snapshot : null;
+        if (
+          prevSnapshot &&
+          prevSnapshot.lastSlideId === snapshot.lastSlideId &&
+          prevSnapshot.lastVideoId === snapshot.lastVideoId &&
+          prevSnapshot.lastVideoTimeMs === snapshot.lastVideoTimeMs
+        ) {
+          return prev;
+        }
+        return { shareToken, snapshot };
+      });
+    },
+    [shareToken],
+  );
 
   useEffect(() => {
     if (!shareToken || !data) return;
@@ -85,10 +103,7 @@ export default function SharePage() {
     return (
       <FeedbackSlidePage
         sharedContent={data}
-        onShareExitSnapshotChange={(snapshot) => {
-          if (!shareToken) return;
-          setExitSnapshotState({ shareToken, snapshot });
-        }}
+        onShareExitSnapshotChange={handleShareExitSnapshotChange}
       />
     );
   }
@@ -96,10 +111,7 @@ export default function SharePage() {
   return (
     <FeedbackVideoPage
       sharedContent={data}
-      onShareExitSnapshotChange={(snapshot) => {
-        if (!shareToken) return;
-        setExitSnapshotState({ shareToken, snapshot });
-      }}
+      onShareExitSnapshotChange={handleShareExitSnapshotChange}
     />
   );
 }
