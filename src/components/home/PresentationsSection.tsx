@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   useHomeActions,
@@ -23,6 +23,8 @@ type Props = {
   filteredCount: number;
   appliedQuery: string;
   presentations: Presentation[];
+  pendingThumbnailIds: string[];
+  thumbVersion: Record<string, number>;
 };
 
 export default function PresentationsSection({
@@ -31,12 +33,15 @@ export default function PresentationsSection({
   filteredCount,
   appliedQuery,
   presentations,
+  pendingThumbnailIds,
+  thumbVersion,
 }: Props) {
   const query = useHomeQuery();
   const sort = useHomeSort();
   const filter = useHomeFilter();
   const viewMode = useHomeViewMode();
   const { setQuery, setSort, setFilter, setViewMode } = useHomeActions();
+  const pendingSet = useMemo(() => new Set(pendingThumbnailIds), [pendingThumbnailIds]);
 
   /**
    * 전체 프로젝트가 하나라도 존재하는지 여부
@@ -134,7 +139,13 @@ export default function PresentationsSection({
               items={displayPresentations}
               getKey={(item) => item.projectId}
               className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3"
-              renderCard={(item) => <PresentationCard {...item} />}
+              renderCard={(item) => (
+                <PresentationCard
+                  {...item}
+                  isThumbnailPending={pendingSet.has(item.projectId) || !item.thumbnailUrl}
+                  thumbnailVersion={thumbVersion[item.projectId] ?? 0}
+                />
+              )}
               empty={null}
             />
           ) : (
@@ -142,7 +153,13 @@ export default function PresentationsSection({
               items={displayPresentations}
               getKey={(item) => item.projectId}
               className="mt-6 flex flex-col gap-3"
-              renderInfo={(item) => <PresentationList {...item} />}
+              renderInfo={(item) => (
+                <PresentationList
+                  {...item}
+                  isThumbnailPending={pendingSet.has(item.projectId) || !item.thumbnailUrl}
+                  thumbnailVersion={thumbVersion[item.projectId] ?? 0}
+                />
+              )}
               empty={null}
             />
           )}
