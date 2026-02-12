@@ -10,5 +10,7 @@ import { HeaderButton } from './HeaderButton';
 export function ShareButton() {
   const openShareModal = useShareStore((s) => s.openShareModal);
 
-  return <HeaderButton text="공유" icon={<ShareIcon />} onClick={openShareModal} />;
+  return (
+    <HeaderButton text="공유" icon={<ShareIcon />} onClick={openShareModal} iconOnlyOnMobile />
+  );
 }

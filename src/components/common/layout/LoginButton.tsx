@@ -50,7 +50,9 @@ export function LoginButton() {
   };
   // 로그인 전 (게스트)
   if (isGuest) {
-    return <HeaderButton text="로그인" icon={<LoginIcon />} onClick={openLoginModal} />;
+    return (
+      <HeaderButton text="로그인" icon={<LoginIcon />} onClick={openLoginModal} iconOnlyOnMobile />
+    );
   }
 
   // 익명 사용자
@@ -60,7 +62,9 @@ export function LoginButton() {
 
   // 소셜이 아닌데 여기까지 왔다면(비정상 상태) 방어
   if (!isSocial) {
-    return <HeaderButton text="로그인" icon={<LoginIcon />} onClick={openLoginModal} />;
+    return (
+      <HeaderButton text="로그인" icon={<LoginIcon />} onClick={openLoginModal} iconOnlyOnMobile />
+    );
   }
 
   const handleWithdraw = async () => {
@@ -91,7 +95,7 @@ export function LoginButton() {
             type="button"
             className="flex cursor-pointer items-center gap-2 text-body-s-bold text-gray-800 transition-colors hover:text-gray-600"
           >
-            {displayName}
+            <span className="hidden min-[1024px]:inline max-w-24 truncate">{displayName}</span>
             <UserAvatar src={user.profileImage} alt={displayName} size={24} />
           </button>
         }
