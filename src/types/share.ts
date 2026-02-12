@@ -100,6 +100,7 @@ export interface ReadSharedContentData {
     shareToken: string;
     scope: ShareScope;
     createdAt: string;
+    publisherName: string;
   };
   projectContent: {
     title: string;

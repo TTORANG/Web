@@ -35,7 +35,7 @@ export default function FeedbackHeaderCenter() {
 
   // 공유 콘텐츠에서 발표 정보 추출
   const title = sharedContent.projectContent.title;
-  const publisherName = sharedContent.sessionInfo.name;
+  const publisherName = sharedContent.shareInfo.publisherName;
   const postedAt = dayjs(sharedContent.shareInfo.createdAt).format('YYYY.MM.DD HH:mm:ss');
 
   return (

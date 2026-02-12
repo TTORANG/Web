@@ -38,7 +38,7 @@ export default function FeedbackHeaderLeft() {
   }
 
   const title = sharedContent.projectContent.title;
-  const publisherName = sharedContent.sessionInfo.name;
+  const publisherName = sharedContent.shareInfo.publisherName;
   const postedAt = dayjs(sharedContent.shareInfo.createdAt).format('YYYY.MM.DD HH:mm:ss');
 
   return (
