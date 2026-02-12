@@ -14,10 +14,12 @@ function mapDtoToReply(
   parentId: string,
   currentUserId?: string,
 ): Comment {
+  const mapped = mapDtoToComment(dto, currentUserId);
+
   return {
-    ...mapDtoToComment(dto, currentUserId),
+    ...mapped,
     isReply: true,
-    parentId,
+    parentId: mapped.parentId ?? parentId,
   };
 }
 
@@ -33,7 +35,25 @@ export function useCommentRepliesQuery(commentId?: string) {
   return useQuery({
     queryKey: queryKeys.comments.replies(commentId ?? ''),
     queryFn: () => getReplies(commentId!),
-    select: (data) => data.map((dto) => mapDtoToReply(dto, commentId!, userId)),
+    select: (data) => {
+      const parentId = commentId!;
+      const deduped = new Map<string, Comment>();
+
+      for (const dto of data) {
+        const reply = mapDtoToReply(dto, parentId, userId);
+
+        // 일부 응답에서 부모 댓글이 섞여 내려오는 경우를 방어
+        if (reply.commentId === parentId) continue;
+
+        const key = reply.serverId || reply.commentId;
+        if (!key) continue;
+        if (!deduped.has(key)) {
+          deduped.set(key, reply);
+        }
+      }
+
+      return [...deduped.values()];
+    },
     enabled: !!commentId && !shareToken,
   });
 }

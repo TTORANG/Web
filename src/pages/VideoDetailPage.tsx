@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import type { ReadVideoDetailResponseDto } from '@/api/dto/video.dto';
+import type { ReadVideoDetailResponseDto, VideoCommentDto } from '@/api/dto/video.dto';
 import { getScript } from '@/api/endpoints/scripts';
 import { videosApi } from '@/api/endpoints/videos';
 import { CommentInput } from '@/components/comment';
@@ -16,23 +16,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { SlideListItem } from '@/types';
 import type { Comment as CommentType } from '@/types/comment';
-
-/** 서버 데이터 인터페이스 정의 */
-interface ServerReply {
-  replyId: string;
-  content: string;
-  createdAt: string;
-  user: { userId: string; name: string; profileImageUrl: string };
-}
-
-interface ServerComment {
-  commentId: string;
-  timestampMs: number;
-  content: string;
-  createdAt: string;
-  user: { userId: string; name: string; profileImageUrl: string };
-  replies?: ServerReply[];
-}
+import type { VideoTimestampFeedback } from '@/types/video';
 
 export default function VideoDetailPage() {
   const { projectId, videoId } = useParams<{ projectId: string; videoId: string }>();
@@ -64,39 +48,88 @@ export default function VideoDetailPage() {
   });
 
   const transformComments = useCallback(
-    (serverComments: ServerComment[]): CommentType[] => {
-      return [...serverComments]
-        .sort((a, b) => a.timestampMs - b.timestampMs)
-        .map((c) => ({
-          commentId: String(c.commentId),
-          serverId: String(c.commentId),
-          userId: c.user.userId,
-          userName: c.user.name,
-          userProfileImage: c.user.profileImageUrl,
-          content: c.content,
-          createdAt: c.createdAt,
-          isMine: String(c.user.userId) === String(currentUser?.id),
-          ref: { kind: 'video', seconds: c.timestampMs / 1000 },
-          isReply: false,
-          replies: (c.replies ?? [])
-            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-            .map((r) => ({
-              commentId: String(r.replyId),
-              serverId: String(r.replyId),
-              userId: r.user.userId,
-              userName: r.user.name,
-              userProfileImage: r.user.profileImageUrl,
-              content: r.content,
-              createdAt: r.createdAt,
-              isMine: r.user.userId === String(currentUser?.id),
-              isReply: true,
-              parentId: String(c.commentId),
-              replies: [],
-            })),
-        }));
+    (serverComments: VideoCommentDto[]): CommentType[] => {
+      const dedupedComments = [
+        ...new Map(serverComments.map((c) => [String(c.commentId), c])).values(),
+      ];
+      const rootTimestampById = new Map<string, number>();
+      for (const comment of dedupedComments) {
+        if (comment.parentId) continue;
+        if (typeof comment.timestampMs === 'number') {
+          rootTimestampById.set(String(comment.commentId), comment.timestampMs);
+        }
+      }
+
+      const mapped = dedupedComments.map((comment) => {
+        const commentId = String(comment.commentId);
+        const parentId = comment.parentId ? String(comment.parentId) : undefined;
+        const threadTimestampMs =
+          typeof comment.timestampMs === 'number'
+            ? comment.timestampMs
+            : parentId
+              ? rootTimestampById.get(parentId)
+              : undefined;
+
+        return {
+          commentId,
+          serverId: commentId,
+          userId: String(comment.userId),
+          userName: comment.writer || undefined,
+          content: comment.content,
+          createdAt: comment.createdAt,
+          isMine: Boolean(comment.isMine) || String(comment.userId) === String(currentUser?.id),
+          parentId,
+          isReply: Boolean(parentId),
+          ref:
+            typeof threadTimestampMs === 'number'
+              ? { kind: 'video' as const, seconds: threadTimestampMs / 1000 }
+              : undefined,
+          replies: [],
+        };
+      });
+
+      const getThreadTimestamp = (comment: CommentType) => {
+        if (comment.ref?.kind === 'video') return Math.round(comment.ref.seconds * 1000);
+        if (comment.parentId)
+          return rootTimestampById.get(comment.parentId) ?? Number.MAX_SAFE_INTEGER;
+        return Number.MAX_SAFE_INTEGER;
+      };
+
+      return mapped.sort((a, b) => {
+        const timestampDiff = getThreadTimestamp(a) - getThreadTimestamp(b);
+        if (timestampDiff !== 0) return timestampDiff;
+
+        if (a.isReply !== b.isReply) {
+          return a.isReply ? 1 : -1;
+        }
+
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      });
     },
     [currentUser?.id],
   );
+
+  const buildFeedbacks = useCallback((flatComments: CommentType[]): VideoTimestampFeedback[] => {
+    if (flatComments.length === 0) return [];
+
+    const grouped = new Map<number, CommentType[]>();
+
+    for (const comment of flatComments) {
+      const timestampMs =
+        comment.ref?.kind === 'video' ? Math.round(comment.ref.seconds * 1000) : 0;
+      const commentsAtTimestamp = grouped.get(timestampMs) ?? [];
+      commentsAtTimestamp.push(comment);
+      grouped.set(timestampMs, commentsAtTimestamp);
+    }
+
+    return [...grouped.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([timestampMs, comments]) => ({
+        timestampMs,
+        comments,
+        reactions: [],
+      }));
+  }, []);
 
   const { comments, addComment, addReply, deleteComment, updateComment } = useVideoComments({
     onMutationSuccess: () => loadData(false),
@@ -106,11 +139,19 @@ export default function VideoDetailPage() {
     async (isInitial = false) => {
       if (!videoId) return;
       try {
-        const response = await videosApi.getVideoDetail(videoId);
-        if (response.data.resultType === 'SUCCESS') {
-          const data = response.data.success!;
+        const [detailResponse, commentsResponse] = await Promise.all([
+          videosApi.getVideoDetail(videoId),
+          videosApi.getVideoCommentsAll(videoId),
+        ]);
+
+        if (detailResponse.data.resultType === 'SUCCESS') {
+          const data = detailResponse.data.success!;
           setVideoData(data);
-          const mapped = transformComments((data.timeline?.comments as ServerComment[]) ?? []);
+          const flatComments =
+            commentsResponse.data.resultType === 'SUCCESS'
+              ? transformComments(commentsResponse.data.success.comments ?? [])
+              : [];
+          const feedbacks = buildFeedbacks(flatComments);
 
           if (isInitial) {
             initVideo({
@@ -118,11 +159,7 @@ export default function VideoDetailPage() {
               title: data.video.title,
               videoUrl: data.video.hlsMasterUrl,
               duration: data.video.durationSeconds,
-              feedbacks: mapped.map((c) => ({
-                timestampMs: (c.ref?.kind === 'video' ? c.ref.seconds : 0) * 1000,
-                comments: [c],
-                reactions: [],
-              })),
+              feedbacks,
               comments: [],
               reactionEvents: [],
             });
@@ -132,11 +169,7 @@ export default function VideoDetailPage() {
               video: state.video
                 ? {
                     ...state.video,
-                    feedbacks: mapped.map((c) => ({
-                      timestampMs: (c.ref?.kind === 'video' ? c.ref.seconds : 0) * 1000,
-                      comments: [c],
-                      reactions: [],
-                    })),
+                    feedbacks,
                   }
                 : null,
             }));
@@ -146,7 +179,7 @@ export default function VideoDetailPage() {
         console.error(err);
       }
     },
-    [videoId, initVideo, transformComments],
+    [videoId, initVideo, transformComments, buildFeedbacks],
   );
 
   useEffect(() => {
@@ -180,7 +213,6 @@ export default function VideoDetailPage() {
           await addReply(targetId, replyDraft);
           setReplyDraft('');
           setReplyingToId(null);
-          await loadData(false);
         }
       },
       cancelReply: () => {
@@ -203,10 +235,10 @@ export default function VideoDetailPage() {
           await updateComment(id, editDraft);
           setEditingId(null);
           setEditDraft('');
-          await loadData(false);
         }
       },
       deleteComment,
+      skipReplyFetch: true,
       goToRef: (ref: { kind: 'slide'; index: number } | { kind: 'video'; seconds: number }) => {
         if (ref.kind === 'video') {
           requestSeekAction(ref.seconds);
@@ -222,7 +254,6 @@ export default function VideoDetailPage() {
       updateComment,
       deleteComment,
       requestSeekAction,
-      loadData,
     ],
   );
 

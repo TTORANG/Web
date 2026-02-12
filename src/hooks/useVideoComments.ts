@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 
 import { updateComment as updateCommentApi } from '@/api/endpoints/comments';
 import { createCommentReply, createVideoComment, deleteVideoComment } from '@/api/endpoints/videos';
@@ -34,6 +34,7 @@ type UseVideoCommentsOptions = {
 export function useVideoComments(options?: UseVideoCommentsOptions) {
   const video = useVideoFeedbackStore((state) => state.video);
   const videoId = video?.videoId;
+  const isAddingReplyRef = useRef(false);
 
   const deleteCommentStore = useVideoFeedbackStore((state) => state.deleteComment);
   const updateCommentStore = useVideoFeedbackStore((state) => state.updateComment);
@@ -101,6 +102,8 @@ export function useVideoComments(options?: UseVideoCommentsOptions) {
    * 답글 추가
    */
   const addReply = async (parentId: string, content: string) => {
+    if (isAddingReplyRef.current) return;
+    isAddingReplyRef.current = true;
     try {
       // parentId로 부모 댓글 찾기 (serverId 필요)
       const allComments = video?.feedbacks.flatMap((f) => f.comments) || [];
@@ -124,6 +127,8 @@ export function useVideoComments(options?: UseVideoCommentsOptions) {
       options?.onMutationSuccess?.();
     } catch {
       showToast.error('답글을 등록하지 못했습니다.', '잠시 후 다시 시도해주세요.');
+    } finally {
+      isAddingReplyRef.current = false;
     }
   };
 
