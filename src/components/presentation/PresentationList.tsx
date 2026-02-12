@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import clsx from 'clsx';
@@ -28,9 +29,21 @@ type Props = (Presentation | VideoPresentation) & {
   isPresentationPending?: boolean;
   thumbnailVersion?: number;
   onDelete?: () => void;
-  // 비디오 전용 제목 수정 함수 추가
-  onUpdateTitle?: (newTitle: string) => Promise<void>;
 };
+
+type SlideListProps = Presentation &
+  Omit<Props, keyof Presentation | 'mode'> & {
+    mode?: 'slide';
+    onUpdateTitle?: never;
+  };
+
+type VideoListProps = VideoPresentation &
+  Omit<Props, keyof VideoPresentation | 'mode'> & {
+    mode: 'videos';
+    onUpdateTitle: (newTitle: string) => Promise<void>;
+  };
+
+type ListProps = SlideListProps | VideoListProps;
 
 const isVideoPresentation = (p: Presentation | VideoPresentation): p is VideoPresentation =>
   'videoId' in p;
@@ -86,7 +99,7 @@ function PresentationListSkeleton() {
   );
 }
 
-function PresentationList(props: Props) {
+function PresentationList(props: ListProps) {
   const {
     projectId,
     title,
@@ -95,13 +108,12 @@ function PresentationList(props: Props) {
     slideCount,
     feedbackCount,
     thumbnailUrl,
-    mode = 'slide',
     isPresentationPending,
     thumbnailVersion,
     onDelete,
-    onUpdateTitle,
     highlightQuery = '',
   } = props;
+  const mode = props.mode ?? 'slide';
 
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
@@ -136,29 +148,25 @@ function PresentationList(props: Props) {
     setNewTitle,
     openRenameModal,
     closeRenameModal,
-    confirmRename: originalConfirmRename,
-  } = useRename({ projectId, initialTitle: title });
+    confirmRename,
+  } = useRename(
+    props.mode === 'videos'
+      ? {
+          initialTitle: title,
+          onConfirmRename: props.onUpdateTitle,
+          successMessage: '영상 이름을 변경했습니다.',
+          errorMessage: '영상 이름을 변경하지 못했습니다.',
+        }
+      : { projectId, initialTitle: title },
+  );
 
   const isVideo = 'reactionCount' in props && 'viewCount' in props;
   const commentCount = isVideo ? (props as VideoPresentation).commentCount : feedbackCount;
   const reactionCount = isVideo ? (props as VideoPresentation).reactionCount : 0;
   const viewCount = isVideo ? (props as VideoPresentation).viewCount : 0;
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
   const isRenaming = isRenameModalOpen && isRenamePending;
-
-  // 이름 변경 확인 핸들러 (비디오 모드 분기 처리)
-  const handleConfirmRename = async () => {
-    if (mode === 'videos' && onUpdateTitle) {
-      try {
-        await onUpdateTitle(newTitle);
-        closeRenameModal();
-      } catch (error) {
-        console.error('Rename failed:', error);
-      }
-    } else {
-      await originalConfirmRename();
-    }
-  };
 
   const handleListClick = () => {
     if (isRenaming) return;
@@ -200,9 +208,9 @@ function PresentationList(props: Props) {
         onClick={handleListClick}
         className={clsx(
           'relative flex w-full items-center justify-between bg-white px-5 py-4 rounded-2xl border border-gray-200 transition-all duration-250 ease-out',
-          isProcessing
-            ? 'cursor-not-allowed'
-            : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-lg',
+          isMoreMenuOpen && 'z-[60]',
+          isProcessing ? 'cursor-not-allowed' : 'cursor-pointer',
+          !isProcessing && !isMoreMenuOpen && 'hover:-translate-y-0.5 hover:shadow-lg',
         )}
         aria-disabled={isProcessing}
       >
@@ -294,6 +302,7 @@ function PresentationList(props: Props) {
               align="end"
               ariaLabel="더보기"
               menuClassName="w-32"
+              onOpenChange={setIsMoreMenuOpen}
             />
           </div>
         </div>
@@ -321,7 +330,9 @@ function PresentationList(props: Props) {
           currentTitle={newTitle}
           isPending={isRenamePending}
           onClose={closeRenameModal}
-          onConfirm={handleConfirmRename} // 래핑된 핸들러로 교체
+          onConfirm={() => {
+            void confirmRename();
+          }}
           onTitleChange={setNewTitle}
         />
       </div>

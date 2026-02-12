@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import clsx from 'clsx';
@@ -29,8 +30,21 @@ type Props = (Presentation | VideoPresentation) & {
   isPresentationPending?: boolean;
   thumbnailVersion?: number;
   onDelete?: () => void;
-  onUpdateTitle?: (newTitle: string) => Promise<void>;
 };
+
+type SlideCardProps = Presentation &
+  Omit<Props, keyof Presentation | 'mode'> & {
+    mode?: 'slide';
+    onUpdateTitle?: never;
+  };
+
+type VideoCardProps = VideoPresentation &
+  Omit<Props, keyof VideoPresentation | 'mode'> & {
+    mode: 'videos';
+    onUpdateTitle: (newTitle: string) => Promise<void>;
+  };
+
+type CardProps = SlideCardProps | VideoCardProps;
 
 const isVideoPresentation = (p: Presentation | VideoPresentation): p is VideoPresentation =>
   'videoId' in p;
@@ -49,7 +63,7 @@ function PresentationCardSkeleton() {
   );
 }
 
-function PresentationCard(props: Props) {
+function PresentationCard(props: CardProps) {
   const {
     projectId,
     title,
@@ -59,12 +73,11 @@ function PresentationCard(props: Props) {
     slideCount,
     feedbackCount,
     thumbnailUrl,
-    mode = 'slide',
     isPresentationPending = false,
     thumbnailVersion,
     onDelete,
-    onUpdateTitle,
   } = props;
+  const mode = props.mode ?? 'slide';
 
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
@@ -103,28 +116,24 @@ function PresentationCard(props: Props) {
     setNewTitle,
     openRenameModal,
     closeRenameModal,
-    confirmRename: originalConfirmRename,
-  } = useRename({ projectId, initialTitle: title });
+    confirmRename,
+  } = useRename(
+    props.mode === 'videos'
+      ? {
+          initialTitle: title,
+          onConfirmRename: props.onUpdateTitle,
+          successMessage: '영상 이름을 변경했습니다.',
+          errorMessage: '영상 이름을 변경하지 못했습니다.',
+        }
+      : { projectId, initialTitle: title },
+  );
 
   const isVideo = 'reactionCount' in props && 'viewCount' in props;
   const totalCommentCount = isVideo ? (props as VideoPresentation).commentCount : feedbackCount;
   const reactionCount = isVideo ? (props as VideoPresentation).reactionCount : 0;
   const viewCount = isVideo ? (props as VideoPresentation).viewCount : 0;
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const isRenaming = isRenameModalOpen && isRenamePending;
-
-  const handleConfirmRename = async () => {
-    if (mode === 'videos' && onUpdateTitle) {
-      try {
-        await onUpdateTitle(newTitle);
-
-        closeRenameModal();
-      } catch (err) {
-        console.error(err);
-      }
-    } else {
-      await originalConfirmRename();
-    }
-  };
 
   const handleCardClick = () => {
     // 모달이 열려있으면 이동 안함
@@ -149,9 +158,9 @@ function PresentationCard(props: Props) {
         onClick={handleCardClick}
         className={clsx(
           'relative rounded-2xl border-none bg-white transition-all duration-250 ease-out',
-          isProcessing
-            ? 'cursor-not-allowed'
-            : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-lg',
+          isMoreMenuOpen && 'z-[60]',
+          isProcessing ? 'cursor-not-allowed' : 'cursor-pointer',
+          !isProcessing && !isMoreMenuOpen && 'hover:-translate-y-0.5 hover:shadow-lg',
         )}
         aria-disabled={isProcessing}
       >
@@ -192,6 +201,7 @@ function PresentationCard(props: Props) {
                   items={dropdownItems}
                   position="bottom"
                   align="end"
+                  onOpenChange={setIsMoreMenuOpen}
                 />
               </div>
             </div>
@@ -206,7 +216,7 @@ function PresentationCard(props: Props) {
           >
             {/* 왼쪽 영역: 비디오가 '아닐 때만' 시간과 페이지 수를 보여줌 */}
             <div className="flex items-center gap-2.5 shrink-0">
-              {mode == 'slide' && (
+              {mode === 'slide' && (
                 <>
                   {minutes !== null && (
                     <div className="gap-1 flex items-center">
@@ -261,7 +271,9 @@ function PresentationCard(props: Props) {
           currentTitle={newTitle}
           isPending={isRenamePending}
           onClose={closeRenameModal}
-          onConfirm={handleConfirmRename}
+          onConfirm={() => {
+            void confirmRename();
+          }}
           onTitleChange={setNewTitle}
         />
       </div>

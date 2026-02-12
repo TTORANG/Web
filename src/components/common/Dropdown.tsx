@@ -38,6 +38,8 @@ interface DropdownProps {
   className?: string;
   menuClassName?: string;
   ariaLabel?: string;
+  isOpen?: boolean;
+  onOpenChange?: (isOpen: boolean) => void;
 }
 
 export function Dropdown({
@@ -48,37 +50,49 @@ export function Dropdown({
   className,
   menuClassName,
   ariaLabel,
+  isOpen,
+  onOpenChange,
 }: DropdownProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [innerOpen, setInnerOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const lastFocusedElement = useRef<HTMLElement | null>(null);
   const menuId = useId();
+  const open = isOpen ?? innerOpen;
 
   const enabledItems = items.filter((item) => !item.disabled);
+
+  const setOpen = useCallback(
+    (next: boolean) => {
+      if (isOpen === undefined) {
+        setInnerOpen(next);
+      }
+      onOpenChange?.(next);
+    },
+    [isOpen, onOpenChange],
+  );
 
   /**
    * 드롭다운의 열림/닫힘 상태를 토글합니다.
    */
   const handleToggle = useCallback(() => {
-    setIsOpen((prev) => {
-      if (!prev) {
-        lastFocusedElement.current = document.activeElement as HTMLElement;
-        setFocusedIndex(-1);
-      }
-      return !prev;
-    });
-  }, []);
+    const next = !open;
+    if (next) {
+      lastFocusedElement.current = document.activeElement as HTMLElement;
+      setFocusedIndex(-1);
+    }
+    setOpen(next);
+  }, [open, setOpen]);
 
   /**
    * 드롭다운을 닫습니다.
    */
   const close = useCallback(() => {
-    setIsOpen(false);
+    setOpen(false);
     setFocusedIndex(-1);
-  }, []);
+  }, [setOpen]);
 
   /**
    * 메뉴 항목 클릭 핸들러
@@ -94,15 +108,15 @@ export function Dropdown({
 
   // 드롭다운 닫힐 때 이전에 포커스된 요소로 포커스 복원
   useEffect(() => {
-    if (!isOpen && lastFocusedElement.current) {
+    if (!open && lastFocusedElement.current) {
       lastFocusedElement.current.focus();
       lastFocusedElement.current = null;
     }
-  }, [isOpen]);
+  }, [open]);
 
   // Escape 키로 닫기 및 키보드 네비게이션
   useEffect(() => {
-    if (!isOpen) return;
+    if (!open) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
@@ -135,7 +149,7 @@ export function Dropdown({
 
     document.addEventListener('keydown', handleKeyDown, true);
     return () => document.removeEventListener('keydown', handleKeyDown, true);
-  }, [isOpen, close, focusedIndex, enabledItems, handleItemClick]);
+  }, [open, close, focusedIndex, enabledItems, handleItemClick]);
 
   // 포커스 인덱스 변경 시 해당 항목에 포커스
   useEffect(() => {
@@ -146,7 +160,7 @@ export function Dropdown({
 
   // 외부 클릭 시 닫기
   useEffect(() => {
-    if (!isOpen) return;
+    if (!open) return;
 
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -156,7 +170,7 @@ export function Dropdown({
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, close]);
+  }, [open, close]);
 
   const positionClasses = clsx({
     'bottom-full mb-2': position === 'top',
@@ -169,7 +183,7 @@ export function Dropdown({
   });
 
   return (
-    <div ref={dropdownRef} className={clsx('relative', className)}>
+    <div ref={dropdownRef} className={clsx('relative', open && 'z-[70]', className)}>
       <div
         role="button"
         tabIndex={0}
@@ -181,20 +195,20 @@ export function Dropdown({
           }
         }}
         aria-haspopup="menu"
-        aria-expanded={isOpen}
-        aria-controls={isOpen ? menuId : undefined}
+        aria-expanded={open}
+        aria-controls={open ? menuId : undefined}
       >
-        {typeof trigger === 'function' ? trigger({ isOpen }) : trigger}
+        {typeof trigger === 'function' ? trigger({ isOpen: open }) : trigger}
       </div>
 
-      {isOpen && (
+      {open && (
         <div
           ref={menuRef}
           id={menuId}
           role="menu"
           aria-label={ariaLabel}
           className={clsx(
-            'absolute z-50 min-w-30 overflow-hidden',
+            'absolute z-[71] min-w-30 overflow-hidden',
             positionClasses,
             alignClasses,
             'rounded-lg border border-gray-200 bg-white',
