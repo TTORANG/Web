@@ -56,7 +56,7 @@ export function TitleEditorPopover({
         position="bottom"
         align="start"
         ariaLabel={ariaLabel}
-        className="w-72 max-w-[90vw] rounded-2xl border border-gray-200 px-6 py-3"
+        className="w-64 max-w-90 rounded-2xl border border-gray-200 px-6 py-3"
       >
         {readOnlyContent}
       </Popover>

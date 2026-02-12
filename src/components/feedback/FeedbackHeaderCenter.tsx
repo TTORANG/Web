@@ -54,7 +54,7 @@ export default function FeedbackHeaderCenter() {
         position="bottom"
         align="start"
         ariaLabel="발표 정보"
-        className="w-64 max-w-90 rounded-2xl border border-gray-200 bg-white! px-5 py-4"
+        className="w-64 max-w-90 rounded-2xl border border-gray-200 bg-white px-5 py-4"
       >
         <div className="grid grid-cols-[5rem_1fr] gap-x-2 gap-y-3">
           <span className="text-gray-600 text-body-s-bold">게시자</span>
