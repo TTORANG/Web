@@ -1,19 +1,9 @@
-import { useParams, useSearchParams } from 'react-router-dom';
-
 import InfoIcon from '@/assets/icons/icon-info.svg?react';
 import { Popover } from '@/components/common';
-import { useSharedContent } from '@/hooks/queries/useShares';
-import dayjs from '@/utils/dayjs';
+import { useFeedbackHeaderInfo } from '@/hooks/useFeedbackHeaderInfo';
 
 export default function FeedbackHeaderCenter() {
-  const { shareToken: shareTokenFromPath } = useParams<{ shareToken: string }>();
-  const [searchParams] = useSearchParams();
-  const shareTokenFromQuery = searchParams.get('shareToken');
-
-  // 경로 파라미터 우선, 없으면 쿼리 파라미터 사용
-  const shareToken = shareTokenFromPath || shareTokenFromQuery || '';
-
-  const { data: sharedContent, isLoading, isError } = useSharedContent(shareToken || undefined);
+  const { title, postedAt, publisherName, isLoading, isError } = useFeedbackHeaderInfo();
 
   // 로딩 중일 때는 로딩 표시
   if (isLoading) {
@@ -25,18 +15,13 @@ export default function FeedbackHeaderCenter() {
   }
 
   // 에러 발생 시 기본 UI 표시
-  if (isError || !sharedContent) {
+  if (isError) {
     return (
       <div className="flex md:hidden items-center">
         <span className="text-body-m-bold text-gray-400">발표 정보를 불러올 수 없습니다</span>
       </div>
     );
   }
-
-  // 공유 콘텐츠에서 발표 정보 추출
-  const title = sharedContent.projectContent.title;
-  const publisherName = sharedContent.shareInfo.publisherName;
-  const postedAt = dayjs(sharedContent.shareInfo.createdAt).format('YYYY.MM.DD HH:mm:ss');
 
   return (
     <div className="flex md:hidden items-center gap-1.5">
@@ -52,9 +37,9 @@ export default function FeedbackHeaderCenter() {
           </button>
         }
         position="bottom"
-        align="start"
+        align="end"
         ariaLabel="발표 정보"
-        className="w-72 max-w-90 rounded-2xl border border-gray-200 bg-white px-5 py-4"
+        className="w-80 max-w-[90vw] rounded-2xl border border-gray-200 bg-white px-5 py-4"
       >
         <div className="grid grid-cols-[5rem_1fr] gap-x-2 gap-y-3">
           <span className="text-gray-600 text-body-s-bold">게시자</span>

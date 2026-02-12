@@ -42,24 +42,26 @@ export function TitleEditorPopover({
 
   if (readOnlyContent) {
     return (
-      <Popover
-        trigger={
-          <button
-            type="button"
-            aria-label={ariaLabel}
-            className="hidden md:inline-flex h-7 items-center gap-1.5 rounded-md bg-transparent px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main min-w-0"
-          >
-            <span className={titleClassName}>{title}</span>
-            <InfoIcon className="h-4 w-4" aria-hidden="true" />
-          </button>
-        }
-        position="bottom"
-        align="start"
-        ariaLabel={ariaLabel}
-        className="w-64 max-w-90 rounded-2xl border border-gray-200 px-6 py-3"
-      >
-        {readOnlyContent}
-      </Popover>
+      <div className="hidden md:inline-flex h-7 items-center gap-1.5 min-w-0">
+        <span className={clsx(titleClassName, 'text-sm font-semibold text-gray-800')}>{title}</span>
+        <Popover
+          trigger={
+            <button
+              type="button"
+              aria-label={ariaLabel}
+              className="flex items-center justify-center h-6 w-6 rounded-md hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main shrink-0"
+            >
+              <InfoIcon className="h-4 w-4 text-gray-800" aria-hidden="true" />
+            </button>
+          }
+          position="bottom"
+          align="start"
+          ariaLabel={ariaLabel}
+          className="w-80 max-w-[90vw] rounded-2xl border border-gray-200 px-6 py-4"
+        >
+          {readOnlyContent}
+        </Popover>
+      </div>
     );
   }
 
