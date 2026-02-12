@@ -32,6 +32,9 @@ type Props = (Presentation | VideoPresentation) & {
   onUpdateTitle?: (newTitle: string) => Promise<void>;
 };
 
+const isVideoPresentation = (p: Presentation | VideoPresentation): p is VideoPresentation =>
+  'videoId' in p;
+
 function PresentationListSkeleton() {
   return (
     <article className="flex w-full items-center justify-between bg-white px-5 py-4 rounded-2xl border border-gray-200">
@@ -107,11 +110,22 @@ function PresentationList(props: Props) {
   const resolvedSrc = thumbnailUrl
     ? `${thumbnailUrl}${thumbnailUrl.includes('?') ? '&' : '?'}v=${thumbnailVersion}`
     : null;
-  const isProcessing =
-    isPresentationPending ||
-    props.status === 'queued' ||
-    props.status === 'processing' ||
-    props.status === 'partial_done';
+
+  const isProcessing = (() => {
+    if (isPresentationPending) return true;
+
+    if (isVideoPresentation(props)) {
+      return props.status === 'uploading' || props.status === 'processing';
+    }
+
+    return (
+      props.status === 'queued' ||
+      props.status === 'uploading' ||
+      props.status === 'processing' ||
+      props.status === 'partial_done'
+    );
+  })();
+
   const minutes = durationSeconds > 0 ? Math.ceil(durationSeconds / 60) : null;
 
   const {

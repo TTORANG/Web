@@ -12,7 +12,7 @@ import ThumbnailImage from '@/components/common/ThumbnailImage';
 import { getTabPath } from '@/constants/navigation';
 import { usePresentationDeletion } from '@/hooks/usePresentationDeletion';
 import { useRename } from '@/hooks/useRename';
-import type { Presentation } from '@/types/presentation';
+import type { Presentation, PresentationStatus } from '@/types/presentation';
 import type { VideoPresentation } from '@/types/video';
 import { formatRelativeTime } from '@/utils/format';
 
@@ -31,6 +31,9 @@ type Props = (Presentation | VideoPresentation) & {
   onDelete?: () => void;
   onUpdateTitle?: (newTitle: string) => Promise<void>;
 };
+
+const isVideoPresentation = (p: Presentation | VideoPresentation): p is VideoPresentation =>
+  'videoId' in p;
 
 function PresentationCardSkeleton() {
   return (
@@ -70,11 +73,26 @@ function PresentationCard(props: Props) {
   const resolvedSrc = thumbnailUrl
     ? `${thumbnailUrl}${thumbnailUrl.includes('?') ? '&' : '?'}v=${thumbnailVersion}`
     : null;
-  const isProcessing =
-    isPresentationPending ||
-    props.status === 'queued' ||
-    props.status === 'processing' ||
-    props.status === 'partial_done';
+
+  const status: PresentationStatus = props.status;
+
+  const isProcessing = (() => {
+    if (isPresentationPending) return true;
+
+    if (isVideoPresentation(props)) {
+      // video status: 'uploading' | 'processing' | 'ready' | 'failed'
+      return props.status === 'uploading' || props.status === 'processing';
+    }
+
+    // slide status: 'queued' | 'processing' | 'failed' | 'completed' | 'partial_done' | 'ready' | 'uploading'
+    return (
+      status === 'queued' ||
+      status === 'uploading' ||
+      status === 'processing' ||
+      status === 'partial_done'
+    );
+  })();
+
   const minutes = durationSeconds > 0 ? Math.ceil(durationSeconds / 60) : null;
 
   const {
