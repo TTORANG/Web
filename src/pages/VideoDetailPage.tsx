@@ -246,16 +246,6 @@ export default function VideoDetailPage() {
     }
   };
 
-  const handleInputFocus = () => {
-    if (!commentDraft) {
-      const mins = Math.floor(currentTime / 60);
-      const secs = Math.floor(currentTime % 60)
-        .toString()
-        .padStart(2, '0');
-      setCommentDraft(`[${mins}:${secs}] `);
-    }
-  };
-
   useEffect(() => {
     const updatePosition = () => {
       const rect = desktopPlaceholderRef.current?.getBoundingClientRect();
@@ -341,7 +331,6 @@ export default function VideoDetailPage() {
             onChange={setCommentDraft}
             onSubmit={handleAddMainComment}
             onCancel={() => setCommentDraft('')}
-            onFocusCapture={handleInputFocus}
             disabled={isSubmittingComment}
             className="w-full"
           />
