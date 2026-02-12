@@ -39,9 +39,9 @@ export default function FeedbackHeaderCenter() {
         position="bottom"
         align="end"
         ariaLabel="발표 정보"
-        className="w-80 max-w-[90vw] rounded-2xl border border-gray-200 bg-white px-5 py-4"
+        className="w-64 max-w-[90vw] rounded-xl border border-gray-200 bg-white px-4 py-3"
       >
-        <div className="grid grid-cols-[5rem_1fr] gap-x-2 gap-y-3">
+        <div className="grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-2">
           <span className="text-gray-600 text-body-s-bold">게시자</span>
           <span className="text-gray-800 text-body-s">{publisherName}</span>
           <span className="text-gray-600 text-body-s-bold">게시 날짜</span>
