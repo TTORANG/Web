@@ -247,21 +247,27 @@ export const useFeedbackSlide = ({
   const treeComments = useMemo(() => {
     // 정렬 로직
     const sorted = [...storedComments].sort((a, b) => {
-      // 최상위 댓글 (parentId 없음)만 슬라이드 인덱스 기준 정렬
       const isARoot = !a.parentId;
       const isBRoot = !b.parentId;
 
+      // 둘 다 최상위 댓글인 경우
       if (isARoot && isBRoot) {
-        // 둘 다 최상위 댓글: 슬라이드 인덱스 오름차순
+        // 1. 슬라이드 인덱스 오름차순
         const aIndex = a.ref?.kind === 'slide' ? a.ref.index : Number.MAX_SAFE_INTEGER;
         const bIndex = b.ref?.kind === 'slide' ? b.ref.index : Number.MAX_SAFE_INTEGER;
         if (aIndex !== bIndex) return aIndex - bIndex;
+
+        // 2. 같은 슬라이드면 작성 시간 오름차순
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       }
 
-      // 답글이거나 같은 슬라이드인 경우: 작성 시간 오름차순 (오래된 것 → 최신)
-      const aTime = new Date(a.createdAt).getTime();
-      const bTime = new Date(b.createdAt).getTime();
-      return aTime - bTime;
+      // 둘 다 답글인 경우: 작성 시간 오름차순
+      if (!isARoot && !isBRoot) {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      }
+
+      // 하나는 최상위, 하나는 답글: 최상위를 먼저
+      return isARoot ? -1 : 1;
     });
 
     return flatToTree(sorted);
