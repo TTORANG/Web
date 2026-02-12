@@ -57,6 +57,7 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
     cancelEdit,
     submitEdit,
     goToRef,
+    skipReplyFetch,
   } = useCommentContext();
   const currentUser = useAuthStore((state) => state.user);
   const fallbackName = getUserDisplayName(currentUser, '알 수 없음');
@@ -243,7 +244,7 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
 
       {!isIndented && (
         <CommentReplies
-          serverId={comment.serverId}
+          serverId={skipReplyFetch ? undefined : comment.serverId}
           localReplies={comment.replies ?? []}
           rootCommentId={resolvedRootId}
         />

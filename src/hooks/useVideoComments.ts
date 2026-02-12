@@ -141,7 +141,14 @@ export function useVideoComments(options?: UseVideoCommentsOptions) {
     const targetServerId = targetComment ? getServerCommentId(targetComment) : null;
 
     if (!targetComment) {
-      showToast.error('댓글을 찾을 수 없습니다.');
+      // Store에 없는 댓글 = TanStack Query로 로드된 답글 (commentId가 곧 serverId)
+      try {
+        await deleteVideoComment(commentId);
+        showToast.success('댓글을 삭제했습니다.');
+        options?.onMutationSuccess?.();
+      } catch {
+        showToast.error('댓글을 삭제하지 못했습니다.', '잠시 후 다시 시도해주세요.');
+      }
       return;
     }
 
@@ -170,7 +177,16 @@ export function useVideoComments(options?: UseVideoCommentsOptions) {
     const targetComment = allComments.find((c) => c.commentId === commentId);
 
     if (!targetComment) {
-      showToast.error('댓글을 찾을 수 없습니다.');
+      // Store에 없는 댓글 = TanStack Query로 로드된 답글 (commentId가 곧 serverId)
+      try {
+        const extracted = extractTimestampFromComment(content);
+        const contentToSend = extracted ? extracted.content : content;
+        await updateCommentApi(commentId, { content: contentToSend });
+        showToast.success('댓글을 수정했습니다.');
+        options?.onMutationSuccess?.();
+      } catch {
+        showToast.error('댓글을 수정하지 못했습니다.', '잠시 후 다시 시도해주세요.');
+      }
       return;
     }
 
