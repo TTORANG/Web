@@ -139,6 +139,21 @@ function App() {
     };
   }, [accessToken, user, updateUser]);
 
+  useEffect(() => {
+    const handleDragStart = (e: DragEvent) => {
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest('img, a')) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('dragstart', handleDragStart);
+    return () => {
+      document.removeEventListener('dragstart', handleDragStart);
+    };
+  }, []);
+
   return (
     <>
       <RouterProvider router={router} />
