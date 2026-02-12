@@ -90,6 +90,7 @@ export interface ReadSharedContentData {
   message: string;
   sessionInfo: {
     sessionId: string;
+    name: string;
     tokens: {
       accessToken: string;
       refreshToken: string;
@@ -99,6 +100,7 @@ export interface ReadSharedContentData {
     shareToken: string;
     scope: ShareScope;
     createdAt: string;
+    publisherName: string;
   };
   projectContent: {
     title: string;

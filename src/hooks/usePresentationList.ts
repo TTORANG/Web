@@ -2,17 +2,13 @@ import { useMemo } from 'react';
 
 import type { SortMode } from '@/types/home';
 import type { Presentation } from '@/types/presentation';
+import { normalizeForSearch } from '@/utils/normalizeForSearch';
 
 type Options = {
   query?: string;
   sort?: SortMode;
   filterFn?: (presentation: Presentation) => boolean;
 };
-
-// 공백(스페이스/탭/줄바꿈 등)을 모두 제거 + 소문자화
-function normalizeForSearch(value: string) {
-  return value.replace(/\s+/g, '').toLowerCase();
-}
 
 /**
  * 프로젝트 목록 필터/정렬 훅
@@ -26,29 +22,26 @@ function normalizeForSearch(value: string) {
  * @returns 필터링/정렬된 프로젝트 배열
  */
 export function usePresentationList(presentations: Presentation[], options?: Options) {
-  return useMemo(() => {
-    const query = options?.query ?? '';
-    const sort = options?.sort ?? 'recent';
-    const filterFn = options?.filterFn;
+  const query = options?.query ?? '';
+  const sort = options?.sort ?? 'recent';
+  const filterFn = options?.filterFn;
 
+  return useMemo(() => {
     let result = filterFn ? presentations.filter(filterFn) : presentations;
 
-    // 검색어/제목 모두 공백 제거 후 비교
     const q = normalizeForSearch(query);
     if (q) {
-      result = result.filter((p) => normalizeForSearch(p.title).includes(q));
+      result = result.filter((p) => {
+        const t = normalizeForSearch(p.title);
+        return t.includes(q);
+      });
     }
 
     if (sort === 'recent') return result;
 
     const next = [...result];
-
-    if (sort === 'commentCount') {
-      return next.sort((a, b) => b.feedbackCount - a.feedbackCount);
-    }
-    if (sort === 'name') {
-      return next.sort((a, b) => a.title.localeCompare(b.title));
-    }
+    if (sort === 'commentCount') return next.sort((a, b) => b.feedbackCount - a.feedbackCount);
+    if (sort === 'name') return next.sort((a, b) => a.title.localeCompare(b.title));
     return result;
-  }, [presentations, options?.query, options?.sort, options?.filterFn]);
+  }, [presentations, query, sort, filterFn]);
 }
