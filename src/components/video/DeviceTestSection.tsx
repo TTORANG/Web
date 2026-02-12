@@ -95,6 +95,10 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
               playsInline
               muted
               className="h-full w-full object-cover"
+              style={{
+                transform: 'scaleX(-1)',
+                WebkitTransform: 'scaleX(-1)', // Safari용
+              }}
             />
             <div
               className={`absolute inset-0 transition-opacity duration-300 ${
@@ -154,7 +158,7 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
         </div>
       </div>
 
-      <div className="mt-4 mb-8 w-full max-w-110 text-white">
+      <div className="mt-4 mb-8 w-full max-w-110 text-black">
         <ActionButton
           text="영상 녹화하기"
           disabled={hasCameraError || !stream}
