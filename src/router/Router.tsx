@@ -12,8 +12,6 @@ import FeedbackHeaderCenter from '@/components/feedback/FeedbackHeaderCenter';
 import FeedbackHeaderLeft from '@/components/feedback/FeedbackHeaderLeft';
 import {
   DevTestPage,
-  FeedbackSlidePageRoute,
-  FeedbackVideoPageRoute,
   HomePage,
   InsightPage,
   OAuthCallbackPage,
@@ -64,22 +62,6 @@ export const router = createBrowserRouter([
       { path: 'videos', element: <VideoListPage /> },
       { path: 'videos/:videoId', element: <VideoDetailPage /> },
     ],
-  },
-  {
-    path: '/feedback/slide/:projectId',
-    element: (
-      <Layout theme="dark" left={<FeedbackHeaderLeft />} center={<FeedbackHeaderCenter />}>
-        <FeedbackSlidePageRoute />
-      </Layout>
-    ),
-  },
-  {
-    path: '/feedback/video/:projectId',
-    element: (
-      <Layout theme="dark" left={<FeedbackHeaderLeft />} center={<FeedbackHeaderCenter />}>
-        <FeedbackVideoPageRoute />
-      </Layout>
-    ),
   },
   {
     path: '/:projectId/video/record',

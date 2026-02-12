@@ -34,3 +34,6 @@ bun.lock
 *.sln
 *.sw?
 !pnpm-lock.yaml
+
+# Test coverage
+coverage
