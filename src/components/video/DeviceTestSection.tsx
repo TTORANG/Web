@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { ActionButton, Dropdown } from '@/components/common';
+import { ActionButton, Dropdown, Skeleton } from '@/components/common';
 import { VolumeIndicator } from '@/components/video';
 import { useMediaStream } from '@/hooks/useMediaStream';
+import { showToast } from '@/utils/toast';
 
 interface DeviceTestSectionProps {
   onComplete: (streams: { cam: MediaStream }) => void;
@@ -12,9 +13,22 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<string>('');
   const [selectedAudio, setSelectedAudio] = useState<string>('');
+  const [isInitializingDevices, setIsInitializingDevices] = useState(true);
+  const [hasCameraError, setHasCameraError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hasShownCameraErrorToast = useRef(false);
 
   const { stream, volume } = useMediaStream(selectedVideo, selectedAudio);
+
+  const notifyCameraLoadError = () => {
+    if (hasShownCameraErrorToast.current) return;
+    hasShownCameraErrorToast.current = true;
+    setHasCameraError(true);
+    showToast.error(
+      '웹캠을 불러오지 못했습니다.',
+      '브라우저 권한과 장치 연결 상태를 확인한 뒤 다시 시도해주세요.',
+    );
+  };
 
   useEffect(() => {
     const initDevices = async () => {
@@ -28,14 +42,23 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
         if (aInput) setSelectedAudio(aInput.deviceId);
       } catch {
         // 장치 접근 실패 시 무시 (eslint no-empty)
+        notifyCameraLoadError();
+      } finally {
+        setIsInitializingDevices(false);
       }
     };
     initDevices();
   }, []);
 
   useEffect(() => {
-    if (videoRef.current && stream) videoRef.current.srcObject = stream;
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+      setHasCameraError(false);
+      hasShownCameraErrorToast.current = false;
+    }
   }, [stream]);
+
+  const isCameraLoading = (isInitializingDevices || !!selectedVideo) && !stream && !hasCameraError;
 
   const renderTrigger = (label: string, value: string, kind: MediaDeviceKind) => {
     const currentDevice = devices.find((d) => d.deviceId === value && d.kind === kind);
@@ -73,6 +96,17 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
               muted
               className="h-full w-full object-cover"
             />
+            <div
+              className={`absolute inset-0 transition-opacity duration-300 ${
+                isCameraLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'
+              }`}
+            >
+              {hasCameraError ? (
+                <div className="h-full w-full bg-gray-200" aria-hidden="true" />
+              ) : (
+                <Skeleton width="100%" height="100%" rounded={0} />
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -88,7 +122,10 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
                 id: d.deviceId,
                 label: d.label,
                 selected: d.deviceId === selectedVideo,
-                onClick: () => setSelectedVideo(d.deviceId),
+                onClick: () => {
+                  setHasCameraError(false);
+                  setSelectedVideo(d.deviceId);
+                },
               }))}
             className="w-full"
             menuClassName="w-full max-h-60 overflow-y-auto"
