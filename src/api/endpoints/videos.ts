@@ -27,17 +27,16 @@ export const videosApi = {
 
   uploadChunk: (videoId: string, chunkIndex: number, file: Blob) => {
     const formData = new FormData();
-    formData.append('file', file);
+    const normalizedType = file.type.startsWith('video/mp4') ? 'video/mp4' : 'video/webm';
+    const ext = normalizedType === 'video/mp4' ? 'mp4' : 'webm';
+    const normalizedFile = new File([file], `chunk-${chunkIndex}.${ext}`, { type: normalizedType });
+    formData.append('file', normalizedFile);
     const numericId = normalizeVideoId(videoId);
 
     return apiClient.post<ApiResponse<CreateChunkUploadResponseDto>>(
       `/videos/${numericId}/chunks/${chunkIndex}`,
       formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      },
+      { headers: { 'Content-Type': undefined } },
     );
   },
 

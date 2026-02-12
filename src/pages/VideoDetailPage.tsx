@@ -79,8 +79,6 @@ export default function VideoDetailPage() {
           setSlideChangeTimes(slides.map((s) => s.timestampMs / 1000));
         }
       } catch (err) {
-        console.error('[VideoDetailPage] Load error:', err);
-      } finally {
         setIsLoading(false);
       }
     };
@@ -189,7 +187,6 @@ export default function VideoDetailPage() {
       ]);
       setCommentDraft('');
     } catch (err) {
-      console.error('[VideoDetailPage] Add comment error:', err);
       alert('댓글 추가 실패');
     }
   }, [commentDraft, currentTime, videoId, currentUser]);
@@ -222,7 +219,6 @@ export default function VideoDetailPage() {
           }),
         );
       } catch (err) {
-        console.error('[VideoDetailPage] Reply error:', err);
         alert('답글 작성 중 오류가 발생했습니다.');
       }
     },
@@ -245,7 +241,6 @@ export default function VideoDetailPage() {
         }),
       );
     } catch (err) {
-      console.error('[VideoDetailPage] Update comment error:', err);
       alert('수정 중 오류가 발생했습니다.');
     }
   }, []);
@@ -263,7 +258,6 @@ export default function VideoDetailPage() {
           })),
       );
     } catch (err) {
-      console.error('[VideoDetailPage] Delete comment error:', err);
       alert('삭제 중 오류가 발생했습니다.');
     }
   }, []);
@@ -284,24 +278,6 @@ export default function VideoDetailPage() {
 
   return (
     <div className="flex h-full w-full bg-gray-100 overflow-hidden">
-      {/* 뒤로가기 버튼 */}
-      <div className="absolute left-4 top-4 z-30">
-        <button
-          onClick={handleBack}
-          className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 shadow hover:bg-gray-50 transition-colors"
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          <span className="text-sm font-medium">목록으로</span>
-        </button>
-      </div>
-
       {/* 메인 콘텐츠 영역 */}
       <div className="flex flex-1 flex-col px-6 py-6 md:px-12">
         <div className="flex flex-1 flex-col gap-6 min-h-0 items-center pt-14">

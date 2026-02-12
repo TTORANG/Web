@@ -58,16 +58,6 @@ export default function VideoListPage() {
   });
 
   useEffect(() => {
-    if (location.state?.uploadSuccess) {
-      showToast.success('영상을 저장했습니다.', undefined, {
-        position: 'top-right',
-      });
-      navigate(location.pathname, { replace: true, state: {} });
-      refetch();
-    }
-  }, [location, navigate, refetch]);
-
-  useEffect(() => {
     if (!hasProcessingVideos) return;
 
     const interval = setInterval(() => {
@@ -128,7 +118,6 @@ export default function VideoListPage() {
         throw new Error(response.data.error?.reason || '삭제에 실패했습니다.');
       }
     } catch (err) {
-      console.error('[VideoListPage] Delete error:', err);
       toast.error('영상을 삭제하지 못했습니다.', {
         description: err instanceof Error ? err.message : '잠시 후 다시 시도해주세요.',
       });

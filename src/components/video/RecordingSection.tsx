@@ -249,7 +249,7 @@ export const RecordingSection = ({
               </button>
             </div>
           </div>
-          <p className="pb-6 text-center text-body-s text-gray-600">
+          <p className="pb-7 text-center text-body-s text-gray-600">
             스페이스바 또는 화살표를 클릭하여 다음 슬라이드로 이동하세요
           </p>
         </section>
