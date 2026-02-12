@@ -14,7 +14,7 @@ import { Modal } from '@/components/common/Modal';
 import { useCreateShareLink, useShareableVideos } from '@/hooks/queries/useShares';
 import { type ShareType, useShareStore } from '@/stores/shareStore';
 import { formatTimestamp } from '@/utils/format';
-import { shareToFacebook, shareToInstagram, shareToKakao, shareToX } from '@/utils/snsShare';
+import { shareQrToInstagram, shareToFacebook, shareToKakao, shareToX } from '@/utils/snsShare';
 import { showToast } from '@/utils/toast';
 
 const KAKAO_JS_KEY = import.meta.env?.VITE_KAKAO_JS_KEY ?? '';
@@ -337,7 +337,7 @@ export function ShareModal() {
             <button
               type="button"
               aria-label="인스타그램으로 공유"
-              onClick={shareToInstagram}
+              onClick={() => void shareQrToInstagram({ url: shareUrl })}
               className="flex h-35 w-34 flex-col items-center justify-center gap-2 rounded-lg bg-white transition-colors hover:bg-gray-100"
             >
               <img src={instagramIcon} alt="" aria-hidden className="h-15 w-15" />
