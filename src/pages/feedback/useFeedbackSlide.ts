@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { slideView } from '@/api/endpoints/analytics';
+import { getSharedComments } from '@/api/endpoints/shares';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useHotkey, useSlideComments } from '@/hooks';
 import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
-import { useSlideCommentsLoader } from '@/hooks/useSlideCommentsLoader';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
 import { useSlideReactions } from '@/hooks/useSlideReactions';
+import { useAuthStore } from '@/stores/authStore';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
 import type { SharedProjectComment, SharedProjectSlide } from '@/types/share';
@@ -20,6 +21,37 @@ type UseFeedbackSlideOptions = {
   shareToken?: string;
   onShareExitSnapshotChange?: (snapshot: ShareExitSnapshot) => void;
 };
+
+/**
+ * 공유 댓글을 Comment 타입으로 변환
+ */
+function mapSharedSlideComments(
+  rawComments: SharedProjectComment[],
+  sharedSlideMeta: Map<string, { index: number; label: string }>,
+): Comment[] {
+  if (!rawComments.length) return [];
+
+  return rawComments
+    .filter((comment) => comment.targetType === 'slide')
+    .map((comment) => {
+      const meta = sharedSlideMeta.get(comment.targetId);
+      return {
+        commentId: comment.commentId,
+        serverId: comment.commentId,
+        slideId: comment.targetId,
+        userId: comment.userId,
+        userName: comment.writer,
+        userProfileImage: comment.profileImageUrl ?? undefined,
+        content: comment.content,
+        createdAt: comment.createdAt,
+        isMine: comment.isMine,
+        parentId: comment.parentId ?? undefined,
+        isReply: Boolean(comment.parentId),
+        ref: meta ? ({ kind: 'slide' as const, index: meta.index } as const) : undefined,
+        slideRef: meta?.label,
+      };
+    });
+}
 
 export const useFeedbackSlide = ({
   sharedSlides,
@@ -35,8 +67,6 @@ export const useFeedbackSlide = ({
 
   const currentSlide = slides[slideIndex];
 
-  const { comments, addComment, addReply, deleteComment, updateComment } =
-    useSlideCommentsActions();
   const { reactions, addReaction } = useSlideReactions();
 
   const initSlide = useSlideStore((state) => state.initSlide);
@@ -45,29 +75,6 @@ export const useFeedbackSlide = ({
 
   const [commentDraft, setCommentDraft] = useState('');
   const [scrollToCommentId, setScrollToCommentId] = useState<string | null>(null);
-
-  const handleAddComment = async () => {
-    if (!commentDraft.trim()) return;
-    const serverId = await addComment(commentDraft);
-    if (serverId) {
-      setScrollToCommentId(serverId);
-    }
-    setCommentDraft('');
-  };
-
-  const mapComments = useCallback(
-    (items: Comment[]) => {
-      if (!currentSlide) return items;
-      const slideLabel = `Slide ${slideIndex + 1}`;
-      return items.map((comment) => ({
-        ...comment,
-        slideId: currentSlide.slideId,
-        ref: { kind: 'slide' as const, index: slideIndex },
-        slideRef: slideLabel,
-      }));
-    },
-    [currentSlide, slideIndex],
-  );
 
   useHotkey({ ArrowLeft: goPrev, ArrowRight: goNext }, { enabled: slides.length > 0 });
 
@@ -113,61 +120,56 @@ export const useFeedbackSlide = ({
     );
   }, [slides]);
 
-  const sharedSlideComments = useMemo(() => {
-    return sharedComments
-      .filter((comment) => comment.targetType === 'slide')
-      .map((comment) => {
-        const meta = sharedSlideMeta.get(comment.targetId);
-        return {
-          commentId: comment.commentId,
-          serverId: comment.commentId,
-          slideId: comment.targetId,
-          userId: comment.userId,
-          userName: comment.writer,
-          userProfileImage: comment.profileImageUrl ?? undefined,
-          content: comment.content,
-          createdAt: comment.createdAt,
-          isMine: comment.isMine,
-          parentId: comment.parentId ?? undefined,
-          isReply: Boolean(comment.parentId),
-          ref: meta ? ({ kind: 'slide' as const, index: meta.index } as const) : undefined,
-          slideRef: meta?.label,
-        };
-      });
-  }, [sharedComments, sharedSlideMeta]);
+  // 서버에서 최신 댓글 목록을 가져와서 store 업데이트
+  const reloadComments = useCallback(async () => {
+    if (!shareToken) return null;
 
-  // 공유 댓글과 로컬 댓글 병합
+    try {
+      const { user } = useAuthStore.getState();
+      const sessionId = user?.sessionId;
+      const data = await getSharedComments(shareToken, sessionId);
+      const slideComments = mapSharedSlideComments(data.comments, sharedSlideMeta);
+      setComments(slideComments);
+      return data.comments;
+    } catch {
+      return null;
+    }
+  }, [shareToken, setComments, sharedSlideMeta]);
+
+  const { addComment, addReply, deleteComment, updateComment } = useSlideCommentsActions();
+
+  const handleAddComment = async () => {
+    if (!commentDraft.trim()) return;
+    const serverId = await addComment(commentDraft);
+    await reloadComments();
+    if (serverId) {
+      setScrollToCommentId(serverId);
+    }
+    setCommentDraft('');
+  };
+
+  const handleAddReply = async (parentId: string, content: string) => {
+    await addReply(parentId, content);
+    await reloadComments();
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    await deleteComment(commentId);
+    await reloadComments();
+  };
+
+  const handleUpdateComment = async (commentId: string, content: string) => {
+    await updateComment(commentId, content);
+    await reloadComments();
+  };
+
+  // 초기 댓글 로딩
   useEffect(() => {
-    if (sharedSlideComments.length === 0 && storedComments.length === 0) return;
-
-    const sharedServerIds = new Set(
-      sharedSlideComments
-        .map((comment) => comment.serverId ?? comment.commentId)
-        .filter((id): id is string => Boolean(id)),
-    );
-    const localOnlyComments = storedComments.filter((comment) => {
-      if (!comment.serverId) return true;
-      return !sharedServerIds.has(comment.serverId);
-    });
-    const mergedComments = [...localOnlyComments, ...sharedSlideComments];
-    const isSameLength = storedComments.length === mergedComments.length;
-    const isSameOrderAndIdentity =
-      isSameLength && storedComments.every((comment, index) => comment === mergedComments[index]);
-
-    if (isSameOrderAndIdentity) return;
-    setComments(mergedComments);
-  }, [sharedSlideComments, setComments, storedComments]);
-
-  const {
-    isLoading: isCommentsLoading,
-    hasNextPage: commentsHasNextPage,
-    isFetchingNextPage: commentsIsFetchingNextPage,
-    fetchNextPage: commentsFetchNextPage,
-  } = useSlideCommentsLoader(currentSlide?.slideId, {
-    mapComments,
-    enabled: false,
-    resetOnSlideChange: false,
-  });
+    const initialComments = mapSharedSlideComments(sharedComments, sharedSlideMeta);
+    if (initialComments.length > 0) {
+      setComments(initialComments);
+    }
+  }, [sharedComments, sharedSlideMeta, setComments]);
 
   const handleGoToRef = useCallback(
     (ref: NonNullable<Comment['ref']>) => {
@@ -199,14 +201,14 @@ export const useFeedbackSlide = ({
       totalSlides,
       slideIndex,
       script,
-      comments,
+      comments: storedComments,
       commentDraft,
       scrollToCommentId,
       reactions,
       isLoading: false,
-      isCommentsLoading,
-      commentsHasNextPage,
-      commentsIsFetchingNextPage,
+      isCommentsLoading: false,
+      commentsHasNextPage: false,
+      commentsIsFetchingNextPage: false,
       isFirst: navigation.isFirst,
       isLast: navigation.isLast,
     },
@@ -216,11 +218,11 @@ export const useFeedbackSlide = ({
       handleGoToRef,
       setCommentDraft,
       handleAddComment,
-      addReply,
-      deleteComment,
-      updateComment,
+      addReply: handleAddReply,
+      deleteComment: handleDeleteComment,
+      updateComment: handleUpdateComment,
       addReaction,
-      commentsFetchNextPage,
+      commentsFetchNextPage: async () => {},
     },
   };
 };
