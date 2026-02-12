@@ -4,6 +4,8 @@
  */
 import { memo, useMemo } from 'react';
 
+import { normalizeForSearch } from '@/utils/normalizeForSearch';
+
 type Props = {
   text: string;
   query: string;
@@ -11,14 +13,6 @@ type Props = {
 };
 
 type Range = { start: number; end: number };
-
-/** 검색 로직(usePresentationList)과 동일한 정규화: NFKC + 비문자/숫자 제거 + 소문자화 */
-function normalizeForSearch(value: string) {
-  return value
-    .normalize('NFKC')
-    .replace(/[^\p{L}\p{N}]+/gu, '')
-    .toLowerCase();
-}
 
 /** 원문 text에서 정규화 후에도 남는 문자(문자/숫자)들의 원본 인덱스 매핑 */
 function buildNormalizedMap(text: string) {
@@ -88,7 +82,11 @@ function findOrderedTokenRanges(text: string, query: string): Range[] {
   return mergeRanges(ranges);
 }
 
-function HighlightText({ text, query, highlightClassName = 'bg-transparent text-main' }: Props) {
+function HighlightTextBase({
+  text,
+  query,
+  highlightClassName = 'bg-transparent text-main',
+}: Props) {
   const parts = useMemo(() => {
     const ranges = findOrderedTokenRanges(text, query);
     if (ranges.length === 0) return [{ value: text, isMatch: false }];
@@ -125,4 +123,4 @@ function HighlightText({ text, query, highlightClassName = 'bg-transparent text-
   );
 }
 
-export const HighlightingText = memo(HighlightText);
+export const HighlightText = memo(HighlightTextBase);
