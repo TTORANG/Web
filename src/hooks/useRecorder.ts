@@ -1,5 +1,15 @@
 import { useCallback, useRef, useState } from 'react';
 
+import { normalizeVideoMimeType } from '@/utils/video';
+
+const RECORDER_MIME_CANDIDATES = [
+  'video/webm;codecs=vp9',
+  'video/webm;codecs=vp8',
+  'video/webm',
+  'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+  'video/mp4',
+] as const;
+
 export const useRecorder = () => {
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
@@ -7,6 +17,7 @@ export const useRecorder = () => {
   const chunksRef = useRef<Blob[]>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const selectedMimeTypeRef = useRef<'video/webm' | 'video/mp4'>('video/webm');
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current?.state !== 'inactive') {
@@ -66,11 +77,13 @@ export const useRecorder = () => {
         chunksRef.current = [];
         setRecordedChunks([]);
 
-        const mimeType = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find(
-          (type) => MediaRecorder.isTypeSupported(type),
+        const mimeType = RECORDER_MIME_CANDIDATES.find((type) =>
+          MediaRecorder.isTypeSupported(type),
         );
-
-        const recorder = new MediaRecorder(camStream, { mimeType });
+        const recorder = mimeType
+          ? new MediaRecorder(camStream, { mimeType })
+          : new MediaRecorder(camStream);
+        selectedMimeTypeRef.current = normalizeVideoMimeType(mimeType || recorder.mimeType);
 
         recorder.ondataavailable = (e) => {
           if (e.data.size > 0) {
@@ -90,7 +103,7 @@ export const useRecorder = () => {
 
   const getRecordedBlob = useCallback(() => {
     if (chunksRef.current.length === 0) return null;
-    return new Blob(chunksRef.current, { type: 'video/webm' });
+    return new Blob(chunksRef.current, { type: selectedMimeTypeRef.current });
   }, []);
 
   return {

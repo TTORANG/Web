@@ -18,6 +18,7 @@ import RefreshIcon from '@/assets/icons/icon-refresh.svg?react';
 import VideoPlaybackBar from '@/components/feedback/video/VideoPlaybackBar';
 import { useVideoSync } from '@/hooks/useVideoSync';
 import type { SlideListItem } from '@/types/slide';
+import type { SegmentHighlight } from '@/types/video';
 import { getSlideIndexFromTime } from '@/utils/video';
 
 const LAYOUT_STORAGE_KEY = 'feedback-video-layout';
@@ -87,6 +88,7 @@ type SlideWebcamStageProps = {
   disablePip?: boolean;
   showLayoutToggle?: boolean;
   layoutToggleLabel?: ReactNode;
+  segmentHighlights?: SegmentHighlight[];
 };
 
 export default function SlideWebcamStage({
@@ -329,7 +331,15 @@ export default function SlideWebcamStage({
           label="웹캠 확장"
           className="bg-[#000000]/40"
         >
-          <video ref={setVideoRef} className="h-full w-full object-cover" playsInline />
+          <video
+            ref={setVideoRef}
+            className="h-full w-full object-cover"
+            style={{
+              transform: 'scaleX(-1)',
+              WebkitTransform: 'scaleX(-1)', // Safari용
+            }}
+            playsInline
+          />
         </MediaBox>
 
         {/* 클릭 핸들러 오버레이 */}
