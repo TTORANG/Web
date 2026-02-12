@@ -8,6 +8,7 @@ import PageCountIcon from '@/assets/icons/icon-page-count.svg?react';
 import ReactionCountIcon from '@/assets/icons/icon-reaction-count.svg?react';
 import RecentIcon from '@/assets/icons/icon-recent.svg?react';
 import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
+import { HighlightText } from '@/components/common/HighlightText';
 import ThumbnailImage from '@/components/common/ThumbnailImage';
 import { getTabPath } from '@/constants/navigation';
 import { usePresentationDeletion } from '@/hooks/usePresentationDeletion';
@@ -96,6 +97,7 @@ function PresentationList(props: Props) {
     thumbnailVersion,
     onDelete,
     onUpdateTitle,
+    highlightQuery = '',
   } = props;
 
   const navigate = useNavigate();
@@ -204,7 +206,13 @@ function PresentationList(props: Props) {
         <div className="flex flex-1 items-center justify-between pl-6 min-w-0">
           <div className="flex flex-1 flex-col gap-0.5 min-w-0">
             {/* 제목 */}
-            <div className="w-full text-body-m-bold text-gray-800 line-clamp-1">{displayTitle}</div>
+            <div className="w-full text-body-m-bold text-gray-800 line-clamp-1">
+              <HighlightText
+                text={displayTitle}
+                query={highlightQuery}
+                highlightClassName="bg-transparent text-main"
+              />
+            </div>
 
             <div className="flex gap-4">
               {/* 날짜 */}
