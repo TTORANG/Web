@@ -217,10 +217,18 @@ export default function SlideWebcamStage({
     videoElement.addEventListener('pause', handlePause);
     videoElement.addEventListener('seeked', handleSeeked);
 
+    // 재생 중 1초마다 seek 이벤트 전송
+    const seekInterval = window.setInterval(() => {
+      if (!videoElement.paused && !videoElement.ended) {
+        emit('seek');
+      }
+    }, 1000);
+
     return () => {
       videoElement.removeEventListener('play', handlePlay);
       videoElement.removeEventListener('pause', handlePause);
       videoElement.removeEventListener('seeked', handleSeeked);
+      window.clearInterval(seekInterval);
     };
   }, [onVideoEvent, videoElement]);
 
