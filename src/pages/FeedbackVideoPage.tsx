@@ -37,14 +37,15 @@ export default function FeedbackVideoPage({
     comments,
     reactions,
     commentDraft,
-    timestampPrefix,
     scrollToCommentId,
     isSubmittingComment,
     webcamVideoUrl,
     updateCurrentTime,
     requestSeek,
     setCommentDraft,
+    handleInputFocus,
     handleAddComment,
+    handleCancelComment,
     handleGoToTimeRef,
     handleVideoPlaybackEvent,
     addReply,
@@ -142,9 +143,9 @@ export default function FeedbackVideoPage({
               value={commentDraft}
               onChange={setCommentDraft}
               onSubmit={handleAddComment}
-              onCancel={() => setCommentDraft('')}
+              onCancel={handleCancelComment}
+              onFocusCapture={handleInputFocus}
               className="items-end w-86"
-              initialValueOnFocus={timestampPrefix}
               disabled={isSubmittingComment}
             />
             <ReactionButtons reactions={reactions} onToggleReaction={addReaction} layout="grid-2" />
@@ -183,9 +184,9 @@ export default function FeedbackVideoPage({
                 value={commentDraft}
                 onChange={setCommentDraft}
                 onSubmit={handleAddComment}
-                onCancel={() => setCommentDraft('')}
+                onCancel={handleCancelComment}
+                onFocusCapture={handleInputFocus}
                 className="w-full"
-                initialValueOnFocus={timestampPrefix}
                 disabled={isSubmittingComment}
               />
             </div>

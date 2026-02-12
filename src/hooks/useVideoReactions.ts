@@ -45,7 +45,6 @@ export function useVideoReactions() {
   const [lockedTypes, setLockedTypes] = useState<Partial<Record<ReactionType, boolean>>>({});
   const activeTimers = useRef<Partial<Record<ReactionType, ReturnType<typeof setTimeout>>>>({});
   const lockTimers = useRef<Partial<Record<ReactionType, ReturnType<typeof setTimeout>>>>({});
-  const pendingApiCount = useRef(0);
 
   useEffect(() => {
     const activeTimerMap = activeTimers.current;
@@ -105,6 +104,8 @@ export function useVideoReactions() {
     }
     lockTimers.current[type] = setTimeout(() => {
       setLockedTypes((prev) => ({ ...prev, [type]: false }));
+      // 락 해제 시 optimistic delta 초기화하여 서버 값으로 동기화
+      setOptimisticDeltas((prev) => ({ ...prev, [type]: 0 }));
     }, OPTIMISTIC_LOCK_DURATION);
 
     // 낙관적 업데이트: 카운트 +1
@@ -125,8 +126,6 @@ export function useVideoReactions() {
     }, ACTIVE_FLASH_MS);
 
     // API 호출
-    pendingApiCount.current += 1;
-
     createReactionApi(
       {
         videoId: video.videoId,
@@ -136,12 +135,6 @@ export function useVideoReactions() {
         },
       },
       {
-        onSettled: () => {
-          pendingApiCount.current -= 1;
-          if (pendingApiCount.current <= 0) {
-            setOptimisticDeltas({});
-          }
-        },
         onError: (error) => {
           // 글로벌 에러 핸들러의 토스트 방지 (isHandled 플래그 설정)
           if (error && typeof error === 'object') {
