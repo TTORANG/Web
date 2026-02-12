@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
 
 import { useQueryClient } from '@tanstack/react-query';
@@ -16,8 +16,6 @@ import { showToast } from './utils/toast';
 function App() {
   useThemeListener();
   const queryClient = useQueryClient();
-
-  const updateUser = useAuthStore((state) => state.updateUser);
 
   useEffect(() => {
     const handleMessage = async (event: MessageEvent) => {
