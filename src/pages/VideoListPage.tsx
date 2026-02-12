@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { toast } from 'sonner';
@@ -11,26 +11,32 @@ import PresentationList from '@/components/presentation/PresentationList';
 import { DeleteVideoModal, RecordingEmptySection } from '@/components/video';
 import { useProjectVideos } from '@/hooks/useProjectVideos';
 import type { FilterMode, SortMode, ViewMode } from '@/types/home';
-import { showToast } from '@/utils/toast';
 
 const SKELETON_CARD_COUNT = 6;
 const SKELETON_LIST_COUNT = 4;
+
+type DeleteTarget = { id: string; title: string } | null;
 
 export default function VideoListPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { projectId } = useParams<{ projectId: string }>();
 
+  // UI 상태
   const [query, setQuery] = useState('');
   const [appliedQuery, setAppliedQuery] = useState('');
   const [sort, setSort] = useState<SortMode>('recent');
   const [filter, setFilter] = useState<FilterMode>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('card');
+
+  // 삭제 상태
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [videoToDelete, setVideoToDelete] = useState<DeleteTarget>(null);
   const [deletingVideoIds, setDeletingVideoIds] = useState<Set<string>>(new Set());
 
-  // 삭제 확인 모달 상태
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [videoToDelete, setVideoToDelete] = useState<{ id: string; title: string } | null>(null);
+  // 썸네일/처리 폴링 상태
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
+  const [thumbVersion, setThumbVersion] = useState<Record<string, number>>({});
 
   const { data, isLoading, error, refetch } = useProjectVideos({
     projectId: projectId!,
@@ -39,88 +45,98 @@ export default function VideoListPage() {
     sort,
   });
 
-  const videos = useMemo(() => data?.videos || [], [data?.videos]);
+  const rawVideos = useMemo(() => data?.videos ?? [], [data?.videos]);
   const totalCount = data?.total ?? 0;
+
+  // 검색 디바운스
+  useEffect(() => {
+    const t = setTimeout(() => setAppliedQuery(query), 300);
+    return () => clearTimeout(t);
+  }, [query]);
 
   const isDebouncing = query.trim() !== appliedQuery.trim();
   const hasAppliedQuery = appliedQuery.trim().length > 0;
+
+  // 업로드 성공 → 토스트 + state 정리 + refetch
+  useEffect(() => {
+    if (!location.state?.uploadSuccess) return;
+
+    toast.success('영상을 저장했습니다.');
+    navigate(location.pathname, { replace: true, state: {} });
+    void refetch();
+  }, [location.state, location.pathname, navigate, refetch]);
+
+  // processing 1시간 초과면 stuck 처리 (파생 데이터로 정리)
+  const videos = useMemo(() => {
+    const now = Date.now();
+
+    return rawVideos.map((v) => {
+      const createdAt = new Date(v.createdAt).getTime();
+      const hours = (now - createdAt) / (1000 * 60 * 60);
+      const isStuck = v.status === 'processing' && hours > 1;
+
+      return {
+        ...v,
+        derivedStatus: isStuck ? 'failed' : v.status,
+        isStuck,
+        isFailed: v.status === 'failed' || isStuck,
+        isPending: v.status === 'processing' || !v.thumbnailUrl,
+      };
+    });
+  }, [rawVideos]);
+
   const hasResults = videos.length > 0;
 
-  const [pendingThumbnailIds, setPendingThumbnailIds] = useState<string[]>([]);
-  const pendIdsRef = useRef<string[]>([]);
-  const [thumbVersion, setThumbVersion] = useState<Record<string, number>>({});
-  const pendingSet = useMemo(() => new Set(pendingThumbnailIds), [pendingThumbnailIds]);
-
-  useEffect(() => {
-    if (location.state?.uploadSuccess) {
-      showToast.success('영상을 저장했습니다.', undefined, {
-        position: 'top-right',
-      });
-      navigate(location.pathname, { replace: true, state: {} });
-      refetch();
-    }
-  }, [location, navigate, refetch]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setAppliedQuery(query);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [query]);
-
+  // pendingIds 갱신: processing or thumbnail 없음인 videoId를 Set에 추가
   useEffect(() => {
     if (videos.length === 0) return;
 
-    const nextPending = videos
-      .filter((v) => v.status === 'processing' || !v.thumbnailUrl)
-      .map((v) => String(v.videoId));
-
-    setPendingThumbnailIds((prev) => {
-      const set = new Set(prev);
-      nextPending.forEach((id) => set.add(id));
-      return Array.from(set);
+    setPendingIds((prev) => {
+      const next = new Set(prev);
+      videos.forEach((v) => {
+        if (v.isPending) next.add(String(v.videoId));
+      });
+      return next;
     });
   }, [videos]);
 
+  // 폴링: pendingIds가 있을 때만 3초마다 refetch → 완료된 id 제거 + thumbVersion bump
   useEffect(() => {
-    pendIdsRef.current = pendingThumbnailIds;
-  }, [pendingThumbnailIds]);
+    if (pendingIds.size === 0) return;
 
-  useEffect(() => {
-    if (pendingThumbnailIds.length === 0) return;
-
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     const poll = async () => {
       if (cancelled) return;
 
       const res = await refetch();
-      const freshVideos = res.data?.videos ?? [];
+      const fresh = res.data?.videos ?? [];
 
-      const currentIds = pendIdsRef.current;
+      const doneIds: string[] = [];
 
-      const doneIds = freshVideos
-        .filter((v) => currentIds.includes(String(v.videoId)))
-        .filter((v) => v.status !== 'processing' && Boolean(v.thumbnailUrl))
-        .map((v) => String(v.videoId));
+      fresh.forEach((v) => {
+        const id = String(v.videoId);
+        const isDone = v.status !== 'processing' && Boolean(v.thumbnailUrl);
+        if (pendingIds.has(id) && isDone) doneIds.push(id);
+      });
 
       if (doneIds.length > 0) {
         setThumbVersion((prev) => {
           const next = { ...prev };
-          doneIds.forEach((id) => {
-            next[id] = (next[id] ?? 0) + 1;
-          });
+          doneIds.forEach((id) => (next[id] = (next[id] ?? 0) + 1));
           return next;
         });
 
-        setPendingThumbnailIds((prev) => prev.filter((id) => !doneIds.includes(id)));
+        setPendingIds((prev) => {
+          const next = new Set(prev);
+          doneIds.forEach((id) => next.delete(id));
+          return next;
+        });
       }
 
-      if (pendIdsRef.current.length > 0) {
-        timeoutId = setTimeout(poll, 3000);
-      }
+      // 아직 남아있으면 계속
+      timeoutId = setTimeout(poll, 3000);
     };
 
     timeoutId = setTimeout(poll, 3000);
@@ -129,50 +145,58 @@ export default function VideoListPage() {
       cancelled = true;
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [pendingThumbnailIds, refetch]);
+  }, [pendingIds, refetch]);
 
-  const handleStartRecording = () => {
+  const handleStartRecording = useCallback(() => {
     navigate(`/${projectId}/video/record`);
-  };
+  }, [navigate, projectId]);
 
-  const handleVideoClick = (videoId: string, status: string) => {
-    if (status === 'processing') {
-      toast.info('영상을 처리하고 있습니다.', {
-        description: '처리가 완료되면 확인할 수 있습니다.',
-      });
-      return;
-    }
+  const handleVideoClick = useCallback(
+    (videoId: string, status: string) => {
+      if (status === 'processing') {
+        toast.info('영상을 처리하고 있습니다.', {
+          description: '처리가 완료되면 확인할 수 있습니다.',
+        });
+        return;
+      }
+      if (status === 'failed') {
+        toast.error('영상 처리에 실패했습니다.', {
+          description: '다시 녹화해주세요.',
+        });
+        return;
+      }
+      navigate(`/${projectId}/videos/${videoId}`);
+    },
+    [navigate, projectId],
+  );
 
-    if (status === 'failed') {
-      toast.error('영상 처리에 실패했습니다.', {
-        description: '다시 녹화해주세요.',
-      });
-      return;
-    }
-
-    navigate(`/${projectId}/videos/${videoId}`);
-  };
-
-  const handleDeleteClick = (videoId: string, title: string) => {
-    setVideoToDelete({ id: videoId, title });
+  const openDeleteModal = useCallback((id: string, title: string) => {
+    setVideoToDelete({ id, title });
     setDeleteModalOpen(true);
-  };
+  }, []);
 
-  const handleConfirmDelete = async () => {
+  const closeDeleteModal = useCallback(() => {
+    setDeleteModalOpen(false);
+    setVideoToDelete(null);
+  }, []);
+
+  const handleConfirmDelete = useCallback(async () => {
     if (!videoToDelete) return;
 
-    setDeleteModalOpen(false);
-    setDeletingVideoIds((prev) => new Set(prev).add(videoToDelete.id));
+    const { id } = videoToDelete;
+
+    closeDeleteModal();
+    setDeletingVideoIds((prev) => new Set(prev).add(id));
 
     try {
-      const response = await videosApi.deleteVideo(videoToDelete.id);
+      const response = await videosApi.deleteVideo(id);
 
-      if (response.data.resultType === 'SUCCESS') {
-        toast.success('영상을 삭제했습니다.');
-        refetch();
-      } else {
+      if (response.data.resultType !== 'SUCCESS') {
         throw new Error(response.data.error?.reason || '삭제에 실패했습니다.');
       }
+
+      toast.success('영상을 삭제했습니다.');
+      void refetch();
     } catch (err) {
       console.error('[VideoListPage] Delete error:', err);
       toast.error('영상을 삭제하지 못했습니다.', {
@@ -181,11 +205,30 @@ export default function VideoListPage() {
     } finally {
       setDeletingVideoIds((prev) => {
         const next = new Set(prev);
-        next.delete(videoToDelete.id);
+        next.delete(id);
         return next;
       });
       setVideoToDelete(null);
     }
+  }, [videoToDelete, closeDeleteModal, refetch]);
+
+  const renderSkeleton = () => {
+    if (viewMode === 'card') {
+      return (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: SKELETON_CARD_COUNT }).map((_, i) => (
+            <PresentationCard.Skeleton key={i} />
+          ))}
+        </div>
+      );
+    }
+    return (
+      <div className="flex flex-col gap-3">
+        {Array.from({ length: SKELETON_LIST_COUNT }).map((_, i) => (
+          <PresentationList.Skeleton key={i} />
+        ))}
+      </div>
+    );
   };
 
   if (!projectId) {
@@ -221,6 +264,9 @@ export default function VideoListPage() {
     );
   }
 
+  const showEmptyRecording = !isLoading && totalCount === 0 && !hasAppliedQuery;
+  const showSkeletonUI = isLoading || isDebouncing;
+
   return (
     <div
       role="tabpanel"
@@ -228,18 +274,14 @@ export default function VideoListPage() {
       aria-labelledby="tab-video"
       className="relative h-full w-full overflow-y-auto bg-gray-100"
     >
-      {/* 삭제 확인 모달 */}
       <DeleteVideoModal
         isOpen={deleteModalOpen}
-        onClose={() => {
-          setDeleteModalOpen(false);
-          setVideoToDelete(null);
-        }}
+        onClose={closeDeleteModal}
         title={videoToDelete?.title}
         onConfirm={handleConfirmDelete}
       />
 
-      {!isLoading && totalCount === 0 && !hasAppliedQuery ? (
+      {showEmptyRecording ? (
         <div className="flex h-full items-center justify-center">
           <RecordingEmptySection onStart={handleStartRecording} />
         </div>
@@ -274,20 +316,8 @@ export default function VideoListPage() {
           </div>
 
           <section className="flex-1">
-            {isLoading || isDebouncing ? (
-              viewMode === 'card' ? (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {Array.from({ length: SKELETON_CARD_COUNT }).map((_, index) => (
-                    <PresentationCard.Skeleton key={index} />
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  {Array.from({ length: SKELETON_LIST_COUNT }).map((_, index) => (
-                    <PresentationList.Skeleton key={index} />
-                  ))}
-                </div>
-              )
+            {showSkeletonUI ? (
+              renderSkeleton()
             ) : !hasResults ? (
               <div className="flex items-center justify-center p-40">
                 <p className="text-body-m text-gray-500">
@@ -296,123 +326,97 @@ export default function VideoListPage() {
                     : '선택한 필터에 맞는 영상을 찾지 못했어요.'}
                 </p>
               </div>
-            ) : (
-              <div>
-                {viewMode === 'card' ? (
-                  <CardView
-                    items={videos}
-                    getKey={(item) => String(item.videoId)}
-                    className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-3"
-                    renderCard={(item) => {
-                      const now = new Date();
-                      const createdAt = new Date(item.createdAt);
-                      const hoursSinceCreated =
-                        (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+            ) : viewMode === 'card' ? (
+              <CardView
+                items={videos}
+                getKey={(item) => String(item.videoId)}
+                className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-3"
+                renderCard={(item) => {
+                  const id = String(item.videoId);
+                  const isDeleting = deletingVideoIds.has(id);
+                  const isPending = pendingIds.has(id) || item.isPending;
 
-                      const isStuck = item.status === 'processing' && hoursSinceCreated > 1;
+                  return (
+                    <div
+                      className="relative"
+                      onClick={() => handleVideoClick(id, item.derivedStatus)}
+                    >
+                      <PresentationCard
+                        {...item}
+                        mode="videos"
+                        isPresentationPending={isPending}
+                        thumbnailVersion={thumbVersion[id] ?? 0}
+                        onDelete={() => openDeleteModal(id, item.title)}
+                      />
 
-                      const isFailed = item.status === 'failed' || isStuck;
-                      const isDeleting = deletingVideoIds.has(item.videoId?.toString() || '');
-
-                      return (
-                        <div
-                          className="relative"
-                          onClick={() =>
-                            handleVideoClick(
-                              item.videoId?.toString() || '',
-                              isStuck ? 'failed' : item.status,
-                            )
-                          }
-                        >
-                          <PresentationCard
-                            {...item}
-                            mode="videos"
-                            isPresentationPending={
-                              pendingSet.has(String(item.videoId)) ||
-                              item.status === 'processing' ||
-                              !item.thumbnailUrl
-                            }
-                            thumbnailVersion={thumbVersion[String(item.videoId)] ?? 0}
-                            onDelete={() =>
-                              handleDeleteClick(item.videoId?.toString() || '', item.title)
-                            }
-                          />
-
-                          {isFailed && !isDeleting && (
-                            <div className="absolute inset-0 bg-black/70 rounded-2xl flex items-center justify-center z-10">
-                              <div className="text-center">
-                                <svg
-                                  className="h-12 w-12 text-red-500 mx-auto mb-3"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                                  />
-                                </svg>
-                                <p className="text-white text-sm font-bold mb-3">
-                                  {isStuck ? '처리 시간 초과' : '처리 실패'}
-                                </p>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteClick(item.videoId?.toString() || '', item.title);
-                                  }}
-                                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors"
-                                >
-                                  삭제
-                                </button>
-                              </div>
-                            </div>
-                          )}
-
-                          {isDeleting && (
-                            <div className="absolute inset-0 bg-black/70 rounded-2xl flex items-center justify-center z-10 pointer-events-none">
-                              <div className="text-center">
-                                <div className="h-10 w-10 animate-spin rounded-full border-4 border-white border-t-transparent mx-auto mb-3" />
-                                <p className="text-white text-sm font-bold">삭제 중...</p>
-                              </div>
-                            </div>
-                          )}
+                      {item.isFailed && !isDeleting && (
+                        <div className="absolute inset-0 bg-black/70 rounded-2xl flex items-center justify-center z-10">
+                          <div className="text-center">
+                            <svg
+                              className="h-12 w-12 text-red-500 mx-auto mb-3"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                              />
+                            </svg>
+                            <p className="text-white text-sm font-bold mb-3">
+                              {item.isStuck ? '처리 시간 초과' : '처리 실패'}
+                            </p>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openDeleteModal(id, item.title);
+                              }}
+                              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                            >
+                              삭제
+                            </button>
+                          </div>
                         </div>
-                      );
-                    }}
-                    empty={null}
-                  />
-                ) : (
-                  <ListView
-                    items={videos}
-                    getKey={(item) => String(item.videoId)}
-                    className="flex flex-col gap-3"
-                    renderInfo={(item) => (
-                      <div
-                        onClick={() =>
-                          handleVideoClick(item.videoId?.toString() || '', item.status)
-                        }
-                      >
-                        <PresentationList
-                          {...item}
-                          mode="videos"
-                          isPresentationPending={
-                            pendingSet.has(String(item.videoId)) ||
-                            item.status === 'processing' ||
-                            !item.thumbnailUrl
-                          }
-                          thumbnailVersion={thumbVersion[String(item.videoId)] ?? 0}
-                          onDelete={() =>
-                            handleDeleteClick(item.videoId?.toString() || '', item.title)
-                          }
-                        />
-                      </div>
-                    )}
-                    empty={null}
-                  />
-                )}
-              </div>
+                      )}
+
+                      {isDeleting && (
+                        <div className="absolute inset-0 bg-black/70 rounded-2xl flex items-center justify-center z-10 pointer-events-none">
+                          <div className="text-center">
+                            <div className="h-10 w-10 animate-spin rounded-full border-4 border-white border-t-transparent mx-auto mb-3" />
+                            <p className="text-white text-sm font-bold">삭제 중...</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }}
+                empty={null}
+              />
+            ) : (
+              <ListView
+                items={videos}
+                getKey={(item) => String(item.videoId)}
+                className="flex flex-col gap-3"
+                renderInfo={(item) => {
+                  const id = String(item.videoId);
+                  const isPending = pendingIds.has(id) || item.isPending;
+
+                  return (
+                    <div onClick={() => handleVideoClick(id, item.derivedStatus)}>
+                      <PresentationList
+                        {...item}
+                        mode="videos"
+                        isPresentationPending={isPending}
+                        thumbnailVersion={thumbVersion[id] ?? 0}
+                        onDelete={() => openDeleteModal(id, item.title)}
+                      />
+                    </div>
+                  );
+                }}
+                empty={null}
+              />
             )}
           </section>
         </main>
