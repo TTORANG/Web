@@ -15,13 +15,14 @@ import { TitleEditorPopover } from '../TitleEditorPopover';
 
 interface PresentationTitleEditorProps {
   readOnlyContent?: React.ReactNode;
+  title?: string;
 }
 
-export function PresentationTitleEditor({ readOnlyContent }: PresentationTitleEditorProps) {
+export function PresentationTitleEditor({ readOnlyContent, title }: PresentationTitleEditorProps) {
   const { projectId } = useParams<{ projectId: string }>();
   const { data: presentation } = usePresentation(projectId ?? '');
 
-  const resolvedTitle = presentation?.title?.trim() ? presentation.title : '내 발표';
+  const resolvedTitle = title || (presentation?.title?.trim() ? presentation.title : '내 발표');
 
   if (readOnlyContent) {
     return (

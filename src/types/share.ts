@@ -90,6 +90,7 @@ export interface ReadSharedContentData {
   message: string;
   sessionInfo: {
     sessionId: string;
+    name: string;
     tokens: {
       accessToken: string;
       refreshToken: string;
