@@ -28,7 +28,9 @@ export function PresentationTitleEditor({
 
   const resolvedTitle =
     titleOverride?.trim() || (presentation?.title?.trim() ? presentation.title : '내 발표');
-  const titleClassName = pathname.endsWith('/slide') ? 'max-w-52 truncate' : undefined;
+  const isProjectTabPath =
+    /^\/[^/]+\/(slide|insight|videos)(\/[^/]+)?$/.test(pathname) || pathname.endsWith('/videos');
+  const titleClassName = isProjectTabPath ? 'max-w-52 truncate' : undefined;
 
   if (readOnlyContent) {
     return (
