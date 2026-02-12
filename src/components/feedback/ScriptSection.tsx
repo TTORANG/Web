@@ -19,6 +19,7 @@ interface ScriptSectionProps {
   onSeek?: (time: number) => void;
   onScroll?: () => void;
   isLoading?: boolean;
+  stlyle?: React.CSSProperties;
 }
 
 export default function ScriptSection({

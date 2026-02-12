@@ -247,7 +247,7 @@ export default function CommentList({
   return (
     <>
       <CommentProvider value={contextValue}>
-        <div ref={listRef} className="mt-2 min-h-0 flex-1 space-y-2 overflow-y-auto">
+        <div ref={listRef} className=" min-h-0 space-y-2 overflow-y-auto">
           {comments.map((comment) => (
             <Comment key={comment.commentId} comment={comment} />
           ))}
