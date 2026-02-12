@@ -18,7 +18,7 @@ import {
 import clsx from 'clsx';
 
 type PopoverPosition = 'top' | 'bottom';
-type PopoverAlign = 'start' | 'end';
+type PopoverAlign = 'start' | 'end' | 'center';
 
 interface PopoverProps {
   trigger: ReactElement | ((props: { isOpen: boolean }) => ReactElement);
@@ -131,6 +131,7 @@ export function Popover({
   const alignClasses = clsx({
     'left-0': align === 'start',
     'right-0': align === 'end',
+    'left-1/2 -translate-x-1/2': align === 'center',
   });
 
   return (
