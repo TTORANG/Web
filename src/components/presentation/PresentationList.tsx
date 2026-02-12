@@ -183,8 +183,10 @@ function PresentationList(props: Props) {
       <article
         onClick={handleListClick}
         className={clsx(
-          'relative flex w-full items-center justify-between bg-white px-5 py-4 rounded-2xl border border-gray-200 transition-shadow',
-          isProcessing ? 'cursor-not-allowed' : 'cursor-pointer hover:shadow-lg',
+          'relative flex w-full items-center justify-between bg-white px-5 py-4 rounded-2xl border border-gray-200 transition-all duration-250 ease-out',
+          isProcessing
+            ? 'cursor-not-allowed'
+            : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-lg',
         )}
         aria-disabled={isProcessing}
       >

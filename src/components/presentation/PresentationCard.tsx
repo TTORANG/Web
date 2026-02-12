@@ -130,8 +130,10 @@ function PresentationCard(props: Props) {
       <article
         onClick={handleCardClick}
         className={clsx(
-          'relative rounded-2xl border-none bg-white transition-shadow',
-          isProcessing ? 'cursor-not-allowed' : 'cursor-pointer hover:shadow-lg',
+          'relative rounded-2xl border-none bg-white transition-all duration-250 ease-out',
+          isProcessing
+            ? 'cursor-not-allowed'
+            : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-lg',
         )}
         aria-disabled={isProcessing}
       >
