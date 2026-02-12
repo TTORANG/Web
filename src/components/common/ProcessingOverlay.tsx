@@ -20,27 +20,28 @@ export default function ProcessingOverlay({
   if (!visible) return null;
 
   const isCard = variant === 'card';
+  const titleText = isCard ? title : '처리 중...';
 
   return (
     <div
       className={clsx(
         'absolute inset-0 z-20 flex items-center justify-center backdrop-blur-sm transition-all duration-200',
-        'bg-black/60 dark:bg-gray-900/60',
         blockPointerEvents ? 'pointer-events-auto' : 'pointer-events-none',
         className,
       )}
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.62)' }}
     >
       <div className="text-center">
         <div
           className={clsx(
-            'animate-spin border-4 border-t-transparent border-white rounded-full mx-auto',
+            'animate-spin border-4 border-gray-900 border-t-transparent rounded-full mx-auto',
             isCard ? 'h-10 w-10 mb-3' : 'h-8 w-8 mb-2',
           )}
         />
-        <p className={clsx('text-white font-bold', isCard ? 'text-sm' : 'text-xs')}>{title}</p>
-        <p className={clsx('text-white/80 mt-1', isCard ? 'text-xs' : 'text-[10px]')}>
-          {description}
+        <p className={clsx('font-bold text-gray-900', isCard ? 'text-sm' : 'text-xs')}>
+          {titleText}
         </p>
+        {isCard && <p className="mt-1 text-xs text-gray-900/80">{description}</p>}
       </div>
     </div>
   );

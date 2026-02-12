@@ -111,6 +111,7 @@ function PresentationCard(props: Props) {
   const handleCardClick = () => {
     // 모달이 열려있으면 이동 안함
     if (isRenameModalOpen || isRenaming || isDeleteModalOpen || isPending) return;
+    if (isProcessing) return;
 
     if (mode === 'videos' && 'videoId' in props) {
       navigate(`/${projectId}/videos/${(props as VideoPresentation).videoId}`);
@@ -128,7 +129,11 @@ function PresentationCard(props: Props) {
     <>
       <article
         onClick={handleCardClick}
-        className="relative rounded-2xl border-none bg-white transition-shadow cursor-pointer hover:shadow-lg"
+        className={clsx(
+          'relative rounded-2xl border-none bg-white transition-shadow',
+          isProcessing ? 'cursor-not-allowed' : 'cursor-pointer hover:shadow-lg',
+        )}
+        aria-disabled={isProcessing}
       >
         <div className="aspect-video w-full overflow-hidden rounded-t-2xl bg-transparent">
           <ThumbnailImage
