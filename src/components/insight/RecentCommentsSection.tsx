@@ -59,7 +59,7 @@ export function RecentCommentsSection({
     // 댓글이 있는 경우 매핑해서 반환
     return (
       <>
-        {recentCommentsData.comments.slice(0, 5).map((comment) => (
+        {recentCommentsData?.comments.slice(0, 5).map((comment) => (
           <RecentCommentItem
             key={comment.commentId}
             user={comment.user.name}
@@ -80,14 +80,11 @@ export function RecentCommentsSection({
     <div className="flex w-full flex-col gap-4">
       <div className="relative">
         {/* 콘텐츠 영역 (영상이 없으면 블러 처리) */}
-        <div
-          className={`flex flex-col gap-2 ${
-            shouldShowOverlay ? 'blur-xs pointer-events-none select-none' : ''
-          }`}
-        >
+        <div className="flex flex-col gap-2">
           <h3 className="text-body-l-bold text-gray-800">최근 댓글 피드백</h3>
-
-          {shouldShowOverlay ? renderSampleComments() : renderActualComments()}
+          <div className={shouldShowOverlay ? 'blur-sm pointer-events-none select-none' : ''}>
+            {shouldShowOverlay ? renderSampleComments() : renderActualComments()}
+          </div>
         </div>
 
         {shouldShowOverlay ? (
@@ -95,8 +92,9 @@ export function RecentCommentsSection({
             className="absolute inset-0 z-10 flex items-center justify-center text-center pointer-events-auto"
             style={{
               borderRadius: '0.75rem',
+              backgroundColor: 'var(--color-white)',
               background:
-                'radial-gradient(ellipse 50% 50% at 50% 50%, rgba(8, 11, 16, 0.86) 0%, rgba(8, 11, 16, 0.62) 34%, rgba(8, 11, 16, 0.34) 60%, rgba(8, 11, 16, 0.14) 80%, rgba(8, 11, 16, 0.04) 92%, rgba(8, 11, 16, 0) 100%)',
+                'radial-gradient(ellipse 50% 50% at 50% 50%, color-mix(in srgb, var(--color-white) 22%, transparent) 0%, color-mix(in srgb, var(--color-white) 16%, transparent) 34%, color-mix(in srgb, var(--color-white) 9%, transparent) 60%, color-mix(in srgb, var(--color-white) 3%, transparent) 80%, color-mix(in srgb, var(--color-white) 1%, transparent) 92%, transparent 100%)',
             }}
           >
             <div className="px-6 py-5">

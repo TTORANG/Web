@@ -20,7 +20,7 @@ export function userFromAccessToken(accessToken: string, sessionIdOverride?: str
     email,
     name: email ? email.split('@')[0] : undefined,
     sessionId,
-    profileImage: payload?.profileImageUrl,
+    profileImage: payload?.profileImageUrl ?? undefined,
   };
 }
 
