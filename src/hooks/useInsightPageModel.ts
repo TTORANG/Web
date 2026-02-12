@@ -52,7 +52,7 @@ export function useInsightPageModel(): InsightModel {
   const { data: summaryAnalytics } = summaryAnalyticsQuery;
   const { data: recentCommentsData } = recentCommentsQuery;
 
-  const videoIdStr = summaryAnalytics?.videoIds?.[0] ?? '';
+  const videoIdStr = summaryAnalytics?.videoIds?.[summaryAnalytics.videoIds.length - 1] ?? '';
   const videoIdNum = videoIdStr ? Number(videoIdStr) : 0;
   const hasVideo = !!videoIdNum;
 
