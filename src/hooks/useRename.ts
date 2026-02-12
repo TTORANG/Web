@@ -1,12 +1,28 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useUpdatePresentation } from '@/hooks/queries/usePresentations';
 import { showToast } from '@/utils/toast';
 
-interface UseRenameOptions {
-  projectId: string;
+type BaseRenameOptions = {
   initialTitle: string;
-}
+  successMessage?: string;
+  errorMessage?: string;
+};
+
+type PresentationRenameOptions = BaseRenameOptions & {
+  projectId: string;
+  onConfirmRename?: undefined;
+};
+
+type ExternalRenameOptions = BaseRenameOptions & {
+  onConfirmRename: (title: string) => Promise<void>;
+  projectId?: undefined;
+};
+
+type UseRenameOptions = PresentationRenameOptions | ExternalRenameOptions;
+
+const hasExternalRenameHandler = (options: UseRenameOptions): options is ExternalRenameOptions =>
+  typeof options.onConfirmRename === 'function';
 
 interface UseRenameReturn {
   /** 이름 변경 모달 열림 여부 */
@@ -24,22 +40,31 @@ interface UseRenameReturn {
   /** 이름 변경 모달 닫기 */
   closeRenameModal: () => void;
   /** 이름 변경 확인 */
-  confirmRename: () => void;
+  confirmRename: () => Promise<void>;
 }
 
 /**
  * 프로젝트 이름 변경 공통 훅
  *
- * @param options - projectId와 initialTitle
+ * @param options - projectId 기반 변경 또는 외부 변경 핸들러
  * @returns 이름 변경에 필요한 상태와 핸들러
  */
-export function useRename({ projectId, initialTitle }: UseRenameOptions): UseRenameReturn {
-  const { mutate: updatePresentation, isPending } = useUpdatePresentation();
+export function useRename(options: UseRenameOptions): UseRenameReturn {
+  const { mutateAsync: updatePresentation, isPending: isPresentationPending } =
+    useUpdatePresentation();
+  const { initialTitle, successMessage, errorMessage } = options;
 
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState(initialTitle);
-  // 로컬에서 성공적으로 변경된 제목을 추적 (즉시 UI 반영용)
   const [confirmedTitle, setConfirmedTitle] = useState(initialTitle);
+  const [isExternalPending, setIsExternalPending] = useState(false);
+
+  useEffect(() => {
+    setConfirmedTitle(initialTitle);
+    setNewTitle(initialTitle);
+  }, [initialTitle]);
+
+  const isPending = isPresentationPending || isExternalPending;
 
   const openRenameModal = () => {
     setNewTitle(confirmedTitle);
@@ -51,7 +76,7 @@ export function useRename({ projectId, initialTitle }: UseRenameOptions): UseRen
     setNewTitle(confirmedTitle);
   };
 
-  const confirmRename = () => {
+  const confirmRename = async () => {
     const trimmedTitle = newTitle.trim();
 
     if (!trimmedTitle) {
@@ -64,19 +89,26 @@ export function useRename({ projectId, initialTitle }: UseRenameOptions): UseRen
       return;
     }
 
-    updatePresentation(
-      { projectId, data: { title: trimmedTitle } },
-      {
-        onSuccess: () => {
-          showToast.success('제목을 변경했습니다.');
-          setConfirmedTitle(trimmedTitle);
-          setIsRenameModalOpen(false);
-        },
-        onError: () => {
-          showToast.error('제목을 변경하지 못했습니다.');
-        },
-      },
-    );
+    const isExternalRename = hasExternalRenameHandler(options);
+
+    try {
+      if (isExternalRename) {
+        setIsExternalPending(true);
+        await options.onConfirmRename(trimmedTitle);
+      } else {
+        await updatePresentation({ projectId: options.projectId, data: { title: trimmedTitle } });
+      }
+
+      showToast.success(successMessage ?? '제목을 변경했습니다.');
+      setConfirmedTitle(trimmedTitle);
+      setIsRenameModalOpen(false);
+    } catch {
+      showToast.error(errorMessage ?? '제목을 변경하지 못했습니다.');
+    } finally {
+      if (isExternalRename) {
+        setIsExternalPending(false);
+      }
+    }
   };
 
   return {

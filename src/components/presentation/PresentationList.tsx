@@ -34,7 +34,7 @@ type Props = (Presentation | VideoPresentation) & {
 type SlideListProps = Presentation &
   Omit<Props, keyof Presentation | 'mode'> & {
     mode?: 'slide';
-    onUpdateTitle?: never;
+    onUpdateTitle?: undefined;
   };
 
 type VideoListProps = VideoPresentation &

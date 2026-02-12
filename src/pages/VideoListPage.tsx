@@ -171,6 +171,14 @@ export default function VideoListPage() {
     [navigate, projectId],
   );
 
+  const handleUpdateVideoTitle = useCallback(
+    async (videoId: string, newTitle: string) => {
+      await videosApi.updateVideoTitle(videoId, newTitle);
+      await refetch();
+    },
+    [refetch],
+  );
+
   const openDeleteModal = useCallback((id: string, title: string) => {
     setVideoToDelete({ id, title });
     setDeleteModalOpen(true);
@@ -348,6 +356,7 @@ export default function VideoListPage() {
                         isPresentationPending={isPending}
                         thumbnailVersion={thumbVersion[id] ?? 0}
                         onDelete={() => openDeleteModal(id, item.title)}
+                        onUpdateTitle={(newTitle) => handleUpdateVideoTitle(id, newTitle)}
                       />
 
                       {item.isFailed && !isDeleting && (
@@ -412,6 +421,7 @@ export default function VideoListPage() {
                         isPresentationPending={isPending}
                         thumbnailVersion={thumbVersion[id] ?? 0}
                         onDelete={() => openDeleteModal(id, item.title)}
+                        onUpdateTitle={(newTitle) => handleUpdateVideoTitle(id, newTitle)}
                       />
                     </div>
                   );

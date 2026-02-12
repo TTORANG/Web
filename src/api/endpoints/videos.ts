@@ -111,7 +111,12 @@ export const videosApi = {
     const response = await apiClient.patch<
       ApiResponse<{ videoId: string; title: string; updatedAt: string }>
     >(`/videos/${videoId}`, { title });
-    return response.data;
+
+    if (response.data.resultType === 'SUCCESS') {
+      return response.data.success;
+    }
+
+    throw new Error(response.data.error.reason);
   },
 };
 
