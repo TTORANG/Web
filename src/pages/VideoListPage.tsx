@@ -12,6 +12,7 @@ import PresentationList from '@/components/presentation/PresentationList';
 import { DeleteVideoModal, RecordingEmptySection } from '@/components/video';
 import { useProjectVideos } from '@/hooks/useProjectVideos';
 import type { FilterMode, SortMode, ViewMode } from '@/types/home';
+import { showToast } from '@/utils/toast';
 
 const SKELETON_CARD_COUNT = 6;
 const SKELETON_LIST_COUNT = 4;
@@ -21,7 +22,6 @@ export default function VideoListPage() {
   const location = useLocation();
   const { projectId } = useParams<{ projectId: string }>();
 
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [query, setQuery] = useState('');
   const [appliedQuery, setAppliedQuery] = useState('');
   const [sort, setSort] = useState<SortMode>('recent');
@@ -59,11 +59,11 @@ export default function VideoListPage() {
 
   useEffect(() => {
     if (location.state?.uploadSuccess) {
-      setShowSuccessToast(true);
+      showToast.success('영상이 성공적으로 저장되었습니다!', undefined, {
+        position: 'top-right',
+      });
       navigate(location.pathname, { replace: true, state: {} });
       refetch();
-      const timer = setTimeout(() => setShowSuccessToast(false), 3000);
-      return () => clearTimeout(timer);
     }
   }, [location, navigate, refetch]);
 
@@ -182,20 +182,6 @@ export default function VideoListPage() {
       aria-labelledby="tab-video"
       className="relative h-full w-full overflow-y-auto bg-gray-100"
     >
-      {/* 성공 토스트 */}
-      {showSuccessToast && (
-        <div className="fixed right-4 top-4 z-50 flex animate-slide-in items-center gap-2 rounded-lg bg-success px-6 py-3 shadow-lg">
-          <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span className="text-body-m-bold text-white">영상이 성공적으로 저장되었습니다!</span>
-        </div>
-      )}
-
       {/* 삭제 확인 모달 */}
       <DeleteVideoModal
         isOpen={deleteModalOpen}
