@@ -6,7 +6,7 @@
  * 로그인 상태: 사용자 이름 + 프로필 이미지 (클릭 시 로그아웃/회원탈퇴 드롭다운)
  */
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -27,6 +27,7 @@ import { WithdrawConfirmModal } from './WithdrawConfirmModal';
 export function LoginButton() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const accessToken = useAuthStore((s) => s.accessToken);
   const user = useAuthStore((s) => s.user);
   const openLoginModal = useAuthStore((s) => s.openLoginModal);
@@ -39,6 +40,7 @@ export function LoginButton() {
   const isGuest = !accessToken;
   const isAnon = accessToken && isAnonymousEmail(user?.email);
   const isSocial = accessToken && user?.email && !isAnonymousEmail(user.email);
+  const isSlideRoute = /\/slide\/?$/.test(pathname);
 
   const handleLogout = () => {
     logout();
@@ -50,7 +52,14 @@ export function LoginButton() {
   };
   // 로그인 전 (게스트)
   if (isGuest) {
-    return <HeaderButton text="로그인" icon={<LoginIcon />} onClick={openLoginModal} />;
+    return (
+      <HeaderButton
+        text="로그인"
+        icon={<LoginIcon />}
+        onClick={openLoginModal}
+        iconOnlyOnMobile={isSlideRoute}
+      />
+    );
   }
 
   // 익명 사용자
@@ -60,7 +69,14 @@ export function LoginButton() {
 
   // 소셜이 아닌데 여기까지 왔다면(비정상 상태) 방어
   if (!isSocial) {
-    return <HeaderButton text="로그인" icon={<LoginIcon />} onClick={openLoginModal} />;
+    return (
+      <HeaderButton
+        text="로그인"
+        icon={<LoginIcon />}
+        onClick={openLoginModal}
+        iconOnlyOnMobile={isSlideRoute}
+      />
+    );
   }
 
   const handleWithdraw = async () => {
@@ -92,7 +108,11 @@ export function LoginButton() {
             type="button"
             className="flex cursor-pointer items-center gap-2 rounded-full px-2 py-1 text-body-s-bold text-gray-800 transition-colors hover:bg-gray-100"
           >
-            <span className="max-w-24 truncate">{displayName}</span>
+            <span
+              className={isSlideRoute ? 'hidden md:inline max-w-24 truncate' : 'max-w-24 truncate'}
+            >
+              {displayName}
+            </span>
             <UserAvatar src={user.profileImage} alt={displayName} size={24} />
           </button>
         }
