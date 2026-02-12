@@ -149,7 +149,7 @@ export default function VideoListPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">잘못된 접근입니다</h2>
           <button
             onClick={() => navigate('/')}
-            className="bg-primary text-white px-6 py-2.5 rounded-lg font-bold"
+            className="bg-main text-white px-6 py-2.5 rounded-lg font-bold hover:bg-main-variant2 transition"
           >
             홈으로 돌아가기
           </button>
@@ -166,7 +166,7 @@ export default function VideoListPage() {
           <p className="text-gray-600 mb-6">잠시 후 다시 시도해주세요.</p>
           <button
             onClick={() => navigate('/')}
-            className="bg-primary text-white px-6 py-2.5 rounded-lg font-bold hover:bg-primary-dark transition"
+            className="bg-main text-white px-6 py-2.5 rounded-lg font-bold hover:bg-main-variant2 transition"
           >
             홈으로 돌아가기
           </button>
