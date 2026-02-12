@@ -87,30 +87,19 @@ export function LoginButton() {
         align="end"
         ariaLabel="사용자 메뉴"
         className="mt-2 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-[0_0.5rem_1.25rem_rgba(0,0,0,0.08)]"
-        trigger={({ isOpen }) => (
+        trigger={
           <button
             type="button"
             className="flex cursor-pointer items-center gap-2 rounded-full px-2 py-1 text-body-s-bold text-gray-800 transition-colors hover:bg-gray-100"
           >
             <span className="max-w-24 truncate">{displayName}</span>
             <UserAvatar src={user.profileImage} alt={displayName} size={24} />
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-            >
-              <path d="m6 9 6 6 6-6" />
-            </svg>
           </button>
-        )}
+        }
       >
         {({ close }) => (
           <div className="p-3">
-            <div className="rounded-lg border border-gray-200 px-3 py-3">
+            <div className="rounded-lg px-3 py-3">
               <p className="text-caption-bold text-gray-600">내 계정</p>
               <div className="mt-2 flex items-center gap-3">
                 <UserAvatar src={user.profileImage} alt={displayName} size={42} />
