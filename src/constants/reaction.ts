@@ -12,6 +12,17 @@ export const REACTION_CONFIG: Record<ReactionType, { emoji: string; label: strin
 } as const;
 
 /**
+ * 낙관적 업데이트 잠금 시간 (ms)
+ * 서버 응답이 오기 전 낙관적 카운트를 유지하는 기간
+ */
+export const OPTIMISTIC_LOCK_DURATION = 2000;
+
+/**
+ * 리액션 카운트 포맷 (99 초과 시 '99+')
+ */
+export const formatReactionCount = (count: number): string | number => (count > 99 ? '99+' : count);
+
+/**
  * 리액션 타입 배열 (REACTION_CONFIG 키에서 추출)
  */
 export const REACTION_TYPES = Object.keys(REACTION_CONFIG) as ReactionType[];

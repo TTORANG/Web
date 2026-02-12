@@ -4,14 +4,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { getTotalReactions } from '@/api/endpoints/reactions';
 import { queryKeys } from '@/api/queryClient';
-import { createDefaultReactions } from '@/constants/reaction';
+import { OPTIMISTIC_LOCK_DURATION, createDefaultReactions } from '@/constants/reaction';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Reaction, ReactionType } from '@/types/script';
 
 import { useCreateReaction, useSlideReactionSummary } from './queries/useReaction.ts';
 
 const EMPTY_REACTIONS: Reaction[] = [];
-const OPTIMISTIC_LOCK_DURATION = 2000;
 
 // 훅 밖에 전역 변수로 선언하여, 슬라이드를 이동해도 기록이 유지되게 함
 // Key: "slideId-reactionType"

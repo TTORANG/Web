@@ -8,7 +8,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { REACTION_TYPES } from '@/constants/reaction';
+import { OPTIMISTIC_LOCK_DURATION, REACTION_TYPES } from '@/constants/reaction';
 import { REACTION_COUNT_WINDOW } from '@/constants/video';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Reaction, ReactionType } from '@/types/script';
@@ -17,8 +17,6 @@ import { useCreateVideoReaction, useVideoReactionWindow } from './queries/useVid
 
 const ACTIVE_FLASH_MS = 500;
 const QUERY_TIMESTAMP_STEP_MS = 5000;
-// useSldieReaction의 Lock개념 그대로 적용
-const OPTIMISTIC_LOCK_DURATION = 2000;
 
 export function useVideoReactions() {
   const video = useVideoFeedbackStore((s) => s.video);

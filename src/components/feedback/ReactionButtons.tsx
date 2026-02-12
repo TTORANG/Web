@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { EmojiConfetti } from '@/components/common';
-import { REACTION_CONFIG } from '@/constants/reaction';
+import { REACTION_CONFIG, formatReactionCount } from '@/constants/reaction';
 import type { Reaction, ReactionType } from '@/types/script';
 
 const MAX_SHAKE_INTENSITY = 3;
@@ -112,7 +112,6 @@ export default function ReactionButtons({
     [startDecay],
   );
 
-  const formatReactionCount = (count: number) => (count > 99 ? '99+' : count);
   const isGrid = layout === 'grid-2';
   const total = reactions.length;
   const containerClass = isGrid
