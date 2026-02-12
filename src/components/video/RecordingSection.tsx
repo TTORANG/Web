@@ -213,6 +213,10 @@ export const RecordingSection = ({
                   muted
                   playsInline
                   className="h-full w-full object-cover"
+                  style={{
+                    transform: 'scaleX(-1)',
+                    WebkitTransform: 'scaleX(-1)', // Safari용
+                  }}
                 />
               </div>
 

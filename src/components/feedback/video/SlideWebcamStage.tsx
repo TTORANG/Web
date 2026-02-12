@@ -321,7 +321,15 @@ export default function SlideWebcamStage({
           label="웹캠 확장"
           className="bg-[#000000]/40"
         >
-          <video ref={setVideoRef} className="h-full w-full object-cover" playsInline />
+          <video
+            ref={setVideoRef}
+            className="h-full w-full object-cover"
+            style={{
+              transform: 'scaleX(-1)',
+              WebkitTransform: 'scaleX(-1)', // Safari용
+            }}
+            playsInline
+          />
         </MediaBox>
 
         {/* 클릭 핸들러 오버레이 */}
