@@ -262,8 +262,6 @@ export default function VideoDetailPage() {
     }
   }, []);
 
-  const handleBack = () => navigate(`/${projectId}/videos`);
-
   const timestampPrefix = `[${Math.floor(currentTime / 60)}:${Math.floor(currentTime % 60)
     .toString()
     .padStart(2, '0')}] `;
