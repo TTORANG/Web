@@ -36,7 +36,6 @@ export const videosApi = {
     return apiClient.post<ApiResponse<CreateChunkUploadResponseDto>>(
       `/videos/${numericId}/chunks/${chunkIndex}`,
       formData,
-      { headers: { 'Content-Type': undefined } },
     );
   },
 

@@ -6,7 +6,6 @@ interface ActionButtonProps {
   text: string;
   onClick: () => void;
   disabled?: boolean;
-  className?: string;
 }
 
 /**
@@ -17,7 +16,7 @@ export const ActionButton = ({ text, onClick, disabled }: ActionButtonProps) => 
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`text-black w-full max-w-110 py-4 bg-main hover:bg-main-variant2 disabled:bg-gray-600
+      className={`text-black w-full max-w-110 py-4 bg-main hover:bg-main-variant2 disabled:bg-gray-600 disabled:text-white
       rounded-lg font-semibold transition-all duration-200 active:scale-[0.98]`}
     >
       {text}
