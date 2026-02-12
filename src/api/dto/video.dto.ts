@@ -90,6 +90,7 @@ export interface VideoTimelineCommentDto {
  * 영상 타임라인 (리액션 + 댓글)
  */
 export interface VideoTimelineDto {
+  feedbacks: never[];
   reactions: VideoTimelineReactionDto[];
   comments: VideoTimelineCommentDto[];
 }

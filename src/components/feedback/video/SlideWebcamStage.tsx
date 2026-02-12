@@ -18,6 +18,7 @@ import RefreshIcon from '@/assets/icons/icon-refresh.svg?react';
 import VideoPlaybackBar from '@/components/feedback/video/VideoPlaybackBar';
 import { useVideoSync } from '@/hooks/useVideoSync';
 import type { SlideListItem } from '@/types/slide';
+import type { SegmentHighlight } from '@/types/video';
 import { getSlideIndexFromTime } from '@/utils/video';
 
 const LAYOUT_STORAGE_KEY = 'feedback-video-layout';
@@ -87,6 +88,7 @@ type SlideWebcamStageProps = {
   disablePip?: boolean;
   showLayoutToggle?: boolean;
   layoutToggleLabel?: ReactNode;
+  segmentHighlights?: SegmentHighlight[];
 };
 
 export default function SlideWebcamStage({
@@ -103,6 +105,7 @@ export default function SlideWebcamStage({
       <RefreshIcon className="w-3.5 h-3.5" />
     </div>
   ),
+  segmentHighlights,
 }: SlideWebcamStageProps) {
   const stageRootRef = useRef<HTMLDivElement | null>(null);
   const clickTimeoutRef = useRef<number | null>(null);
