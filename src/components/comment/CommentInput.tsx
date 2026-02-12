@@ -32,6 +32,8 @@ interface CommentInputProps {
   initialValueOnFocus?: string;
   /** 로딩 중 비활성화 */
   disabled?: boolean;
+  /** 포커스 핸들러 (추가 동작용) */
+  onFocusCapture?: () => void;
 }
 
 /**
@@ -57,6 +59,7 @@ export default function CommentInput({
   textareaClassName,
   initialValueOnFocus,
   disabled = false,
+  onFocusCapture,
 }: CommentInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -64,6 +67,9 @@ export default function CommentInput({
 
   /** 포커스 시 초기값 설정 (값이 비어있을 때만) */
   const handleFocus = useCallback(() => {
+    // 외부에서 전달된 포커스 핸들러 실행 (타임스탬프 캡처용)
+    onFocusCapture?.();
+
     if (initialValueOnFocus && !value) {
       onChange(initialValueOnFocus);
       // 커서를 끝으로 이동
@@ -74,7 +80,7 @@ export default function CommentInput({
         }
       });
     }
-  }, [initialValueOnFocus, value, onChange]);
+  }, [initialValueOnFocus, value, onChange, onFocusCapture]);
 
   /** textarea 높이를 내용에 맞게 자동 조절 */
   useEffect(() => {
