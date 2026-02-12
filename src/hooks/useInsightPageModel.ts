@@ -27,7 +27,7 @@ import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
 
 const FALLBACK_SLIDE_DURATION_SECONDS = 10;
-const summaryStatLabels = ['총 조회수', '완료율', '받은 피드백', '평균 체류 시간'] as const;
+const summaryStatLabels = ['총 조회수', '완독률', '받은 피드백', '평균 시청 시간'] as const;
 
 const emptySummaryStats: SummaryStat[] = summaryStatLabels.map((label) => ({
   label,
@@ -178,7 +178,6 @@ export function useInsightPageModel(): InsightModel {
           slides?.length && slideChangeTimes.length
             ? getSlideIndexFromTime(seconds, slideChangeTimes, slides.length - 1)
             : 0;
-
         return {
           time: formatVideoTimestamp(seconds),
           desc: slides?.length ? `슬라이드 ${slideIndex + 1}` : '슬라이드',
