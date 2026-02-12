@@ -36,7 +36,7 @@ export function HeaderButton({
         className,
       )}
     >
-      <span className={clsx(shouldHideTextOnMobile && 'hidden min-[1024px]:inline')}>{text}</span>
+      <span className={clsx(shouldHideTextOnMobile && 'hidden lg:inline')}>{text}</span>
       {icon}
     </button>
   );
