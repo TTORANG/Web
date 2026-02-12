@@ -17,6 +17,7 @@ import { Popover } from '@/components/common/Popover';
 import { UserAvatar } from '@/components/common/UserAvatar';
 import { useAuthStore } from '@/stores/authStore';
 import { useHomeStore } from '@/stores/homeStore';
+import { useThemeStore } from '@/stores/themeStore';
 import { isAnonymousEmail } from '@/utils/auth';
 import { showToast } from '@/utils/toast';
 import { getUserDisplayName } from '@/utils/user';
@@ -33,6 +34,8 @@ export function LoginButton() {
   const openLoginModal = useAuthStore((s) => s.openLoginModal);
   const logout = useAuthStore((s) => s.logout);
   const resetHome = useHomeStore((s) => s.reset);
+  const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
+  const setTheme = useThemeStore((s) => s.setTheme);
 
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
@@ -41,6 +44,7 @@ export function LoginButton() {
   const isAnon = accessToken && isAnonymousEmail(user?.email);
   const isSocial = accessToken && user?.email && !isAnonymousEmail(user.email);
   const isSlideRoute = /\/slide\/?$/.test(pathname);
+  const isDark = resolvedTheme === 'dark';
 
   const handleLogout = () => {
     logout();
@@ -131,6 +135,33 @@ export function LoginButton() {
             </div>
 
             <div className="mt-2 border-t border-gray-200 pt-2">
+              <button
+                type="button"
+                className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-gray-100"
+                onClick={() => setTheme(isDark ? 'light' : 'dark')}
+              >
+                <div>
+                  <p className="text-body-s-bold text-gray-800">테마</p>
+                  <p className="text-caption text-gray-600">
+                    {isDark ? '다크 모드 사용 중' : '라이트 모드 사용 중'}
+                  </p>
+                </div>
+                <span
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                    isDark ? 'bg-main' : 'bg-gray-400'
+                  }`}
+                  aria-hidden="true"
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      isDark ? 'translate-x-4' : 'translate-x-1'
+                    }`}
+                  />
+                </span>
+              </button>
+            </div>
+
+            <div className="mt-1 border-t border-gray-200 pt-2">
               <button
                 type="button"
                 className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-body-s text-gray-800 transition-colors hover:bg-gray-100"
