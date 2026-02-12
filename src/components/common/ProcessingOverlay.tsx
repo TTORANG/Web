@@ -31,22 +31,24 @@ export default function ProcessingOverlay({
         className,
       )}
       style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.62)',
-        backdropFilter: 'blur(4px)',
+        backgroundColor: 'var(--processing-overlay-bg)',
+        backdropFilter: `blur(var(--processing-overlay-blur))`,
       }}
       aria-hidden={false}
     >
-      <div className="text-center">
+      <div className="text-center" style={{ color: 'var(--processing-overlay-fg)' }}>
         <div
           className={clsx(
-            'animate-spin border-4 border-gray-900 border-t-transparent rounded-full mx-auto',
+            'animate-spin border-4 border-current border-t-transparent rounded-full mx-auto',
             isCard ? 'h-10 w-10 mb-3' : 'h-8 w-8 mb-2',
           )}
         />
-        <p className={clsx('font-bold text-gray-900', isCard ? 'text-sm' : 'text-xs')}>
-          {titleText}
-        </p>
-        {isCard && <p className="mt-1 text-xs text-gray-900/80">{description}</p>}
+        <p className={clsx('font-bold', isCard ? 'text-sm' : 'text-xs')}>{titleText}</p>
+        {isCard && (
+          <p className="mt-1 text-xs" style={{ color: 'var(--processing-overlay-fg-muted)' }}>
+            {description}
+          </p>
+        )}
       </div>
     </div>
   );
