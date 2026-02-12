@@ -135,12 +135,9 @@ export function useVideoReactions() {
         },
       },
       {
-        onError: (error) => {
-          // 글로벌 에러 핸들러의 토스트 방지 (isHandled 플래그 설정)
-          if (error && typeof error === 'object') {
-            (error as unknown as Record<string, unknown>).isHandled = true;
-          }
+        onError: () => {
           // 정확한 숫자보다 즉각적인 반응 경험이 중요하므로 delta만 롤백
+          // 에러 토스트는 mutation의 meta.suppressErrorToast로 이미 억제됨
           setOptimisticDeltas((prev) => ({
             ...prev,
             [type]: (prev[type] || 0) - 1,
