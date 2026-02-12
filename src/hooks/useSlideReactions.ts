@@ -12,11 +12,8 @@ import { useCreateReaction, useSlideReactionSummary } from './queries/useReactio
 
 const EMPTY_REACTIONS: Reaction[] = [];
 
-// 훅 밖에 전역 변수로 선언하여, 슬라이드를 이동해도 기록이 유지되게 함
-// Key: "slideId-reactionType"
-const globalLastActionTimes: Record<string, number> = {};
-
 export function useSlideReactions() {
+  const lastActionTimesRef = useRef<Record<string, number>>({});
   const slideId = useSlideStore((state) => state.slide?.slideId);
   const reactions = useSlideStore((state) => state.slide?.emojiReactions ?? EMPTY_REACTIONS);
   const addReactionStore = useSlideStore((state) => state.addReaction);
@@ -41,7 +38,7 @@ export function useSlideReactions() {
       const current = currentReactionsState.find((r) => r.type === reaction.type);
 
       const lockKey = `${slideId}-${reaction.type}`;
-      const lastActionTime = globalLastActionTimes[lockKey] || 0;
+      const lastActionTime = lastActionTimesRef.current[lockKey] || 0;
       const isLocked = now - lastActionTime < OPTIMISTIC_LOCK_DURATION;
 
       // 락이 걸려있으면(내가 방금 누름) -> 스토어 값(current.count) 유지
@@ -82,8 +79,7 @@ export function useSlideReactions() {
   const addReaction = (type: ReactionType) => {
     if (!slideId) return;
 
-    // 전역 변수에 시간 기록 (슬라이드 ID 포함해서 유니크하게)
-    globalLastActionTimes[`${slideId}-${type}`] = Date.now();
+    lastActionTimesRef.current[`${slideId}-${type}`] = Date.now();
 
     // 낙관적 업데이트: 카운트 +1
     addReactionStore(type);
