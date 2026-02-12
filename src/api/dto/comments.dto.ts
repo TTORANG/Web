@@ -37,16 +37,11 @@ export interface GetSlideCommentsResponseDto {
 
 /**
  * 답글 목록 조회 응답
+ *
+ * API: GET /comments/{commentId}/replies
+ * success 필드가 CommentWithUserDto[] 배열을 직접 반환
  */
-export interface GetReplyListResponseDto {
-  comments: CommentWithUserDto[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
+export type GetReplyListResponseDto = CommentWithUserDto[];
 
 /**
  * 슬라이드 댓글 생성 요청

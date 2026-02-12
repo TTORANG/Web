@@ -27,6 +27,8 @@ interface CommentListProps {
   isFetchingNextPage?: boolean;
   onLoadMore?: () => void;
   onDeleteModalOpenChange?: (isOpen: boolean) => void;
+  /** true이면 CommentReplies에서 서버 답글 조회를 스킵 (전체 댓글이 이미 트리에 포함된 경우) */
+  skipReplyFetch?: boolean;
 }
 
 const skeletonContentWidths = ['90%', '70%', '85%', '60%'];
@@ -43,6 +45,7 @@ export default function CommentList({
   isFetchingNextPage = false,
   onLoadMore,
   onDeleteModalOpenChange,
+  skipReplyFetch = false,
 }: CommentListProps) {
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
@@ -191,6 +194,7 @@ export default function CommentList({
       submitEdit,
       deleteComment: onDeleteComment ? requestDelete : undefined,
       goToRef: onGoToRef,
+      skipReplyFetch,
     }),
     [
       replyingToId,
@@ -206,6 +210,7 @@ export default function CommentList({
       cancelEdit,
       submitEdit,
       onGoToRef,
+      skipReplyFetch,
     ],
   );
 

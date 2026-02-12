@@ -1,41 +1,81 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import type { ReadVideoDetailResponseDto } from '@/api/dto/video.dto';
-import { getScript } from '@/api/endpoints/scripts';
+import type { ReadVideoDetailResponseDto, VideoCommentDto } from '@/api/dto/video.dto';
 import { videosApi } from '@/api/endpoints/videos';
 import { CommentInput } from '@/components/comment';
-// CommentList 추가
-import Comment from '@/components/comment/Comment';
-import { CommentProvider } from '@/components/comment/CommentContext';
-import ScriptSection from '@/components/feedback/ScriptSection';
+import CommentList from '@/components/comment/CommentList';
 import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
-import { useSlides } from '@/hooks/queries/useSlides';
 import { useVideoComments } from '@/hooks/useVideoComments';
 import { useAuthStore } from '@/stores/authStore';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
-import type { SlideListItem } from '@/types';
 import type { Comment as CommentType } from '@/types/comment';
 
-/** 서버 데이터 인터페이스 정의 */
-interface ServerReply {
-  replyId: string;
-  content: string;
-  createdAt: string;
-  user: { userId: string; name: string; profileImageUrl: string };
+/**
+ * VideoCommentDto → Comment 타입 변환
+ *
+ * parentId가 있으면 답글, 없으면 루트 댓글.
+ * 루트 댓글만 타임스탬프 ref를 가진다.
+ */
+function mapVideoComment(dto: VideoCommentDto): CommentType {
+  const isReply = dto.parentId !== null;
+
+  return {
+    commentId: String(dto.commentId),
+    serverId: String(dto.commentId),
+    userId: String(dto.userId),
+    userName: dto.writer,
+    content: dto.content,
+    createdAt: dto.createdAt,
+    isMine: dto.isMine,
+    isReply,
+    parentId: dto.parentId ? String(dto.parentId) : undefined,
+    ref:
+      !isReply && dto.timestampMs != null
+        ? { kind: 'video', seconds: dto.timestampMs / 1000 }
+        : undefined,
+  };
 }
 
-interface ServerComment {
-  commentId: string;
-  timestampMs: number;
-  content: string;
-  createdAt: string;
-  user: { userId: string; name: string; profileImageUrl: string };
-  replies?: ServerReply[];
+/**
+ * flat 댓글 배열 → 타임스탬프별 feedbacks 그룹화
+ *
+ * 모든 댓글(루트+답글)을 루트 댓글의 타임스탬프 기준으로 그룹화한다.
+ * 답글은 부모의 타임스탬프 그룹에 포함된다.
+ */
+function groupByTimestamp(allComments: CommentType[]) {
+  // 루트 댓글 → 타임스탬프 매핑
+  const rootTimestampMap = new Map<string, number>();
+  for (const c of allComments) {
+    if (!c.parentId && c.ref?.kind === 'video') {
+      rootTimestampMap.set(c.commentId, c.ref.seconds * 1000);
+    }
+  }
+
+  const grouped = new Map<number, CommentType[]>();
+  for (const c of allComments) {
+    // 답글이면 부모의 타임스탬프, 루트면 자기 타임스탬프
+    const ts = c.parentId
+      ? (rootTimestampMap.get(c.parentId) ?? 0)
+      : c.ref?.kind === 'video'
+        ? c.ref.seconds * 1000
+        : 0;
+    const arr = grouped.get(ts) ?? [];
+    arr.push(c);
+    grouped.set(ts, arr);
+  }
+
+  return Array.from(grouped.entries())
+    .sort((a, b) => a[0] - b[0])
+    .map(([timestampMs, comments]) => ({
+      timestampMs,
+      comments,
+      reactions: [],
+    }));
 }
 
 export default function VideoDetailPage() {
-  const { projectId, videoId } = useParams<{ projectId: string; videoId: string }>();
+  const { videoId } = useParams<{ projectId: string; videoId: string }>();
   const currentUser = useAuthStore((state) => state.user);
 
   const { initVideo, requestSeek: requestSeekAction } = useVideoFeedbackStore();
@@ -45,17 +85,8 @@ export default function VideoDetailPage() {
   const [currentTime, setCurrentTime] = useState(0);
   const [commentDraft, setCommentDraft] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  // 💡 scrollToCommentId 상태 삭제 (Unused variable 경고 해결)
-
-  const [replyingToId, setReplyingToId] = useState<string | null>(null);
-  const [replyDraft, setReplyDraft] = useState('');
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState('');
-
-  const { data: slidesData } = useSlides(projectId!);
-  const [projectSlides, setProjectSlides] = useState<SlideListItem[]>([]);
-  const [slideChangeTimes, setSlideChangeTimes] = useState<number[]>([]);
-  const [slideIdOrder, setSlideIdOrder] = useState<string[]>([]);
+  const [scrollToCommentId, setScrollToCommentId] = useState<string | undefined>(undefined);
+  const [capturedTimestamp, setCapturedTimestamp] = useState<number | null>(null);
 
   const desktopPlaceholderRef = useRef<HTMLDivElement>(null);
   const [videoStyle, setVideoStyle] = useState<React.CSSProperties>({
@@ -63,198 +94,107 @@ export default function VideoDetailPage() {
     opacity: 0,
   });
 
-  const transformComments = useCallback(
-    (serverComments: ServerComment[]): CommentType[] => {
-      return [...serverComments]
-        .sort((a, b) => a.timestampMs - b.timestampMs)
-        .map((c) => ({
-          commentId: String(c.commentId),
-          serverId: String(c.commentId),
-          userId: c.user.userId,
-          userName: c.user.name,
-          userProfileImage: c.user.profileImageUrl,
-          content: c.content,
-          createdAt: c.createdAt,
-          isMine: String(c.user.userId) === String(currentUser?.id),
-          ref: { kind: 'video', seconds: c.timestampMs / 1000 },
-          isReply: false,
-          replies: (c.replies ?? [])
-            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-            .map((r) => ({
-              commentId: String(r.replyId),
-              serverId: String(r.replyId),
-              userId: r.user.userId,
-              userName: r.user.name,
-              userProfileImage: r.user.profileImageUrl,
-              content: r.content,
-              createdAt: r.createdAt,
-              isMine: r.user.userId === String(currentUser?.id),
-              isReply: true,
-              parentId: String(c.commentId),
-              replies: [],
-            })),
-        }));
-    },
-    [currentUser?.id],
-  );
-
   const { comments, addComment, addReply, deleteComment, updateComment } = useVideoComments({
-    onMutationSuccess: () => loadData(false),
+    onMutationSuccess: () => loadComments(),
   });
 
-  const loadData = useCallback(
-    async (isInitial = false) => {
-      if (!videoId) return;
-      try {
-        const response = await videosApi.getVideoDetail(videoId);
-        if (response.data.resultType === 'SUCCESS') {
-          const data = response.data.success!;
-          setVideoData(data);
-          const mapped = transformComments((data.timeline?.comments as ServerComment[]) ?? []);
+  /** 영상 상세 정보 로드 (최초 1회) */
+  const loadVideoDetail = useCallback(async () => {
+    if (!videoId) return;
+    const response = await videosApi.getVideoDetail(videoId);
+    if (response.data.resultType === 'SUCCESS') {
+      const data = response.data.success!;
+      setVideoData(data);
+      return data;
+    }
+    return null;
+  }, [videoId]);
 
-          if (isInitial) {
-            initVideo({
-              videoId: data.video.videoId,
-              title: data.video.title,
-              videoUrl: data.video.hlsMasterUrl,
-              duration: data.video.durationSeconds,
-              feedbacks: mapped.map((c) => ({
-                timestampMs: (c.ref?.kind === 'video' ? c.ref.seconds : 0) * 1000,
-                comments: [c],
-                reactions: [],
-              })),
-              comments: [],
-              reactionEvents: [],
-            });
-          } else {
-            useVideoFeedbackStore.setState((state) => ({
-              ...state,
-              video: state.video
-                ? {
-                    ...state.video,
-                    feedbacks: mapped.map((c) => ({
-                      timestampMs: (c.ref?.kind === 'video' ? c.ref.seconds : 0) * 1000,
-                      comments: [c],
-                      reactions: [],
-                    })),
-                  }
-                : null,
-            }));
-          }
+  /** 전체 댓글 로드 (comments/all) → store 반영 */
+  const loadComments = useCallback(async () => {
+    if (!videoId) return;
+    try {
+      const response = await videosApi.getVideoCommentsAll(videoId);
+      if (response.data.resultType === 'SUCCESS') {
+        const allComments = response.data.success.comments.map(mapVideoComment);
+        const feedbacks = groupByTimestamp(allComments);
+
+        useVideoFeedbackStore.setState((state) => ({
+          ...state,
+          video: state.video ? { ...state.video, feedbacks } : null,
+        }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }, [videoId]);
+
+  /** 초기 로드: 영상 상세 + 전체 댓글 */
+  useEffect(() => {
+    const init = async () => {
+      if (!videoId) return;
+      setIsLoading(true);
+      try {
+        const detail = await loadVideoDetail();
+        if (detail) {
+          // 먼저 store 초기화 (빈 feedbacks)
+          initVideo({
+            videoId: detail.video.videoId,
+            title: detail.video.title,
+            videoUrl: detail.video.hlsMasterUrl,
+            duration: detail.video.durationSeconds,
+            feedbacks: [],
+            comments: [],
+            reactionEvents: [],
+          });
+          // 전체 댓글 로드
+          await loadComments();
         }
       } catch (err) {
         console.error(err);
       }
-    },
-    [videoId, initVideo, transformComments],
-  );
-
-  useEffect(() => {
-    const init = async () => {
-      setIsLoading(true);
-      await loadData(true);
-      if (videoId) {
-        const slidesRes = await videosApi.getVideoSlides(videoId);
-        if (slidesRes.data.resultType === 'SUCCESS') {
-          const slides = slidesRes.data.success.slides;
-          setSlideIdOrder(slides.map((s) => s.slideId));
-          setSlideChangeTimes(slides.map((s) => s.timestampMs / 1000));
-        }
-      }
       setIsLoading(false);
     };
     init();
-  }, [videoId, loadData]);
+  }, [videoId, loadVideoDetail, loadComments, initVideo]);
 
-  const contextValue = useMemo(
-    () => ({
-      replyingToId,
-      replyDraft,
-      setReplyDraft,
-      toggleReply: (id: string) => {
-        setReplyingToId((prev) => (prev === id ? null : id));
-        setReplyDraft('');
-      },
-      submitReply: async (targetId: string) => {
-        if (replyDraft.trim()) {
-          await addReply(targetId, replyDraft);
-          setReplyDraft('');
-          setReplyingToId(null);
-          await loadData(false);
-        }
-      },
-      cancelReply: () => {
-        setReplyingToId(null);
-        setReplyDraft('');
-      },
-      editingId,
-      editDraft,
-      setEditDraft,
-      startEdit: (id: string, content: string) => {
-        setEditingId(id);
-        setEditDraft(content);
-      },
-      cancelEdit: () => {
-        setEditingId(null);
-        setEditDraft('');
-      },
-      submitEdit: async (id: string) => {
-        if (editDraft.trim()) {
-          await updateComment(id, editDraft);
-          setEditingId(null);
-          setEditDraft('');
-          await loadData(false);
-        }
-      },
-      deleteComment,
-      goToRef: (ref: { kind: 'slide'; index: number } | { kind: 'video'; seconds: number }) => {
-        if (ref.kind === 'video') {
-          requestSeekAction(ref.seconds);
-        }
-      },
-    }),
-    [
-      replyingToId,
-      replyDraft,
-      editingId,
-      editDraft,
-      addReply,
-      updateComment,
-      deleteComment,
-      requestSeekAction,
-      loadData,
-    ],
+  const handleGoToTimeRef = useCallback(
+    (ref: NonNullable<CommentType['ref']>) => {
+      if (ref.kind === 'video') {
+        requestSeekAction(ref.seconds);
+      }
+    },
+    [requestSeekAction],
   );
 
-  const handleAddMainComment = async () => {
+  const handleInputFocus = useCallback(() => {
+    if (capturedTimestamp === null) {
+      setCapturedTimestamp(currentTime);
+    }
+  }, [capturedTimestamp, currentTime]);
+
+  const handleAddMainComment = useCallback(async () => {
     if (!commentDraft.trim() || isSubmittingComment) return;
     setIsSubmittingComment(true);
     try {
-      const successId = await addComment(commentDraft, currentTime);
+      const timestampToUse = capturedTimestamp ?? currentTime;
+      const successId = await addComment(commentDraft, timestampToUse);
       if (successId) {
         setCommentDraft('');
-        await loadData(false);
-        // 💡 렌더링 후 해당 댓글로 스크롤 (상태 변수 대신 직접 DOM 접근)
-        setTimeout(() => {
-          document
-            .getElementById(`comment-${successId}`)
-            ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 300);
+        setCapturedTimestamp(null);
+        await loadComments();
+        setScrollToCommentId(successId);
+        setTimeout(() => setScrollToCommentId(undefined), 500);
       }
     } finally {
       setIsSubmittingComment(false);
     }
-  };
+  }, [commentDraft, isSubmittingComment, capturedTimestamp, currentTime, addComment, loadComments]);
 
-  const handleInputFocus = () => {
-    if (!commentDraft) {
-      const mins = Math.floor(currentTime / 60);
-      const secs = Math.floor(currentTime % 60)
-        .toString()
-        .padStart(2, '0');
-      setCommentDraft(`[${mins}:${secs}] `);
-    }
-  };
+  const handleCancelComment = useCallback(() => {
+    setCommentDraft('');
+    setCapturedTimestamp(null);
+  }, []);
 
   useEffect(() => {
     const updatePosition = () => {
@@ -275,26 +215,6 @@ export default function VideoDetailPage() {
     return () => window.removeEventListener('resize', updatePosition);
   }, [isLoading]);
 
-  useEffect(() => {
-    if (!slidesData || slideIdOrder.length === 0) return;
-    const loadScripts = async () => {
-      const ordered = await Promise.all(
-        slideIdOrder.map(async (id) => {
-          const slideBase = slidesData.find((s) => String(s.slideId) === String(id));
-          if (!slideBase) return null;
-          try {
-            const scriptRes = await getScript(String(id));
-            return { ...slideBase, script: scriptRes.scriptText || '' };
-          } catch {
-            return { ...slideBase, script: slideBase.script || '' };
-          }
-        }),
-      );
-      setProjectSlides(ordered.filter((s): s is SlideListItem => s !== null));
-    };
-    loadScripts();
-  }, [slidesData, slideIdOrder]);
-
   if (isLoading) return <div className="flex h-screen items-center justify-center">Loading...</div>;
 
   return (
@@ -306,16 +226,6 @@ export default function VideoDetailPage() {
             className="aspect-video w-full max-w-[800px] bg-black rounded-lg shadow-md"
           />
         </div>
-        <div className="flex-1 min-h-0 px-12 pb-6 flex flex-col items-center">
-          <div className="w-full max-w-[800px] h-full flex flex-col min-h-0 overflow-y-auto bg-white border border-gray-100 rounded-t-xl">
-            <ScriptSection
-              slides={projectSlides}
-              slideChangeTimes={slideChangeTimes}
-              currentTime={currentTime}
-              onSeek={requestSeekAction}
-            />
-          </div>
-        </div>
       </div>
 
       <aside className="w-[400px] shrink-0 flex flex-col border-l border-gray-200 bg-white">
@@ -323,24 +233,23 @@ export default function VideoDetailPage() {
           <h2 className="text-base font-bold text-gray-900">의견</h2>
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto scroll-smooth">
-          <CommentProvider value={contextValue}>
-            <div className="flex flex-col">
-              {comments.map((comment) => (
-                <Comment
-                  key={comment.commentId}
-                  comment={comment}
-                  rootCommentId={comment.commentId}
-                />
-              ))}
-            </div>
-          </CommentProvider>
+          <CommentList
+            comments={comments}
+            scrollToCommentId={scrollToCommentId}
+            onAddReply={addReply}
+            onGoToRef={handleGoToTimeRef}
+            onDeleteComment={deleteComment}
+            onUpdateComment={updateComment}
+            isLoading={isLoading}
+            skipReplyFetch
+          />
         </div>
         <div className="p-4 border-t border-gray-100 bg-white shrink-0">
           <CommentInput
             value={commentDraft}
             onChange={setCommentDraft}
             onSubmit={handleAddMainComment}
-            onCancel={() => setCommentDraft('')}
+            onCancel={handleCancelComment}
             onFocusCapture={handleInputFocus}
             disabled={isSubmittingComment}
             className="w-full"
@@ -353,8 +262,8 @@ export default function VideoDetailPage() {
         className="pointer-events-auto rounded-lg overflow-hidden ring-1 ring-black/5"
       >
         <SlideWebcamStage
-          slides={projectSlides}
-          slideChangeTimes={slideChangeTimes}
+          slides={[]}
+          slideChangeTimes={[]}
           webcamVideoUrl={videoData?.video.hlsMasterUrl || ''}
           onTimeUpdate={setCurrentTime}
         />
