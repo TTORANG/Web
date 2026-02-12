@@ -21,13 +21,13 @@ import {
 } from '@/hooks/queries/useAnalytics';
 import { useSlideReactionSummaries } from '@/hooks/queries/useReaction.ts';
 import { useSlides } from '@/hooks/queries/useSlides';
+import { useVideoSlides } from '@/hooks/queries/useVideoSlides';
 import type { DropOffSlide, DropOffTime, SummaryStat } from '@/types/insight';
 import type { SlideListItem } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
 
-const FALLBACK_SLIDE_DURATION_SECONDS = 10;
-const summaryStatLabels = ['총 조회수', '완료율', '받은 피드백', '평균 체류 시간'] as const;
+const summaryStatLabels = ['총 조회수', '완독률', '받은 피드백', '평균 시청 시간'] as const;
 
 const emptySummaryStats: SummaryStat[] = summaryStatLabels.map((label) => ({
   label,
@@ -52,12 +52,14 @@ export function useInsightPageModel(): InsightModel {
   const { data: summaryAnalytics } = summaryAnalyticsQuery;
   const { data: recentCommentsData } = recentCommentsQuery;
 
-  const videoIdStr = summaryAnalytics?.videoIds?.[0] ?? '';
+  const videoIdStr = summaryAnalytics?.videoIds?.[summaryAnalytics.videoIds.length - 1] ?? '';
   const videoIdNum = videoIdStr ? Number(videoIdStr) : 0;
   const hasVideo = !!videoIdNum;
 
   const videoAnalyticsQuery = useVideoAnalytics(videoIdNum);
+  const videoSlidesQuery = useVideoSlides(videoIdNum);
   const { data: videoExitAnalytics } = videoAnalyticsQuery;
+  const { data: videoSlidesTimeline } = videoSlidesQuery;
 
   // ---- Summary stats ----
   const computedSummaryStats = useMemo<SummaryStat[]>(() => {
@@ -133,14 +135,35 @@ export function useInsightPageModel(): InsightModel {
   const { data: topSlideReactionSummaries } = topSlideReactionSummariesQuery;
 
   // ---- Drop-off ----
-  const slideChangeTimes = useMemo(() => {
-    if (!slides?.length) return [];
-    return slides.map((slide, index) =>
-      Number.isFinite(slide.startTime)
-        ? (slide.startTime ?? 0)
-        : index * FALLBACK_SLIDE_DURATION_SECONDS,
-    );
-  }, [slides]);
+  const dropOffTimeline = useMemo(() => {
+    const timelineItems = videoSlidesTimeline?.slides ?? [];
+    if (!timelineItems.length) {
+      return {
+        changeTimes: [] as number[],
+        slideIndexes: [] as number[],
+      };
+    }
+
+    const { slideIndexById } = slideDataMaps;
+    const maxSlideIndex = Math.max(0, slideList.length - 1);
+
+    const sortedTimeline = timelineItems
+      .slice()
+      .filter((item) => item.slideId)
+      .sort((a, b) => a.timestampMs - b.timestampMs);
+
+    const changeTimes = sortedTimeline.map((item) => Math.max(0, item.timestampMs / 1000));
+    const slideIndexes = sortedTimeline.map((item, index) => {
+      const mappedIndex = slideIndexById.get(item.slideId);
+      if (mappedIndex !== undefined) {
+        return mappedIndex;
+      }
+
+      return Math.min(index, maxSlideIndex);
+    });
+
+    return { changeTimes, slideIndexes };
+  }, [slideDataMaps, slideList.length, videoSlidesTimeline]);
 
   const dropOffSlides: DropOffSlide[] = useMemo(() => {
     const items: SlideAnalyticsDto[] = slideAnalytics?.slides ?? [];
@@ -168,25 +191,29 @@ export function useInsightPageModel(): InsightModel {
 
   const dropOffTimes: DropOffTime[] = useMemo(() => {
     const items: VideoExitAnalyticsDto[] = videoExitAnalytics?.exits ?? [];
+    const { changeTimes, slideIndexes } = dropOffTimeline;
+    const hasTimeline = changeTimes.length > 0;
+
     return items
       .slice()
       .sort((a, b) => b.exitCount - a.exitCount)
       .slice(0, 3)
       .map((item) => {
         const seconds = item.timestampMs / 1000;
-        const slideIndex =
-          slides?.length && slideChangeTimes.length
-            ? getSlideIndexFromTime(seconds, slideChangeTimes, slides.length - 1)
-            : 0;
+        const timelineIndex = hasTimeline
+          ? getSlideIndexFromTime(seconds, changeTimes, changeTimes.length - 1)
+          : 0;
+        const slideIndex = hasTimeline ? (slideIndexes[timelineIndex] ?? 0) : 0;
+        const slideNum = slideList[slideIndex]?.slideNum ?? slideIndex + 1;
 
         return {
           time: formatVideoTimestamp(seconds),
-          desc: slides?.length ? `슬라이드 ${slideIndex + 1}` : '슬라이드',
+          desc: slideList.length ? `슬라이드 ${slideNum}` : '슬라이드',
           count: item.exitCount,
           slideIndex,
         };
       });
-  }, [videoExitAnalytics, slideChangeTimes, slides]);
+  }, [dropOffTimeline, slideList, videoExitAnalytics]);
 
   // ---- Retention(잔존율) ----
   const videoRetentionQuery = useVideoRetention(videoIdNum);
@@ -224,6 +251,7 @@ export function useInsightPageModel(): InsightModel {
     summaryAnalyticsQuery,
     recentCommentsQuery,
     videoAnalyticsQuery,
+    videoSlidesQuery,
     videoRetentionQuery,
     slideRetentionQuery,
     topSlideReactionSummariesQuery,

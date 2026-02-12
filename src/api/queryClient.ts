@@ -84,6 +84,7 @@ export const queryKeys = {
     list: (projectId: string) => [...queryKeys.videos.lists(), projectId] as const,
     details: () => [...queryKeys.videos.all, 'detail'] as const,
     detail: (videoId: string) => [...queryKeys.videos.details(), videoId] as const,
+    slides: (videoId: number) => [...queryKeys.videos.all, 'slides', videoId] as const,
   },
   shares: {
     all: ['shares'] as const,
