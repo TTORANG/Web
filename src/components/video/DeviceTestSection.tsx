@@ -157,6 +157,7 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
       <div className="mt-4 mb-8 w-full max-w-110 text-white">
         <ActionButton
           text="영상 녹화하기"
+          disabled={hasCameraError || !stream}
           onClick={() => {
             if (stream) {
               const clonedStream = stream.clone();
