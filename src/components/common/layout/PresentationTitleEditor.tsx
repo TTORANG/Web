@@ -6,7 +6,7 @@
  * - 클릭하면 Popover 열리고, 입력/저장 가능
  * - Enter 또는 저장 버튼으로 제출
  */
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 
 import { usePresentation, useUpdatePresentation } from '@/hooks/queries/usePresentations';
 import { showToast } from '@/utils/toast';
@@ -23,10 +23,12 @@ export function PresentationTitleEditor({
   titleOverride,
 }: PresentationTitleEditorProps) {
   const { projectId } = useParams<{ projectId: string }>();
+  const { pathname } = useLocation();
   const { data: presentation } = usePresentation(projectId ?? '');
 
   const resolvedTitle =
     titleOverride?.trim() || (presentation?.title?.trim() ? presentation.title : '내 발표');
+  const titleClassName = pathname.endsWith('/slide') ? 'max-w-52 truncate' : undefined;
 
   if (readOnlyContent) {
     return (
@@ -34,19 +36,28 @@ export function PresentationTitleEditor({
         title={resolvedTitle}
         readOnlyContent={readOnlyContent}
         ariaLabel="발표 정보"
+        titleClassName={titleClassName}
       />
     );
   }
 
-  return <PresentationTitleEditorEditable projectId={projectId} title={resolvedTitle} />;
+  return (
+    <PresentationTitleEditorEditable
+      projectId={projectId}
+      title={resolvedTitle}
+      titleClassName={titleClassName}
+    />
+  );
 }
 
 function PresentationTitleEditorEditable({
   projectId,
   title,
+  titleClassName,
 }: {
   projectId?: string;
   title: string;
+  titleClassName?: string;
 }) {
   const { mutate: updatePresentation, isPending } = useUpdatePresentation();
 
@@ -79,6 +90,7 @@ function PresentationTitleEditorEditable({
       onSave={handleSave}
       ariaLabel="발표 이름 변경"
       isPending={isPending}
+      titleClassName={titleClassName}
     />
   );
 }
