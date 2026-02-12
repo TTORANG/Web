@@ -5,14 +5,12 @@ import type { ReadVideoDetailResponseDto } from '@/api/dto/video.dto';
 import { getScript } from '@/api/endpoints/scripts';
 import { videosApi } from '@/api/endpoints/videos';
 import { CommentInput } from '@/components/comment';
+// CommentList 추가
 import Comment from '@/components/comment/Comment';
-// 💡 공통 컴포넌트 사용
 import { CommentProvider } from '@/components/comment/CommentContext';
-// 💡 컨텍스트 제공
 import ScriptSection from '@/components/feedback/ScriptSection';
 import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
 import { useSlides } from '@/hooks/queries/useSlides';
-import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { useVideoComments } from '@/hooks/useVideoComments';
 import { useAuthStore } from '@/stores/authStore';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
@@ -37,41 +35,34 @@ interface ServerComment {
 }
 
 export default function VideoDetailPage() {
-  const isDesktop = useIsDesktop();
   const { projectId, videoId } = useParams<{ projectId: string; videoId: string }>();
   const currentUser = useAuthStore((state) => state.user);
 
-  // Zustand Store
   const { initVideo, requestSeek: requestSeekAction } = useVideoFeedbackStore();
 
-  // UI 상태 관리
   const [videoData, setVideoData] = useState<ReadVideoDetailResponseDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
   const [commentDraft, setCommentDraft] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  const [scrollToCommentId, setScrollToCommentId] = useState<string | undefined>();
+  // 💡 scrollToCommentId 상태 삭제 (Unused variable 경고 해결)
 
-  // 💡 CommentContext 연동을 위한 상태 (CommentList.tsx 로직 기반)
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState('');
 
-  // 슬라이드 및 스크립트 관련 로직 유지
   const { data: slidesData } = useSlides(projectId!);
   const [projectSlides, setProjectSlides] = useState<SlideListItem[]>([]);
   const [slideChangeTimes, setSlideChangeTimes] = useState<number[]>([]);
   const [slideIdOrder, setSlideIdOrder] = useState<string[]>([]);
 
-  // 비디오 배치 Ref
   const desktopPlaceholderRef = useRef<HTMLDivElement>(null);
   const [videoStyle, setVideoStyle] = useState<React.CSSProperties>({
     position: 'fixed',
     opacity: 0,
   });
 
-  /** 1. 데이터 매핑 로직 (정렬 및 계층 구조) */
   const transformComments = useCallback(
     (serverComments: ServerComment[]): CommentType[] => {
       return [...serverComments]
@@ -107,7 +98,6 @@ export default function VideoDetailPage() {
     [currentUser?.id],
   );
 
-  /** 2. 데이터 로드 및 훅 연동 */
   const { comments, addComment, addReply, deleteComment, updateComment } = useVideoComments({
     onMutationSuccess: () => loadData(false),
   });
@@ -137,7 +127,6 @@ export default function VideoDetailPage() {
               reactionEvents: [],
             });
           } else {
-            // 💡 초기화 없이 코멘트 데이터만 교체하여 비디오 위치 유지
             useVideoFeedbackStore.setState((state) => ({
               ...state,
               video: state.video
@@ -177,7 +166,6 @@ export default function VideoDetailPage() {
     init();
   }, [videoId, loadData]);
 
-  /** 3. CommentContext 전용 핸들러 (any 제거 및 Root ID 연동) */
   const contextValue = useMemo(
     () => ({
       replyingToId,
@@ -189,7 +177,6 @@ export default function VideoDetailPage() {
       },
       submitReply: async (targetId: string) => {
         if (replyDraft.trim()) {
-          // 💡 Comment.tsx에서 넘겨준 resolvedRootId를 사용하여 대댓글도 항상 부모 밑에 달리게 함
           await addReply(targetId, replyDraft);
           setReplyDraft('');
           setReplyingToId(null);
@@ -239,7 +226,6 @@ export default function VideoDetailPage() {
     ],
   );
 
-  /** 4. 메인 댓글 작성 및 자동 스크롤 */
   const handleAddMainComment = async () => {
     if (!commentDraft.trim() || isSubmittingComment) return;
     setIsSubmittingComment(true);
@@ -247,13 +233,12 @@ export default function VideoDetailPage() {
       const successId = await addComment(commentDraft, currentTime);
       if (successId) {
         setCommentDraft('');
-        setScrollToCommentId(successId); // 스크롤 트리거
-        await loadData(false); // 자동 새로고침
-
-        // 💡 렌더링 후 해당 댓글로 스크롤 이동
+        await loadData(false);
+        // 💡 렌더링 후 해당 댓글로 스크롤 (상태 변수 대신 직접 DOM 접근)
         setTimeout(() => {
-          const element = document.getElementById(`comment-${successId}`);
-          element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          document
+            .getElementById(`comment-${successId}`)
+            ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 300);
       }
     } finally {
@@ -271,7 +256,6 @@ export default function VideoDetailPage() {
     }
   };
 
-  // 비디오 배치 및 스크립트 로드 로직 유지
   useEffect(() => {
     const updatePosition = () => {
       const rect = desktopPlaceholderRef.current?.getBoundingClientRect();
@@ -345,7 +329,7 @@ export default function VideoDetailPage() {
                 <Comment
                   key={comment.commentId}
                   comment={comment}
-                  rootCommentId={comment.commentId} // 💡 대댓글이 항상 Root를 참조하게 함
+                  rootCommentId={comment.commentId}
                 />
               ))}
             </div>
