@@ -46,6 +46,7 @@ declare global {
  * ───────────────────────────────────────────────────────────── */
 
 const DEFAULT_SHARE_TEXT = '내 발표를 확인하고 피드백을 남겨주세요!';
+const INSTAGRAM_WEB_URL = 'https://www.instagram.com/';
 
 function encode(value: string) {
   return encodeURIComponent(value);
@@ -55,6 +56,42 @@ function encode(value: string) {
 function openNewTab(url: string) {
   const win = window.open(url, '_blank', 'noopener,noreferrer');
   if (!win) showToast.error('공유 창을 열지 못했습니다.', '팝업 차단을 해제해주세요.');
+}
+
+function isMobileDevice() {
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
+function buildQrCodeUrl(url: string, size = 512) {
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encode(url)}`;
+}
+
+async function downloadImage(url: string, fileName: string) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('download failed');
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+
+  const anchor = document.createElement('a');
+  anchor.href = objectUrl;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  URL.revokeObjectURL(objectUrl);
+}
+
+function openInstagramStoryDeepLink(qrCodeUrl: string) {
+  const deepLink = `instagram-stories://share?backgroundImage=${encode(qrCodeUrl)}`;
+  const start = Date.now();
+  window.location.href = deepLink;
+
+  // 딥링크 실패(앱 미설치/미지원) 시 웹 인스타로 fallback
+  window.setTimeout(() => {
+    if (Date.now() - start < 1800) {
+      openNewTab(INSTAGRAM_WEB_URL);
+    }
+  }, 1200);
 }
 
 /** Kakao SDK 스크립트를 동적으로 로드 */
@@ -139,8 +176,7 @@ export async function shareToKakao(params: {
       },
       buttons: [{ title: '링크 열기', link: { webUrl: url, mobileWebUrl: url } }],
     });
-  } catch (e) {
-    console.error(e);
+  } catch {
     showToast.error('카카오 공유에 실패했습니다.', '도메인, 키, 링크 설정을 확인해주세요.');
   }
 }
@@ -150,6 +186,45 @@ export async function shareToKakao(params: {
  */
 export function shareToInstagram() {
   showToast.info('인스타그램 공유는 지원하지 않습니다.', '링크를 복사해 앱에서 직접 공유해주세요.');
+}
+
+/**
+ * QR 코드 기반 인스타그램 공유
+ * - 모바일: 인스타그램 스토리 딥링크 시도
+ * - 웹: QR 코드 이미지 다운로드 후 인스타그램 열기
+ */
+export async function shareQrToInstagram(params: { url: string }) {
+  const { url } = params;
+  if (!url) {
+    showToast.error('공유할 링크가 없습니다.');
+    return;
+  }
+
+  const qrCodeUrl = buildQrCodeUrl(url, 640);
+
+  if (isMobileDevice()) {
+    openInstagramStoryDeepLink(qrCodeUrl);
+    showToast.info(
+      '인스타그램 앱으로 이동합니다.',
+      '스토리 작성 화면에서 QR 이미지를 선택해 공유해주세요.',
+    );
+    return;
+  }
+
+  try {
+    await downloadImage(qrCodeUrl, 'ttorang-share-qr.png');
+    showToast.success(
+      'QR 코드를 다운로드했습니다.',
+      '인스타그램에서 이미지를 첨부해 공유해주세요.',
+    );
+  } catch {
+    showToast.warning(
+      'QR 코드 다운로드에 실패했습니다.',
+      '인스타그램에서 링크를 직접 붙여넣어 공유해주세요.',
+    );
+  } finally {
+    openNewTab(INSTAGRAM_WEB_URL);
+  }
 }
 
 /**

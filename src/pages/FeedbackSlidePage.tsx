@@ -158,10 +158,10 @@ export default function FeedbackSlidePage({
         scriptTabContent={
           <div className="px-4 py-4">
             <SlideTitle fallbackTitle={`슬라이드 ${slideIndex + 1}`} readOnly />
-            <div className="mt-3 bg-gray-200 rounded-lg px-4 py-3 h-48 overflow-y-auto">
+            <div className="mt-3 rounded-2xl border border-gray-200 bg-gray-200 px-4 py-3 h-48 overflow-y-auto pb-4">
               <p
-                className={`text-body-s ${script ? 'text-black' : 'text-gray-400'}`}
-                style={{ whiteSpace: 'pre-line' }}
+                className={`text-body-s leading-relaxed break-words ${script ? 'text-black' : 'text-gray-400'}`}
+                style={{ whiteSpace: 'pre-wrap' }}
               >
                 {script || '대본이 없습니다.'}
               </p>

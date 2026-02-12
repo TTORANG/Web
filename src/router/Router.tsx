@@ -50,7 +50,7 @@ export const router = createBrowserRouter([
         }
         center={<Gnb />}
         right={
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-3 md:gap-8">
             <ShareButton />
             <LoginButton />
           </div>

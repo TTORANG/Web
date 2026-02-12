@@ -47,7 +47,10 @@ export function useCreateReaction() {
   return useMutation({
     mutationFn: ({ slideId, data }: { slideId: string; data: CreateSlideReactionDto }) =>
       createReaction(slideId, data),
-
+    meta: {
+      // 연타 시 에러 토스트를 표시하지 않음 (사용자 경험 개선)
+      suppressErrorToast: true,
+    },
     onSuccess: (_, { slideId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.reactions.summary(slideId) });
     },

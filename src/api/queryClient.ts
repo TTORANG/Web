@@ -23,7 +23,12 @@ export const MAX_RETRIES = 1; // 실패 시 재시도 횟수
  * React Query 전역 에러 핸들링 함수
  * Axios에서 처리하지 않은 비즈니스 에러만 잡아서 처리합니다.
  */
-const handleGlobalError = (error: unknown) => {
+const handleGlobalError = (error: unknown, meta?: { suppressErrorToast?: boolean }) => {
+  // 0. mutation meta에서 suppressErrorToast가 true면 무시 (연타 시 토스트 방지)
+  if (meta?.suppressErrorToast) {
+    return;
+  }
+
   // 1. Axios 에러인 경우
   if (isAxiosError<ApiFailureResponse>(error)) {
     // 이미 Axios 인터셉터에서 처리된 에러라면 무시 (중복 토스트 방지)
@@ -135,10 +140,12 @@ export const queryKeys = {
  */
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
-    onError: (error) => handleGlobalError(error),
+    onError: (error, query) =>
+      handleGlobalError(error, query.meta as { suppressErrorToast?: boolean }),
   }),
   mutationCache: new MutationCache({
-    onError: (error) => handleGlobalError(error),
+    onError: (error, _variables, _context, mutation) =>
+      handleGlobalError(error, mutation.meta as { suppressErrorToast?: boolean }),
   }),
   defaultOptions: {
     queries: {

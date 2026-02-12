@@ -36,20 +36,22 @@ export default function SlideViewer({
   }
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-gray-100">
-      <div className="flex-1 min-h-0 flex items-center justify-center">
-        <img src={slide.imageUrl} alt={slide.title} className="max-w-full max-h-full shadow-lg" />
-      </div>
+    <div className="flex-1 flex items-start justify-center min-w-0 bg-gray-100">
+      <div className="flex flex-col max-w-full max-h-full">
+        <div className="flex items-center justify-center">
+          <img src={slide.imageUrl} alt={slide.title} className="max-w-full max-h-full shadow-lg" />
+        </div>
 
-      <SlideInfoPanel
-        script={script}
-        slideIndex={slideIndex}
-        totalSlides={totalSlides}
-        isFirst={isFirst}
-        isLast={isLast}
-        onPrev={onPrev}
-        onNext={onNext}
-      />
+        <SlideInfoPanel
+          script={script}
+          slideIndex={slideIndex}
+          totalSlides={totalSlides}
+          isFirst={isFirst}
+          isLast={isLast}
+          onPrev={onPrev}
+          onNext={onNext}
+        />
+      </div>
     </div>
   );
 }
