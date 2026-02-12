@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { toast } from 'sonner';
 
 import { videosApi } from '@/api/endpoints/videos';
 import { CardView, ListView } from '@/components/common';
-import ProcessingOverlay from '@/components/common/ProcessingOverlay';
 import PresentationCard from '@/components/presentation/PresentationCard';
 import PresentationHeader from '@/components/presentation/PresentationHeader';
 import PresentationList from '@/components/presentation/PresentationList';
@@ -40,22 +39,17 @@ export default function VideoListPage() {
     sort,
   });
 
-  const videos = data?.videos || [];
-  const totalCount = data?.total || 0;
+  const videos = useMemo(() => data?.videos || [], [data?.videos]);
+  const totalCount = data?.total ?? 0;
 
   const isDebouncing = query.trim() !== appliedQuery.trim();
   const hasAppliedQuery = appliedQuery.trim().length > 0;
   const hasResults = videos.length > 0;
 
-  const hasProcessingVideos = videos.some((video) => {
-    if (video.status !== 'uploading' && video.status !== 'processing') return false;
-
-    const createdAt = new Date(video.createdAt);
-    const now = new Date();
-    const hoursSinceCreated = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
-
-    return hoursSinceCreated < 1;
-  });
+  const [pendingThumbnailIds, setPendingThumbnailIds] = useState<string[]>([]);
+  const pendIdsRef = useRef<string[]>([]);
+  const [thumbVersion, setThumbVersion] = useState<Record<string, number>>({});
+  const pendingSet = useMemo(() => new Set(pendingThumbnailIds), [pendingThumbnailIds]);
 
   useEffect(() => {
     if (location.state?.uploadSuccess) {
@@ -68,16 +62,6 @@ export default function VideoListPage() {
   }, [location, navigate, refetch]);
 
   useEffect(() => {
-    if (!hasProcessingVideos) return;
-
-    const interval = setInterval(() => {
-      refetch();
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [hasProcessingVideos, refetch]);
-
-  useEffect(() => {
     const timer = setTimeout(() => {
       setAppliedQuery(query);
     }, 300);
@@ -85,12 +69,74 @@ export default function VideoListPage() {
     return () => clearTimeout(timer);
   }, [query]);
 
+  useEffect(() => {
+    if (videos.length === 0) return;
+
+    const nextPending = videos
+      .filter((v) => v.status === 'processing' || !v.thumbnailUrl)
+      .map((v) => String(v.videoId));
+
+    setPendingThumbnailIds((prev) => {
+      const set = new Set(prev);
+      nextPending.forEach((id) => set.add(id));
+      return Array.from(set);
+    });
+  }, [videos]);
+
+  useEffect(() => {
+    pendIdsRef.current = pendingThumbnailIds;
+  }, [pendingThumbnailIds]);
+
+  useEffect(() => {
+    if (pendingThumbnailIds.length === 0) return;
+
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let cancelled = false;
+
+    const poll = async () => {
+      if (cancelled) return;
+
+      const res = await refetch();
+      const freshVideos = res.data?.videos ?? [];
+
+      const currentIds = pendIdsRef.current;
+
+      const doneIds = freshVideos
+        .filter((v) => currentIds.includes(String(v.videoId)))
+        .filter((v) => v.status !== 'processing' && Boolean(v.thumbnailUrl))
+        .map((v) => String(v.videoId));
+
+      if (doneIds.length > 0) {
+        setThumbVersion((prev) => {
+          const next = { ...prev };
+          doneIds.forEach((id) => {
+            next[id] = (next[id] ?? 0) + 1;
+          });
+          return next;
+        });
+
+        setPendingThumbnailIds((prev) => prev.filter((id) => !doneIds.includes(id)));
+      }
+
+      if (pendIdsRef.current.length > 0) {
+        timeoutId = setTimeout(poll, 3000);
+      }
+    };
+
+    timeoutId = setTimeout(poll, 3000);
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [pendingThumbnailIds, refetch]);
+
   const handleStartRecording = () => {
     navigate(`/${projectId}/video/record`);
   };
 
   const handleVideoClick = (videoId: string, status: string) => {
-    if (status === 'uploading' || status === 'processing') {
+    if (status === 'processing') {
       toast.info('영상을 처리하고 있습니다.', {
         description: '처리가 완료되면 확인할 수 있습니다.',
       });
@@ -255,7 +301,7 @@ export default function VideoListPage() {
                 {viewMode === 'card' ? (
                   <CardView
                     items={videos}
-                    getKey={(item) => item.videoId?.toString() || ''}
+                    getKey={(item) => String(item.videoId)}
                     className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-3"
                     renderCard={(item) => {
                       const now = new Date();
@@ -263,12 +309,7 @@ export default function VideoListPage() {
                       const hoursSinceCreated =
                         (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
 
-                      const isStuck =
-                        (item.status === 'uploading' || item.status === 'processing') &&
-                        hoursSinceCreated > 1;
-
-                      const isProcessing =
-                        (item.status === 'uploading' || item.status === 'processing') && !isStuck;
+                      const isStuck = item.status === 'processing' && hoursSinceCreated > 1;
 
                       const isFailed = item.status === 'failed' || isStuck;
                       const isDeleting = deletingVideoIds.has(item.videoId?.toString() || '');
@@ -286,14 +327,16 @@ export default function VideoListPage() {
                           <PresentationCard
                             {...item}
                             mode="videos"
+                            isPresentationPending={
+                              pendingSet.has(String(item.videoId)) ||
+                              item.status === 'processing' ||
+                              !item.thumbnailUrl
+                            }
+                            thumbnailVersion={thumbVersion[String(item.videoId)] ?? 0}
                             onDelete={() =>
                               handleDeleteClick(item.videoId?.toString() || '', item.title)
                             }
                           />
-
-                          {isProcessing && (
-                            <ProcessingOverlay visible variant="card" className="rounded-2xl" />
-                          )}
 
                           {isFailed && !isDeleting && (
                             <div className="absolute inset-0 bg-black/70 rounded-2xl flex items-center justify-center z-10">
@@ -343,7 +386,7 @@ export default function VideoListPage() {
                 ) : (
                   <ListView
                     items={videos}
-                    getKey={(item) => item.videoId?.toString() || ''}
+                    getKey={(item) => String(item.videoId)}
                     className="flex flex-col gap-3"
                     renderInfo={(item) => (
                       <div
@@ -354,6 +397,12 @@ export default function VideoListPage() {
                         <PresentationList
                           {...item}
                           mode="videos"
+                          isPresentationPending={
+                            pendingSet.has(String(item.videoId)) ||
+                            item.status === 'processing' ||
+                            !item.thumbnailUrl
+                          }
+                          thumbnailVersion={thumbVersion[String(item.videoId)] ?? 0}
                           onDelete={() =>
                             handleDeleteClick(item.videoId?.toString() || '', item.title)
                           }
