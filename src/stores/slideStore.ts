@@ -9,43 +9,27 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
-import { useAuthStore } from '@/stores/authStore';
 import type { Comment } from '@/types/comment';
 import type { ReactionType } from '@/types/script';
 import type { SlideDetail } from '@/types/slide';
-import {
-  addReplyToFlat,
-  createComment,
-  deleteFromFlat,
-  findRootParentId,
-  updateInFlat,
-} from '@/utils/comment';
+import { deleteFromFlat, updateInFlat } from '@/utils/comment';
 
 interface SlideState {
   slide: SlideDetail | null;
-  reactionHistory: Record<string, ReactionType[]>;
-  reactionCounts: Record<string, Record<string, number>>;
 
   initSlide: (slide: SlideDetail) => void;
   updateSlide: (updates: Partial<SlideDetail>) => void;
-  setReactionCounts: (slideId: string, counts: Record<string, number>) => void;
   updateScript: (script: string) => void;
   deleteComment: (id: string) => void;
   updateComment: (id: string, content: string) => void;
-  updateCommentServerId: (localId: string, serverId: string) => void;
-  addReply: (parentId: string, content: string) => Comment | undefined;
   addReaction: (type: ReactionType) => void;
-  addComment: (content: string, slideIndex: number) => Comment | undefined;
   setComments: (comments: Comment[]) => void;
 }
 
 export const useSlideStore = create<SlideState>()(
   devtools(
-    (set, get) => ({
+    (set) => ({
       slide: null,
-
-      reactionHistory: {},
-      reactionCounts: {},
 
       initSlide: (slide) => {
         set({ slide }, false, 'slide/initSlide');
@@ -58,19 +42,6 @@ export const useSlideStore = create<SlideState>()(
           }),
           false,
           'slide/updateSlide',
-        );
-      },
-
-      setReactionCounts: (slideId, counts) => {
-        set(
-          (state) => ({
-            reactionCounts: {
-              ...state.reactionCounts,
-              [slideId]: { ...counts },
-            },
-          }),
-          false,
-          'slide/setReactionCounts',
         );
       },
 
@@ -114,139 +85,25 @@ export const useSlideStore = create<SlideState>()(
         );
       },
 
-      updateCommentServerId: (localId, serverId) => {
-        set(
-          (state) => ({
-            slide: state.slide
-              ? {
-                  ...state.slide,
-                  comments: (state.slide.comments ?? []).map((c) =>
-                    c.commentId === localId ? { ...c, serverId } : c,
-                  ),
-                }
-              : null,
-          }),
-          false,
-          'slide/updateCommentServerId',
-        );
-      },
-
-      addReply: (parentId, content) => {
-        const currentState = get();
-        if (!currentState.slide) return undefined;
-
-        // 항상 최상위 부모 댓글에 답글을 달도록 rootParentId를 찾음
-        const rootParentId = findRootParentId(currentState.slide.comments ?? [], parentId);
-        const rootParentComment = (currentState.slide.comments ?? []).find(
-          (comment) => comment.commentId === rootParentId,
-        );
-        const currentUser = useAuthStore.getState().user;
-        const authorId = currentUser?.id ?? 'anonymous';
-
-        const { comments, newComment } = addReplyToFlat(
-          currentState.slide.comments ?? [],
-          rootParentId,
-          {
-            content,
-            userId: authorId,
-            userName: currentUser?.name,
-            userProfileImage: currentUser?.profileImage,
-            ref: rootParentComment?.ref,
-          },
-        );
-
-        const updatedComments = rootParentComment?.slideId
-          ? comments.map((comment) =>
-              comment.commentId === newComment.commentId
-                ? {
-                    ...comment,
-                    slideId: rootParentComment.slideId,
-                    slideRef: rootParentComment.slideRef,
-                  }
-                : comment,
-            )
-          : comments;
-
-        set(
-          { slide: { ...currentState.slide, comments: updatedComments } },
-          false,
-          'slide/addReply',
-        );
-
-        return newComment;
-      },
-
       addReaction: (type) => {
         set(
           (state) => {
             if (!state.slide) return state;
 
-            const slideId = state.slide.slideId;
             const currentReactions = state.slide.emojiReactions || [];
-
-            // 카운트 1 증가 (토글 아님, 항상 +1)
-            const newReactions = currentReactions.map((r) => {
-              if (r.type === type) {
-                return { ...r, count: r.count + 1 };
-              }
-              return r;
-            });
-
-            const currentCounts = state.reactionCounts[slideId] || {};
-            const newCounts = { ...currentCounts };
-            newReactions.forEach((r) => {
-              newCounts[r.type] = r.count;
-            });
 
             return {
               slide: {
                 ...state.slide,
-                emojiReactions: newReactions,
+                emojiReactions: currentReactions.map((r) =>
+                  r.type === type ? { ...r, count: r.count + 1 } : r,
+                ),
               },
-              reactionCounts: { ...state.reactionCounts, [slideId]: newCounts },
             };
           },
           false,
           'slide/addReaction',
         );
-      },
-
-      addComment: (content, slideIndex) => {
-        const trimmed = content.trim();
-        if (!trimmed) return undefined;
-        const currentSlideId = get().slide?.slideId;
-        const currentUser = useAuthStore.getState().user;
-        const authorId = currentUser?.id ?? 'anonymous';
-
-        const newComment = createComment({
-          content: trimmed,
-          userId: authorId,
-          userName: currentUser?.name,
-          userProfileImage: currentUser?.profileImage,
-          ref: { kind: 'slide', index: slideIndex },
-        });
-
-        set(
-          (state) => ({
-            slide: state.slide
-              ? {
-                  ...state.slide,
-                  comments: [
-                    {
-                      ...newComment,
-                      slideId: currentSlideId,
-                      slideRef: `Slide ${slideIndex + 1}`,
-                    },
-                    ...(state.slide.comments ?? []),
-                  ],
-                }
-              : null,
-          }),
-          false,
-          'slide/addComment',
-        );
-
-        return newComment;
       },
 
       setComments: (comments) => {

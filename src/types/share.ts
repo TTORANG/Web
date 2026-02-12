@@ -78,6 +78,7 @@ export interface SharedProjectComment {
   userId: string;
   isMine: boolean;
   writer: string;
+  profileImageUrl?: string | null;
   targetType: SharedProjectCommentTargetType;
   targetId: string;
   parentId: string | null;

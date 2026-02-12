@@ -51,9 +51,46 @@ export default defineConfig({
     chunkSizeWarningLimit: 800,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'tanstack-vendor': ['@tanstack/react-query'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (
+              id.includes('react') ||
+              id.includes('react-dom') ||
+              id.includes('react-router-dom')
+            ) {
+              return 'react-vendor';
+            }
+            if (id.includes('@tanstack/react-query')) {
+              return 'tanstack-vendor';
+            }
+            if (id.includes('recharts')) {
+              return 'chart-vendor';
+            }
+            if (id.includes('hls.js')) {
+              return 'video-vendor';
+            }
+            if (
+              id.includes('dayjs') ||
+              id.includes('clsx') ||
+              id.includes('axios') ||
+              id.includes('zustand') ||
+              id.includes('sonner')
+            ) {
+              return 'app-vendor';
+            }
+          }
+
+          if (id.includes('/src/pages/feedback/') || id.includes('/src/pages/Feedback')) {
+            return 'feedback-pages';
+          }
+          if (id.includes('/src/components/insight/') || id.includes('/src/pages/InsightPage')) {
+            return 'insight-pages';
+          }
+          if (id.includes('/src/components/video/') || id.includes('/src/pages/Video')) {
+            return 'video-pages';
+          }
+
+          return undefined;
         },
       },
     },

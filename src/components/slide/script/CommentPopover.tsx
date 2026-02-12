@@ -5,13 +5,16 @@
  * 대본에 대한 팀원들의 의견을 보여주고, 답글을 달 수 있습니다.
  * 무한 스크롤로 다음 페이지를 로드합니다.
  */
+import { useCallback, useMemo, useState } from 'react';
+
 import clsx from 'clsx';
 
 import CommentList from '@/components/comment/CommentList';
 import { Popover, Skeleton } from '@/components/common';
-import { useSlideComments, useSlideId } from '@/hooks';
+import { useSlideId } from '@/hooks';
 import { useSlideCommentsInfiniteQuery } from '@/hooks/queries/useSlideCommentsQuery';
 import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
+import { countTreeComments } from '@/utils/comment';
 
 interface CommentPopoverProps {
   isLoading?: boolean;
@@ -19,7 +22,6 @@ interface CommentPopoverProps {
 
 export default function CommentPopover({ isLoading }: CommentPopoverProps) {
   const slideId = useSlideId();
-  const slideComments = useSlideComments();
   const {
     comments: treeComments,
     addReply,
@@ -32,13 +34,26 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
     isFetchingNextPage,
     fetchNextPage,
   } = useSlideCommentsInfiniteQuery(slideId);
+  const commentCount = useMemo(() => countTreeComments(treeComments), [treeComments]);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const handleOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen && isDeleteModalOpen) return;
+      setIsPopoverOpen(nextOpen);
+    },
+    [isDeleteModalOpen],
+  );
 
   return (
     <Popover
+      isOpen={isPopoverOpen}
+      onOpenChange={handleOpenChange}
       trigger={({ isOpen }) => (
         <button
           type="button"
-          aria-label={`의견 ${slideComments.length}개 보기`}
+          aria-label={`의견 ${commentCount}개 보기`}
           className={clsx(
             'inline-flex h-7 items-center gap-1 rounded px-2',
             'outline-1 -outline-offset-1 focus-visible:outline-2 focus-visible:outline-main',
@@ -61,11 +76,7 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
               isOpen ? 'text-main-variant1' : 'text-gray-600',
             )}
           >
-            {isLoading ? (
-              <Skeleton width="100%" height={16} className="rounded" />
-            ) : (
-              slideComments.length
-            )}
+            {isLoading ? <Skeleton width="100%" height={16} className="rounded" /> : commentCount}
           </span>
         </button>
       )}
@@ -93,6 +104,7 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
           onLoadMore={() => {
             void fetchNextPage();
           }}
+          onDeleteModalOpenChange={setIsDeleteModalOpen}
         />
       </div>
     </Popover>

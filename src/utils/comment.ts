@@ -1,52 +1,4 @@
-import type { Comment, CreateCommentInput } from '@/types/comment';
-
-/**
- * 고유 ID 생성
- */
-export function generateCommentId(): string {
-  return crypto.randomUUID();
-}
-
-/**
- * 새 댓글 객체 생성
- */
-export function createComment(input: CreateCommentInput): Comment {
-  const isReply = Boolean(input.parentId);
-
-  return {
-    commentId: generateCommentId(),
-    userId: input.userId ?? 'unknown',
-    userName: input.userName,
-    userProfileImage: input.userProfileImage,
-    content: input.content.trim(),
-    createdAt: new Date().toISOString(),
-    isMine: true,
-    ref: input.ref,
-    isReply,
-    parentId: input.parentId,
-    replies: isReply ? undefined : [],
-  };
-}
-
-/**
- * 플랫 배열에 답글 추가 (부모 댓글 바로 다음 위치에 삽입)
- *
- * SlidePage(Opinion) 방식: 플랫 배열 + parentId 참조
- */
-export function addReplyToFlat(
-  comments: Comment[],
-  parentId: string,
-  input: Omit<CreateCommentInput, 'parentId'>,
-): { comments: Comment[]; newComment: Comment } {
-  const newReply = createComment({ ...input, parentId });
-
-  const parentIndex = comments.findIndex((c) => c.commentId === parentId);
-  if (parentIndex === -1) return { comments, newComment: newReply };
-
-  const result = [...comments];
-  result.splice(parentIndex + 1, 0, newReply);
-  return { comments: result, newComment: newReply };
-}
+import type { Comment } from '@/types/comment';
 
 /**
  * 플랫 배열에서 특정 댓글의 content를 업데이트
@@ -59,7 +11,22 @@ export function updateInFlat(comments: Comment[], targetId: string, content: str
  * 플랫 배열에서 댓글 삭제 (부모 삭제 시 자식도 함께 삭제)
  */
 export function deleteFromFlat(comments: Comment[], targetId: string): Comment[] {
-  return comments.filter((c) => c.commentId !== targetId && c.parentId !== targetId);
+  const deleteIds = new Set<string>([targetId]);
+  let hasNewChild = true;
+
+  // target의 모든 하위 답글(자손)까지 재귀적으로 수집
+  while (hasNewChild) {
+    hasNewChild = false;
+    for (const comment of comments) {
+      if (!comment.parentId) continue;
+      if (deleteIds.has(comment.parentId) && !deleteIds.has(comment.commentId)) {
+        deleteIds.add(comment.commentId);
+        hasNewChild = true;
+      }
+    }
+  }
+
+  return comments.filter((c) => !deleteIds.has(c.commentId));
 }
 
 /**
@@ -93,44 +60,11 @@ export function flatToTree(comments: Comment[]): Comment[] {
 }
 
 /**
- * 트리 구조를 플랫 배열로 변환
- *
- * 부모 바로 다음에 자식들이 오도록 순서 보장합니다.
+ * 트리 구조 댓글의 전체 개수(댓글+답글)를 계산
  */
-export function treeToFlat(comments: Comment[]): Comment[] {
-  const result: Comment[] = [];
-
-  const flatten = (list: Comment[], parentId?: string) => {
-    for (const comment of list) {
-      const { replies, ...rest } = comment;
-      result.push({ ...rest, parentId, isReply: Boolean(parentId) });
-      if (replies && replies.length > 0) {
-        flatten(replies, comment.commentId);
-      }
-    }
-  };
-
-  flatten(comments);
-  return result;
-}
-
-/**
- * 플랫 배열에서 최상위 부모 댓글 ID 찾기
- *
- * 대댓글의 답글을 클릭하면 최상위 부모에게 답글이 달리도록 하기 위함
- *
- * @param comments - 플랫 구조 댓글 배열
- * @param commentId - 현재 댓글 ID
- * @returns 최상위 부모 댓글 ID (parentId가 없는 댓글)
- */
-export function findRootParentId(comments: Comment[], commentId: string): string {
-  const comment = comments.find((c) => c.commentId === commentId);
-
-  // 댓글을 찾지 못하거나 이미 최상위 댓글이면 자기 자신 반환
-  if (!comment || !comment.parentId) {
-    return commentId;
-  }
-
-  // 재귀적으로 부모의 부모를 찾아감
-  return findRootParentId(comments, comment.parentId);
+export function countTreeComments(comments: Comment[]): number {
+  return comments.reduce(
+    (count, comment) => count + 1 + countTreeComments(comment.replies ?? []),
+    0,
+  );
 }

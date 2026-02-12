@@ -20,7 +20,7 @@ export default function SlidePage() {
    */
   useEffect(() => {
     if (isError) {
-      showToast.error('슬라이드를 불러오지 못했습니다.', '잠시 후 다시 시도해주세요.');
+      showToast.error('슬라이드를 불러오지 못했습니다.', '새로고침 후 다시 시도해주세요.');
     }
   }, [isError]);
 

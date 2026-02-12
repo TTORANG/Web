@@ -33,7 +33,7 @@ export default function HomePage() {
     if (response?.resultType === 'SUCCESS') {
       const projectId = response.success.projectId;
       setPendingThumbnailIds((prev) => (prev.includes(projectId) ? prev : [...prev, projectId]));
-      showToast.success('업로드 완료!');
+      showToast.success('파일 업로드가 완료되었습니다.');
       void queryClient.invalidateQueries({ queryKey: queryKeys.presentations.lists() });
     }
   };

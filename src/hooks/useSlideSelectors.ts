@@ -36,7 +36,6 @@ export const useSlideActions = () =>
       updateScript: state.updateScript,
       deleteComment: state.deleteComment,
       updateComment: state.updateComment,
-      addReply: state.addReply,
       setComments: state.setComments,
     })),
   );

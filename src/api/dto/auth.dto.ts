@@ -10,6 +10,7 @@ export interface SocialLoginUserResponseDto {
   email: string;
   name: string;
   sessionId: string;
+  profileImageUrl?: string | null;
 }
 
 /**
@@ -36,7 +37,7 @@ export interface JwtPayloadDto {
   id: string;
   email: string;
   sessionId: string;
-  profileImageUrl: string;
+  profileImageUrl?: string | null;
 }
 
 //위 형식대로 response, request dto 작성 부탁드립니다.

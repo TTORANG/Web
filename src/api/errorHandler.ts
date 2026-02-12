@@ -15,10 +15,10 @@ const errorHandlers: Record<number, ErrorHandler> = {
     showToast.error('로그인이 만료되었습니다.', '다시 로그인해주세요.');
   },
   403: (message: string) => {
-    showToast.error('권한이 없습니다.', message || '이 작업에 대한 접근 권한이 부족합니다.');
+    showToast.error('권한이 없습니다.', message || '접근 권한을 확인해주세요.');
   },
   404: (message: string) => {
-    showToast.error('요청하신 리소스를 찾을 수 없습니다.', message);
+    showToast.error('요청한 정보를 찾을 수 없습니다.', message);
   },
 };
 
@@ -37,7 +37,7 @@ const handleServerSideError = () => {
  */
 export const handleApiError = (status: number | undefined, message: string) => {
   if (!status) {
-    showToast.error('네트워크 오류', '인터넷 연결을 확인해주세요.');
+    showToast.error('네트워크 연결을 확인해주세요.', '인터넷 상태를 확인한 뒤 다시 시도해주세요.');
     return;
   }
 
@@ -55,5 +55,5 @@ export const handleApiError = (status: number | undefined, message: string) => {
   }
 
   // 3. 그 외 일반 에러 (400 등)는 제목을 통일하고 메시지는 설명으로 전달
-  showToast.error('오류가 발생했습니다.', message);
+  showToast.error('요청을 처리하지 못했습니다.', message);
 };

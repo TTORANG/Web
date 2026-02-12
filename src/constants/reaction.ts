@@ -12,25 +12,15 @@ export const REACTION_CONFIG: Record<ReactionType, { emoji: string; label: strin
 } as const;
 
 /**
- * 상호 배타적 리액션 그룹
- * 같은 그룹 내에서는 하나만 선택 가능
+ * 낙관적 업데이트 잠금 시간 (ms)
+ * 서버 응답이 오기 전 낙관적 카운트를 유지하는 기간
  */
-export const EXCLUSIVE_REACTION_GROUPS: ReactionType[][] = [
-  ['fire', 'sleepy'],
-  ['good', 'bad'],
-];
+export const OPTIMISTIC_LOCK_DURATION = 2000;
 
 /**
- * 주어진 리액션 타입의 exclusive 그룹에서 다른 타입 반환
+ * 리액션 카운트 포맷 (99 초과 시 '99+')
  */
-export function getExclusiveCounterpart(type: ReactionType): ReactionType | null {
-  for (const group of EXCLUSIVE_REACTION_GROUPS) {
-    if (group.includes(type)) {
-      return group.find((t) => t !== type) ?? null;
-    }
-  }
-  return null;
-}
+export const formatReactionCount = (count: number): string | number => (count > 99 ? '99+' : count);
 
 /**
  * 리액션 타입 배열 (REACTION_CONFIG 키에서 추출)

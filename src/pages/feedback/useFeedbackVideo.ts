@@ -14,20 +14,16 @@ import { useVideoReactions } from '@/hooks/useVideoReactions';
 import { useAuthStore } from '@/stores/authStore';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Comment } from '@/types/comment';
-import type {
-  ReadSharedContentData,
-  SharedProjectComment,
-  SharedProjectSlide,
-} from '@/types/share';
+import type { ReadSharedContentData, SharedProjectComment } from '@/types/share';
 import type { SlideDetail } from '@/types/slide';
 import type { VideoTimestampFeedback } from '@/types/video';
 import { formatVideoTimestamp } from '@/utils/format';
+import { SHARED_PROJECT_ID, normalizeSharedSlides } from '@/utils/sharedContent';
 import { getSlideIndexFromTime } from '@/utils/video';
 
 const DEFAULT_VIDEO_ID = '34';
 const FALLBACK_SLIDE_DURATION_SECONDS = 10;
 const FALLBACK_VIDEO_DURATION_SECONDS = 9;
-const SHARED_PROJECT_ID = 'shared';
 
 export interface ShareExitSnapshot {
   lastSlideId?: number;
@@ -59,35 +55,6 @@ function toPlayableVideoUrl(url?: string | null): string {
   }
 
   return publicUrl;
-}
-
-function toNumber(value: string | number | undefined, fallback: number): number {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  if (typeof value === 'string') {
-    const parsed = Number(value);
-    if (Number.isFinite(parsed)) return parsed;
-  }
-  return fallback;
-}
-
-function normalizeSharedSlides(rawSlides: SharedProjectSlide[]): SlideDetail[] {
-  const now = new Date().toISOString();
-
-  return rawSlides
-    .map((slide, index) => {
-      const slideNum = toNumber(slide.slideNum, index + 1);
-      return {
-        slideId: slide.slideId,
-        projectId: SHARED_PROJECT_ID,
-        title: `슬라이드 ${slideNum}`,
-        slideNum,
-        imageUrl: slide.imageUrl,
-        createdAt: now,
-        updatedAt: now,
-        script: slide.scriptText,
-      };
-    })
-    .sort((a, b) => a.slideNum - b.slideNum);
 }
 
 function mapSlidesByTimeline(
@@ -181,6 +148,7 @@ function mapSharedCommentsToFeedbacks(
       replies: parentId ? undefined : [],
       userId,
       userName,
+      userProfileImage: sharedComment.profileImageUrl ?? undefined,
       content: sharedComment.content,
       createdAt: sharedComment.createdAt,
       isMine: sharedComment.isMine,
@@ -202,7 +170,7 @@ function mapSharedCommentsToFeedbacks(
 }
 
 export function useFeedbackVideo(
-  sharedContent?: ReadSharedContentData,
+  sharedContent: ReadSharedContentData,
   options: UseFeedbackVideoOptions = {},
 ) {
   const { onShareExitSnapshotChange } = options;
@@ -224,7 +192,6 @@ export function useFeedbackVideo(
   const requestSeek = useVideoFeedbackStore((s) => s.requestSeek);
   const updateFeedbacks = useVideoFeedbackStore((s) => s.updateFeedbacks);
 
-  const { comments, addComment, addReply, deleteComment, updateComment } = useVideoComments();
   const { reactions, addReaction } = useVideoReactions();
   const [commentDraft, setCommentDraft] = useState('');
   const [scrollToCommentId, setScrollToCommentId] = useState<string | undefined>(undefined);
@@ -252,6 +219,10 @@ export function useFeedbackVideo(
       return null;
     }
   }, [shareToken, updateFeedbacks]);
+
+  const { comments, addComment, addReply, deleteComment, updateComment } = useVideoComments({
+    onMutationSuccess: () => void reloadComments(),
+  });
 
   const handleAddComment = useCallback(async () => {
     if (!commentDraft.trim()) return;
@@ -421,12 +392,7 @@ export function useFeedbackVideo(
 
     const load = async () => {
       try {
-        if (sharedContent) {
-          await loadFromSharedContent(sharedContent);
-        } else {
-          // SharePage를 통하지 않고 직접 접근한 경우
-          throw new Error('공유 콘텐츠 데이터가 필요합니다.');
-        }
+        await loadFromSharedContent(sharedContent);
       } catch {
         if (cancelled) return;
 

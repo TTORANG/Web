@@ -6,7 +6,7 @@
  * React Query를 통해 서버에서 리액션 집계를 직접 조회합니다.
  */
 import { Popover } from '@/components/common';
-import { REACTION_CONFIG, REACTION_TYPES } from '@/constants/reaction';
+import { REACTION_CONFIG, REACTION_TYPES, formatReactionCount } from '@/constants/reaction';
 import { useSlideId } from '@/hooks';
 import { useSlideReactionSummary } from '@/hooks/queries/useReaction';
 
@@ -46,7 +46,7 @@ export default function ScriptBoxEmoji() {
             <div key={type} className="flex items-center gap-2">
               <span className="text-base leading-6 text-gray-800">{config.emoji}</span>
               <span className="text-base leading-6 text-gray-800">
-                {count > 99 ? '99+' : count}
+                {formatReactionCount(count)}
               </span>
             </div>
           );

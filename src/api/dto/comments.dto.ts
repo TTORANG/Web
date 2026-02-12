@@ -4,6 +4,7 @@
 export interface CommentUserDto {
   userId: string;
   nickName: string;
+  profileImageUrl?: string | null;
 }
 
 /**

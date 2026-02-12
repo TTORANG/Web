@@ -54,7 +54,7 @@ function encode(value: string) {
 /** 새 탭에서 URL 열기. 팝업 차단 시 토스트 표시 */
 function openNewTab(url: string) {
   const win = window.open(url, '_blank', 'noopener,noreferrer');
-  if (!win) showToast.error('공유 창을 열 수 없습니다.', '팝업 차단을 해제해주세요.');
+  if (!win) showToast.error('공유 창을 열지 못했습니다.', '팝업 차단을 해제해주세요.');
 }
 
 /** Kakao SDK 스크립트를 동적으로 로드 */
@@ -109,11 +109,11 @@ export async function shareToKakao(params: {
 
   try {
     if (!jsKey) {
-      showToast.error('Kakao JS Key가 비어 있습니다.', 'VITE_KAKAO_JS_KEY를 확인해주세요.');
+      showToast.error('카카오 공유 설정을 확인해주세요.', 'VITE_KAKAO_JS_KEY 값을 확인해주세요.');
       return;
     }
     if (!url) {
-      showToast.error('공유할 URL이 비어 있습니다.');
+      showToast.error('공유할 링크가 없습니다.');
       return;
     }
 
@@ -121,7 +121,7 @@ export async function shareToKakao(params: {
 
     const Kakao = window.Kakao;
     if (!Kakao) {
-      showToast.error('Kakao SDK 로드에 실패했습니다.');
+      showToast.error('카카오 SDK를 불러오지 못했습니다.');
       return;
     }
 
@@ -141,7 +141,7 @@ export async function shareToKakao(params: {
     });
   } catch (e) {
     console.error(e);
-    showToast.error('카카오 공유에 실패했습니다.', 'JS SDK 도메인/키/URL을 확인해주세요.');
+    showToast.error('카카오 공유에 실패했습니다.', '도메인, 키, 링크 설정을 확인해주세요.');
   }
 }
 
@@ -149,7 +149,7 @@ export async function shareToKakao(params: {
  * 인스타그램 공유 (웹에서 직접 호출 불가)
  */
 export function shareToInstagram() {
-  showToast.info('인스타그램 공유 불가', '웹에서 링크 공유를 직접 호출할 수 없습니다.');
+  showToast.info('인스타그램 공유는 지원하지 않습니다.', '링크를 복사해 앱에서 직접 공유해주세요.');
 }
 
 /**

@@ -5,7 +5,7 @@ export type { ApiErrorResponse, ApiResponse, PaginatedData } from './api';
 export type { AuthProvider, User } from './auth';
 
 // Comment
-export type { Comment, CreateCommentInput } from './comment';
+export type { Comment } from './comment';
 
 // Home
 export type { SortMode, ViewMode, FilterMode } from './home';
@@ -49,19 +49,3 @@ export type { ThemeMode } from './theme';
 // Upload _
 //export type { UploadState } from './uploadFile';
 export type { UploadStep } from './uploadFile';
-
-// WebSocket
-export type {
-  CommentDeletedPayload,
-  ErrorPayload,
-  JoinedProjectResponse,
-  JoinProjectPayload,
-  LeftProjectResponse,
-  NewCommentPayload,
-  NewReactionPayload,
-  ReactionCountUpdatedPayload,
-  ReactionRemovedPayload,
-  RoomsListResponse,
-  SocketAuthConfig,
-} from './websocket';
-export { ClientEvents, ServerEvents } from './websocket';

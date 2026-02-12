@@ -18,14 +18,14 @@ import { type ShareExitSnapshot, useFeedbackVideo } from '@/pages/feedback/useFe
 import type { ReadSharedContentData } from '@/types/share';
 
 interface FeedbackVideoPageProps {
-  sharedContent?: ReadSharedContentData;
-  onShareExitSnapshotChange?: (snapshot: ShareExitSnapshot) => void;
+  sharedContent: ReadSharedContentData;
+  onShareExitSnapshotChange: (snapshot: ShareExitSnapshot) => void;
 }
 
 export default function FeedbackVideoPage({
   sharedContent,
   onShareExitSnapshotChange,
-}: FeedbackVideoPageProps = {}) {
+}: FeedbackVideoPageProps) {
   const isDesktop = useIsDesktop();
   const ctx = useFeedbackVideo(sharedContent, { onShareExitSnapshotChange });
 

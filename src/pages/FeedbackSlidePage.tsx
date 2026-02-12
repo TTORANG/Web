@@ -17,24 +17,24 @@ import SlideViewer from '@/components/feedback/SlideViewer';
 import SlideTitle from '@/components/slide/script/SlideTitle';
 import { createDefaultReactions } from '@/constants/reaction';
 import type { ReadSharedContentData } from '@/types/share';
+import { countTreeComments } from '@/utils/comment';
 
 import { useFeedbackSlide } from './feedback/useFeedbackSlide';
 import type { ShareExitSnapshot } from './feedback/useFeedbackVideo';
 
 interface FeedbackSlidePageProps {
-  sharedContent?: ReadSharedContentData;
-  onShareExitSnapshotChange?: (snapshot: ShareExitSnapshot) => void;
+  sharedContent: ReadSharedContentData;
+  onShareExitSnapshotChange: (snapshot: ShareExitSnapshot) => void;
 }
 
 export default function FeedbackSlidePage({
   sharedContent,
   onShareExitSnapshotChange,
-}: FeedbackSlidePageProps = {}) {
+}: FeedbackSlidePageProps) {
   const { shareToken } = useParams<{ shareToken: string }>();
   const { state, actions } = useFeedbackSlide({
-    sharedSlides: sharedContent?.projectContent?.slides,
-    sharedComments: sharedContent?.projectContent?.comments,
-    sessionId: sharedContent?.sessionInfo?.sessionId,
+    sharedSlides: sharedContent.projectContent.slides,
+    sharedComments: sharedContent.projectContent.comments,
     shareToken,
     onShareExitSnapshotChange,
   });
@@ -195,7 +195,7 @@ export default function FeedbackSlidePage({
             </div>
           </>
         }
-        commentCount={comments.length}
+        commentCount={countTreeComments(comments)}
       />
     </div>
   );

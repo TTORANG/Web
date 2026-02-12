@@ -55,7 +55,7 @@ export function useRename({ projectId, initialTitle }: UseRenameOptions): UseRen
     const trimmedTitle = newTitle.trim();
 
     if (!trimmedTitle) {
-      showToast.error('제목을 입력해주세요');
+      showToast.error('제목을 입력해주세요.');
       return;
     }
 
@@ -68,12 +68,12 @@ export function useRename({ projectId, initialTitle }: UseRenameOptions): UseRen
       { projectId, data: { title: trimmedTitle } },
       {
         onSuccess: () => {
-          showToast.success('제목이 변경되었습니다');
+          showToast.success('제목을 변경했습니다.');
           setConfirmedTitle(trimmedTitle);
           setIsRenameModalOpen(false);
         },
         onError: () => {
-          showToast.error('제목 변경에 실패했습니다');
+          showToast.error('제목을 변경하지 못했습니다.');
         },
       },
     );

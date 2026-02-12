@@ -1,29 +1,27 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { videosApi } from '@/api/endpoints/videos';
-import { CardView, ListView, Modal } from '@/components/common';
+import { CardView, ListView } from '@/components/common';
 import ProcessingOverlay from '@/components/common/ProcessingOverlay';
 import PresentationCard from '@/components/presentation/PresentationCard';
 import PresentationHeader from '@/components/presentation/PresentationHeader';
 import PresentationList from '@/components/presentation/PresentationList';
-import { RecordingEmptySection } from '@/components/video/RecordingEmptySection';
+import { DeleteVideoModal, RecordingEmptySection } from '@/components/video';
 import { useProjectVideos } from '@/hooks/useProjectVideos';
 import type { FilterMode, SortMode, ViewMode } from '@/types/home';
+import { showToast } from '@/utils/toast';
 
 const SKELETON_CARD_COUNT = 6;
 const SKELETON_LIST_COUNT = 4;
 
 export default function VideoListPage() {
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
   const { projectId } = useParams<{ projectId: string }>();
 
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [query, setQuery] = useState('');
   const [appliedQuery, setAppliedQuery] = useState('');
   const [sort, setSort] = useState<SortMode>('recent');
@@ -59,52 +57,13 @@ export default function VideoListPage() {
     return hoursSinceCreated < 1;
   });
 
-  const handleUpdateTitle = useCallback(
-    async (videoId: string, newTitle: string) => {
-      if (!newTitle.trim()) {
-        toast.error('제목을 입력해주세요.');
-        return;
-      }
-
-      try {
-        const response = await videosApi.updateVideoTitle(videoId, newTitle);
-
-        if (response.resultType === 'SUCCESS') {
-          // 3. 쿼리 무효화: 이 작업이 완료될 때까지 await로 대기
-          await queryClient.invalidateQueries({
-            queryKey: ['videos', projectId],
-            exact: false,
-          });
-
-          toast.success('영상의 제목이 수정되었습니다.');
-        } else {
-          // 실패 시 에러 메시지 처리
-          throw new Error(response.error?.reason || '수정 실패');
-        }
-      } catch (err) {
-        console.error('[VideoListPage] Rename error:', err);
-        const errorMessage = err instanceof Error ? err.message : '알 수 없는 에러가 발생했습니다.';
-
-        toast.error('제목 수정 실패', {
-          description: errorMessage,
-        });
-
-        // 에러 발생 시에도 혹시 모를 데이터 불일치를 위해 새로고침 시도
-        await queryClient.invalidateQueries({
-          queryKey: ['videos', projectId],
-          exact: false,
-        });
-      }
-    },
-    [projectId, queryClient],
-  );
   useEffect(() => {
     if (location.state?.uploadSuccess) {
-      setShowSuccessToast(true);
+      showToast.success('영상을 저장했습니다.', undefined, {
+        position: 'top-right',
+      });
       navigate(location.pathname, { replace: true, state: {} });
       refetch();
-      const timer = setTimeout(() => setShowSuccessToast(false), 3000);
-      return () => clearTimeout(timer);
     }
   }, [location, navigate, refetch]);
 
@@ -132,14 +91,14 @@ export default function VideoListPage() {
 
   const handleVideoClick = (videoId: string, status: string) => {
     if (status === 'uploading' || status === 'processing') {
-      toast.info('영상을 처리 중입니다', {
-        description: '잠시만 기다려주세요. 처리가 완료되면 확인하실 수 있습니다.',
+      toast.info('영상을 처리하고 있습니다.', {
+        description: '처리가 완료되면 확인할 수 있습니다.',
       });
       return;
     }
 
     if (status === 'failed') {
-      toast.error('영상 처리에 실패했습니다', {
+      toast.error('영상 처리에 실패했습니다.', {
         description: '다시 녹화해주세요.',
       });
       return;
@@ -163,14 +122,15 @@ export default function VideoListPage() {
       const response = await videosApi.deleteVideo(videoToDelete.id);
 
       if (response.data.resultType === 'SUCCESS') {
-        toast.success('영상이 삭제되었습니다');
+        toast.success('영상을 삭제했습니다.');
         refetch();
       } else {
-        throw new Error(response.data.error?.reason || '삭제 실패');
+        throw new Error(response.data.error?.reason || '삭제에 실패했습니다.');
       }
     } catch (err) {
-      toast.error('삭제 실패', {
-        description: err instanceof Error ? err.message : '영상을 삭제할 수 없습니다',
+      console.error('[VideoListPage] Delete error:', err);
+      toast.error('영상을 삭제하지 못했습니다.', {
+        description: err instanceof Error ? err.message : '잠시 후 다시 시도해주세요.',
       });
     } finally {
       setDeletingVideoIds((prev) => {
@@ -189,7 +149,7 @@ export default function VideoListPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">잘못된 접근입니다</h2>
           <button
             onClick={() => navigate('/')}
-            className="bg-primary text-white px-6 py-2.5 rounded-lg font-bold"
+            className="bg-main text-white px-6 py-2.5 rounded-lg font-bold hover:bg-main-variant2 transition"
           >
             홈으로 돌아가기
           </button>
@@ -206,7 +166,7 @@ export default function VideoListPage() {
           <p className="text-gray-600 mb-6">잠시 후 다시 시도해주세요.</p>
           <button
             onClick={() => navigate('/')}
-            className="bg-primary text-white px-6 py-2.5 rounded-lg font-bold hover:bg-primary-dark transition"
+            className="bg-main text-white px-6 py-2.5 rounded-lg font-bold hover:bg-main-variant2 transition"
           >
             홈으로 돌아가기
           </button>
@@ -222,53 +182,16 @@ export default function VideoListPage() {
       aria-labelledby="tab-video"
       className="relative h-full w-full overflow-y-auto bg-gray-100"
     >
-      {showSuccessToast && (
-        <div className="fixed right-4 top-4 z-50 flex animate-slide-in items-center gap-2 rounded-lg bg-success px-6 py-3 shadow-lg">
-          <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span className="text-body-m-bold text-white">영상이 성공적으로 저장되었습니다!</span>
-        </div>
-      )}
-
-      <Modal
+      {/* 삭제 확인 모달 */}
+      <DeleteVideoModal
         isOpen={deleteModalOpen}
         onClose={() => {
           setDeleteModalOpen(false);
           setVideoToDelete(null);
         }}
-        title="영상 삭제"
-        size="sm"
-      >
-        <p className="text-body-m mb-6">
-          <span className="font-bold">{videoToDelete?.title}</span> 영상을 삭제하시겠습니까?
-          <br />
-          <span className="text-gray-600 text-sm">삭제된 영상은 복구할 수 없습니다.</span>
-        </p>
-        <div className="flex gap-3">
-          <button
-            onClick={() => {
-              setDeleteModalOpen(false);
-              setVideoToDelete(null);
-            }}
-            className="flex-1 rounded-md bg-gray-100 py-3 font-bold text-gray-600 hover:bg-gray-200 transition-colors"
-            type="button"
-          >
-            취소
-          </button>
-          <button
-            onClick={handleConfirmDelete}
-            className="flex-1 rounded-md bg-error py-3 font-bold text-white hover:bg-error/90 transition-colors"
-            type="button"
-          >
-            삭제
-          </button>
-        </div>
-      </Modal>
+        title={videoToDelete?.title}
+        onConfirm={handleConfirmDelete}
+      />
 
       {!isLoading && totalCount === 0 && !hasAppliedQuery ? (
         <div className="flex h-full items-center justify-center">
@@ -353,7 +276,6 @@ export default function VideoListPage() {
                       return (
                         <div
                           className="relative"
-                          key={item.videoId}
                           onClick={() =>
                             handleVideoClick(
                               item.videoId?.toString() || '',
@@ -366,10 +288,6 @@ export default function VideoListPage() {
                             mode="videos"
                             onDelete={() =>
                               handleDeleteClick(item.videoId?.toString() || '', item.title)
-                            }
-                            // [수정] 제목 수정 핸들러 추가
-                            onUpdateTitle={(newTitle: string) =>
-                              handleUpdateTitle(item.videoId?.toString() || '', newTitle)
                             }
                           />
 
@@ -429,7 +347,6 @@ export default function VideoListPage() {
                     className="flex flex-col gap-3"
                     renderInfo={(item) => (
                       <div
-                        key={item.videoId}
                         onClick={() =>
                           handleVideoClick(item.videoId?.toString() || '', item.status)
                         }
@@ -439,10 +356,6 @@ export default function VideoListPage() {
                           mode="videos"
                           onDelete={() =>
                             handleDeleteClick(item.videoId?.toString() || '', item.title)
-                          }
-                          // [수정] 리스트 형태에도 제목 수정 핸들러 추가
-                          onUpdateTitle={(newTitle: string) =>
-                            handleUpdateTitle(item.videoId?.toString() || '', newTitle)
                           }
                         />
                       </div>

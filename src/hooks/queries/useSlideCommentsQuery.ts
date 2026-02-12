@@ -24,6 +24,7 @@ export function mapDtoToComment(dto: CommentWithUserDto, currentUserId?: string)
     serverId: dto.commentId,
     userId: dto.user.userId,
     userName: dto.user.nickName,
+    userProfileImage: dto.user.profileImageUrl ?? undefined,
     content: dto.content,
     createdAt: dto.createdAt,
     isMine: currentUserId ? dto.user.userId === currentUserId : false,

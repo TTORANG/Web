@@ -1,5 +1,16 @@
 import { toast } from 'sonner';
 
+type ToastPosition =
+  | 'top-left'
+  | 'top-center'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-center'
+  | 'bottom-right';
+type ToastOptions = {
+  position?: ToastPosition;
+};
+
 /**
  * 전역 알림(Toast) 유틸리티
  *
@@ -15,23 +26,23 @@ import { toast } from 'sonner';
  */
 export const showToast = {
   // 성공 알림
-  success: (message: string, description?: string) => {
-    toast.success(message, { description });
+  success: (message: string, description?: string, options?: ToastOptions) => {
+    toast.success(message, { description, ...options });
   },
 
   // 오류 알림
-  error: (message: string, description?: string) => {
-    toast.error(message, { description });
+  error: (message: string, description?: string, options?: ToastOptions) => {
+    toast.error(message, { description, ...options });
   },
 
   // 정보 알림
-  info: (message: string, description?: string) => {
-    toast.info(message, { description });
+  info: (message: string, description?: string, options?: ToastOptions) => {
+    toast.info(message, { description, ...options });
   },
 
   // 경고 알림
-  warning: (message: string, description?: string) => {
-    toast.warning(message, { description });
+  warning: (message: string, description?: string, options?: ToastOptions) => {
+    toast.warning(message, { description, ...options });
   },
 
   /**

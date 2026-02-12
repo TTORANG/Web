@@ -3,8 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { toast } from 'sonner';
 
-import { Layout, Logo, Modal } from '@/components/common';
-import { DeviceTestSection, RecordingSection, StopButton } from '@/components/video';
+import { Layout, Logo } from '@/components/common';
+import {
+  DeviceTestSection,
+  RecordExitModal,
+  RecordingSection,
+  StopButton,
+} from '@/components/video';
 import { usePresentation } from '@/hooks/queries/usePresentations';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { useVideoUpload } from '@/hooks/useVideoUpload';
@@ -70,12 +75,12 @@ export default function VideoRecordPage() {
     }
 
     if (!videoBlob || videoBlob.size === 0) {
-      toast.error('녹화된 영상 데이터가 생성되지 않았습니다.');
+      toast.error('녹화 파일을 확인할 수 없습니다.');
       return;
     }
 
     if (!slidesData || slidesData.length === 0) {
-      toast.error('슬라이드 정보를 불러올 수 없어 업로드를 중단합니다.');
+      toast.error('슬라이드 정보를 불러오지 못해 업로드를 중단했습니다.');
       return;
     }
 
@@ -105,20 +110,23 @@ export default function VideoRecordPage() {
         .filter((log): log is { slideId: number; timestampMs: number } => log !== null);
 
       if (slideLogs.length === 0) {
-        toast.error('슬라이드 기록이 올바르지 않습니다.');
+        toast.error('슬라이드 기록이 올바르지 않습니다.', {
+          description: '다시 녹화해주세요.',
+        });
         return;
       }
 
       const videoId = await uploadVideo(videoBlob, numericProjectId, title, slideLogs);
 
       if (videoId) {
-        toast.success('영상이 성공적으로 저장되었습니다!');
         setTimeout(() => {
           navigate(`/${projectId}/videos`, { state: { uploadSuccess: true } });
         }, 500);
       }
     } catch (err: unknown) {
-      toast.error('업로드 중 오류가 발생했습니다.');
+      toast.error('업로드에 실패했습니다.', {
+        description: '잠시 후 다시 시도해주세요.',
+      });
     }
   };
 
@@ -166,40 +174,12 @@ export default function VideoRecordPage() {
           )
         )}
 
-        <Modal
+        <RecordExitModal
           isOpen={isExitModalOpen}
           onClose={() => setIsExitModalOpen(false)}
-          title={step === 'RECORDING' ? '녹화 중단' : '테스트 종료'}
-          size="sm"
-        >
-          <div className="text-body-m">
-            {step === 'RECORDING' ? (
-              <>
-                녹화를 중단하시겠습니까?
-                <br />
-                저장되지 않은 데이터는 삭제됩니다.
-              </>
-            ) : (
-              '테스트를 종료하시겠습니까?'
-            )}
-          </div>
-          <div className="mt-7 flex gap-3">
-            <button
-              onClick={() => setIsExitModalOpen(false)}
-              className="flex-1 rounded-md bg-gray-100 py-3 font-bold text-gray-600 hover:bg-gray-200 transition-colors"
-              type="button"
-            >
-              취소
-            </button>
-            <button
-              onClick={handleConfirmExit}
-              className="flex-1 rounded-md bg-error py-3 font-bold text-white hover:bg-error/90 transition-colors"
-              type="button"
-            >
-              종료
-            </button>
-          </div>
-        </Modal>
+          step={step}
+          onConfirm={handleConfirmExit}
+        />
       </div>
     </Layout>
   );

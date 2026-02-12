@@ -8,11 +8,12 @@
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { Modal, Skeleton, Spinner } from '@/components/common';
+import { Skeleton, Spinner } from '@/components/common';
 import type { Comment as CommentType } from '@/types/comment';
 
 import Comment from './Comment';
 import { CommentProvider } from './CommentContext';
+import DeleteCommentModal from './DeleteCommentModal';
 
 interface CommentListProps {
   comments: CommentType[];
@@ -25,6 +26,7 @@ interface CommentListProps {
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
   onLoadMore?: () => void;
+  onDeleteModalOpenChange?: (isOpen: boolean) => void;
 }
 
 const skeletonContentWidths = ['90%', '70%', '85%', '60%'];
@@ -40,6 +42,7 @@ export default function CommentList({
   hasNextPage = false,
   isFetchingNextPage = false,
   onLoadMore,
+  onDeleteModalOpenChange,
 }: CommentListProps) {
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState('');
@@ -168,6 +171,10 @@ export default function CommentList({
     setDeleteTargetId(null);
   }, [deleteTargetId, onDeleteComment]);
 
+  useEffect(() => {
+    onDeleteModalOpenChange?.(Boolean(deleteTargetId));
+  }, [deleteTargetId, onDeleteModalOpenChange]);
+
   const contextValue = useMemo(
     () => ({
       replyingToId,
@@ -256,25 +263,11 @@ export default function CommentList({
         </div>
       </CommentProvider>
 
-      <Modal isOpen={!!deleteTargetId} onClose={closeDeleteModal} title="댓글 삭제" size="sm">
-        <p className="text-body-m">댓글을 삭제하시겠습니까?</p>
-        <div className="mt-7 flex gap-3">
-          <button
-            className="flex-1 rounded-md bg-gray-100 py-3 font-bold text-gray-600 transition-colors hover:bg-gray-200"
-            type="button"
-            onClick={closeDeleteModal}
-          >
-            취소
-          </button>
-          <button
-            className="flex-1 rounded-md bg-error py-3 font-bold text-white transition-colors hover:bg-error/90"
-            type="button"
-            onClick={confirmDelete}
-          >
-            삭제
-          </button>
-        </div>
-      </Modal>
+      <DeleteCommentModal
+        isOpen={!!deleteTargetId}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDelete}
+      />
     </>
   );
 }
