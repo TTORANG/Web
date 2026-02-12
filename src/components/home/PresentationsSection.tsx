@@ -45,7 +45,8 @@ export default function PresentationsSection({
 
   /**
    * 전체 프로젝트가 하나라도 존재하는지 여부
-   * 아예 데이터가 없으면 PresentationSection 자체를 숨기기 위함
+   * - 아예 데이터가 없고 검색어가 없는 경우에만 PresentationSection 자체를 숨깁니다.
+   *   (검색 중에는 섹션이 깜빡이지 않도록 유지)
    */
   const hasAnyPresentations = totalCount > 0;
 
@@ -58,8 +59,11 @@ export default function PresentationsSection({
   // 검색어가 있는지 여부 (검색 모드인지 판단, 깜빡임 방지)
   const hasAppliedQuery = appliedQuery.trim().length > 0;
 
+  // 사용자가 입력 중인지
+  const hasTypedQuery = query.trim().length > 0;
+
   // 필터 결과 유무 (검색과 무관)
-  const hasFilterResults = filteredCount > 0;
+  const hasFilteredResults = filteredCount > 0;
 
   // 마지막 저장된 결과(디바운스 끝난 appliedQuery 기준 결과)를 저장
   const [lastSavedPresentations, setLastSavedPresentations] =
@@ -80,10 +84,13 @@ export default function PresentationsSection({
   }, [isDebouncing, presentations]);
 
   /**
-   * 전체 프로젝트가 아예 없을 때는
-   * 검색/필터 여부와 상관 없이 PresentationsSection 자체를 렌더링하지 않음
+   * 전체 프로젝트가 아예 없을 때
+   * - 검색어(appliedQuery)가 없고 로딩이 끝난 상태라면 섹션을 숨깁니다.
+   * - 검색어가 있는 경우(또는 디바운싱 중)에는 섹션을 유지하여 깜빡임을 방지합니다.
    */
-  if (!isLoading && !hasAnyPresentations) return null;
+  if (!isLoading && !hasAnyPresentations && !hasAppliedQuery && !hasTypedQuery) return null;
+
+  const hasActiveFilters = filter !== null && filter !== 'all';
 
   return (
     <section className="mt-14">
@@ -119,17 +126,17 @@ export default function PresentationsSection({
             ))}
           </div>
         )
-      ) : !isDebouncing && !hasFilterResults ? (
-        // 2. 필터 결과가 0개
-        <div className="flex items-center justify-center p-40">
-          <p className="text-body-m text-gray-500">선택한 필터에 맞는 발표를 찾지 못했어요.</p>
-        </div>
       ) : !isDebouncing && hasAppliedQuery && !hasDisplayResults ? (
-        // 3. 검색 적용된 값이 있고, 결과가 없을 때에만 empty UI 표시
+        // 2. (검색) 검색 적용된 값이 있고, 결과가 없을 때에만 검색용 empty UI 표시
         <div className="flex items-center justify-center p-40">
           <p className="text-body-m text-gray-500">
             &apos;{appliedQuery}&apos;에 대한 검색 결과를 찾지 못했어요.
           </p>
+        </div>
+      ) : !isDebouncing && hasActiveFilters && !hasFilteredResults ? (
+        // 3. 필터 결과가 0개
+        <div className="flex items-center justify-center p-40">
+          <p className="text-body-m text-gray-500">선택한 필터에 맞는 발표를 찾지 못했어요.</p>
         </div>
       ) : (
         // 4. 그 외의 경우 -> 리스트 렌더
@@ -142,6 +149,7 @@ export default function PresentationsSection({
               renderCard={(item) => (
                 <PresentationCard
                   {...item}
+                  highlightQuery={appliedQuery}
                   isPresentationPending={pendingSet.has(item.projectId) || !item.thumbnailUrl}
                   thumbnailVersion={thumbVersion[item.projectId] ?? 0}
                 />
@@ -156,6 +164,7 @@ export default function PresentationsSection({
               renderInfo={(item) => (
                 <PresentationList
                   {...item}
+                  highlightQuery={appliedQuery}
                   isPresentationPending={pendingSet.has(item.projectId) || !item.thumbnailUrl}
                   thumbnailVersion={thumbVersion[item.projectId] ?? 0}
                 />
