@@ -1,5 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 
+import { normalizeVideoMimeType } from '@/utils/video';
+
 const RECORDER_MIME_CANDIDATES = [
   'video/webm;codecs=vp9',
   'video/webm;codecs=vp8',
@@ -7,9 +9,6 @@ const RECORDER_MIME_CANDIDATES = [
   'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
   'video/mp4',
 ] as const;
-
-const normalizeVideoMimeType = (mimeType?: string): 'video/webm' | 'video/mp4' =>
-  mimeType?.startsWith('video/mp4') ? 'video/mp4' : 'video/webm';
 
 export const useRecorder = () => {
   const [isRecording, setIsRecording] = useState<boolean>(false);

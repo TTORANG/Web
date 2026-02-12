@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { videosApi } from '@/api/endpoints/videos';
+import { normalizeVideoMimeType } from '@/utils/video';
 
 interface UploadProgress {
   uploadedChunks: number;
@@ -13,9 +14,6 @@ interface SlideLog {
   slideId: number;
   timestampMs: number;
 }
-
-const normalizeVideoMimeType = (mimeType?: string): 'video/webm' | 'video/mp4' =>
-  mimeType?.startsWith('video/mp4') ? 'video/mp4' : 'video/webm';
 
 export const useVideoUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
