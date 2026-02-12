@@ -85,7 +85,11 @@ export default function CommentList({
 
     const scrollToTarget = () => {
       if (cancelled) return;
-      const target = document.getElementById(`comment-${scrollToCommentId}`);
+      const escapedId =
+        typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+          ? CSS.escape(scrollToCommentId)
+          : scrollToCommentId;
+      const target = listRef.current?.querySelector<HTMLElement>(`#comment-${escapedId}`);
       if (target) {
         lastScrolledIdRef.current = scrollToCommentId;
         target.scrollIntoView({ behavior: 'smooth', block: 'center' });
