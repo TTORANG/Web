@@ -264,6 +264,7 @@ export function useSlideCommentsActions() {
     const target = findComment(commentId);
     const targetSlideId = target?.slideId ?? slideId;
     const targetServerId = target?.serverId;
+    const previousComments = useSlideStore.getState().slide?.comments ?? [];
 
     if (!targetSlideId) {
       showToast.error('댓글을 수정하지 못했습니다.', '슬라이드 정보를 찾을 수 없습니다.');
@@ -276,6 +277,9 @@ export function useSlideCommentsActions() {
       return;
     }
 
+    // 낙관적 업데이트: UI에서 즉시 반영
+    updateCommentStore(commentId, content);
+
     try {
       await updateCommentMutateAsync({
         commentId: targetServerId,
@@ -287,6 +291,8 @@ export function useSlideCommentsActions() {
         queryKey: queryKeys.comments.list(targetSlideId),
       });
     } catch {
+      // 실패 시 롤백
+      setComments(previousComments);
       showToast.error('댓글을 수정하지 못했습니다.', '잠시 후 다시 시도해주세요.');
     }
   };

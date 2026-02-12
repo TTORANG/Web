@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { RouterProvider } from 'react-router-dom';
 
 import { useQueryClient } from '@tanstack/react-query';
@@ -19,6 +19,7 @@ function App() {
   const accessToken = useAuthStore((state) => state.accessToken);
   const user = useAuthStore((state) => state.user);
   const updateUser = useAuthStore((state) => state.updateUser);
+  const profileSyncAttemptRef = useRef<string | null>(null);
 
   useEffect(() => {
     const handleMessage = async (event: MessageEvent) => {
@@ -114,6 +115,10 @@ function App() {
     if (!user) return;
     if (isAnonymousEmail(user.email)) return;
     if (user.profileImage) return;
+
+    const attemptKey = `${accessToken}:${user.id}`;
+    if (profileSyncAttemptRef.current === attemptKey) return;
+    profileSyncAttemptRef.current = attemptKey;
 
     let isCancelled = false;
 

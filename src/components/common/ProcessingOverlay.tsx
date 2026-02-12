@@ -17,6 +17,8 @@ export default function ProcessingOverlay({
   className,
   blockPointerEvents = true,
 }: Props) {
+  if (!visible) return null;
+
   const isCard = variant === 'card';
   const titleText = isCard ? title : '처리 중...';
 
@@ -24,15 +26,15 @@ export default function ProcessingOverlay({
     <div
       className={clsx(
         'absolute inset-0 z-20 flex items-center justify-center transition-all duration-250',
-        visible && blockPointerEvents ? 'pointer-events-auto' : 'pointer-events-none',
-        visible ? 'opacity-100' : 'opacity-0',
+        blockPointerEvents ? 'pointer-events-auto' : 'pointer-events-none',
+        'opacity-100',
         className,
       )}
       style={{
-        backgroundColor: visible ? 'rgba(0, 0, 0, 0.62)' : 'rgba(0, 0, 0, 0)',
-        backdropFilter: visible ? 'blur(4px)' : 'blur(0px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.62)',
+        backdropFilter: 'blur(4px)',
       }}
-      aria-hidden={!visible}
+      aria-hidden={false}
     >
       <div className="text-center">
         <div
