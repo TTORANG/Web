@@ -35,6 +35,12 @@
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
+
+  /* ProcessingOverlay */
+  --processing-overlay-bg: rgba(0, 0, 0, 0.6);
+  --processing-overlay-blur: 4px;
+  --processing-overlay-fg: rgba(255, 255, 255, 0.92); /* 글자/스피너 색 */
+  --processing-overlay-fg-muted: rgba(255, 255, 255, 0.75); /* description */
 }
 
 /* XXX: 다크 모드에서는 라이트 모드의 색상을 반전시켰습니다. */
@@ -58,4 +64,10 @@
   --color-error: #f24b4b;
   --color-success: #42c563;
   --color-warning: #f2ce4b;
+
+  /* ProcessingOverlay */
+  --processing-overlay-bg: rgba(0, 0, 0, 0.62);
+  --processing-overlay-blur: 4px;
+  --processing-overlay-fg: rgba(255, 255, 255, 0.92); /* 글자/스피너 색 */
+  --processing-overlay-fg-muted: rgba(255, 255, 255, 0.75); /* description */
 }
