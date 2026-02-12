@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import type { ReadVideoDetailResponseDto } from '@/api/dto/video.dto';
-import { createReply, deleteComment, updateComment } from '@/api/endpoints/comments';
+//import { createReply, deleteComment, updateComment } from '@/api/endpoints/comments';
 import { getScript } from '@/api/endpoints/scripts';
-import { createVideoComment, videosApi } from '@/api/endpoints/videos';
+import { videosApi } from '@/api/endpoints/videos';
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
 import ScriptSection from '@/components/feedback/ScriptSection';

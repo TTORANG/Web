@@ -105,7 +105,6 @@ export default function SlideWebcamStage({
       <RefreshIcon className="w-3.5 h-3.5" />
     </div>
   ),
-  segmentHighlights,
 }: SlideWebcamStageProps) {
   const stageRootRef = useRef<HTMLDivElement | null>(null);
   const clickTimeoutRef = useRef<number | null>(null);
