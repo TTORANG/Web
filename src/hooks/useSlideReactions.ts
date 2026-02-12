@@ -22,7 +22,6 @@ export function useSlideReactions() {
   const reactions = useSlideStore((state) => state.slide?.emojiReactions ?? EMPTY_REACTIONS);
   const addReactionStore = useSlideStore((state) => state.addReaction);
   const updateSlide = useSlideStore((state) => state.updateSlide);
-  const setReactionCounts = useSlideStore((state) => state.setReactionCounts);
   const queryClient = useQueryClient();
 
   const { mutate: createReactionApi } = useCreateReaction();
@@ -67,16 +66,6 @@ export function useSlideReactions() {
       updateSlide({ emojiReactions: nextReactions });
     }
 
-    setReactionCounts(
-      slideId,
-      nextReactions.reduce(
-        (acc, reaction) => {
-          acc[reaction.type] = reaction.count;
-          return acc;
-        },
-        {} as Record<ReactionType, number>,
-      ),
-    );
     queryClient.setQueryData<Record<ReactionType, number>>(
       queryKeys.reactions.summary(slideId),
       () =>

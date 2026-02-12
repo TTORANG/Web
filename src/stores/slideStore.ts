@@ -16,12 +16,9 @@ import { deleteFromFlat, updateInFlat } from '@/utils/comment';
 
 interface SlideState {
   slide: SlideDetail | null;
-  reactionHistory: Record<string, ReactionType[]>;
-  reactionCounts: Record<string, Record<string, number>>;
 
   initSlide: (slide: SlideDetail) => void;
   updateSlide: (updates: Partial<SlideDetail>) => void;
-  setReactionCounts: (slideId: string, counts: Record<string, number>) => void;
   updateScript: (script: string) => void;
   deleteComment: (id: string) => void;
   updateComment: (id: string, content: string) => void;
@@ -34,9 +31,6 @@ export const useSlideStore = create<SlideState>()(
     (set) => ({
       slide: null,
 
-      reactionHistory: {},
-      reactionCounts: {},
-
       initSlide: (slide) => {
         set({ slide }, false, 'slide/initSlide');
       },
@@ -48,19 +42,6 @@ export const useSlideStore = create<SlideState>()(
           }),
           false,
           'slide/updateSlide',
-        );
-      },
-
-      setReactionCounts: (slideId, counts) => {
-        set(
-          (state) => ({
-            reactionCounts: {
-              ...state.reactionCounts,
-              [slideId]: { ...counts },
-            },
-          }),
-          false,
-          'slide/setReactionCounts',
         );
       },
 
@@ -109,29 +90,15 @@ export const useSlideStore = create<SlideState>()(
           (state) => {
             if (!state.slide) return state;
 
-            const slideId = state.slide.slideId;
             const currentReactions = state.slide.emojiReactions || [];
-
-            // 카운트 1 증가 (토글 아님, 항상 +1)
-            const newReactions = currentReactions.map((r) => {
-              if (r.type === type) {
-                return { ...r, count: r.count + 1 };
-              }
-              return r;
-            });
-
-            const currentCounts = state.reactionCounts[slideId] || {};
-            const newCounts = { ...currentCounts };
-            newReactions.forEach((r) => {
-              newCounts[r.type] = r.count;
-            });
 
             return {
               slide: {
                 ...state.slide,
-                emojiReactions: newReactions,
+                emojiReactions: currentReactions.map((r) =>
+                  r.type === type ? { ...r, count: r.count + 1 } : r,
+                ),
               },
-              reactionCounts: { ...state.reactionCounts, [slideId]: newCounts },
             };
           },
           false,
