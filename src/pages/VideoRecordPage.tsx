@@ -117,7 +117,6 @@ export default function VideoRecordPage() {
       const videoId = await uploadVideo(videoBlob, numericProjectId, title, slideLogs);
 
       if (videoId) {
-        toast.success('영상이 성공적으로 저장되었습니다!');
         setTimeout(() => {
           navigate(`/${projectId}/videos`, { state: { uploadSuccess: true } });
         }, 500);
