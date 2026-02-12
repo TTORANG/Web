@@ -21,7 +21,7 @@ export default function RecentCommentItem({
   thumbUrl,
 }: RecentCommentItemProps) {
   return (
-    <div className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-5 py-4">
+    <div className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-5 py-4 my-2">
       {/* 썸네일 */}
       <SlideThumb
         src={thumbUrl}
