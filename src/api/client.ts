@@ -63,24 +63,107 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+// 토큰 재발급 상태 관리
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void;
+  reject: (reason?: unknown) => void;
+}> = [];
+
+/**
+ * 대기 중인 요청 처리
+ */
+const processQueue = (error: unknown = null) => {
+  failedQueue.forEach((promise) => {
+    if (error) {
+      promise.reject(error);
+    } else {
+      promise.resolve();
+    }
+  });
+  failedQueue = [];
+};
+
 /**
  * 응답 인터셉터
  * 서버로부터 응답을 받은 후 실행됩니다.
  *
  * 하이브리드 에러 핸들링 전략:
- * - 401, 500+: Axios 인터셉터에서 즉시 처리하고 isHandled 플래그 설정
+ * - 401: 토큰 재발급 시도 후 원래 요청 재시도
+ * - 500+: Axios 인터셉터에서 즉시 처리하고 isHandled 플래그 설정
  * - 그 외: TanStack Query 전역 핸들러로 위임
  */
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<ApiFailureResponse>) => {
+  async (error: AxiosError<ApiFailureResponse>) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     const status = error.response?.status;
     const errorData = error.response?.data?.error;
     const reason = errorData?.reason || '알 수 없는 오류가 발생했습니다';
 
+    // [401 에러 - 토큰 재발급 로직]
+    if (status === 401 && originalRequest && !originalRequest._retry) {
+      // 토큰 재발급이 이미 진행 중이면 대기
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(() => {
+            // 토큰 재발급 완료 후 원래 요청 재시도
+            const { accessToken } = useAuthStore.getState();
+            if (accessToken) {
+              originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+            }
+            return apiClient(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        // sessionApi를 동적 import로 가져와서 순환 참조 방지
+        const { sessionApi } = await import('@/api/endpoints/session');
+
+        // reissue API 호출 (쿠키 기반)
+        const response = await sessionApi.reissueToken();
+
+        if (response.resultType === 'SUCCESS') {
+          const { tokens } = response.success;
+          const { user, refreshToken } = useAuthStore.getState();
+
+          // 새 accessToken 저장 (refreshToken은 쿠키로 관리되므로 기존 값 유지)
+          useAuthStore.getState().setAuth({
+            user,
+            accessToken: tokens.accessToken,
+            refreshToken,
+          });
+
+          // 대기 중인 요청들 재시도
+          processQueue();
+
+          // 원래 요청 재시도
+          originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
+          return apiClient(originalRequest);
+        } else {
+          // reissue 실패
+          throw new Error('Token reissue failed');
+        }
+      } catch (refreshError) {
+        // 토큰 재발급 실패 → 로그아웃
+        processQueue(refreshError);
+        useAuthStore.getState().logout();
+        handleApiError(401, '세션이 만료되었습니다. 다시 로그인해주세요.');
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
     // [하이브리드 전략]
-    // 시스템 에러 (401 인증, 500 서버 장애)는 Axios가 즉시 처리
-    if (status === 401 || (status && status >= 500)) {
+    // 시스템 에러 (500 서버 장애)는 Axios가 즉시 처리
+    if (status && status >= 500) {
       handleApiError(status, reason);
       // 다운스트림(React Query 등)에서 중복 처리하지 않도록 플래그 설정
       error.isHandled = true;

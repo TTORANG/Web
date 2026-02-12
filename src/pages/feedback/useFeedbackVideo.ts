@@ -196,6 +196,7 @@ export function useFeedbackVideo(
   const [commentDraft, setCommentDraft] = useState('');
   const [scrollToCommentId, setScrollToCommentId] = useState<string | undefined>(undefined);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [capturedTimestamp, setCapturedTimestamp] = useState<number | null>(null);
 
   const timestampPrefix = useMemo(() => `${formatVideoTimestamp(currentTime)} `, [currentTime]);
   // 비디오 이벤트 기록 API는 number videoId를 사용합니다.
@@ -224,15 +225,24 @@ export function useFeedbackVideo(
     onMutationSuccess: () => void reloadComments(),
   });
 
+  const handleInputFocus = useCallback(() => {
+    // input에 포커스될 때 현재 재생 시점을 캡처
+    if (capturedTimestamp === null) {
+      setCapturedTimestamp(currentTime);
+    }
+  }, [capturedTimestamp, currentTime]);
+
   const handleAddComment = useCallback(async () => {
     if (!commentDraft.trim()) return;
 
     setIsSubmittingComment(true);
 
     try {
-      // 1. POST 요청으로 댓글 작성
-      const newCommentServerId = await addComment(commentDraft, currentTime);
+      // 1. POST 요청으로 댓글 작성 (처음 포커스한 시점의 타임스탬프 사용)
+      const timestampToUse = capturedTimestamp ?? currentTime;
+      const newCommentServerId = await addComment(commentDraft, timestampToUse);
       setCommentDraft('');
+      setCapturedTimestamp(null); // 타임스탬프 초기화
 
       // 2. 서버에서 최신 댓글 목록 가져오기 (다른 사용자의 댓글도 반영)
       const latestComments = await reloadComments();
@@ -252,7 +262,7 @@ export function useFeedbackVideo(
     } finally {
       setIsSubmittingComment(false);
     }
-  }, [addComment, commentDraft, currentTime, reloadComments]);
+  }, [addComment, commentDraft, currentTime, capturedTimestamp, reloadComments]);
 
   const handleGoToTimeRef = useCallback(
     (ref: NonNullable<Comment['ref']>) => {
@@ -421,6 +431,11 @@ export function useFeedbackVideo(
     };
   }, [initVideo, sharedContent, shareToken]);
 
+  const handleCancelComment = useCallback(() => {
+    setCommentDraft('');
+    setCapturedTimestamp(null);
+  }, []);
+
   return {
     isLoading,
     currentTime,
@@ -436,7 +451,9 @@ export function useFeedbackVideo(
     updateCurrentTime,
     requestSeek,
     setCommentDraft,
+    handleInputFocus,
     handleAddComment,
+    handleCancelComment,
     handleGoToTimeRef,
     handleVideoPlaybackEvent,
     addReply,
