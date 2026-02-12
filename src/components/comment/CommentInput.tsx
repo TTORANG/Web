@@ -144,18 +144,20 @@ export default function CommentInput({
       />
 
       <div className="flex gap-2 items-center justify-end">
-        <button
-          type="button"
-          onClick={handleCancel}
-          disabled={disabled}
-          className={clsx(
-            'px-3 py-1.5 rounded-full text-caption-bold transition focus-visible:outline-2 focus-visible:outline-main',
-            disabled ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80',
-            'text-gray-800',
-          )}
-        >
-          취소
-        </button>
+        {!isEmpty && (
+          <button
+            type="button"
+            onClick={handleCancel}
+            disabled={disabled}
+            className={clsx(
+              'px-3 py-1.5 rounded-full text-caption-bold transition focus-visible:outline-2 focus-visible:outline-main',
+              disabled ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80',
+              'text-gray-800',
+            )}
+          >
+            취소
+          </button>
+        )}
 
         <button
           type="button"
