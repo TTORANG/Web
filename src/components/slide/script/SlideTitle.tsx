@@ -76,6 +76,7 @@ function SlideTitleEditable({
       isCollapsed={isCollapsed}
       ariaLabel="슬라이드 이름 변경"
       titleClassName="max-w-40 truncate"
+      showOnMobile
     />
   );
 }
