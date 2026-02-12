@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { slideView } from '@/api/endpoints/analytics';
+import { createReply } from '@/api/endpoints/comments';
 import { getSharedComments } from '@/api/endpoints/shares';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useHotkey, useSlideComments } from '@/hooks';
@@ -11,7 +12,9 @@ import { useAuthStore } from '@/stores/authStore';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
 import type { SharedProjectComment, SharedProjectSlide } from '@/types/share';
+import { flatToTree } from '@/utils/comment';
 import { normalizeSharedSlides } from '@/utils/sharedContent';
+import { showToast } from '@/utils/toast';
 
 import type { ShareExitSnapshot } from './useFeedbackVideo';
 
@@ -136,7 +139,24 @@ export const useFeedbackSlide = ({
     }
   }, [shareToken, setComments, sharedSlideMeta]);
 
-  const { addComment, addReply, deleteComment, updateComment } = useSlideCommentsActions();
+  const { addComment, deleteComment, updateComment } = useSlideCommentsActions();
+
+  // 최상위 부모 댓글 찾기 (반복문)
+  const findRootParent = useCallback(
+    (comment: Comment | undefined): Comment | undefined => {
+      if (!comment) return undefined;
+
+      let current = comment;
+      while (current.parentId) {
+        const parent = storedComments.find((c) => c.commentId === current.parentId);
+        if (!parent) break;
+        current = parent;
+      }
+
+      return current;
+    },
+    [storedComments],
+  );
 
   const handleAddComment = async () => {
     if (!commentDraft.trim()) return;
@@ -149,8 +169,37 @@ export const useFeedbackSlide = ({
   };
 
   const handleAddReply = async (parentId: string, content: string) => {
-    await addReply(parentId, content);
-    await reloadComments();
+    const trimmedContent = content.trim();
+    if (!trimmedContent) return;
+
+    // 답글 대상 찾기
+    const targetComment = storedComments.find((c) => c.commentId === parentId);
+    if (!targetComment) {
+      showToast.error('답글을 등록하지 못했습니다.', '원본 댓글을 찾을 수 없습니다.');
+      return;
+    }
+
+    // 답글에 답글을 다는 경우, 최상위 부모를 찾음
+    const rootParent = findRootParent(targetComment);
+    const rootParentServerId = rootParent?.serverId || rootParent?.commentId;
+
+    if (!rootParentServerId) {
+      showToast.error('답글을 등록하지 못했습니다.', '댓글 정보를 확인해주세요.');
+      return;
+    }
+
+    // 최상위 부모의 serverId로 답글 작성
+    try {
+      const response = await createReply(rootParentServerId, { content: trimmedContent });
+      await reloadComments();
+
+      // 작성한 답글로 스크롤
+      if (response.replyId) {
+        setScrollToCommentId(response.replyId);
+      }
+    } catch {
+      showToast.error('답글을 등록하지 못했습니다.', '잠시 후 다시 시도해주세요.');
+    }
   };
 
   const handleDeleteComment = async (commentId: string) => {
@@ -194,6 +243,30 @@ export const useFeedbackSlide = ({
 
   const script = currentSlide?.script ?? '';
 
+  // flat 구조를 정렬 후 tree 구조로 변환
+  const treeComments = useMemo(() => {
+    // 정렬 로직
+    const sorted = [...storedComments].sort((a, b) => {
+      // 최상위 댓글 (parentId 없음)만 슬라이드 인덱스 기준 정렬
+      const isARoot = !a.parentId;
+      const isBRoot = !b.parentId;
+
+      if (isARoot && isBRoot) {
+        // 둘 다 최상위 댓글: 슬라이드 인덱스 오름차순
+        const aIndex = a.ref?.kind === 'slide' ? a.ref.index : Number.MAX_SAFE_INTEGER;
+        const bIndex = b.ref?.kind === 'slide' ? b.ref.index : Number.MAX_SAFE_INTEGER;
+        if (aIndex !== bIndex) return aIndex - bIndex;
+      }
+
+      // 답글이거나 같은 슬라이드인 경우: 작성 시간 오름차순 (오래된 것 → 최신)
+      const aTime = new Date(a.createdAt).getTime();
+      const bTime = new Date(b.createdAt).getTime();
+      return aTime - bTime;
+    });
+
+    return flatToTree(sorted);
+  }, [storedComments]);
+
   return {
     state: {
       slides,
@@ -201,7 +274,7 @@ export const useFeedbackSlide = ({
       totalSlides,
       slideIndex,
       script,
-      comments: storedComments,
+      comments: treeComments,
       commentDraft,
       scrollToCommentId,
       reactions,
