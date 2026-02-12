@@ -42,9 +42,9 @@ export default function SlideInfoPanel({
         />
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-gray-200 px-4 py-3 h-48 overflow-y-auto pb-4">
+      <div className="rounded-xl border border-gray-200 bg-gray-200 px-4 py-3 max-h-48 overflow-y-auto pb-4">
         <p
-          className={`text-body-s leading-relaxed break-words ${script ? 'text-black' : 'text-gray-600'}`}
+          className={`text-body-s leading-relaxed wrap-break-word ${script ? 'text-black' : 'text-gray-600'}`}
           style={{ whiteSpace: 'pre-wrap' }}
         >
           {script || '대본이 없습니다.'}

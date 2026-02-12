@@ -91,6 +91,10 @@ export function useCreateVideoReaction() {
   return useMutation({
     mutationFn: ({ videoId, data }: { videoId: string; data: CreateVideoReactionRequest }) =>
       createVideoReaction(videoId, data),
+    meta: {
+      // 연타 시 에러 토스트를 표시하지 않음 (사용자 경험 개선)
+      suppressErrorToast: true,
+    },
     onSuccess: (_, { videoId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.reactions.video.all(videoId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.videos.detail(videoId) });

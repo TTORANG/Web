@@ -34,9 +34,9 @@ function formatPostedAt(value?: string): string {
 export function useFeedbackHeaderInfo() {
   const { projectId, shareToken } = useParams<{ projectId?: string; shareToken?: string }>();
   const { data: presentation } = usePresentation(projectId ?? '');
-  const { data: sharedContent } = useSharedContent(shareToken);
+  const { data: sharedContent, isLoading, isError } = useSharedContent(shareToken);
 
-  return useMemo(() => {
+  const info = useMemo(() => {
     const shared = (sharedContent ?? null) as SharedContentLike | null;
 
     const title =
@@ -64,4 +64,10 @@ export function useFeedbackHeaderInfo() {
       postedAt: formatPostedAt(postedAtRaw),
     };
   }, [presentation, sharedContent]);
+
+  return {
+    ...info,
+    isLoading,
+    isError,
+  };
 }

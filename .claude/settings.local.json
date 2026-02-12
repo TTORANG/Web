@@ -1,5 +1,11 @@
 {
   "permissions": {
-    "allow": ["Bash(npx tsc:*)", "Bash(npx eslint:*)", "Bash(npm run type-check:*)", "Bash(dir:*)"]
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(dir:*)",
+      "Bash(git merge:*)"
+    ]
   }
 }
