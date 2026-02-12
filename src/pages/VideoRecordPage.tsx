@@ -123,6 +123,7 @@ export default function VideoRecordPage() {
           navigate(`/${projectId}/videos`, { state: { uploadSuccess: true } });
         }, 500);
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err: unknown) {
       toast.error('업로드에 실패했습니다.', {
         description: '잠시 후 다시 시도해주세요.',
@@ -151,7 +152,9 @@ export default function VideoRecordPage() {
       left={
         <>
           <Logo onClick={handleExitClick} />
-          <span className="text-body-m-bold text-white">영상 녹화</span>
+          <span className="text-body-m-bold" style={{ color: '#FFFFFF' }}>
+            영상 녹화
+          </span>{' '}
         </>
       }
       right={

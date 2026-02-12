@@ -204,35 +204,39 @@ function PresentationCard(props: Props) {
             )}
             aria-hidden={isProcessing}
           >
+            {/* 왼쪽 영역: 비디오가 '아닐 때만' 시간과 페이지 수를 보여줌 */}
             <div className="flex items-center gap-2.5 shrink-0">
-              {minutes !== null && (
-                <div className="gap-1 flex items-center">
-                  <RecentIcon className="w-4 h-4" />
-                  <span className="ml-1">{minutes} 분</span>
-                </div>
+              {mode == 'slide' && (
+                <>
+                  {minutes !== null && (
+                    <div className="gap-1 flex items-center">
+                      <RecentIcon className="w-4 h-4" />
+                      <span className="ml-1">{minutes} 분</span>
+                    </div>
+                  )}
+                  <div className="flex items-center">
+                    <PageCountIcon className="w-4 h-4" />
+                    <span className="ml-1">{slideCount} 장</span>
+                  </div>
+                </>
               )}
-              <div className="flex items-center">
-                <PageCountIcon className="w-4 h-4" />
-                <span className="ml-1">{slideCount} 장</span>
-              </div>
             </div>
+
+            {/* 오른쪽 영역: 댓글(공통), 반응/조회수(비디오 전용) */}
             <div className="flex items-center gap-2 shrink-0">
               <div className="flex items-center gap-1">
                 <CommentCountIcon className="w-4 h-4" />
                 <span>{totalCommentCount ?? 0}</span>
+
+                <div className="flex items-center gap-1">
+                  <ReactionCountIcon className="w-4 h-4" />
+                  <span>{reactionCount}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <ViewCountIcon className="w-4 h-4" />
+                  <span>{viewCount}</span>
+                </div>
               </div>
-              {isVideo && (
-                <>
-                  <div className="flex items-center gap-1">
-                    <ReactionCountIcon className="w-4 h-4" />
-                    <span>{reactionCount}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <ViewCountIcon className="w-4 h-4" />
-                    <span>{viewCount}</span>
-                  </div>
-                </>
-              )}
             </div>
           </div>
         </div>

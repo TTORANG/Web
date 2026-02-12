@@ -57,6 +57,8 @@ export type {
   VideoTimelineCommentUserDto,
   VideoTimelineDto,
   VideoTimelineReactionDto,
+  VideoCommentDto,
+  ReadVideoCommentsAllResponseDto,
 } from './video.dto';
 export type {
   CommentUserDto,

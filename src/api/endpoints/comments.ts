@@ -89,19 +89,12 @@ export async function createReply(
 /**
  * 댓글의 답글 목록 조회
  *
- * @param commentId - 댓글 ID
- * @returns 답글 목록
+ * @param commentId - 부모 댓글 ID
+ * @returns 답글 목록 (생성일 오름차순)
  */
-export async function getReplies(
-  commentId: string,
-  page = 1,
-  limit = 20,
-): Promise<GetReplyListResponseDto> {
+export async function getReplies(commentId: string): Promise<GetReplyListResponseDto> {
   const response = await apiClient.get<ApiResponse<GetReplyListResponseDto>>(
     `/comments/${commentId}/replies`,
-    {
-      params: { page, limit },
-    },
   );
 
   if (response.data.resultType === 'SUCCESS') {
