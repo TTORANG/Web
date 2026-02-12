@@ -300,14 +300,14 @@ export default function VideoDetailPage() {
   return (
     <div className="flex h-full w-full bg-white overflow-hidden">
       <div className="flex flex-1 flex-col h-full min-w-0">
-        <div className="flex shrink-0 flex-col items-center pt-10 pb-6 px-12 bg-gray-50">
+        <div className="flex shrink-0 flex-col items-center pt-10 pb-6 px-12 ">
           <div
             ref={desktopPlaceholderRef}
-            className="aspect-video w-full max-w-[800px] bg-black rounded-lg shadow-md"
+            className="aspect-video w-full max-w-[800px] rounded-lg shadow-md"
           />
         </div>
         <div className="flex-1 min-h-0 px-12 pb-6 flex flex-col items-center">
-          <div className="w-full max-w-[800px] h-full flex flex-col min-h-0 overflow-y-auto bg-white border border-gray-100 rounded-t-xl">
+          <div className="w-full max-w-[800px] h-full flex flex-col min-h-0 overflow-y-auto">
             <ScriptSection
               slides={projectSlides}
               slideChangeTimes={slideChangeTimes}

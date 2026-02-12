@@ -199,7 +199,6 @@ export default function VideoListPage() {
       showToast.success('영상을 삭제했습니다.');
       void refetch();
     } catch (err) {
-      console.error('[VideoListPage] Delete error:', err);
       showToast.error(
         '영상을 삭제하지 못했습니다.',
         err instanceof Error ? err.message : '잠시 후 다시 시도해주세요.',

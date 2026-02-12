@@ -157,8 +157,22 @@ export default function ScriptSection({
                 setAutoScroll(true);
               }
             }}
-            className="flex gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out text-body-s cursor-pointer"
+            className={`flex gap-3 px-4 py-3 rounded-lg transition-all duration-300 ease-in-out text-body-s cursor-pointer
+    ${
+      isCurrentSlide
+        ? 'bg-white text-[#343841] dark:bg-[#343841] dark:text-white shadow-sm'
+        : 'bg-[#343841] text-[#A9ACB2] dark:bg-gray-800 dark:text-gray-400'
+    }
+  `}
           >
+            <div
+              className={`
+      shrink-0 font-medium text-sm min-w-10 transition-colors duration-300
+      ${isCurrentSlide ? 'text-[#343841] dark:text-blue-400' : 'text-[#A9ACB2]'}
+    `}
+            >
+              {timeStr}
+            </div>
             <div
               style={{
                 color: isCurrentSlide ? '#343841' : '#A9ACB2',
