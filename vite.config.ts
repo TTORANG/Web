@@ -56,7 +56,9 @@ export default defineConfig({
             if (
               id.includes('react') ||
               id.includes('react-dom') ||
-              id.includes('react-router-dom')
+              id.includes('react-router-dom') ||
+              id.includes('sonner') ||
+              id.includes('zustand')
             ) {
               return 'react-vendor';
             }
@@ -69,13 +71,7 @@ export default defineConfig({
             if (id.includes('hls.js')) {
               return 'video-vendor';
             }
-            if (
-              id.includes('dayjs') ||
-              id.includes('clsx') ||
-              id.includes('axios') ||
-              id.includes('zustand') ||
-              id.includes('sonner')
-            ) {
+            if (id.includes('dayjs') || id.includes('clsx') || id.includes('axios')) {
               return 'app-vendor';
             }
           }
