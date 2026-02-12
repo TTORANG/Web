@@ -52,24 +52,29 @@ export default function FeedbackMobileLayout({
   }, []);
 
   const getTabClassName = (isActive: boolean) =>
-    `flex-1 py-3 text-body-m-bold transition-colors border-b-2 ${
+    `flex-1 min-w-0 py-3 text-body-m-bold transition-colors border-b-2 ${
       isActive ? 'text-main-variant1 border-main-variant1' : 'text-black border-gray-200'
     }`;
 
   return (
-    <div className="flex md:hidden flex-1 min-h-0 flex-col">
+    <div className="flex md:hidden flex-1 min-w-0 min-h-0 flex-col overflow-x-hidden">
       {/* 미디어 영역 */}
-      <div className="shrink-0 w-full bg-gray-400">{mediaSlot}</div>
+      <div className="shrink-0 w-full min-w-0 overflow-hidden bg-gray-400">{mediaSlot}</div>
 
       {/* 콘텐츠 영역 */}
-      <div className="flex-1 min-h-0 flex flex-col bg-gray-100">
-        <div className="px-5 shrink-0">
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col bg-gray-100 overflow-x-hidden">
+        <div className="px-5 shrink-0 min-w-0">
           {navigationSlot ? <div className="py-4">{navigationSlot}</div> : <div className="h-4" />}
-          <div className="relative z-10 py-2">{reactionSlot}</div>
+          <div className="relative z-10 py-2 min-w-0">{reactionSlot}</div>
         </div>
 
         {/* 탭 메뉴 */}
-        <div role="tablist" aria-label="대본/댓글 탭" className="flex" onKeyDown={handleTabKeyDown}>
+        <div
+          role="tablist"
+          aria-label="대본/댓글 탭"
+          className="flex min-w-0"
+          onKeyDown={handleTabKeyDown}
+        >
           <button
             role="tab"
             id={TAB_IDS.script}
@@ -93,13 +98,13 @@ export default function FeedbackMobileLayout({
         </div>
 
         {/* 탭 콘텐츠 */}
-        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+        <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
           {activeTab === 'script' ? (
             <div
               id={PANEL_IDS.script}
               role="tabpanel"
               aria-labelledby={TAB_IDS.script}
-              className="h-full flex flex-col"
+              className="h-full min-w-0 flex flex-col"
             >
               {scriptTabContent}
             </div>
@@ -108,7 +113,7 @@ export default function FeedbackMobileLayout({
               id={PANEL_IDS.comment}
               role="tabpanel"
               aria-labelledby={TAB_IDS.comment}
-              className="flex flex-col h-full overflow-hidden"
+              className="flex flex-col h-full min-w-0 overflow-hidden"
             >
               {commentTabContent}
             </div>

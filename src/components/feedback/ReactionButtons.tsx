@@ -41,10 +41,18 @@ export default function ReactionButtons({
   const { shakeIntensities, triggerShake } = useShakeAnimation();
 
   const isGrid = layout === 'grid-2';
+  const isCompact = !showLabel && !isGrid;
   const total = reactions.length;
   const containerClass = isGrid
     ? `grid grid-cols-2 gap-2 justify-items-center ${className ?? ''}`
-    : `flex gap-2 ${showLabel ? 'flex-wrap' : 'flex-nowrap justify-center overflow-hidden'} ${className ?? ''}`;
+    : isCompact
+      ? `grid w-full min-w-0 gap-2 ${className ?? ''}`
+      : `flex gap-2 flex-wrap ${className ?? ''}`;
+  const containerStyle = isCompact
+    ? ({
+        gridTemplateColumns: `repeat(${Math.max(total, 1)}, minmax(0, 1fr))`,
+      } as React.CSSProperties)
+    : undefined;
 
   const handleToggle = (type: ReactionType) => {
     setConfettiTriggers((prev) => ({
@@ -56,13 +64,15 @@ export default function ReactionButtons({
   };
 
   return (
-    <div className={containerClass}>
+    <div className={containerClass} style={containerStyle}>
       {reactions.map((reaction, index) => {
         const config = REACTION_CONFIG[reaction.type];
         const isLastOdd = isGrid && total % 2 === 1 && index === total - 1;
         const baseBtn = showLabel
           ? 'flex items-center justify-between px-2 py-2 rounded-full border transition text-body-m focus-visible:outline-2 focus-visible:outline-main w-42.25'
-          : 'flex items-center gap-2 px-3 py-2 rounded-full border transition text-body-m focus-visible:outline-2 focus-visible:outline-main shrink-0';
+          : isCompact
+            ? 'flex w-full min-w-0 items-center justify-center gap-1 px-2 py-2 rounded-full border transition text-body-m focus-visible:outline-2 focus-visible:outline-main'
+            : 'flex items-center gap-2 px-3 py-2 rounded-full border transition text-body-m focus-visible:outline-2 focus-visible:outline-main';
 
         const shakeLevel = shakeIntensities[reaction.type] || 0;
 
@@ -88,7 +98,7 @@ export default function ReactionButtons({
             ) : (
               <>
                 <span>{config.emoji}</span>
-                <span className="tabular-nums min-w-4">
+                <span className="tabular-nums min-w-0">
                   {reaction.count > 0 ? formatReactionCount(reaction.count) : ''}
                 </span>
               </>

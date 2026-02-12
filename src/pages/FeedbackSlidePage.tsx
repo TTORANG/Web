@@ -78,7 +78,7 @@ export default function FeedbackSlidePage({
   }
 
   return (
-    <div className="flex h-full w-full">
+    <div className="flex h-full w-full min-w-0">
       <div className="hidden md:flex flex-1 px-35">
         <SlideViewer
           slide={currentSlide}
