@@ -17,6 +17,7 @@ import { Popover } from '@/components/common/Popover';
 import { UserAvatar } from '@/components/common/UserAvatar';
 import { useAuthStore } from '@/stores/authStore';
 import { useHomeStore } from '@/stores/homeStore';
+import { useThemeStore } from '@/stores/themeStore';
 import { isAnonymousEmail } from '@/utils/auth';
 import { showToast } from '@/utils/toast';
 import { getUserDisplayName } from '@/utils/user';
@@ -32,6 +33,8 @@ export function LoginButton() {
   const openLoginModal = useAuthStore((s) => s.openLoginModal);
   const logout = useAuthStore((s) => s.logout);
   const resetHome = useHomeStore((s) => s.reset);
+  const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
+  const setTheme = useThemeStore((s) => s.setTheme);
 
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
@@ -111,6 +114,32 @@ export function LoginButton() {
             </div>
 
             <div className="mt-2 border-t border-gray-200 pt-2">
+              <button
+                type="button"
+                className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-gray-100"
+                onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+              >
+                <div>
+                  <p className="text-body-s-bold text-gray-800">다크모드</p>
+                  <p className="text-caption text-gray-600">
+                    {resolvedTheme === 'dark' ? '현재 다크모드 사용 중' : '현재 라이트모드 사용 중'}
+                  </p>
+                </div>
+                <span
+                  className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                    resolvedTheme === 'dark' ? 'bg-main' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      resolvedTheme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </span>
+              </button>
+            </div>
+
+            <div className="mt-1 border-t border-gray-200 pt-2">
               <button
                 type="button"
                 className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-body-s text-gray-800 transition-colors hover:bg-gray-100"
