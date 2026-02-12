@@ -1,19 +1,9 @@
-import { useParams } from 'react-router-dom';
-
 import InfoIcon from '@/assets/icons/icon-info.svg?react';
 import { Popover } from '@/components/common';
-import { usePresentation } from '@/hooks/queries/usePresentations';
-import dayjs from '@/utils/dayjs';
+import { useFeedbackHeaderInfo } from '@/hooks/useFeedbackHeaderInfo';
 
 export default function FeedbackHeaderCenter() {
-  const { projectId } = useParams<{ projectId: string }>();
-
-  const { data: presentation } = usePresentation(projectId ?? '');
-  const title = presentation?.title?.trim() ? presentation.title : '내 발표';
-  const postedAt = presentation?.updatedAt
-    ? dayjs(presentation.updatedAt).format('YYYY.MM.DD HH:mm:ss')
-    : '-';
-  const publisherName = presentation?.userName ?? '알 수 없음';
+  const { title, postedAt, publisherName } = useFeedbackHeaderInfo();
 
   return (
     <div className="flex md:hidden items-center">
