@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ import PresentationList from '@/components/presentation/PresentationList';
 import { DeleteVideoModal, RecordingEmptySection } from '@/components/video';
 import { useProjectVideos } from '@/hooks/useProjectVideos';
 import type { FilterMode, SortMode, ViewMode } from '@/types/home';
+import { showToast } from '@/utils/toast';
 
 const SKELETON_CARD_COUNT = 6;
 const SKELETON_LIST_COUNT = 4;
@@ -61,7 +62,7 @@ export default function VideoListPage() {
   useEffect(() => {
     if (!location.state?.uploadSuccess) return;
 
-    toast.success('영상을 저장했습니다.');
+    showToast.success('영상을 저장했습니다.');
     navigate(location.pathname, { replace: true, state: {} });
     void refetch();
   }, [location.state, location.pathname, navigate, refetch]);
@@ -195,13 +196,14 @@ export default function VideoListPage() {
         throw new Error(response.data.error?.reason || '삭제에 실패했습니다.');
       }
 
-      toast.success('영상을 삭제했습니다.');
+      showToast.success('영상을 삭제했습니다.');
       void refetch();
     } catch (err) {
       console.error('[VideoListPage] Delete error:', err);
-      toast.error('영상을 삭제하지 못했습니다.', {
-        description: err instanceof Error ? err.message : '잠시 후 다시 시도해주세요.',
-      });
+      showToast.error(
+        '영상을 삭제하지 못했습니다.',
+        err instanceof Error ? err.message : '잠시 후 다시 시도해주세요.',
+      );
     } finally {
       setDeletingVideoIds((prev) => {
         const next = new Set(prev);
