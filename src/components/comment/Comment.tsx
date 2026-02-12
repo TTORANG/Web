@@ -148,8 +148,10 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
                     onClick={handleStartEdit}
                     aria-label="댓글 수정"
                     className={clsx(
-                      'flex items-center gap-1 rounded text-caption-bold active:opacity-80 focus-visible:outline-2 focus-visible:outline-main',
-                      isEditing ? 'text-gray-400' : 'text-black',
+                      'flex items-center gap-1 rounded text-caption-bold active:opacity-80 focus-visible:outline-2 focus-visible:outline-main transition-colors',
+                      isEditing
+                        ? 'text-gray-400'
+                        : 'text-gray-600 hover:text-gray-800 active:text-gray-700',
                     )}
                   >
                     수정
