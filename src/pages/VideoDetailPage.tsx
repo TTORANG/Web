@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import type { ReadVideoDetailResponseDto } from '@/api/dto/video.dto';
 import { createReply, deleteComment, updateComment } from '@/api/endpoints/comments';
@@ -17,7 +17,6 @@ import type { Comment as CommentType } from '@/types/comment';
 
 export default function VideoDetailPage() {
   const { projectId, videoId } = useParams<{ projectId: string; videoId: string }>();
-  const navigate = useNavigate();
   const currentUser = useAuthStore((state) => state.user);
   const requestSeekAction = useVideoFeedbackStore((s) => s.requestSeek);
 
@@ -34,12 +33,12 @@ export default function VideoDetailPage() {
   const [slideIdOrder, setSlideIdOrder] = useState<string[]>([]);
 
   const placeholderRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [videoStyle, setVideoStyle] = useState<React.CSSProperties>({
     position: 'fixed',
     opacity: 0,
   });
 
-  // 1. 데이터 로드 로직
   useEffect(() => {
     const loadData = async () => {
       if (!videoId) return;
@@ -141,14 +140,21 @@ export default function VideoDetailPage() {
     const observer = new ResizeObserver(updatePosition);
     if (placeholderRef.current) observer.observe(placeholderRef.current);
 
+    // containerRef의 스크롤 이벤트만 감지
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('scroll', updatePosition);
+    }
+
     window.addEventListener('resize', updatePosition);
-    window.addEventListener('scroll', updatePosition, true);
 
     return () => {
       timers.forEach(clearTimeout);
       observer.disconnect();
+      if (container) {
+        container.removeEventListener('scroll', updatePosition);
+      }
       window.removeEventListener('resize', updatePosition);
-      window.removeEventListener('scroll', updatePosition, true);
     };
   }, [isLoading, videoData, projectSlides]);
 
@@ -276,8 +282,11 @@ export default function VideoDetailPage() {
 
   return (
     <div className="flex h-full w-full bg-gray-100 overflow-hidden">
-      {/* 메인 콘텐츠 영역 */}
-      <div className="flex flex-1 flex-col px-6 py-6 md:px-12">
+      {/* 메인 콘텐츠 영역 - 스크롤 가능 */}
+      <div
+        ref={containerRef}
+        className="flex flex-1 flex-col px-6 py-6 md:px-12 overflow-y-auto scroll-smooth"
+      >
         <div className="flex flex-1 flex-col gap-6 min-h-0 items-center pt-14">
           {/* 비디오 Placeholder */}
           <div
@@ -300,7 +309,7 @@ export default function VideoDetailPage() {
 
       {/* 댓글 사이드바 */}
       <aside className="hidden w-100 shrink-0 flex-col border border-gray-200 bg-white lg:flex my-2 mr-20 shadow-sm rounded-2xl">
-        <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto scroll-smooth">
           <div className="mt-4 p-4 border-b">
             <h3 className="text-gray-950 font-bold text-lg">의견 ({comments.length})</h3>
           </div>
