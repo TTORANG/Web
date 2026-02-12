@@ -96,9 +96,9 @@ export function ShareModal() {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
-      showToast.success('복사가 완료되었습니다.');
+      showToast.success('링크를 복사했습니다.');
     } catch {
-      showToast.error('복사에 실패했습니다.');
+      showToast.error('링크를 복사하지 못했습니다.');
     }
   };
 
@@ -125,14 +125,14 @@ export function ShareModal() {
         setStep('result');
       } else if (response.resultType === 'FAILURE') {
         // 서버에서 에러 응답이 온 경우
-        const errorMessage = response.error.reason || '공유 링크 생성에 실패했습니다.';
+        const errorMessage = response.error.reason || '공유 링크를 만들지 못했습니다.';
         showToast.error(errorMessage);
       } else {
         // 예상치 못한 응답 형식
-        showToast.error('알 수 없는 응답 형식입니다.');
+        showToast.error('응답을 처리하지 못했습니다.');
       }
     } catch {
-      showToast.error('공유 링크 생성에 실패했습니다.');
+      showToast.error('공유 링크를 만들지 못했습니다.');
     }
   };
   const shareTypeItems: DropdownItem[] = [
@@ -318,7 +318,7 @@ export function ShareModal() {
               aria-label="카카오톡으로 공유"
               onClick={() => {
                 if (!KAKAO_JS_KEY) {
-                  showToast.error('카카오 JS 키가 설정되지 않았습니다.', '.env를 확인해주세요.');
+                  showToast.error('카카오 공유 설정을 확인해주세요.', '.env 값을 확인해주세요.');
                   return;
                 }
                 shareToKakao({

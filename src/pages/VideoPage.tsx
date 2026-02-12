@@ -37,7 +37,7 @@ const VideoPage = () => {
 
   useEffect(() => {
     if (location.state?.uploadSuccess) {
-      showToast.success('영상이 성공적으로 저장되었습니다!');
+      showToast.success('영상을 저장했습니다.');
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location, navigate]);
@@ -50,9 +50,9 @@ const VideoPage = () => {
     if (video.status === 'ready') {
       navigate(`/${projectId}/videos/${video.videoId}`);
     } else if (video.status === 'processing') {
-      showToast.info('영상을 서버에서 처리 중입니다. 잠시 후 다시 확인해주세요.');
+      showToast.info('영상을 처리하고 있습니다.', '잠시 후 다시 확인해주세요.');
     } else {
-      showToast.error('영상 처리에 실패했습니다.');
+      showToast.error('영상 처리에 실패했습니다.', '다시 녹화해주세요.');
     }
   };
 
@@ -61,7 +61,7 @@ const VideoPage = () => {
   };
 
   if (apiError) {
-    showToast.error('영상 목록을 불러오는 데 실패했습니다.');
+    showToast.error('영상 목록을 불러오지 못했습니다.');
   }
 
   const hasVideos = videos.length > 0;

@@ -153,7 +153,7 @@ export function useSlideCommentsActions() {
       });
       return response.commentId;
     } catch {
-      showToast.error('댓글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+      showToast.error('댓글을 등록하지 못했습니다.', '잠시 후 다시 시도해주세요.');
       return null;
     }
   };
@@ -219,7 +219,7 @@ export function useSlideCommentsActions() {
         queryKey: queryKeys.comments.replies(targetServerId),
       });
     } catch {
-      showToast.error('답글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+      showToast.error('답글을 등록하지 못했습니다.', '잠시 후 다시 시도해주세요.');
     }
   };
 
@@ -230,7 +230,7 @@ export function useSlideCommentsActions() {
     const previousComments = useSlideStore.getState().slide?.comments ?? [];
 
     if (!targetSlideId) {
-      showToast.error('댓글 삭제에 실패했습니다.', '슬라이드 정보를 찾을 수 없습니다.');
+      showToast.error('댓글을 삭제하지 못했습니다.', '슬라이드 정보를 찾을 수 없습니다.');
       return;
     }
 
@@ -239,7 +239,7 @@ export function useSlideCommentsActions() {
 
     // 서버에 저장되지 않은 댓글은 로컬에서만 삭제
     if (!targetServerId) {
-      showToast.success('댓글이 삭제되었습니다.');
+      showToast.success('댓글을 삭제했습니다.');
       return;
     }
 
@@ -252,11 +252,11 @@ export function useSlideCommentsActions() {
       await queryClient.invalidateQueries({
         queryKey: queryKeys.comments.list(targetSlideId),
       });
-      showToast.success('댓글이 삭제되었습니다.');
+      showToast.success('댓글을 삭제했습니다.');
     } catch {
       // 실패 시 롤백
       setComments(previousComments);
-      showToast.error('댓글 삭제에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+      showToast.error('댓글을 삭제하지 못했습니다.', '잠시 후 다시 시도해주세요.');
     }
   };
 
@@ -266,7 +266,7 @@ export function useSlideCommentsActions() {
     const targetServerId = target?.serverId;
 
     if (!targetSlideId) {
-      showToast.error('댓글 수정에 실패했습니다.', '슬라이드 정보를 찾을 수 없습니다.');
+      showToast.error('댓글을 수정하지 못했습니다.', '슬라이드 정보를 찾을 수 없습니다.');
       return;
     }
 
@@ -287,7 +287,7 @@ export function useSlideCommentsActions() {
         queryKey: queryKeys.comments.list(targetSlideId),
       });
     } catch {
-      showToast.error('댓글 수정에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+      showToast.error('댓글을 수정하지 못했습니다.', '잠시 후 다시 시도해주세요.');
     }
   };
 

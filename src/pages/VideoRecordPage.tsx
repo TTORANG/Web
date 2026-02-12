@@ -75,12 +75,12 @@ export default function VideoRecordPage() {
     }
 
     if (!videoBlob || videoBlob.size === 0) {
-      toast.error('녹화된 영상 데이터가 생성되지 않았습니다.');
+      toast.error('녹화 파일을 확인할 수 없습니다.');
       return;
     }
 
     if (!slidesData || slidesData.length === 0) {
-      toast.error('슬라이드 정보를 불러올 수 없어 업로드를 중단합니다.');
+      toast.error('슬라이드 정보를 불러오지 못해 업로드를 중단했습니다.');
       return;
     }
 
@@ -110,7 +110,9 @@ export default function VideoRecordPage() {
         .filter((log): log is { slideId: number; timestampMs: number } => log !== null);
 
       if (slideLogs.length === 0) {
-        toast.error('슬라이드 기록이 올바르지 않습니다.');
+        toast.error('슬라이드 기록이 올바르지 않습니다.', {
+          description: '다시 녹화해주세요.',
+        });
         return;
       }
 
@@ -122,7 +124,9 @@ export default function VideoRecordPage() {
         }, 500);
       }
     } catch (err: unknown) {
-      toast.error('업로드 중 오류가 발생했습니다.');
+      toast.error('업로드에 실패했습니다.', {
+        description: '잠시 후 다시 시도해주세요.',
+      });
     }
   };
 

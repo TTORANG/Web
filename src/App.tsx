@@ -84,13 +84,13 @@ function App() {
             const mergedCount = mergeResponse.success?.mergedProjectsCount;
             if (typeof mergedCount === 'number' && mergedCount > 0) {
               showToast.success(
-                '익명 세션이 병합되었어요.',
-                `${mergedCount}개의 발표가 계정으로 이동했어요.`,
+                '임시 작업을 계정에 가져왔습니다.',
+                `${mergedCount}개의 발표를 계정으로 이동했습니다.`,
               );
             }
           } else {
             showToast.warning(
-              '세션 병합에 실패했어요.',
+              '임시 작업을 계정으로 가져오지 못했습니다.',
               mergeResponse.error?.reason ?? '잠시 후 다시 시도해주세요.',
             );
           }

@@ -133,7 +133,7 @@ export function useDeletePresentation() {
       void queryClient.removeQueries({ queryKey: queryKeys.presentations.detail(projectId) });
     },
     onError: () => {
-      showToast.error('삭제 실패', '잠시 후 다시 시도해 주세요.');
+      showToast.error('삭제하지 못했습니다.', '잠시 후 다시 시도해주세요.');
     },
   });
 }

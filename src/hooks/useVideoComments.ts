@@ -70,7 +70,7 @@ export function useVideoComments(options?: UseVideoCommentsOptions) {
    */
   const addComment = async (content: string, seconds: number): Promise<string | null> => {
     if (!videoId) {
-      showToast.error('비디오 정보를 찾을 수 없습니다.');
+      showToast.error('영상 정보를 찾을 수 없습니다.');
       return null;
     }
 
@@ -92,7 +92,7 @@ export function useVideoComments(options?: UseVideoCommentsOptions) {
 
       return null;
     } catch {
-      showToast.error('댓글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+      showToast.error('댓글을 등록하지 못했습니다.', '잠시 후 다시 시도해주세요.');
       return null;
     }
   };
@@ -108,7 +108,7 @@ export function useVideoComments(options?: UseVideoCommentsOptions) {
       const parentServerId = parentComment ? getServerCommentId(parentComment) : null;
 
       if (!parentComment) {
-        showToast.error('답글 등록에 실패했습니다.', '부모 댓글을 찾을 수 없습니다.');
+        showToast.error('답글을 등록하지 못했습니다.', '원본 댓글을 찾을 수 없습니다.');
         return;
       }
 
@@ -117,13 +117,13 @@ export function useVideoComments(options?: UseVideoCommentsOptions) {
       const contentToSend = extracted ? extracted.content : content;
 
       if (!parentServerId) {
-        showToast.error('답글 등록에 실패했습니다.', '잘못된 댓글 ID입니다.');
+        showToast.error('답글을 등록하지 못했습니다.', '댓글 정보를 확인해주세요.');
         return;
       }
       await createCommentReply(parentServerId, { content: contentToSend });
       options?.onMutationSuccess?.();
     } catch {
-      showToast.error('답글 등록에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+      showToast.error('답글을 등록하지 못했습니다.', '잠시 후 다시 시도해주세요.');
     }
   };
 
@@ -153,10 +153,10 @@ export function useVideoComments(options?: UseVideoCommentsOptions) {
 
     try {
       await deleteVideoComment(targetServerId);
-      showToast.success('댓글이 삭제되었습니다.');
+      showToast.success('댓글을 삭제했습니다.');
       options?.onMutationSuccess?.();
     } catch {
-      showToast.error('댓글 삭제에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+      showToast.error('댓글을 삭제하지 못했습니다.', '잠시 후 다시 시도해주세요.');
     }
   };
 
@@ -190,10 +190,10 @@ export function useVideoComments(options?: UseVideoCommentsOptions) {
         throw new Error('Invalid comment server ID');
       }
       await updateCommentApi(String(commentIdNum), { content: contentToSend });
-      showToast.success('댓글이 수정되었습니다.');
+      showToast.success('댓글을 수정했습니다.');
       options?.onMutationSuccess?.();
     } catch {
-      showToast.error('댓글 수정에 실패했습니다.', '잠시 후 다시 시도해주세요.');
+      showToast.error('댓글을 수정하지 못했습니다.', '잠시 후 다시 시도해주세요.');
     }
   };
 

@@ -59,7 +59,7 @@ export default function VideoListPage() {
 
   useEffect(() => {
     if (location.state?.uploadSuccess) {
-      showToast.success('영상이 성공적으로 저장되었습니다!', undefined, {
+      showToast.success('영상을 저장했습니다.', undefined, {
         position: 'top-right',
       });
       navigate(location.pathname, { replace: true, state: {} });
@@ -91,14 +91,14 @@ export default function VideoListPage() {
 
   const handleVideoClick = (videoId: string, status: string) => {
     if (status === 'uploading' || status === 'processing') {
-      toast.info('영상을 처리 중입니다', {
-        description: '잠시만 기다려주세요. 처리가 완료되면 확인하실 수 있습니다.',
+      toast.info('영상을 처리하고 있습니다.', {
+        description: '처리가 완료되면 확인할 수 있습니다.',
       });
       return;
     }
 
     if (status === 'failed') {
-      toast.error('영상 처리에 실패했습니다', {
+      toast.error('영상 처리에 실패했습니다.', {
         description: '다시 녹화해주세요.',
       });
       return;
@@ -122,15 +122,15 @@ export default function VideoListPage() {
       const response = await videosApi.deleteVideo(videoToDelete.id);
 
       if (response.data.resultType === 'SUCCESS') {
-        toast.success('영상이 삭제되었습니다');
+        toast.success('영상을 삭제했습니다.');
         refetch();
       } else {
-        throw new Error(response.data.error?.reason || '삭제 실패');
+        throw new Error(response.data.error?.reason || '삭제에 실패했습니다.');
       }
     } catch (err) {
       console.error('[VideoListPage] Delete error:', err);
-      toast.error('삭제 실패', {
-        description: err instanceof Error ? err.message : '영상을 삭제할 수 없습니다',
+      toast.error('영상을 삭제하지 못했습니다.', {
+        description: err instanceof Error ? err.message : '잠시 후 다시 시도해주세요.',
       });
     } finally {
       setDeletingVideoIds((prev) => {

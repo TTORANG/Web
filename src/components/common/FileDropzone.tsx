@@ -40,7 +40,7 @@ export default function FileDropzone({
   const isBlocked = isDisabled || isUploading; // 업로드 중에는 모든 입력 차단
 
   useEffect(() => {
-    if (error) showToast.warning('업로드에 실패했어요.', error);
+    if (error) showToast.warning('업로드에 실패했습니다.', error);
   }, [error]);
 
   /** 클릭으로 파일 선택 */
@@ -95,7 +95,7 @@ export default function FileDropzone({
     if (isBlocked) return;
 
     if (e.dataTransfer.files.length > 1) {
-      showToast.warning('한 번에 하나의 파일만 업로드할 수 있습니다.');
+      showToast.warning('파일은 한 번에 1개만 업로드할 수 있습니다.');
     }
     // 첫번째 파일만 받아서 넘김
     const file = e.dataTransfer.files?.item(0);

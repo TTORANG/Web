@@ -32,10 +32,10 @@ export default function ScriptHistory() {
         onSuccess: (data) => {
           // 로컬 store 업데이트
           updateScript(data.scriptText);
-          showToast.success('대본이 복원되었습니다.');
+          showToast.success('대본을 복원했습니다.');
         },
         onError: () => {
-          showToast.error('복원 실패', '다시 시도해주세요.');
+          showToast.error('대본을 복원하지 못했습니다.', '다시 시도해주세요.');
         },
       },
     );
