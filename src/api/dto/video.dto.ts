@@ -60,6 +60,7 @@ export interface VideoTimelineReactionDto {
  * 타임라인 댓글 작성자
  */
 export interface VideoTimelineCommentUserDto {
+  profileImageUrl: unknown;
   userId: string;
   name: string;
 }
