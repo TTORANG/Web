@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { videosApi } from '@/api/endpoints/videos';
+import { normalizeVideoMimeType } from '@/utils/video';
 
 interface UploadProgress {
   uploadedChunks: number;
@@ -42,11 +43,12 @@ export const useVideoUpload = () => {
       const videoId = startResponse.data.success.videoId;
       const CHUNK_SIZE = 1024 * 1024;
       const totalChunks = Math.ceil(videoBlob.size / CHUNK_SIZE);
+      const uploadMimeType = normalizeVideoMimeType(videoBlob.type);
 
       setProgress((prev) => ({ ...prev, totalChunks, currentStep: 'uploading' }));
 
       for (let i = 0; i < totalChunks; i++) {
-        const chunk = videoBlob.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE, 'video/webm');
+        const chunk = videoBlob.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE, uploadMimeType);
         const uploadRes = await videosApi.uploadChunk(videoId, i, chunk);
 
         if (uploadRes.data.resultType === 'FAILURE') {

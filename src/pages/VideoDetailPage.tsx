@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import type { ReadVideoDetailResponseDto } from '@/api/dto/video.dto';
-import { createReply, deleteComment, updateComment } from '@/api/endpoints/comments';
+//import { createReply, deleteComment, updateComment } from '@/api/endpoints/comments';
 import { getScript } from '@/api/endpoints/scripts';
-import { createVideoComment, videosApi } from '@/api/endpoints/videos';
+import { videosApi } from '@/api/endpoints/videos';
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
 import ScriptSection from '@/components/feedback/ScriptSection';
@@ -17,9 +17,10 @@ import type { Comment as CommentType } from '@/types/comment';
 
 export default function VideoDetailPage() {
   const { projectId, videoId } = useParams<{ projectId: string; videoId: string }>();
-  const navigate = useNavigate();
   const currentUser = useAuthStore((state) => state.user);
-  const requestSeekAction = useVideoFeedbackStore((s) => s.requestSeek);
+
+  // Zustand 스토어: initVideo를 사용해 비디오 정보를 등록합니다.
+  const { initVideo, requestSeek: requestSeekAction } = useVideoFeedbackStore();
 
   const [videoData, setVideoData] = useState<ReadVideoDetailResponseDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,7 +40,7 @@ export default function VideoDetailPage() {
     opacity: 0,
   });
 
-  // 1. 데이터 로드 로직
+  // 1. 초기 데이터 로드
   useEffect(() => {
     const loadData = async () => {
       if (!videoId) return;
@@ -50,6 +51,17 @@ export default function VideoDetailPage() {
         if (response.data.resultType === 'SUCCESS') {
           const data = response.data.success!;
           setVideoData(data);
+
+          // ✅ 핵심: 스토어 초기화 (이걸 해야 VideoPlaybackBar가 videoId를 잡습니다)
+          initVideo({
+            videoId: data.video.videoId,
+            title: data.video.title,
+            feedbacks: data.timeline?.feedbacks ?? [],
+            videoUrl: '',
+            duration: 0,
+            comments: [],
+            reactionEvents: [],
+          });
 
           const transformed = (data.timeline?.comments ?? []).map((comment) => ({
             commentId: comment.commentId,
@@ -79,44 +91,47 @@ export default function VideoDetailPage() {
           setSlideChangeTimes(slides.map((s) => s.timestampMs / 1000));
         }
       } catch (err) {
-        console.error('[VideoDetailPage] Load error:', err);
-      } finally {
-        setIsLoading(false);
+        console.error('Data Loading Error:', err);
       }
     };
 
     loadData();
-  }, [videoId, currentUser?.id]);
+  }, [videoId, currentUser?.id, initVideo]);
 
-  // 2. 슬라이드 및 스크립트 정렬
+  // 2. 슬라이드/스크립트 결합 로직
   useEffect(() => {
-    if (!slidesData || slideIdOrder.length === 0) return;
+    if (!slidesData || slideIdOrder.length === 0) {
+      if (!isLoading && slideIdOrder.length === 0) setIsLoading(false);
+      return;
+    }
 
     const loadScriptsAndOrder = async () => {
-      const ordered = await Promise.all(
-        slideIdOrder.map(async (id) => {
-          const slideBase = slidesData.find((s) => String(s.slideId) === String(id));
-          if (!slideBase) return null;
-
-          try {
-            const scriptRes = await getScript(String(id));
-            return {
-              slideId: slideBase.slideId,
-              imageUrl: slideBase.imageUrl,
-              script: scriptRes.scriptText || '',
-            };
-          } catch (err) {
-            return {
-              slideId: slideBase.slideId,
-              imageUrl: slideBase.imageUrl,
-              script: slideBase.script || '',
-            };
-          }
-        }),
-      );
-      setProjectSlides(ordered.filter((s): s is SlideListItem => s !== null));
+      try {
+        const ordered = await Promise.all(
+          slideIdOrder.map(async (id) => {
+            const slideBase = slidesData.find((s) => String(s.slideId) === String(id));
+            if (!slideBase) return null;
+            try {
+              const scriptRes = await getScript(String(id));
+              return {
+                slideId: slideBase.slideId,
+                imageUrl: slideBase.imageUrl,
+                script: scriptRes.scriptText || '',
+              };
+            } catch (err) {
+              return {
+                slideId: slideBase.slideId,
+                imageUrl: slideBase.imageUrl,
+                script: slideBase.script || '',
+              };
+            }
+          }),
+        );
+        setProjectSlides(ordered.filter((s): s is SlideListItem => s !== null));
+      } finally {
+        setIsLoading(false);
+      }
     };
-
     loadScriptsAndOrder();
   }, [slidesData, slideIdOrder]);
 
@@ -142,7 +157,6 @@ export default function VideoDetailPage() {
     const timers = [0, 100, 300, 500].map((delay) => setTimeout(updatePosition, delay));
     const observer = new ResizeObserver(updatePosition);
     if (placeholderRef.current) observer.observe(placeholderRef.current);
-
     window.addEventListener('resize', updatePosition);
     window.addEventListener('scroll', updatePosition, true);
 
@@ -154,125 +168,7 @@ export default function VideoDetailPage() {
     };
   }, [isLoading, videoData, projectSlides]);
 
-  const requestSeek = useCallback(
-    (time: number) => {
-      requestSeekAction(time);
-    },
-    [requestSeekAction],
-  );
-
-  const handleGoToTimeRef = useCallback(
-    (ref: NonNullable<CommentType['ref']>) => {
-      if (ref.kind === 'video') requestSeek(ref.seconds);
-    },
-    [requestSeek],
-  );
-
-  const handleAddComment = useCallback(async () => {
-    if (!commentDraft.trim() || !videoId) return;
-    try {
-      const result = await createVideoComment(videoId, {
-        content: commentDraft,
-        timestampMs: Math.round(currentTime * 1000),
-      });
-      setComments((prev) => [
-        ...prev,
-        {
-          commentId: result.serverId,
-          content: result.content,
-          ref: { kind: 'video', seconds: currentTime },
-          createdAt: new Date().toISOString(),
-          userId: currentUser?.id || 'me',
-          isMine: true,
-          replies: [],
-        },
-      ]);
-      setCommentDraft('');
-    } catch (err) {
-      console.error('[VideoDetailPage] Add comment error:', err);
-      alert('댓글 추가 실패');
-    }
-  }, [commentDraft, currentTime, videoId, currentUser]);
-
-  const handleReplyComment = useCallback(
-    async (parentId: string, content: string) => {
-      if (!content.trim()) return;
-      try {
-        const result = await createReply(parentId, { content });
-        setComments((prev) =>
-          prev.map((comment) => {
-            if (comment.commentId === parentId) {
-              return {
-                ...comment,
-                replies: [
-                  ...(comment.replies || []),
-                  {
-                    commentId: result.replyId,
-                    content: result.content,
-                    createdAt: result.createdAt,
-                    userId: currentUser?.id || 'me',
-                    isMine: true,
-                    isReply: true,
-                    parentId: parentId,
-                  },
-                ],
-              };
-            }
-            return comment;
-          }),
-        );
-      } catch (err) {
-        console.error('[VideoDetailPage] Reply error:', err);
-        alert('답글 작성 중 오류가 발생했습니다.');
-      }
-    },
-    [currentUser],
-  );
-
-  const handleUpdateComment = useCallback(async (commentId: string, content: string) => {
-    if (!content.trim()) return;
-    try {
-      const result = await updateComment(commentId, { content });
-      setComments((prev) =>
-        prev.map((c) => {
-          if (c.commentId === commentId) return { ...c, content: result.content };
-          return {
-            ...c,
-            replies: c.replies?.map((r) =>
-              r.commentId === commentId ? { ...r, content: result.content } : r,
-            ),
-          };
-        }),
-      );
-    } catch (err) {
-      console.error('[VideoDetailPage] Update comment error:', err);
-      alert('수정 중 오류가 발생했습니다.');
-    }
-  }, []);
-
-  const handleDeleteComment = useCallback(async (commentId: string) => {
-    if (!window.confirm('정말 삭제하시겠습니까?')) return;
-    try {
-      await deleteComment({ commentId });
-      setComments((prev) =>
-        prev
-          .filter((c) => c.commentId !== commentId)
-          .map((c) => ({
-            ...c,
-            replies: c.replies?.filter((r) => r.commentId !== commentId),
-          })),
-      );
-    } catch (err) {
-      console.error('[VideoDetailPage] Delete comment error:', err);
-      alert('삭제 중 오류가 발생했습니다.');
-    }
-  }, []);
-
-  const handleBack = () => navigate(`/${projectId}/videos`);
-
-  const timestampPrefix = `[${Math.floor(currentTime / 60)}:${Math.floor(currentTime % 60)
-    .toString()
-    .padStart(2, '0')}] `;
+  const requestSeek = useCallback((time: number) => requestSeekAction(time), [requestSeekAction]);
 
   if (isLoading) {
     return (
@@ -284,35 +180,18 @@ export default function VideoDetailPage() {
 
   return (
     <div className="flex h-full w-full bg-gray-100 overflow-hidden">
-      {/* 뒤로가기 버튼 */}
-      <div className="absolute left-4 top-4 z-30">
-        <button
-          onClick={handleBack}
-          className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 shadow hover:bg-gray-50 transition-colors"
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          <span className="text-sm font-medium">목록으로</span>
-        </button>
-      </div>
-
-      {/* 메인 콘텐츠 영역 */}
-      <div className="flex flex-1 flex-col px-6 py-6 md:px-12">
-        <div className="flex flex-1 flex-col gap-6 min-h-0 items-center pt-14">
-          {/* 비디오 Placeholder */}
+      <div className="flex flex-1 flex-col h-full min-w-0">
+        {/* 상단 비디오 영역 (고정) */}
+        <div className="flex shrink-0 flex-col items-center pt-10 pb-6 px-6 md:px-12">
           <div
             ref={placeholderRef}
-            className="aspect-video w-[80%] bg-black shadow-2xl rounded-lg"
+            className="aspect-video w-full max-w-[800px] bg-black rounded-lg"
           />
+        </div>
 
-          {/* 스크립트 섹션 */}
-          <div className="w-[85%] flex-1 min-h-0">
+        {/* 하단 스크립트 영역 (스크롤) */}
+        <div className="flex-1 min-h-0 px-6 md:px-12 pb-6 flex flex-col items-center">
+          <div className="w-full max-w-[800px] h-full flex flex-col min-h-0 overflow-y-auto">
             <ScriptSection
               slides={projectSlides}
               slideChangeTimes={slideChangeTimes}
@@ -324,34 +203,36 @@ export default function VideoDetailPage() {
         </div>
       </div>
 
-      {/* 댓글 사이드바 */}
-      <aside className="hidden w-100 shrink-0 flex-col border border-gray-200 bg-white lg:flex my-2 mr-20 shadow-sm rounded-2xl">
+      {/* 오른쪽 사이드바 */}
+      <aside className="hidden w-100 shrink-0 flex-col border-l border-gray-200 bg-white lg:flex my-2 mr-6 shadow-sm overflow-hidden">
         <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="mt-4 p-4 border-b">
-            <h3 className="text-gray-950 font-bold text-lg">의견 ({comments.length})</h3>
+            <h3 className="text-gray font-bold text-lg">의견 ({comments.length})</h3>
           </div>
           <CommentList
             comments={comments}
-            onGoToRef={handleGoToTimeRef}
-            onAddReply={handleReplyComment}
-            onDeleteComment={handleDeleteComment}
-            onUpdateComment={handleUpdateComment}
+            onGoToRef={(ref) => ref.kind === 'video' && requestSeek(ref.seconds)}
+            onAddReply={async () => {}}
+            onDeleteComment={async () => {}}
+            onUpdateComment={async () => {}}
           />
         </div>
-
-        <div className="shrink-0 border-t border-gray-100 p-4">
+        <div className="p-4 border-t">
           <CommentInput
             value={commentDraft}
             onChange={setCommentDraft}
-            onSubmit={handleAddComment}
-            onCancel={() => setCommentDraft('')}
-            className="w-full"
-            initialValueOnFocus={timestampPrefix}
+            onSubmit={() => {}}
+            initialValueOnFocus={`[${Math.floor(currentTime / 60)}:${Math.floor(currentTime % 60)
+              .toString()
+              .padStart(2, '0')}] `}
+            onCancel={function (): void {
+              throw new Error('Function not implemented.');
+            }}
           />
         </div>
       </aside>
 
-      {/* 실시간 렌더링되는 비디오 스테이지 */}
+      {/* 비디오 스테이지 */}
       <div style={videoStyle} className="pointer-events-auto rounded-lg overflow-hidden">
         <SlideWebcamStage
           slides={projectSlides}

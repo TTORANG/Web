@@ -9,6 +9,9 @@ import type { ReactionEvent, SegmentHighlight } from '@/types/video';
 /** 세그먼트 버킷 크기 (초) */
 export const SEGMENT_BUCKET_SIZE = 5;
 
+export const normalizeVideoMimeType = (mimeType?: string): 'video/webm' | 'video/mp4' =>
+  mimeType?.startsWith('video/mp4') ? 'video/mp4' : 'video/webm';
+
 /**
  * 현재 재생 시간에 해당하는 슬라이드 인덱스를 계산
  *
