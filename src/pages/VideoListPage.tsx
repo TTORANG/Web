@@ -81,7 +81,7 @@ export default function VideoListPage() {
         derivedStatus: isStuck ? 'failed' : v.status,
         isStuck,
         isFailed: v.status === 'failed' || isStuck,
-        isPending: v.status === 'processing' || !v.thumbnailUrl,
+        isPending: (v.status === 'processing' || v.status === 'uploading') && !v.thumbnailUrl,
       };
     });
   }, [rawVideos]);
@@ -118,7 +118,7 @@ export default function VideoListPage() {
 
       fresh.forEach((v) => {
         const id = String(v.videoId);
-        const isDone = v.status !== 'processing' && Boolean(v.thumbnailUrl);
+        const isDone = Boolean(v.thumbnailUrl) || v.status === 'failed';
         if (pendingIds.has(id) && isDone) doneIds.push(id);
       });
 
