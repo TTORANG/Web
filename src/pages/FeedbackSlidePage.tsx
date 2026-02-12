@@ -17,6 +17,7 @@ import SlideViewer from '@/components/feedback/SlideViewer';
 import SlideTitle from '@/components/slide/script/SlideTitle';
 import { createDefaultReactions } from '@/constants/reaction';
 import type { ReadSharedContentData } from '@/types/share';
+import { countTreeComments } from '@/utils/comment';
 
 import { useFeedbackSlide } from './feedback/useFeedbackSlide';
 import type { ShareExitSnapshot } from './feedback/useFeedbackVideo';
@@ -194,7 +195,7 @@ export default function FeedbackSlidePage({
             </div>
           </>
         }
-        commentCount={comments.length}
+        commentCount={countTreeComments(comments)}
       />
     </div>
   );

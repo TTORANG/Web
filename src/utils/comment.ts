@@ -11,7 +11,22 @@ export function updateInFlat(comments: Comment[], targetId: string, content: str
  * 플랫 배열에서 댓글 삭제 (부모 삭제 시 자식도 함께 삭제)
  */
 export function deleteFromFlat(comments: Comment[], targetId: string): Comment[] {
-  return comments.filter((c) => c.commentId !== targetId && c.parentId !== targetId);
+  const deleteIds = new Set<string>([targetId]);
+  let hasNewChild = true;
+
+  // target의 모든 하위 답글(자손)까지 재귀적으로 수집
+  while (hasNewChild) {
+    hasNewChild = false;
+    for (const comment of comments) {
+      if (!comment.parentId) continue;
+      if (deleteIds.has(comment.parentId) && !deleteIds.has(comment.commentId)) {
+        deleteIds.add(comment.commentId);
+        hasNewChild = true;
+      }
+    }
+  }
+
+  return comments.filter((c) => !deleteIds.has(c.commentId));
 }
 
 /**
@@ -42,4 +57,14 @@ export function flatToTree(comments: Comment[]): Comment[] {
   }
 
   return roots;
+}
+
+/**
+ * 트리 구조 댓글의 전체 개수(댓글+답글)를 계산
+ */
+export function countTreeComments(comments: Comment[]): number {
+  return comments.reduce(
+    (count, comment) => count + 1 + countTreeComments(comment.replies ?? []),
+    0,
+  );
 }

@@ -23,6 +23,7 @@ export default function CommentPopover() {
   const [replyDraft, setReplyDraft] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState('');
+  const commentCount = comments.length;
 
   const submitReply = useCallback(
     (targetId: string) => {
@@ -103,7 +104,7 @@ export default function CommentPopover() {
       trigger={({ isOpen }) => (
         <button
           type="button"
-          aria-label={`의견 ${comments.length}개 보기`}
+          aria-label={`의견 ${commentCount}개 보기`}
           className={clsx(
             'inline-flex h-7 items-center gap-1 rounded px-2',
             'outline-1 -outline-offset-1',
@@ -126,7 +127,7 @@ export default function CommentPopover() {
               isOpen ? 'text-main-variant1' : 'text-gray-600',
             )}
           >
-            {comments.length}
+            {commentCount}
           </span>
         </button>
       )}
