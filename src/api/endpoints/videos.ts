@@ -8,6 +8,7 @@ import type {
   CreateStartVideoRequestDto,
   CreateStartVideoResponseDto,
   ReadProjectVideosResponseDto,
+  ReadVideoCommentsAllResponseDto,
   ReadVideoDetailResponseDto,
   ReadVideoSlidesResponseDto,
 } from '@/api/dto/video.dto';
@@ -60,6 +61,14 @@ export const videosApi = {
   getVideoSlides: (videoId: string) => {
     const numericId = normalizeVideoId(videoId);
     return apiClient.get<ApiResponse<ReadVideoSlidesResponseDto>>(`/videos/${numericId}/slides`);
+  },
+
+  /** 영상 전체 댓글/답글 목록 조회 */
+  getVideoCommentsAll: (videoId: string) => {
+    const numericId = normalizeVideoId(videoId);
+    return apiClient.get<ApiResponse<ReadVideoCommentsAllResponseDto>>(
+      `/videos/${numericId}/comments/all`,
+    );
   },
   // DELETE /videos/{videoId} - 영상 삭제
   deleteVideo: (videoId: string) => {
