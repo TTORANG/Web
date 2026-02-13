@@ -18,8 +18,8 @@ function InsightPageSkeleton() {
       </div>
 
       <div className="flex flex-col gap-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {[0, 1, 2].map((idx) => (
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((idx) => (
             <div
               key={idx}
               className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white px-5 py-4"
