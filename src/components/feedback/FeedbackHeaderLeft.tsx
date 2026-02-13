@@ -22,7 +22,7 @@ export default function FeedbackHeaderLeft() {
       <>
         <Logo />
         <div className="hidden md:flex items-center gap-1.5">
-          <span className="text-body-m-bold text-gray-400">발표 정보를 불러올 수 없습니다</span>
+          <span className="text-body-m-bold text-gray-600">발표 정보를 불러올 수 없습니다</span>
         </div>
       </>
     );
