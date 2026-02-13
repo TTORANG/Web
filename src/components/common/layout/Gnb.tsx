@@ -16,12 +16,13 @@ export function Gnb() {
   const location = useLocation();
   const activeTab = getTabFromPathname(location.pathname);
   const activeIndex = TABS.findIndex((tab) => tab.key === activeTab);
+  const safeActiveIndex = activeIndex >= 0 ? activeIndex : 0;
 
   if (!projectId) return null;
 
   return (
     <nav
-      className="relative flex h-15 items-center justify-center"
+      className="relative flex h-full w-full items-center justify-center md:h-15 md:w-[18.75rem]"
       role="tablist"
       aria-label="네비게이션 메뉴"
     >
@@ -36,19 +37,19 @@ export function Gnb() {
             aria-selected={isActive}
             aria-controls={`tabpanel-${key}`}
             className={clsx(
-              'flex h-full w-25 items-end justify-center px-2.5 pb-4 pt-4 text-body-m-bold transition-colors duration-300',
+              'flex h-full min-w-0 flex-1 items-end justify-center px-2 pb-3 pt-3 text-body-m-bold whitespace-nowrap transition-colors duration-300 md:w-25 md:flex-none md:px-2.5 md:pb-4 md:pt-4',
               isActive ? 'text-main' : 'text-gray-600',
             )}
           >
-            {label}
+            <span className="truncate">{label}</span>
           </Link>
         );
       })}
 
       {/* 슬라이딩 인디케이터 */}
       <div
-        className="absolute bottom-0 h-0.5 w-25 bg-main transition-transform duration-300 ease-out"
-        style={{ transform: `translateX(${(activeIndex - 1) * 100}%)` }}
+        className="absolute bottom-0 left-0 h-0.5 w-[calc(100%/3)] bg-main transition-transform duration-300 ease-out md:w-25"
+        style={{ transform: `translateX(${safeActiveIndex * 100}%)` }}
       />
     </nav>
   );
