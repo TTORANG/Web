@@ -58,6 +58,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <Navigate to="slide" replace /> },
+      { path: 'slide/:slideId', element: <SlidePage /> },
       { path: 'slide', element: <SlidePage /> },
       { path: 'insight', element: <InsightPage /> },
       { path: 'videos', element: <VideoListPage /> },

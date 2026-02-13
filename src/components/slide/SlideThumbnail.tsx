@@ -5,11 +5,12 @@
  * SlideList 내부에서 사용되며, 슬라이드 번호와 미리보기를 표시합니다.
  * 현재 선택된 슬라이드는 시각적으로 구분됩니다.
  */
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 import clsx from 'clsx';
 
 import { SlideImage } from '@/components/common';
+import { getTabPath } from '@/constants/navigation';
 import type { SlideListItem } from '@/types/slide';
 
 interface SlideThumbnailProps {
@@ -35,6 +36,8 @@ export default function SlideThumbnail({
   isActive = false,
   isLoading,
 }: SlideThumbnailProps) {
+  const { projectId } = useParams<{ projectId: string }>();
+
   if (isLoading || !slide) {
     return (
       <div className="flex items-start gap-2 p-2">
@@ -46,7 +49,7 @@ export default function SlideThumbnail({
 
   return (
     <Link
-      to={{ search: `?slideId=${slide.slideId}` }}
+      to={projectId ? getTabPath(projectId, 'slide', slide.slideId) : '#'}
       replace
       aria-current={isActive ? 'true' : undefined}
       className={clsx(
