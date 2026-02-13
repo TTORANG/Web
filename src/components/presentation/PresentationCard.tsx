@@ -184,7 +184,7 @@ function PresentationCard(props: CardProps) {
                     highlightClassName="bg-transparent text-main"
                   />
                 </h3>
-                <p className="mt-1 text-body-s text-gray-400">{formatRelativeTime(updatedAt)}</p>
+                <p className="mt-1 text-body-s text-gray-600">{formatRelativeTime(updatedAt)}</p>
               </div>
 
               <div
@@ -195,7 +195,7 @@ function PresentationCard(props: CardProps) {
                 <Dropdown
                   trigger={({ isOpen }) => (
                     <div className="p-2 -m-2" aria-label="더보기">
-                      <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-400')} />
+                      <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-600')} />
                     </div>
                   )}
                   ariaLabel="더보기"
