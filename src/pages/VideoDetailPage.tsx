@@ -319,7 +319,12 @@ export default function VideoDetailPage() {
   if (isLoading) return <div className="flex h-screen items-center justify-center">Loading...</div>;
 
   return (
-    <div className="flex h-full w-full bg-white overflow-hidden">
+    <div
+      role="tabpanel"
+      id="tabpanel-videos"
+      aria-labelledby="tab-videos"
+      className="flex h-full w-full bg-white overflow-hidden"
+    >
       <div className="flex flex-1 flex-col h-full min-w-0">
         <div className="flex shrink-0 flex-col items-center pt-10 pb-6 px-12 ">
           <div
