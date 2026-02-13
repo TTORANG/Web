@@ -41,7 +41,7 @@ export default function PresentationHeader({
       {/* 검색 부분 */}
       <div className="flex w-full sm:flex-1 sm:min-w-0 sm:max-w-none items-center gap-2 px-4 py-3 rounded-2xl bg-white border-2 border-gray-200 focus-within:border-main transition-colors duration-200">
         <input
-          className="w-full bg-transparent text-body-m text-gray-900 placeholder:text-gray-400 focus:outline-none"
+          className="w-full bg-transparent text-body-m text-gray-900 placeholder:text-gray-600 focus:outline-none"
           aria-label="발표 검색"
           placeholder="검색어를 입력하세요"
           type="text"
@@ -117,7 +117,7 @@ export default function PresentationHeader({
             aria-label="카드 보기"
             className={clsx(
               'rounded-lg p-2 cursor-pointer transition-colors duration-200',
-              viewMode === 'card' ? 'text-main' : 'text-gray-400',
+              viewMode === 'card' ? 'text-main' : 'text-gray-600',
             )}
             type="button"
             onClick={() => onChangeViewMode('card')}
@@ -128,7 +128,7 @@ export default function PresentationHeader({
             aria-label="리스트 보기"
             className={clsx(
               'rounded-lg p-2 cursor-pointer transition-colors duration-200',
-              viewMode === 'list' ? 'text-main' : 'text-gray-400',
+              viewMode === 'list' ? 'text-main' : 'text-gray-600',
             )}
             type="button"
             onClick={() => onChangeViewMode('list')}
