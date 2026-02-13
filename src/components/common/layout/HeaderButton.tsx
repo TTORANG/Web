@@ -30,13 +30,19 @@ export function HeaderButton({
     <button
       type="button"
       onClick={onClick}
+      aria-label={shouldHideTextOnMobile ? text : undefined}
       className={clsx(
-        'flex items-center gap-1 text-body-s-bold text-gray-800 cursor-pointer transition-colors hover:text-gray-600',
+        'flex min-h-11 min-w-11 items-center gap-1 rounded-md px-2 py-2 text-body-s-bold text-gray-800 transition-colors hover:text-gray-600 focus-visible:outline-2 focus-visible:outline-main',
         shouldHideTextOnMobile && 'justify-center',
         className,
       )}
     >
-      <span className={clsx(shouldHideTextOnMobile && 'hidden lg:inline')}>{text}</span>
+      <span
+        aria-hidden={shouldHideTextOnMobile}
+        className={clsx(shouldHideTextOnMobile && 'hidden lg:inline')}
+      >
+        {text}
+      </span>
       {icon}
     </button>
   );
