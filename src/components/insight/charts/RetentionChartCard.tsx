@@ -19,14 +19,19 @@ interface Props {
 }
 
 export function RetentionChartCard({ title, data, isVideo }: Props) {
+  const needsRotation = data.length > 10;
+
   return (
     <div className="flex w-full flex-col gap-6 rounded-lg border border-gray-200 bg-white px-5 pb-8 pt-4">
       <h3 className="text-body-l-bold text-gray-800">{title}</h3>
 
-      <div className="h-[300px] w-full min-w-0 px-6">
+      <div className="h-[300px] w-full min-w-0 px-0 md:px-6">
         {data.length > 0 ? (
           <ResponsiveContainer width="100%" height={300} minWidth={0}>
-            <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <AreaChart
+              data={data}
+              margin={{ top: 10, right: 10, left: -20, bottom: needsRotation ? 40 : 0 }}
+            >
               <defs>
                 <linearGradient
                   id={`colorRate-${isVideo ? 'video' : 'slide'}`}
@@ -52,8 +57,10 @@ export function RetentionChartCard({ title, data, isVideo }: Props) {
                 tickLine={false}
                 tick={{ fontSize: 12, fill: 'var(--color-gray-600)', fontWeight: 600 }}
                 dy={10}
-                interval={isVideo ? 'preserveStartEnd' : 0}
-                minTickGap={30}
+                interval="preserveStartEnd"
+                minTickGap={needsRotation ? 15 : 30}
+                angle={needsRotation ? -45 : 0}
+                textAnchor={needsRotation ? 'end' : 'middle'}
               />
 
               <YAxis
