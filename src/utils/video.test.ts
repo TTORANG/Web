@@ -9,6 +9,7 @@ import {
   computeUserActiveHighlights,
   getOverlappingFeedbacks,
   getSlideIndexFromTime,
+  parseSeekSecondsParam,
 } from './video';
 
 describe('getSlideIndexFromTime', () => {
@@ -47,6 +48,28 @@ describe('clamp', () => {
 
   it('clamps to max', () => {
     expect(clamp(15, 0, 10)).toBe(10);
+  });
+});
+
+describe('parseSeekSecondsParam', () => {
+  it('parses valid seek query values to non-negative integer seconds', () => {
+    expect(parseSeekSecondsParam('0')).toBe(0);
+    expect(parseSeekSecondsParam('12')).toBe(12);
+    expect(parseSeekSecondsParam('12.9')).toBe(12);
+    expect(parseSeekSecondsParam(' 7 ')).toBe(7);
+  });
+
+  it('returns null for invalid or negative values', () => {
+    expect(parseSeekSecondsParam(null)).toBeNull();
+    expect(parseSeekSecondsParam('')).toBeNull();
+    expect(parseSeekSecondsParam('abc')).toBeNull();
+    expect(parseSeekSecondsParam('-1')).toBeNull();
+  });
+
+  it('can be clamped by duration upper bound for initial seek', () => {
+    const parsed = parseSeekSecondsParam('999');
+    expect(parsed).toBe(999);
+    expect(clamp(parsed!, 0, 120)).toBe(120);
   });
 });
 

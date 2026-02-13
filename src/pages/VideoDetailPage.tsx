@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 import type { ReadVideoDetailResponseDto, VideoCommentDto } from '@/api/dto/video.dto';
 import { getScript } from '@/api/endpoints/scripts';
@@ -17,9 +17,13 @@ import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { SlideListItem } from '@/types';
 import type { Comment as CommentType } from '@/types/comment';
 import type { VideoTimestampFeedback } from '@/types/video';
+import { clamp, parseSeekSecondsParam } from '@/utils/video';
 
 export default function VideoDetailPage() {
   const { projectId, videoId } = useParams<{ projectId: string; videoId: string }>();
+  const [searchParams] = useSearchParams();
+  const seekParam = searchParams.get('t');
+  const requestedSeekSeconds = parseSeekSecondsParam(seekParam);
   const currentUser = useAuthStore((state) => state.user);
 
   const { initVideo, requestSeek: requestSeekAction } = useVideoFeedbackStore();
@@ -42,6 +46,7 @@ export default function VideoDetailPage() {
   const [slideIdOrder, setSlideIdOrder] = useState<string[]>([]);
 
   const desktopPlaceholderRef = useRef<HTMLDivElement>(null);
+  const initialSeekRequestedRef = useRef(false);
   const [videoStyle, setVideoStyle] = useState<React.CSSProperties>({
     position: 'fixed',
     opacity: 0,
@@ -198,6 +203,28 @@ export default function VideoDetailPage() {
     };
     init();
   }, [videoId, loadData]);
+
+  useEffect(() => {
+    initialSeekRequestedRef.current = false;
+  }, [videoId, seekParam]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (initialSeekRequestedRef.current) return;
+
+    initialSeekRequestedRef.current = true;
+    if (requestedSeekSeconds === null) return;
+
+    const durationSeconds = videoData?.video.durationSeconds;
+    const safeSeekSeconds =
+      typeof durationSeconds === 'number' &&
+      Number.isFinite(durationSeconds) &&
+      durationSeconds >= 0
+        ? clamp(requestedSeekSeconds, 0, durationSeconds)
+        : requestedSeekSeconds;
+
+    requestSeekAction(safeSeekSeconds);
+  }, [isLoading, requestSeekAction, requestedSeekSeconds, videoData?.video.durationSeconds]);
 
   const contextValue = useMemo(
     () => ({
