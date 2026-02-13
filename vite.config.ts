@@ -75,17 +75,6 @@ export default defineConfig({
               return 'app-vendor';
             }
           }
-
-          if (id.includes('/src/pages/feedback/') || id.includes('/src/pages/Feedback')) {
-            return 'feedback-pages';
-          }
-          if (id.includes('/src/components/insight/') || id.includes('/src/pages/InsightPage')) {
-            return 'insight-pages';
-          }
-          if (id.includes('/src/components/video/') || id.includes('/src/pages/Video')) {
-            return 'video-pages';
-          }
-
           return undefined;
         },
       },

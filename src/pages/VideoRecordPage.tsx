@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { toast } from 'sonner';
 
-import { Layout, Logo } from '@/components/common';
+import { Layout } from '@/components/common/layout/Layout';
+import { Logo } from '@/components/common/layout/Logo';
 import {
   DeviceTestSection,
   RecordExitModal,
