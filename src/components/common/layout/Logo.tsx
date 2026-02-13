@@ -36,6 +36,8 @@ export function Logo({ onClick }: LogoProps) {
         src={isHome ? logoFull : logoIcon}
         alt="또랑"
         className="h-8 select-none"
+        width={isHome ? 375 : 164}
+        height={128}
         draggable={false}
       />
     </Link>
