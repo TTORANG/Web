@@ -181,24 +181,30 @@ export function Dropdown({
     'left-0': align === 'start',
     'right-0': align === 'end',
   });
+  const triggerElement = typeof trigger === 'function' ? trigger({ isOpen: open }) : trigger;
+  const triggerType = typeof triggerElement.type === 'string' ? triggerElement.type : null;
+  const useButtonSemantics = triggerType !== 'button' && triggerType !== 'a';
 
   return (
     <div ref={dropdownRef} className={clsx('relative', open && 'z-[70]', className)}>
       <div
-        role="button"
-        tabIndex={0}
+        className="inline-flex"
+        role={useButtonSemantics ? 'button' : undefined}
+        tabIndex={useButtonSemantics ? 0 : undefined}
+        aria-label={useButtonSemantics ? ariaLabel : undefined}
+        aria-haspopup={useButtonSemantics ? 'menu' : undefined}
+        aria-expanded={useButtonSemantics ? open : undefined}
+        aria-controls={useButtonSemantics && open ? menuId : undefined}
         onClick={handleToggle}
         onKeyDown={(e) => {
+          if (!useButtonSemantics) return;
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             handleToggle();
           }
         }}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-controls={open ? menuId : undefined}
       >
-        {typeof trigger === 'function' ? trigger({ isOpen: open }) : trigger}
+        {triggerElement}
       </div>
 
       {open && (
