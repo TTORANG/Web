@@ -35,7 +35,7 @@ export function Logo({ onClick }: LogoProps) {
       <img
         src={isHome ? logoFull : logoIcon}
         alt="또랑"
-        className="h-8 select-none"
+        className="h-8 w-auto select-none"
         width={isHome ? 375 : 164}
         height={128}
         draggable={false}
