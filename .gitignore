@@ -37,3 +37,7 @@ bun.lock
 
 # Test coverage
 coverage
+
+# Playwright test results
+docs/reports
+artifacts
