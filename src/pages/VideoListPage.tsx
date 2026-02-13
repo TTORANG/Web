@@ -279,8 +279,8 @@ export default function VideoListPage() {
   return (
     <div
       role="tabpanel"
-      id="tabpanel-video"
-      aria-labelledby="tab-video"
+      id="tabpanel-videos"
+      aria-labelledby="tab-videos"
       className="relative h-full w-full overflow-y-auto bg-gray-100"
     >
       <DeleteVideoModal
