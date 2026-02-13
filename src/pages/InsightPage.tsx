@@ -102,7 +102,7 @@ export default function InsightPage() {
       ) : (
         <div className="flex flex-col gap-6 px-4 py-6 md:px-18 md:py-8">
           {m.isError && (
-            <div className="rounded-lg border border-error/20 bg-error/10 px-4 py-3 text-body-s text-error">
+            <div className="rounded-lg border border-error/20 bg-error/10 px-4 py-3 text-body-s text-gray-800">
               데이터를 불러오는 중 문제가 발생했습니다.
               {m.errorMessage ? ` (${m.errorMessage})` : ''}
             </div>
