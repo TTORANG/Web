@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { queryKeys } from '@/api/queryClient';
 import { DevFab } from '@/components/common/DevFab';
+import { usePosthogAuthSync } from '@/hooks/usePosthogAuthSync';
 import { router } from '@/router';
 import { useAuthStore } from '@/stores/authStore';
 import { useThemeListener } from '@/stores/themeStore';
@@ -15,6 +16,7 @@ import { showToast } from './utils/toast';
 
 function App() {
   useThemeListener();
+  usePosthogAuthSync();
   const queryClient = useQueryClient();
 
   useEffect(() => {
