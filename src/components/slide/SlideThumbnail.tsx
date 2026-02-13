@@ -69,7 +69,13 @@ export default function SlideThumbnail({
 
       {/* 썸네일 */}
       <div className="relative flex-1 rounded overflow-hidden bg-gray-200">
-        <SlideImage src={slide.imageUrl} alt={`슬라이드 ${index + 1}: ${slide.title}`} />
+        <SlideImage
+          src={slide.imageUrl}
+          alt={`슬라이드 ${index + 1}: ${slide.title}`}
+          loading="lazy"
+          decoding="async"
+          fetchPriority="low"
+        />
       </div>
     </Link>
   );
