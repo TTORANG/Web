@@ -12,9 +12,10 @@ import clsx from 'clsx';
 interface SlideImageProps {
   src: string;
   alt: string;
+  maxHeight?: string;
 }
 
-export default function SlideImage({ src, alt }: SlideImageProps) {
+export default function SlideImage({ src, alt, maxHeight }: SlideImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
 
   return (
@@ -22,8 +23,10 @@ export default function SlideImage({ src, alt }: SlideImageProps) {
       src={src}
       alt={alt}
       onLoad={() => setIsLoaded(true)}
+      style={maxHeight ? { maxHeight } : undefined}
       className={clsx(
-        'block w-full h-auto transition-opacity duration-300',
+        'block h-auto transition-opacity duration-300',
+        maxHeight ? 'max-w-full' : 'w-full',
         !isLoaded && 'animate-pulse bg-gray-200',
         isLoaded ? 'opacity-100' : 'opacity-0',
       )}
