@@ -41,15 +41,16 @@ export function RecentCommentsSection({
   // 1. 영상이 없을 때 보여줄 샘플 댓글 렌더링 함수
   const renderSampleComments = () => (
     <>
-      {sampleComments.map((comment) => (
-        <RecentCommentItem
-          key={comment.commentId}
-          user={comment.user}
-          slideLabel={`슬라이드 ${comment.slideNum}`}
-          time={comment.time}
-          text={comment.text}
-          thumbFallbackClassName={thumbBase}
-        />
+      {sampleComments.map((comment, idx) => (
+        <div key={comment.commentId} className={idx > 0 ? 'hidden md:block' : ''}>
+          <RecentCommentItem
+            user={comment.user}
+            slideLabel={`슬라이드 ${comment.slideNum}`}
+            time={comment.time}
+            text={comment.text}
+            thumbFallbackClassName={thumbBase}
+          />
+        </div>
       ))}
     </>
   );

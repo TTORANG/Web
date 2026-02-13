@@ -29,9 +29,9 @@ export default function FeedbackDistributionSection({
           const ratio = Math.round((react.count / max) * 100);
           return (
             <div key={react.type} className="flex items-center">
-              <div className="flex w-20 shrink-0 items-center gap-2 sm:w-32.5">
+              <div className="flex w-8 shrink-0 items-center gap-2 sm:w-32.5">
                 <span className="text-body-l">{REACTION_CONFIG[react.type].emoji}</span>
-                <span className="text-body-m text-gray-800">
+                <span className="hidden text-body-m text-gray-800 sm:inline">
                   {REACTION_CONFIG[react.type].label}
                 </span>
               </div>

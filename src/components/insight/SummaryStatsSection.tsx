@@ -6,11 +6,11 @@ interface SummaryStatsSectionProps {
 
 export default function SummaryStatsSection({ stats }: SummaryStatsSectionProps) {
   return (
-    <div className="flex flex-wrap gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       {stats.map((stat, idx) => (
         <div
           key={idx}
-          className="flex min-w-0 flex-1 basis-full flex-col gap-2 rounded-lg border border-gray-200 bg-white px-5 py-4 sm:min-w-60 sm:basis-78"
+          className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white px-5 py-4"
         >
           <div className="flex flex-col gap-1">
             <span className="text-body-s text-gray-800">{stat.label}</span>
