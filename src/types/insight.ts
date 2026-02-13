@@ -19,4 +19,5 @@ export type DropOffTime = {
   desc: string;
   count: number;
   slideIndex: number;
+  seconds: number;
 };

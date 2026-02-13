@@ -57,6 +57,24 @@ export function clamp(n: number, min: number, max: number): number {
 }
 
 /**
+ * URL query string의 seek 파라미터를 초 단위 정수로 파싱합니다.
+ *
+ * @param value - 예: "12", "12.9"
+ * @returns 유효한 경우 0 이상의 정수(소수점 버림), 아니면 null
+ */
+export function parseSeekSecondsParam(value: string | null): number | null {
+  if (value == null) return null;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed) || parsed < 0) return null;
+
+  return Math.floor(parsed);
+}
+
+/**
  * 현재 시간 기준 ±window 범위 내의 피드백을 필터링
  *
  * @param feedbacks - 피드백 배열

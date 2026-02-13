@@ -26,6 +26,7 @@ export type InsightTopSlide = {
 export type InsightModel = {
   projectIdStr: string;
   projectIdNum: number;
+  latestVideoId: string | null;
 
   hasVideo: boolean;
 
@@ -41,6 +42,8 @@ export type InsightModel = {
   topSlides: InsightTopSlide[];
   topSlideReactionSummaries?: Array<Record<ReactionType, number>>;
   getThumb: (slideIndex: number) => string | undefined;
+  getSeekSecondsForSlide: (slideIndex: number) => number | null;
+  getSlideIdByIndex: (slideIndex: number) => string | null;
 
   recentCommentsData: ReadRecentCommentListResponseDto | undefined;
 
