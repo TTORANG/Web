@@ -93,9 +93,10 @@ export function LoginButton() {
         trigger={
           <button
             type="button"
-            className="flex cursor-pointer items-center gap-2 rounded-full px-2 py-1 text-body-s-bold text-gray-800 transition-colors hover:bg-gray-100"
+            title={displayName}
+            className="flex cursor-pointer items-center gap-2 rounded-full p-1.5 text-body-s-bold text-gray-800 transition-colors hover:bg-gray-100 md:px-3 md:py-1.5"
           >
-            <span className="max-w-24 truncate">{displayName}</span>
+            <span className="hidden max-w-24 truncate md:inline">{displayName}</span>
             <UserAvatar src={user.profileImage} alt={displayName} size={24} />
           </button>
         }
