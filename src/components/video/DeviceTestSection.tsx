@@ -117,7 +117,7 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
 
       <div className="flex w-full max-w-214.5 flex-col gap-4 px-4 mt-6 md:mt-12 md:flex-row md:px-0">
         <div className="flex flex-1 flex-col gap-2">
-          <label className="text-body-m-bold text-black/60 ml-1">웹캠</label>
+          <label className="text-body-m-bold text-white ml-1">웹캠</label>
           <Dropdown
             trigger={renderTrigger('웹캠', selectedVideo, 'videoinput')}
             items={devices
@@ -137,7 +137,7 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
         </div>
 
         <div className="flex flex-1 flex-col gap-2">
-          <label className="text-body-m-bold text-black/60 ml-1">마이크</label>
+          <label className="text-body-m-bold text-white ml-1">마이크</label>
           <Dropdown
             trigger={renderTrigger('마이크', selectedAudio, 'audioinput')}
             items={devices
@@ -153,7 +153,7 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
           />
           <div className="mt-2 flex flex-col gap-2">
             <VolumeIndicator volume={volume} />
-            <p className="text-caption text-black/40">또랑또랑한 목소리를 들려주세요.</p>
+            <p className="text-caption text-gray-600">또랑또랑한 목소리를 들려주세요.</p>
           </div>
         </div>
       </div>
