@@ -28,7 +28,14 @@ export default function SlideViewer({ isLoading }: SlideViewerProps) {
         ) : (
           thumb && (
             <div className="relative mx-auto w-fit shadow-sm overflow-hidden rounded-lg">
-              <SlideImage key={thumb} src={thumb} alt={title} maxHeight={SLIDE_MAX_HEIGHT} />
+              <SlideImage
+                src={thumb}
+                alt={title}
+                maxHeight={SLIDE_MAX_HEIGHT}
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
+              />
             </div>
           )
         )}
