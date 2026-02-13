@@ -194,10 +194,11 @@ function PresentationCard(props: CardProps) {
               >
                 <Dropdown
                   trigger={({ isOpen }) => (
-                    <div className="p-2 -m-2">
+                    <div className="p-2 -m-2" aria-label="더보기">
                       <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-400')} />
                     </div>
                   )}
+                  ariaLabel="더보기"
                   items={dropdownItems}
                   position="bottom"
                   align="end"
