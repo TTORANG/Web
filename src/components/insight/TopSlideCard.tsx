@@ -44,7 +44,7 @@ export default function TopSlideCard({ title, thumbUrl, reactionMetrics }: TopSl
             </div>
           ))}
           {topReactions.length === 0 && (
-            <div className="text-body-s text-gray-400">아직 반응이 없어요.</div>
+            <div className="text-body-s text-gray-600">아직 반응이 없어요.</div>
           )}
         </div>
       </div>
