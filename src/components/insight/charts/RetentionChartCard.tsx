@@ -23,7 +23,7 @@ export function RetentionChartCard({ title, data, isVideo }: Props) {
     <div className="flex w-full flex-col gap-6 rounded-lg border border-gray-200 bg-white px-5 pb-8 pt-4">
       <h3 className="text-body-l-bold text-gray-800">{title}</h3>
 
-      <div className="h-[300px] w-full min-w-0 px-6">
+      <div className="h-[300px] w-full min-w-0 px-0 md:px-6">
         {data.length > 0 ? (
           <ResponsiveContainer width="100%" height={300} minWidth={0}>
             <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>

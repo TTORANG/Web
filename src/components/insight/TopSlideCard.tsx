@@ -12,7 +12,7 @@ export default function TopSlideCard({ title, thumbUrl, reactionMetrics }: TopSl
   const topReactions = reactionMetrics.slice(0, 2);
 
   return (
-    <div className="w-50.75 overflow-hidden rounded-lg border border-gray-200">
+    <div className="w-full overflow-hidden rounded-lg border border-gray-200 sm:w-50.75">
       {/* 썸네일 */}
       {thumbUrl ? (
         <img

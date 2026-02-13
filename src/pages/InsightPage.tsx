@@ -11,7 +11,7 @@ import { useInsightPageModel } from '@/hooks/useInsightPageModel';
 
 function InsightPageSkeleton() {
   return (
-    <div className="flex flex-col gap-6 px-18 py-8">
+    <div className="flex flex-col gap-6 px-4 py-6 md:px-18 md:py-8">
       <div className="flex flex-col gap-2">
         <Skeleton width={140} height={20} />
         <Skeleton width={220} height={14} />
@@ -22,7 +22,7 @@ function InsightPageSkeleton() {
           {[0, 1, 2, 3].map((idx) => (
             <div
               key={idx}
-              className="flex min-w-60 flex-1 basis-78 flex-col gap-3 rounded-lg border border-gray-200 bg-white px-5 py-4"
+              className="flex min-w-0 flex-1 basis-full flex-col gap-3 rounded-lg border border-gray-200 bg-white px-5 py-4 sm:min-w-60 sm:basis-78"
             >
               <Skeleton width="50%" height={14} />
               <Skeleton width="40%" height={22} />
@@ -35,7 +35,7 @@ function InsightPageSkeleton() {
           {[0, 1].map((idx) => (
             <div
               key={idx}
-              className="flex min-w-80 flex-1 basis-160 flex-col gap-3 rounded-lg border border-gray-200 bg-white px-5 py-4"
+              className="flex min-w-0 flex-1 basis-full flex-col gap-3 rounded-lg border border-gray-200 bg-white px-5 py-4 lg:basis-160"
             >
               <Skeleton width="40%" height={18} />
               {[0, 1, 2].map((row) => (
@@ -99,7 +99,7 @@ export default function InsightPage() {
       {m.isLoading ? (
         <InsightPageSkeleton />
       ) : (
-        <div className="flex flex-col gap-6 px-18 py-8">
+        <div className="flex flex-col gap-6 px-4 py-6 md:px-18 md:py-8">
           {m.isError && (
             <div className="rounded-lg border border-error/20 bg-error/10 px-4 py-3 text-body-s text-error">
               데이터를 불러오는 중 문제가 발생했습니다.
