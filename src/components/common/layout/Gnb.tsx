@@ -22,7 +22,7 @@ export function Gnb() {
 
   return (
     <nav
-      className="relative flex h-full w-full items-center justify-center md:h-15 md:w-[18.75rem]"
+      className="relative flex h-full w-full items-center justify-center md:h-15 md:w-75"
       role="tablist"
       aria-label="네비게이션 메뉴"
     >
