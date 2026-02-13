@@ -66,7 +66,12 @@ export default function SlidePage() {
 
   return (
     <div className="h-full bg-gray-100">
-      <div className="hidden min-[1024px]:flex h-full gap-12 pl-14 pr-20 pt-6">
+      <div
+        role="tabpanel"
+        id="tabpanel-slide"
+        aria-labelledby="tab-slide"
+        className="hidden min-[1024px]:flex h-full gap-12 pl-14 pr-20 pt-6"
+      >
         <SlideList slides={slides} currentSlideId={currentSlide?.slideId} isLoading={isLoading} />
 
         <main className="flex-1 h-full min-w-0 overflow-hidden">
@@ -74,7 +79,12 @@ export default function SlidePage() {
         </main>
       </div>
 
-      <div className="flex min-[1024px]:hidden h-full flex-col px-4 py-4">
+      <div
+        role="tabpanel"
+        id="tabpanel-slide-mobile"
+        aria-labelledby="tab-slide"
+        className="flex min-[1024px]:hidden h-full flex-col px-4 py-4"
+      >
         <div className="flex items-center justify-between pb-3">
           <button
             type="button"
