@@ -1,19 +1,18 @@
 import { useEffect } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { SlideList, SlideWorkspace } from '@/components/slide';
-import { setLastSlideId } from '@/constants/navigation';
+import { getTabPath, setLastSlideId } from '@/constants/navigation';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { showToast } from '@/utils/toast';
 
 export default function SlidePage() {
-  const { projectId } = useParams<{ projectId: string }>();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const { projectId, slideId: routeSlideId } = useParams<{ projectId: string; slideId?: string }>();
+  const navigate = useNavigate();
 
   const { data: slides, isLoading, isError } = useSlides(projectId ?? '');
 
-  const slideIdParam = searchParams.get('slideId');
-  const currentSlide = slides?.find((s) => s.slideId === slideIdParam) ?? slides?.[0];
+  const currentSlide = slides?.find((s) => s.slideId === routeSlideId) ?? slides?.[0];
   const currentIndex = currentSlide
     ? (slides?.findIndex((s) => s.slideId === currentSlide.slideId) ?? -1)
     : -1;
@@ -33,16 +32,12 @@ export default function SlidePage() {
    * URL에 slideId가 없거나 유효하지 않은 경우, 첫 번째 슬라이드(또는 기본값)로 리다이렉트 (replace)
    */
   useEffect(() => {
-    if (!isLoading && slides && slides.length > 0) {
-      if (!slideIdParam) {
-        // slideId가 아예 없으면 첫 번째 슬라이드로
-        setSearchParams({ slideId: slides[0].slideId }, { replace: true });
-      } else if (!slides.find((s) => s.slideId === slideIdParam)) {
-        // slideId가 있지만 목록에 없으면 첫 번째 슬라이드로
-        setSearchParams({ slideId: slides[0].slideId }, { replace: true });
-      }
+    if (!projectId || isLoading || !slides || slides.length === 0) return;
+
+    if (!routeSlideId || !slides.find((s) => s.slideId === routeSlideId)) {
+      navigate(getTabPath(projectId, 'slide', slides[0].slideId), { replace: true });
     }
-  }, [isLoading, slides, slideIdParam, setSearchParams]);
+  }, [isLoading, navigate, projectId, routeSlideId, slides]);
 
   /**
    * 탭 이동(영상/인사이트 → 슬라이드) 후 다시 돌아왔을 때
@@ -55,13 +50,13 @@ export default function SlidePage() {
   }, [projectId, currentSlide?.slideId]);
 
   const goPrev = () => {
-    if (!slides || !hasPrev) return;
-    setSearchParams({ slideId: slides[currentIndex - 1].slideId }, { replace: true });
+    if (!slides || !hasPrev || !projectId) return;
+    navigate(getTabPath(projectId, 'slide', slides[currentIndex - 1].slideId), { replace: true });
   };
 
   const goNext = () => {
-    if (!slides || !hasNext) return;
-    setSearchParams({ slideId: slides[currentIndex + 1].slideId }, { replace: true });
+    if (!slides || !hasNext || !projectId) return;
+    navigate(getTabPath(projectId, 'slide', slides[currentIndex + 1].slideId), { replace: true });
   };
 
   return (

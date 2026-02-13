@@ -7,8 +7,9 @@
  * 위/아래 화살표 키로 슬라이드 간 이동이 가능합니다.
  */
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
+import { getTabPath } from '@/constants/navigation';
 import { useHotkey } from '@/hooks';
 import type { SlideListItem } from '@/types/slide';
 
@@ -33,16 +34,17 @@ interface SlideListProps {
  */
 export default function SlideList({ slides, currentSlideId, isLoading }: SlideListProps) {
   const navigate = useNavigate();
+  const { projectId } = useParams<{ projectId: string }>();
   const listRef = useRef<HTMLDivElement>(null);
 
   const currentIndex = slides?.findIndex((slide) => slide.slideId === currentSlideId) ?? -1;
 
   const navigateToSlide = useCallback(
     (index: number) => {
-      if (!slides || index < 0 || index >= slides.length) return;
-      navigate({ search: `?slideId=${slides[index].slideId}` }, { replace: true });
+      if (!slides || !projectId || index < 0 || index >= slides.length) return;
+      navigate(getTabPath(projectId, 'slide', slides[index].slideId), { replace: true });
     },
-    [slides, navigate],
+    [navigate, projectId, slides],
   );
 
   const keyMap = useMemo(
