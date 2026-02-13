@@ -293,7 +293,7 @@ function PresentationList(props: ListProps) {
           <div onClick={(e) => e.stopPropagation()} className="-m-2 shrink-0">
             <Dropdown
               trigger={({ isOpen }) => (
-                <div className="p-2">
+                <div className="p-2" aria-label="더보기">
                   <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-600')} />
                 </div>
               )}
