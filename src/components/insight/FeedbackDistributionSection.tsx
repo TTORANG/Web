@@ -22,7 +22,7 @@ export default function FeedbackDistributionSection({
     <div className="flex min-w-0 flex-1 flex-col gap-6">
       <div className="flex items-center justify-between">
         <h3 className="text-body-l-bold text-gray-800">슬라이드 이모지 피드백 분포</h3>
-        <span className="text-body-l-bold text-main">총 {total}개</span>
+        <span className="text-body-l-bold text-main-variant2">총 {total}개</span>
       </div>
       <div className="flex flex-col gap-6">
         {reactions.map((react) => {

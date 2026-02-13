@@ -94,7 +94,7 @@ export function RetentionChartCard({ title, data, isVideo }: Props) {
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-gray-400">
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-gray-600">
             <p>데이터를 분석 중이거나 결과가 없습니다.</p>
           </div>
         )}

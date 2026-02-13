@@ -15,6 +15,7 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "audit:mobile-tablet": "node ./scripts/audit/mobile-tablet-audit.mjs",
     "prepare": "husky"
   },
   "dependencies": {
@@ -45,8 +46,10 @@
     ]
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.1",
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
+    "@playwright/test": "^1.58.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
@@ -69,6 +72,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "msw": "^2.12.7",
+    "playwright": "^1.58.2",
     "prettier": "3.7.4",
     "typescript": "~5.9.3",
     "vite": "^7.2.4",

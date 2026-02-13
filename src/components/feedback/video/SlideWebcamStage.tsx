@@ -286,7 +286,7 @@ export default function SlideWebcamStage({
   if (!webcamVideoUrl) {
     return (
       <div className="flex-1 min-w-0 flex items-center justify-center bg-gray-900 rounded-xl aspect-video">
-        <span className="text-gray-400">비디오를 불러오는 중...</span>
+        <span className="text-gray-300">비디오를 불러오는 중...</span>
       </div>
     );
   }

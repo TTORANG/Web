@@ -227,7 +227,7 @@ export const RecordingSection = ({
               </div>
 
               <div className="absolute right-5 top-4 flex flex-col items-start rounded-lg bg-white/65 px-4 pb-2 pt-2.5 z-10">
-                <span className="text-caption-bold text-gray-600">현재 슬라이드</span>
+                <span className="text-caption-bold text-gray-800">현재 슬라이드</span>
                 <span className="text-body-l-bold text-black">
                   {formatTime(slideProgress[currentPage]?.duration || 0)}
                 </span>
@@ -249,7 +249,7 @@ export const RecordingSection = ({
               </button>
             </div>
           </div>
-          <p className="pb-7 text-center text-body-s text-gray-600">
+          <p className="pb-7 text-center text-body-s text-gray-800">
             스페이스바 또는 화살표를 클릭하여 다음 슬라이드로 이동하세요
           </p>
         </section>
@@ -261,7 +261,7 @@ export const RecordingSection = ({
               {currentPage < totalPages ? (
                 <SlideImage src={slidesList[currentPage]?.url} alt="다음 슬라이드" />
               ) : (
-                <div className="flex h-full items-center justify-center text-body-m text-gray-600">
+                <div className="flex h-full items-center justify-center text-body-m text-gray-800">
                   마지막 슬라이드
                 </div>
               )}
