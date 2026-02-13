@@ -42,8 +42,10 @@ export default function SlideNavigation({
       className={`${isSpread ? 'flex w-full items-center justify-between' : 'inline-flex items-center gap-4'} shrink-0 ${className ?? ''}`}
     >
       <button
+        type="button"
         onClick={onPrev}
         disabled={isFirst}
+        aria-label="이전 슬라이드"
         className={clsx(
           'grid size-6 shrink-0 place-items-center rounded-full border transition focus-visible:outline-2 focus-visible:outline-main',
           isFirst
@@ -64,8 +66,10 @@ export default function SlideNavigation({
       </div>
 
       <button
+        type="button"
         onClick={onNext}
         disabled={isLast}
+        aria-label="다음 슬라이드"
         className={clsx(
           'grid size-6 shrink-0 place-items-center rounded-full border transition focus-visible:outline-2 focus-visible:outline-main',
           isLast

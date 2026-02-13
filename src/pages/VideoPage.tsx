@@ -69,7 +69,8 @@ const VideoPage = () => {
   return (
     <div
       role="tabpanel"
-      id="tabpanel-video"
+      id="tabpanel-videos"
+      aria-labelledby="tab-videos"
       className="relative h-full w-full overflow-y-auto bg-gray-100"
     >
       {selectedVideo && (

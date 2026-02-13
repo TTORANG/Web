@@ -94,6 +94,7 @@ export default function InsightPage() {
       role="tabpanel"
       id="tabpanel-insight"
       aria-labelledby="tab-insight"
+      tabIndex={0}
       className="h-full overflow-y-auto bg-gray-100"
     >
       {m.isLoading ? (
