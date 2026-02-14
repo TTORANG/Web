@@ -20,7 +20,7 @@ export function useFeedbackHeaderInfo() {
   const { data: sharedContent, isLoading, isError } = useSharedContent(shareToken);
 
   const info = useMemo(() => {
-    const title = sharedContent?.projectContent?.title?.trim() || FALLBACK_TITLE;
+    const title = sharedContent?.presentationContent?.title?.trim() || FALLBACK_TITLE;
 
     const publisherName = sharedContent?.shareInfo?.publisherName?.trim() || FALLBACK_PUBLISHER;
 
