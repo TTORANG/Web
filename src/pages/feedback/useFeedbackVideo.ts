@@ -14,7 +14,7 @@ import { useVideoReactions } from '@/hooks/useVideoReactions';
 import { useAuthStore } from '@/stores/authStore';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Comment } from '@/types/comment';
-import type { ReadSharedContentData, SharedProjectComment } from '@/types/share';
+import type { ReadSharedContentData, SharedPresentationComment } from '@/types/share';
 import type { SlideDetail } from '@/types/slide';
 import type { VideoTimestampFeedback } from '@/types/video';
 import { formatVideoTimestamp } from '@/utils/format';
@@ -125,7 +125,7 @@ function toNumericId(value: string | number | null | undefined): number | null {
 }
 
 function mapSharedCommentsToFeedbacks(
-  rawComments: SharedProjectComment[],
+  rawComments: SharedPresentationComment[],
 ): VideoTimestampFeedback[] {
   if (!rawComments.length) return [];
 
@@ -251,7 +251,7 @@ export function useFeedbackVideo(
       if (newCommentServerId && latestComments) {
         // 서버에서 받은 댓글 목록에서 방금 작성한 댓글 찾기
         const newComment = latestComments.find(
-          (c: SharedProjectComment) => c.commentId === newCommentServerId,
+          (c: SharedPresentationComment) => c.commentId === newCommentServerId,
         );
         if (newComment) {
           setScrollToCommentId(newComment.commentId);
@@ -334,10 +334,10 @@ export function useFeedbackVideo(
     const loadFromSharedContent = async (content: ReadSharedContentData) => {
       // 인증 처리는 SharePage에서 수행 (중복 제거)
 
-      const sharedSlides = normalizeSharedSlides(content.projectContent.slides);
-      const sharedComments = content.projectContent.comments;
+      const sharedSlides = normalizeSharedSlides(content.presentationContent.slides);
+      const sharedComments = content.presentationContent.comments;
       const sharedFeedbacks = mapSharedCommentsToFeedbacks(sharedComments);
-      const fallbackTimelineSlides = content.projectContent.slides
+      const fallbackTimelineSlides = content.presentationContent.slides
         .filter(
           (slide) =>
             typeof slide.timestampMs === 'number' &&
@@ -349,10 +349,10 @@ export function useFeedbackVideo(
           timestampMs: normalizeTimestampMs(slide.timestampMs),
         }));
 
-      const videoId = content.projectContent.video?.videoId ?? '';
+      const videoId = content.presentationContent.video?.videoId ?? '';
       const normalizedVideoId = String(videoId || DEFAULT_VIDEO_ID);
-      let videoUrl = toPlayableVideoUrl(content.projectContent.video?.videoUrl);
-      let videoTitle = content.projectContent.title || '공유 영상';
+      let videoUrl = toPlayableVideoUrl(content.presentationContent.video?.videoUrl);
+      let videoTitle = content.presentationContent.title || '공유 영상';
       let duration = FALLBACK_VIDEO_DURATION_SECONDS;
       let timelineSlides: Array<{ slideId: string; timestampMs: number }> = fallbackTimelineSlides;
 

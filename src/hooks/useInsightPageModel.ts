@@ -12,7 +12,7 @@ import type {
 } from '@/api/dto/analytics.dto';
 import type { ChartDataPoint, InsightModel, InsightTopSlide } from '@/components/insight/types';
 import {
-  useProjectAnalyticsSummary,
+  usePresentationAnalyticsSummary,
   useRecentComments,
   useSlideAnalytics,
   useSlideRetention,
@@ -44,7 +44,7 @@ export function useInsightPageModel(): InsightModel {
 
   const slidesQuery = useSlides(projectIdStr);
   const slideAnalyticsQuery = useSlideAnalytics(projectIdNum);
-  const summaryAnalyticsQuery = useProjectAnalyticsSummary(projectIdNum);
+  const summaryAnalyticsQuery = usePresentationAnalyticsSummary(projectIdNum);
   const recentCommentsQuery = useRecentComments(projectIdNum);
 
   const { data: slides } = slidesQuery;

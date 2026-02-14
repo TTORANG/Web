@@ -2,7 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 
 import {
   type RecordExitRequest,
-  getProjectAnalyticsSummary,
+  getPresentationAnalyticsSummary,
   getRecentComments,
   getSlideAnalytics,
   getSlideRetention,
@@ -54,10 +54,10 @@ export function useVideoAnalytics(videoId: number) {
  *
  * @param projectId - 프로젝트 ID
  */
-export function useProjectAnalyticsSummary(projectId: number) {
+export function usePresentationAnalyticsSummary(projectId: number) {
   return useQuery({
     queryKey: queryKeys.analytics.summary(projectId),
-    queryFn: () => getProjectAnalyticsSummary(projectId),
+    queryFn: () => getPresentationAnalyticsSummary(projectId),
     enabled: !!projectId,
   });
 }

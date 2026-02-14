@@ -172,7 +172,7 @@ export interface CreateFinishVideoResponseDto {
  * 프로젝트별 영상 목록 조회 응답
  * GET /presentations/:projectId/videos
  */
-export interface ReadProjectVideosResponseDto {
+export interface ReadPresentationVideosResponseDto {
   videos: VideoListItemDto[];
   total?: number; // 페이지네이션용 (옵션)
 }

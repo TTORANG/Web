@@ -44,7 +44,7 @@ export type {
 export type {
   CreateStartVideoRequestDto,
   CreateStartVideoResponseDto,
-  ReadProjectVideosResponseDto,
+  ReadPresentationVideosResponseDto,
   ReadVideoDetailResponseDto,
   UpdateVideoRequestDto,
   UpdateVideoResponseDto,

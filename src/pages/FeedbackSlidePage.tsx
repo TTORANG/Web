@@ -33,8 +33,8 @@ export default function FeedbackSlidePage({
 }: FeedbackSlidePageProps) {
   const { shareToken } = useParams<{ shareToken: string }>();
   const { state, actions } = useFeedbackSlide({
-    sharedSlides: sharedContent.projectContent.slides,
-    sharedComments: sharedContent.projectContent.comments,
+    sharedSlides: sharedContent.presentationContent.slides,
+    sharedComments: sharedContent.presentationContent.comments,
     shareToken,
     onShareExitSnapshotChange,
   });
