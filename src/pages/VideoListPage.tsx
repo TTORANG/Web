@@ -4,7 +4,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { videosApi } from '@/api/endpoints/videos';
-import { CardView, ListView } from '@/components/common';
+import { CardView, ListView, Spinner } from '@/components/common';
 import PresentationCard from '@/components/presentation/PresentationCard';
 import PresentationHeader from '@/components/presentation/PresentationHeader';
 import PresentationList from '@/components/presentation/PresentationList';
@@ -29,6 +29,7 @@ export default function VideoListPage() {
   const [sort, setSort] = useState<SortMode>('recent');
   const [filter, setFilter] = useState<FilterMode>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('card');
+  const [hasCompletedInitialLoad, setHasCompletedInitialLoad] = useState(false);
 
   // 삭제 상태
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -57,6 +58,13 @@ export default function VideoListPage() {
 
   const isDebouncing = query.trim() !== appliedQuery.trim();
   const hasAppliedQuery = appliedQuery.trim().length > 0;
+
+  // 최초 진입에서는 스켈레톤 대신 중앙 스피너를 보여 깜빡임을 줄입니다.
+  useEffect(() => {
+    if (!isLoading && !hasCompletedInitialLoad) {
+      setHasCompletedInitialLoad(true);
+    }
+  }, [isLoading, hasCompletedInitialLoad]);
 
   // 업로드 성공 → 토스트 + state 정리 + refetch
   useEffect(() => {
@@ -273,8 +281,10 @@ export default function VideoListPage() {
     );
   }
 
-  const showEmptyRecording = !isLoading && totalCount === 0 && !hasAppliedQuery;
-  const showSkeletonUI = isLoading || isDebouncing;
+  const showInitialLoadingSpinner = !hasCompletedInitialLoad && isLoading;
+  const showEmptyRecording =
+    !showInitialLoadingSpinner && !isLoading && totalCount === 0 && !hasAppliedQuery;
+  const showSkeletonUI = !showInitialLoadingSpinner && (isLoading || isDebouncing);
 
   return (
     <div
@@ -290,7 +300,11 @@ export default function VideoListPage() {
         onConfirm={handleConfirmDelete}
       />
 
-      {showEmptyRecording ? (
+      {showInitialLoadingSpinner ? (
+        <div className="flex h-full items-center justify-center">
+          <Spinner size={40} />
+        </div>
+      ) : showEmptyRecording ? (
         <div className="flex h-full items-center justify-center">
           <RecordingEmptySection onStart={handleStartRecording} />
         </div>

@@ -55,6 +55,7 @@ export const router = createBrowserRouter([
     path: '/:projectId',
     element: (
       <Layout
+        mobileTwoLineHeader
         left={
           <>
             <Logo />
@@ -63,7 +64,7 @@ export const router = createBrowserRouter([
         }
         center={<Gnb />}
         right={
-          <div className="flex items-center gap-3 md:gap-8">
+          <div className="flex max-w-full items-center gap-2 md:gap-8">
             <ShareButton />
             <LoginButton />
           </div>
@@ -72,6 +73,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <Navigate to="slide" replace /> },
+      { path: 'slide/:slideId', element: withRouteSuspense(<SlidePage />) },
       { path: 'slide', element: withRouteSuspense(<SlidePage />) },
       { path: 'insight', element: withRouteSuspense(<InsightPage />) },
       { path: 'videos', element: withRouteSuspense(<VideoListPage />) },

@@ -5,8 +5,20 @@ interface SummaryStatsSectionProps {
 }
 
 export default function SummaryStatsSection({ stats }: SummaryStatsSectionProps) {
+  const mobileColsClass =
+    stats.length <= 1 ? 'grid-cols-1' : stats.length === 3 ? 'grid-cols-3' : 'grid-cols-2';
+
+  const desktopColsClass =
+    stats.length <= 1
+      ? 'lg:grid-cols-1'
+      : stats.length === 2
+        ? 'lg:grid-cols-2'
+        : stats.length === 3
+          ? 'lg:grid-cols-3'
+          : 'lg:grid-cols-4';
+
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className={`grid ${mobileColsClass} gap-4 ${desktopColsClass}`}>
       {stats.map((stat, idx) => (
         <div
           key={idx}

@@ -11,6 +11,7 @@ import {
   RecordingSection,
   StopButton,
 } from '@/components/video';
+import { getTabPath } from '@/constants/navigation';
 import { usePresentation } from '@/hooks/queries/usePresentations';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { useVideoUpload } from '@/hooks/useVideoUpload';
@@ -144,7 +145,12 @@ export default function VideoRecordPage() {
     setCamStream(null);
     setIsExitModalOpen(false);
     toast.dismiss(UPLOAD_TOAST_ID);
-    navigate(`/${projectId}/slide`);
+    if (!projectId) {
+      navigate('/');
+      return;
+    }
+
+    navigate(getTabPath(projectId, 'slide'));
   };
 
   return (

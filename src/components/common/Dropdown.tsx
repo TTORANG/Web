@@ -188,7 +188,6 @@ export function Dropdown({
   return (
     <div ref={dropdownRef} className={clsx('relative', open && 'z-[70]', className)}>
       <div
-        className="inline-flex"
         role={useButtonSemantics ? 'button' : undefined}
         tabIndex={useButtonSemantics ? 0 : undefined}
         aria-label={useButtonSemantics ? ariaLabel : undefined}

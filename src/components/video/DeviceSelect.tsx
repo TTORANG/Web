@@ -30,7 +30,10 @@ const DeviceSelect = ({ label, options, selectedValue, onChange }: DeviceSelectP
         className="w-full"
         menuClassName="w-full"
         trigger={({ isOpen }) => (
-          <div className="flex w-full cursor-pointer items-center justify-between rounded-md bg-white p-3 text-sm text-black">
+          <button
+            type="button"
+            className="flex w-full items-center justify-between rounded-md bg-white p-3 text-sm text-black"
+          >
             <span className="truncate">{currentLabel}</span>
             <svg
               className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -41,7 +44,7 @@ const DeviceSelect = ({ label, options, selectedValue, onChange }: DeviceSelectP
             >
               <path d="M1 1L6 6L11 1" stroke="#1A1A1A" strokeWidth="2" strokeLinecap="round" />
             </svg>
-          </div>
+          </button>
         )}
         items={dropdownItems}
       />

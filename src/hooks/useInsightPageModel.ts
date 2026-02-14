@@ -52,8 +52,8 @@ export function useInsightPageModel(): InsightModel {
   const { data: summaryAnalytics } = summaryAnalyticsQuery;
   const { data: recentCommentsData } = recentCommentsQuery;
 
-  const videoIdStr = summaryAnalytics?.videoIds?.[summaryAnalytics.videoIds.length - 1] ?? '';
-  const videoIdNum = videoIdStr ? Number(videoIdStr) : 0;
+  const latestVideoId = summaryAnalytics?.videoIds?.[summaryAnalytics.videoIds.length - 1] ?? null;
+  const videoIdNum = latestVideoId ? Number(latestVideoId) : 0;
   const hasVideo = !!videoIdNum;
 
   const videoAnalyticsQuery = useVideoAnalytics(videoIdNum);
@@ -102,6 +102,62 @@ export function useInsightPageModel(): InsightModel {
   }, [slideList]);
 
   const getThumb = (slideIndex: number) => slideList[slideIndex]?.imageUrl;
+  const getSlideIdByIndex = (slideIndex: number) => slideList[slideIndex]?.slideId ?? null;
+
+  const slideSeekSecondsByIndex = useMemo(() => {
+    const timelineItems = videoSlidesTimeline?.slides ?? [];
+    if (!timelineItems.length) {
+      return new Map<number, number>();
+    }
+
+    const { slideIndexById } = slideDataMaps;
+    const mapped = new Map<number, number>();
+    const maxSlideIndex = Math.max(0, slideList.length - 1);
+
+    timelineItems
+      .slice()
+      .filter((item) => item.slideId)
+      .sort((a, b) => a.timestampMs - b.timestampMs)
+      .forEach((item, timelineIndex) => {
+        // slideId 매칭이 안되는 경우에도 타임라인 순서를 기준으로 안전하게 보정
+        const fallbackIndex = Math.min(timelineIndex, maxSlideIndex);
+        const slideIndex = slideIndexById.get(item.slideId) ?? fallbackIndex;
+        if (mapped.has(slideIndex)) {
+          return;
+        }
+
+        mapped.set(slideIndex, Math.max(0, item.timestampMs / 1000));
+      });
+
+    return mapped;
+  }, [slideDataMaps, slideList.length, videoSlidesTimeline]);
+
+  const getSeekSecondsForSlide = (slideIndex: number): number | null => {
+    const mapped = slideSeekSecondsByIndex.get(slideIndex);
+    if (mapped !== undefined) {
+      return mapped;
+    }
+
+    if (slideSeekSecondsByIndex.size > 0) {
+      const entries = [...slideSeekSecondsByIndex.entries()].sort((a, b) => a[0] - b[0]);
+      const previous = entries
+        .slice()
+        .reverse()
+        .find(([mappedIndex]) => mappedIndex < slideIndex);
+
+      if (previous) {
+        return previous[1];
+      }
+
+      return entries[0]?.[1] ?? 0;
+    }
+
+    if (slideIndex === 0) {
+      return 0;
+    }
+
+    return null;
+  };
 
   // ---- Top slides ----
   const topSlides = useMemo<InsightTopSlide[]>(() => {
@@ -211,6 +267,7 @@ export function useInsightPageModel(): InsightModel {
           desc: slideList.length ? `슬라이드 ${slideNum}` : '슬라이드',
           count: item.exitCount,
           slideIndex,
+          seconds,
         };
       });
   }, [dropOffTimeline, slideList, videoExitAnalytics]);
@@ -271,6 +328,7 @@ export function useInsightPageModel(): InsightModel {
   return {
     projectIdStr,
     projectIdNum,
+    latestVideoId,
     hasVideo,
 
     summaryStats,
@@ -286,6 +344,8 @@ export function useInsightPageModel(): InsightModel {
     topSlideReactionSummaries,
 
     getThumb,
+    getSeekSecondsForSlide,
+    getSlideIdByIndex,
 
     recentCommentsData,
 
