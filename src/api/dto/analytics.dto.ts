@@ -103,7 +103,7 @@ export interface ReadVideoExitAnalyticsResponseDto {
 /**
  * 프로젝트 분석 요약 조회 Dto
  */
-export interface ReadProjectAnalyticsSummaryDto {
+export interface ReadPresentationAnalyticsSummaryDto {
   videoIds: string[];
   totalViews: number;
   avgDurationSeconds: number;

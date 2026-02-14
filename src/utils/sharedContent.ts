@@ -2,7 +2,7 @@
  * @file sharedContent.ts
  * @description 공유 콘텐츠 관련 공통 유틸리티
  */
-import type { SharedProjectSlide } from '@/types/share';
+import type { SharedPresentationSlide } from '@/types/share';
 import type { SlideDetail } from '@/types/slide';
 
 export const SHARED_PROJECT_ID = 'shared';
@@ -16,7 +16,7 @@ export function toNumber(value: string | number | undefined, fallback: number): 
   return fallback;
 }
 
-export function normalizeSharedSlides(rawSlides: SharedProjectSlide[]): SlideDetail[] {
+export function normalizeSharedSlides(rawSlides: SharedPresentationSlide[]): SlideDetail[] {
   const now = new Date().toISOString();
 
   return rawSlides

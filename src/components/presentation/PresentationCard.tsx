@@ -177,6 +177,7 @@ function PresentationCard(props: CardProps) {
           <div className="min-h-18 text-left">
             <div className="flex justify-between gap-2">
               <div className="flex-1 min-w-0">
+                {/* 제목 */}
                 <h3 className="text-body-m-bold text-gray-800 line-clamp-2">
                   <HighlightText
                     text={displayTitle}
@@ -184,9 +185,11 @@ function PresentationCard(props: CardProps) {
                     highlightClassName="bg-transparent text-main"
                   />
                 </h3>
+                {/* 업데이트된 시간 */}
                 <p className="mt-1 text-body-s text-gray-600">{formatRelativeTime(updatedAt)}</p>
               </div>
 
+              {/* 더보기 */}
               <div
                 className="shrink-0 mt-1"
                 onClick={(e) => e.stopPropagation()}
@@ -210,7 +213,7 @@ function PresentationCard(props: CardProps) {
 
           <div
             className={clsx(
-              'mt-5 flex flex-wrap items-center justify-between gap-x-1 gap-y-2 text-caption text-gray-600',
+              'md:mt-5 mt-2 flex flex-wrap items-center justify-between gap-x-1 gap-y-2 text-caption text-gray-600',
               isProcessing && 'invisible pointer-events-none',
             )}
             aria-hidden={isProcessing}
@@ -220,14 +223,14 @@ function PresentationCard(props: CardProps) {
               {mode === 'slide' && (
                 <>
                   {minutes !== null && (
-                    <div className="gap-1 flex items-center">
+                    <div className="flex items-center">
                       <RecentIcon className="w-4 h-4" />
-                      <span className="ml-1">{minutes} 분</span>
+                      <span className="ml-1">{minutes}분</span>
                     </div>
                   )}
                   <div className="flex items-center">
                     <PageCountIcon className="w-4 h-4" />
-                    <span className="ml-1">{slideCount} 장</span>
+                    <span className="ml-1">{slideCount}장</span>
                   </div>
                 </>
               )}

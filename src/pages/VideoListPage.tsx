@@ -9,7 +9,7 @@ import PresentationCard from '@/components/presentation/PresentationCard';
 import PresentationHeader from '@/components/presentation/PresentationHeader';
 import PresentationList from '@/components/presentation/PresentationList';
 import { DeleteVideoModal, RecordingEmptySection } from '@/components/video';
-import { useProjectVideos } from '@/hooks/useProjectVideos';
+import { usePresentationVideos } from '@/hooks/usePresentationVideos';
 import type { FilterMode, SortMode, ViewMode } from '@/types/home';
 import { showToast } from '@/utils/toast';
 
@@ -40,7 +40,7 @@ export default function VideoListPage() {
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
   const [thumbVersion, setThumbVersion] = useState<Record<string, number>>({});
 
-  const { data, isLoading, error, refetch } = useProjectVideos({
+  const { data, isLoading, error, refetch } = usePresentationVideos({
     projectId: projectId!,
     search: appliedQuery,
     filter,

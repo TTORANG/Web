@@ -7,7 +7,7 @@ import type {
   CreateFinishVideoResponseDto,
   CreateStartVideoRequestDto,
   CreateStartVideoResponseDto,
-  ReadProjectVideosResponseDto,
+  ReadPresentationVideosResponseDto,
   ReadVideoCommentsAllResponseDto,
   ReadVideoDetailResponseDto,
   ReadVideoSlidesResponseDto,
@@ -76,7 +76,7 @@ export const videosApi = {
     return apiClient.delete<ApiResponse<{ videoId: string }>>(`/videos/${numericId}`);
   },
 
-  getProjectVideos: (
+  getPresentationVideos: (
     projectId: string,
     params?: {
       search?: string;
@@ -92,7 +92,7 @@ export const videosApi = {
     const queryString = searchParams.toString();
     const url = `/presentations/${encodeURIComponent(projectId)}/videos${queryString ? `?${queryString}` : ''}`;
 
-    return apiClient.get<ApiResponse<ReadProjectVideosResponseDto>>(url);
+    return apiClient.get<ApiResponse<ReadPresentationVideosResponseDto>>(url);
   },
   /**
    * 영상 제목 및 생성일 조회

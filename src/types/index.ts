@@ -13,7 +13,7 @@ export type { SortMode, ViewMode, FilterMode } from './home';
 // Navigation
 export type { TabItem, TabKey } from './navigation';
 
-// Project
+// Presentation
 export type { Presentation } from './presentation';
 
 // Script
@@ -30,10 +30,10 @@ export type {
   SharedContentSummary,
   CreateShareLinkData,
   CreateShareLinkResponse,
-  SharedProjectSlide,
-  SharedProjectVideo,
-  SharedProjectComment,
-  SharedProjectCommentTargetType,
+  SharedPresentationSlide,
+  SharedPresentationVideo,
+  SharedPresentationComment,
+  SharedPresentationCommentTargetType,
   ReadSharedContentData,
   ReadSharedContentResponse,
   ReadSharedCommentsData,

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { RecordingEmptySection } from '@/components/video';
-import { useProjectVideos } from '@/hooks/useProjectVideos';
+import { usePresentationVideos } from '@/hooks/usePresentationVideos';
 import type { VideoPresentation } from '@/types/video';
 import { showToast } from '@/utils/toast';
 
@@ -27,7 +27,7 @@ const VideoPage = () => {
     data,
     isLoading,
     error: apiError,
-  } = useProjectVideos({
+  } = usePresentationVideos({
     projectId: projectId!,
     sort: 'recent',
     filter: 'all',

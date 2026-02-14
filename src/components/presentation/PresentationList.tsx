@@ -12,6 +12,7 @@ import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
 import { HighlightText } from '@/components/common/HighlightText';
 import ThumbnailImage from '@/components/common/ThumbnailImage';
 import { getTabPath } from '@/constants/navigation';
+import { useIsDesktop } from '@/hooks';
 import { usePresentationDeletion } from '@/hooks/usePresentationDeletion';
 import { useRename } from '@/hooks/useRename';
 import type { Presentation } from '@/types/presentation';
@@ -114,6 +115,7 @@ function PresentationList(props: ListProps) {
     highlightQuery = '',
   } = props;
   const mode = props.mode ?? 'slide';
+  const isDesktop = useIsDesktop();
 
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
@@ -225,87 +227,159 @@ function PresentationList(props: ListProps) {
         </div>
 
         {/* 본문 */}
-        <div className="flex flex-1 items-center justify-between pl-6 min-w-0">
-          <div className="flex flex-1 flex-col gap-0.5 min-w-0">
-            {/* 제목 */}
-            <div className="w-full text-body-m-bold text-gray-800 line-clamp-1">
-              <HighlightText
-                text={displayTitle}
-                query={highlightQuery}
-                highlightClassName="bg-transparent text-main"
-              />
+        {isDesktop ? (
+          // =========================
+          //          DESKTOP
+          // =========================
+          <div className="flex flex-1 items-center justify-between pl-6 min-w-0">
+            <div className="flex flex-1 flex-col gap-0.5 min-w-0">
+              {/* 제목 */}
+              <div className="w-full text-body-m-bold text-gray-800 line-clamp-1">
+                <HighlightText
+                  text={displayTitle}
+                  query={highlightQuery}
+                  highlightClassName="bg-transparent text-main"
+                />
+              </div>
+
+              <div className="flex gap-4">
+                {/* 업데이트된 날짜 */}
+                <div className="text-caption text-gray-600">{formatRelativeTime(updatedAt)}</div>
+
+                {/* 메타 정보 */}
+                <div
+                  className={clsx(
+                    'flex items-center gap-4 text-caption text-gray-600',
+                    isProcessing && 'invisible pointer-events-none',
+                  )}
+                  aria-hidden={isProcessing}
+                >
+                  {/* 소요 시간 */}
+                  {minutes !== null && (
+                    <span className="flex items-center gap-1.5">
+                      <RecentIcon className="w-4 h-4" />
+                      {minutes}분
+                    </span>
+                  )}
+
+                  {/* 구분선 */}
+                  <span className="h-3.5 w-px bg-gray-200" />
+
+                  {/* 슬라이드 수 & 피드백 정보 */}
+                  <div className="flex items-center gap-4">
+                    {mode === 'slide' && (
+                      <span className="flex items-center gap-1">
+                        <PageCountIcon className="w-4 h-4" />
+                        {slideCount} 장
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1">
+                      <CommentCountIcon className="w-4 h-4" />
+                      {commentCount ?? 0}
+                    </span>
+
+                    {isVideo && (
+                      <>
+                        <span className="flex items-center gap-1">
+                          <ReactionCountIcon className="w-4 h-4" />
+                          {reactionCount}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <ViewCountIcon className="w-4 h-4" />
+                          {viewCount}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="flex gap-4">
-              {/* 날짜 */}
+            {/* 더보기 */}
+            <div onClick={(e) => e.stopPropagation()} className="-m-2 shrink-0">
+              <Dropdown
+                trigger={({ isOpen }) => (
+                  <div className="p-2" aria-label="더보기">
+                    <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-600')} />
+                  </div>
+                )}
+                items={dropdownItems}
+                position="bottom"
+                align="end"
+                ariaLabel="더보기"
+                menuClassName="w-32"
+                onOpenChange={setIsMoreMenuOpen}
+              />
+            </div>
+          </div>
+        ) : (
+          // =========================
+          //           MOBILE
+          // =========================
+          <>
+            <div className="flex flex-1 flex-col gap-0.5 ml-2 min-w-0">
+              {/* 제목 */}
+              <div className="w-full text-body-m-bold text-gray-800 line-clamp-1">
+                <HighlightText
+                  text={displayTitle}
+                  query={highlightQuery}
+                  highlightClassName="bg-transparent text-main"
+                />
+              </div>
+
+              {/* 업데이트된 날짜 */}
               <div className="text-caption text-gray-600">{formatRelativeTime(updatedAt)}</div>
 
               {/* 메타 정보 */}
               <div
                 className={clsx(
-                  'flex items-center gap-4 text-caption text-gray-600',
+                  'flex flex-wrap items-center gap-2 text-caption text-gray-600',
                   isProcessing && 'invisible pointer-events-none',
                 )}
                 aria-hidden={isProcessing}
               >
                 {/* 소요 시간 */}
                 {minutes !== null && (
-                  <span className="flex items-center gap-1.5">
-                    <RecentIcon className="w-4 h-4" />
+                  <span className="flex items-center gap-0.5">
+                    <RecentIcon className="w-3 h-3" />
                     {minutes}분
                   </span>
                 )}
 
-                {/* 구분선 */}
-                <span className="h-3.5 w-px bg-gray-200" />
-
-                {/* 슬라이드 수 & 피드백 정보 */}
-                <div className="flex items-center gap-4">
-                  {mode === 'slide' && (
-                    <span className="flex items-center gap-1">
-                      <PageCountIcon className="w-4 h-4" />
-                      {slideCount} 장
-                    </span>
-                  )}
-                  <span className="flex items-center gap-1">
-                    <CommentCountIcon className="w-4 h-4" />
-                    {commentCount ?? 0}
+                {/* 슬라이드 수 */}
+                {mode === 'slide' && (
+                  <span className="flex items-center gap-0.5">
+                    <PageCountIcon className="w-3 h-3" />
+                    {slideCount}장
                   </span>
+                )}
 
-                  {isVideo && (
-                    <>
-                      <span className="flex items-center gap-1">
-                        <ReactionCountIcon className="w-4 h-4" />
-                        {reactionCount}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <ViewCountIcon className="w-4 h-4" />
-                        {viewCount}
-                      </span>
-                    </>
-                  )}
-                </div>
+                {/* 댓글 수 */}
+                <span className="flex items-center gap-0.5">
+                  <CommentCountIcon className="w-3 h-3" />
+                  {commentCount ?? 0}
+                </span>
               </div>
             </div>
-          </div>
 
-          {/* 더보기 */}
-          <div onClick={(e) => e.stopPropagation()} className="-m-2 shrink-0">
-            <Dropdown
-              trigger={({ isOpen }) => (
-                <div className="p-2" aria-label="더보기">
-                  <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-600')} />
-                </div>
-              )}
-              items={dropdownItems}
-              position="bottom"
-              align="end"
-              ariaLabel="더보기"
-              menuClassName="w-32"
-              onOpenChange={setIsMoreMenuOpen}
-            />
-          </div>
-        </div>
+            {/* 더보기 */}
+            <div onClick={(e) => e.stopPropagation()} className="-m-2 shrink-0">
+              <Dropdown
+                trigger={({ isOpen }) => (
+                  <div className="p-2" aria-label="더보기">
+                    <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-600')} />
+                  </div>
+                )}
+                items={dropdownItems}
+                position="bottom"
+                align="end"
+                ariaLabel="더보기"
+                menuClassName="w-32"
+                onOpenChange={setIsMoreMenuOpen}
+              />
+            </div>
+          </>
+        )}
 
         <ProcessingOverlay visible={isProcessing} variant="list" className="rounded-2xl" />
       </article>

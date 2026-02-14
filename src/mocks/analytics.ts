@@ -1,14 +1,14 @@
 import type {
-  ReadProjectAnalyticsSummaryDto,
+  ReadPresentationAnalyticsSummaryDto,
   ReadSlideAnalyticsResponseDto,
   ReadVideoExitAnalyticsResponseDto,
 } from '@/api/dto/analytics.dto';
 
 import { MOCK_SLIDES } from './slides';
 
-export const getMockProjectAnalyticsSummary = (
+export const getMockPresentationAnalyticsSummary = (
   projectId: string,
-): ReadProjectAnalyticsSummaryDto => {
+): ReadPresentationAnalyticsSummaryDto => {
   void projectId;
   return {
     videoIds: ['1', '2'], // Mock video IDs

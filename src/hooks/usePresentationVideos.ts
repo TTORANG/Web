@@ -4,18 +4,23 @@ import { videosApi } from '@/api/endpoints/videos';
 import type { FilterMode, SortMode } from '@/types/home';
 import type { VideoPresentation } from '@/types/video';
 
-export interface UseProjectVideosParams {
+export interface UsePresentationVideosParams {
   projectId: string;
   search?: string;
   filter?: FilterMode;
   sort?: SortMode;
 }
 
-export function useProjectVideos({ projectId, search, filter, sort }: UseProjectVideosParams) {
+export function usePresentationVideos({
+  projectId,
+  search,
+  filter,
+  sort,
+}: UsePresentationVideosParams) {
   return useQuery({
     queryKey: ['videos', projectId, search, filter, sort],
     queryFn: async () => {
-      const response = await videosApi.getProjectVideos(projectId, {
+      const response = await videosApi.getPresentationVideos(projectId, {
         search,
         filter: filter && filter !== 'all' ? filter : undefined,
         sort: sort || undefined,

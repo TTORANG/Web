@@ -11,7 +11,7 @@ import { useSlideReactions } from '@/hooks/useSlideReactions';
 import { useAuthStore } from '@/stores/authStore';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
-import type { SharedProjectComment, SharedProjectSlide } from '@/types/share';
+import type { SharedPresentationComment, SharedPresentationSlide } from '@/types/share';
 import { flatToTree } from '@/utils/comment';
 import { normalizeSharedSlides } from '@/utils/sharedContent';
 import { showToast } from '@/utils/toast';
@@ -19,8 +19,8 @@ import { showToast } from '@/utils/toast';
 import type { ShareExitSnapshot } from './useFeedbackVideo';
 
 type UseFeedbackSlideOptions = {
-  sharedSlides: SharedProjectSlide[];
-  sharedComments: SharedProjectComment[];
+  sharedSlides: SharedPresentationSlide[];
+  sharedComments: SharedPresentationComment[];
   shareToken?: string;
   onShareExitSnapshotChange?: (snapshot: ShareExitSnapshot) => void;
 };
@@ -29,7 +29,7 @@ type UseFeedbackSlideOptions = {
  * 공유 댓글을 Comment 타입으로 변환
  */
 function mapSharedSlideComments(
-  rawComments: SharedProjectComment[],
+  rawComments: SharedPresentationComment[],
   sharedSlideMeta: Map<string, { index: number; label: string }>,
 ): Comment[] {
   if (!rawComments.length) return [];

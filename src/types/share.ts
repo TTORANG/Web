@@ -55,7 +55,7 @@ export interface ShareableVideosData {
 export type ShareableVideosResponse = ApiResponse<ShareableVideosData>;
 
 /** 5. 공유 콘텐츠 조회 */
-export interface SharedProjectSlide {
+export interface SharedPresentationSlide {
   slideId: string;
   slideNum: number;
   title: string;
@@ -64,22 +64,22 @@ export interface SharedProjectSlide {
   timestampMs: number;
 }
 
-export interface SharedProjectVideo {
+export interface SharedPresentationVideo {
   videoId: string;
   videoUrl: string | null;
   thumbnailUrl: string | null;
 }
 
-export type SharedProjectCommentTargetType = 'video' | 'slide';
+export type SharedPresentationCommentTargetType = 'video' | 'slide';
 
-export interface SharedProjectComment {
+export interface SharedPresentationComment {
   commentId: string;
   content: string;
   userId: string;
   isMine: boolean;
   writer: string;
   profileImageUrl?: string | null;
-  targetType: SharedProjectCommentTargetType;
+  targetType: SharedPresentationCommentTargetType;
   targetId: string;
   parentId: string | null;
   timestampMs: number;
@@ -102,11 +102,11 @@ export interface ReadSharedContentData {
     createdAt: string;
     publisherName: string;
   };
-  projectContent: {
+  presentationContent: {
     title: string;
-    slides: SharedProjectSlide[];
-    video: SharedProjectVideo | null;
-    comments: SharedProjectComment[];
+    slides: SharedPresentationSlide[];
+    video: SharedPresentationVideo | null;
+    comments: SharedPresentationComment[];
   };
 }
 
@@ -114,7 +114,7 @@ export type ReadSharedContentResponse = ApiResponse<ReadSharedContentData>;
 
 /** 6. 공유 댓글 목록 조회 */
 export interface ReadSharedCommentsData {
-  comments: SharedProjectComment[];
+  comments: SharedPresentationComment[];
 }
 
 export type ReadSharedCommentsResponse = ApiResponse<ReadSharedCommentsData>;
