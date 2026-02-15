@@ -15,6 +15,8 @@ interface ScriptSectionProps {
   onSeek?: (time: number) => void;
   onScroll?: () => void;
   isLoading?: boolean;
+  /** 'default': 기존 스타일, 'inverted': 활성/대기 색상 반전 (피드백 비디오용) */
+  variant?: 'default' | 'inverted';
 }
 
 export default function ScriptSection({
@@ -24,9 +26,11 @@ export default function ScriptSection({
   onSeek,
   onScroll,
   isLoading = false,
+  variant = 'default',
 }: ScriptSectionProps) {
   const { resolvedTheme } = useThemeStore();
   const isDark = resolvedTheme === 'dark';
+  const inverted = variant === 'inverted';
 
   const scriptSectionRef = useRef<HTMLDivElement>(null);
   const scriptItemsRef = useRef<(HTMLDivElement | null)[]>([]);
@@ -95,24 +99,17 @@ export default function ScriptSection({
         const slideStartTime = slideChangeTimes[index] || 0;
         const timeStr = formatVideoTimestamp(slideStartTime);
 
-        /**
-         * isDark 값에 따라 색상 직접 결정
-         */
+        // inverted: 활성/대기 색상을 반전 (피드백 비디오 페이지용)
+        const active = inverted ? !isCurrent : isCurrent;
         const colors = {
-          backgroundColor: isCurrent
+          backgroundColor: active
             ? isDark
               ? '#FFFFFF'
-              : '#343841' // 활성: 다크(흰배경), 라이트(회배경)
+              : '#343841'
             : isDark
               ? '#343841'
-              : '#FFFFFF', // 대기: 다크(회배경), 라이트(흰배경)
-          color: isCurrent
-            ? isDark
-              ? '#343841'
-              : '#FFFFFF' // 활성: 다크(회글자), 라이트(흰글자)
-            : isDark
-              ? '#FFFFFF'
-              : '#343841', // 대기: 다크(흰글자), 라이트(회글자)
+              : '#FFFFFF',
+          color: active ? (isDark ? '#343841' : '#FFFFFF') : isDark ? '#FFFFFF' : '#343841',
         };
 
         return (
@@ -131,8 +128,8 @@ export default function ScriptSection({
               isCurrent && 'font-bold shadow-md',
             )}
           >
-            <span className="shrink-0 text-sm min-w-[45px]">{timeStr}</span>
-            <p className="flex-1 text-sm leading-relaxed whitespace-pre-line">
+            <span className="shrink-0 text-body-s min-w-[45px]">{timeStr}</span>
+            <p className="flex-1 text-body-s leading-relaxed whitespace-pre-line">
               {slide.script || '(대본 없음)'}
             </p>
           </div>
