@@ -19,7 +19,7 @@ interface SlideData {
 interface RecordingSectionProps {
   projectId: string;
   initialStream: MediaStream;
-  onFinish: (videoBlob: Blob, durations: { [key: number]: number }) => void;
+  onFinish: (videoBlob: Blob, slideLogs: { slideId: number; timestampMs: number }[]) => void;
   onExitClick?: () => void;
 }
 
@@ -105,21 +105,44 @@ export const RecordingSection = ({
       }
     }
   }, [currentPage]);
+  const [slideLogs, setSlideLogs] = useState<{ slideId: number; timestampMs: number }[]>([]);
+  const startTimeRef = useRef<number>(0);
+
+  const startRecordingWithLog = (stream: MediaStream) => {
+    startTimeRef.current = Date.now();
+    startRecording(stream);
+
+    // 첫 번째 슬라이드 로그 기록 (녹화 시작 시점과 동기화)
+    const firstSlideId = slidesList[0]?.id;
+    if (firstSlideId) {
+      setSlideLogs([{ slideId: parseInt(firstSlideId, 10), timestampMs: 0 }]);
+    }
+  };
 
   const handlePageChange = useCallback(
     (dir: 'next' | 'prev') => {
       setCurrentPage((p) => {
         const next = dir === 'next' ? Math.min(p + 1, totalPages) : Math.max(p - 1, 1);
+
         if (next !== p) {
           setSlideProgress((prev) => ({
             ...prev,
             [next]: prev[next] || { page: next, duration: 0, visited: true },
           }));
+          const nextSlideId = slidesList[next - 1]?.id;
+          if (nextSlideId && startTimeRef.current) {
+            const elapsedMs = Date.now() - startTimeRef.current;
+
+            setSlideLogs((prev) => [
+              ...prev,
+              { slideId: parseInt(nextSlideId, 10), timestampMs: elapsedMs },
+            ]);
+          }
         }
         return next;
       });
     },
-    [totalPages],
+    [totalPages, slidesList],
   );
 
   useEffect(() => {
@@ -151,11 +174,7 @@ export const RecordingSection = ({
         throw new Error('녹화된 영상이 없습니다.');
       }
 
-      const durations = Object.fromEntries(
-        Object.entries(slideProgress).map(([k, v]) => [Number(k), v.duration]),
-      );
-
-      onFinish(finalVideoBlob, durations);
+      onFinish(finalVideoBlob, slideLogs);
     } catch (error) {
       alert(error instanceof Error ? error.message : '오류가 발생했습니다.');
       setIsFinishing(false);
