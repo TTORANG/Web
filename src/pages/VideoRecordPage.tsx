@@ -127,7 +127,7 @@ export default function VideoRecordPage() {
         if (projectId) {
           await Promise.all([
             queryClient.invalidateQueries({ queryKey: queryKeys.shares.videos(projectId) }),
-            queryClient.invalidateQueries({ queryKey: ['videos', projectId], exact: false }),
+            queryClient.invalidateQueries({ queryKey: queryKeys.videos.list(projectId) }),
           ]);
         }
 
