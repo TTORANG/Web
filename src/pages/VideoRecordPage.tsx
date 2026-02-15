@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
+import { queryKeys } from '@/api';
 import { Layout } from '@/components/common/layout/Layout';
 import { Logo } from '@/components/common/layout/Logo';
 import {
@@ -21,6 +23,7 @@ type RecordStep = 'TEST' | 'RECORDING';
 export default function VideoRecordPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: presentation } = usePresentation(projectId!);
   const { data: slidesData } = useSlides(projectId!);
@@ -121,6 +124,13 @@ export default function VideoRecordPage() {
       const videoId = await uploadVideo(videoBlob, numericProjectId, title, slideLogs);
 
       if (videoId) {
+        if (projectId) {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: queryKeys.shares.videos(projectId) }),
+            queryClient.invalidateQueries({ queryKey: ['videos', projectId], exact: false }),
+          ]);
+        }
+
         setTimeout(() => {
           navigate(`/${projectId}/videos`, { state: { uploadSuccess: true } });
         }, 500);
