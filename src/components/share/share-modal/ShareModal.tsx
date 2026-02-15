@@ -66,6 +66,22 @@ export function ShareModal() {
     return videos.find((v) => v.id === selectedVideoId) ?? null;
   }, [videos, selectedVideoId]);
 
+  const prevShareTypeRef = useRef<ShareType>(shareType);
+
+  // 영상 포함 공유 유형으로 진입하면 목록의 첫 번째 영상을 기본 선택합니다.
+  useEffect(() => {
+    const prevShareType = prevShareTypeRef.current;
+    const isTypeChanged = prevShareType !== shareType;
+    prevShareTypeRef.current = shareType;
+
+    if (shareType !== 'slide_script_video') return;
+    if (videos.length === 0) return;
+
+    if (isTypeChanged || !selectedVideoId) {
+      setSelectedVideoId(videos[0].id);
+    }
+  }, [shareType, videos, selectedVideoId, setSelectedVideoId]);
+
   // 무한 스크롤을 위한 Intersection Observer
   const observerTarget = useRef<HTMLDivElement>(null);
 
