@@ -191,63 +191,61 @@ export const RecordingSection = ({
       </header>
 
       <main className="mt-15 flex">
-        <section className="relative  h-[calc(60vh-60px)] flex flex-1 flex-col bg-white">
-          <div className="relative flex flex-1 items-center justify-center px-5 py-4">
-            <div className="relative h-full w-full max-w-[1024px]">
-              <div className="h-full w-full rounded-lg bg-gray-900 flex items-center justify-center overflow-hidden">
-                {slidesList[currentPage - 1]?.url ? (
-                  <img
-                    src={slidesList[currentPage - 1].url}
-                    alt={`슬라이드 ${currentPage}`}
-                    className="h-full w-full object-contain"
-                  />
-                ) : (
-                  <div className="text-white">슬라이드 로딩 중...</div>
-                )}
-              </div>
+        <section className="relative  h-[calc(110vh-120px)] flex flex-1 flex-col bg-white">
+          <div className="relative pt-5 aspect-video w-full overflow-hidden rounded-lg flex items-center justify-center">
+            {slidesList[currentPage - 1]?.url ? (
+              <img
+                src={slidesList[currentPage - 1].url}
+                alt={`슬라이드 ${currentPage}`}
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              <div className="text-white">슬라이드 로딩 중...</div>
+            )}
 
-              <div className="absolute right-5 bottom-28 w-48 h-27 rounded-xl overflow-hidden shadow-2xl bg-black z-10">
-                <video
-                  ref={camVideoRef}
-                  autoPlay
-                  muted
-                  playsInline
-                  className="h-full w-full object-cover"
-                  style={{
-                    transform: 'scaleX(-1)',
-                    WebkitTransform: 'scaleX(-1)', // Safari용
-                  }}
-                />
-              </div>
-
-              <div className="absolute left-5 top-4 flex items-center gap-2 rounded-full bg-white/65 px-4 py-2 z-10">
-                <span className="text-body-m-bold text-black">{currentPage}</span>
-                <span className="text-body-m-bold text-black">/</span>
-                <span className="text-body-m-bold text-black">{totalPages}</span>
-              </div>
-
-              <div className="absolute right-5 top-4 flex flex-col items-start rounded-lg bg-white/65 px-4 pb-2 pt-2.5 z-10">
-                <span className="text-caption-bold text-gray-800">현재 슬라이드</span>
-                <span className="text-body-l-bold text-black">
-                  {formatTime(slideProgress[currentPage]?.duration || 0)}
-                </span>
-              </div>
-
-              <button
-                onClick={() => handlePageChange('prev')}
-                disabled={currentPage === 1}
-                className="absolute left-5 top-1/2 -translate-y-1/2 rounded-full bg-white/65 p-2 transition-colors hover:bg-white/80 disabled:opacity-30 z-10"
-              >
-                <IconArrowLeft className="h-6 w-6 text-black" />
-              </button>
-              <button
-                onClick={() => handlePageChange('next')}
-                disabled={currentPage === totalPages}
-                className="absolute right-5 top-1/2 -translate-y-1/2 rounded-full bg-white/65 p-2 transition-colors hover:bg-white/80 disabled:opacity-30 z-10"
-              >
-                <IconArrowRight className="h-6 w-6 text-black" />
-              </button>
+            <div className="absolute left-5 top-4 flex items-center gap-2 rounded-full px-4 py-2 z-10">
+              <span className="text-body-m-bold text-black">{currentPage}</span>
+              <span className="text-body-m-bold text-black">/</span>
+              <span className="text-body-m-bold text-black">{totalPages}</span>
             </div>
+          </div>
+
+          {/* 캠 영역 */}
+          <div className="mt-4 flex justify-end">
+            {' '}
+            <div className="mr-15 h-27 w-48 overflow-hidden rounded-xl shadow-lg ">
+              <video
+                ref={camVideoRef}
+                autoPlay
+                muted
+                playsInline
+                className="h-full w-full object-cover"
+                style={{
+                  transform: 'scaleX(-1)',
+                  WebkitTransform: 'scaleX(-1)',
+                }}
+              />
+            </div>
+            <div className="absolute right-5 top-4 flex flex-col items-start rounded-lg bg-white/65 px-4 pb-2 pt-2.5 z-10">
+              <span className="text-caption-bold text-gray-800">현재 슬라이드</span>
+              <span className="text-body-l-bold text-black">
+                {formatTime(slideProgress[currentPage]?.duration || 0)}
+              </span>
+            </div>
+            <button
+              onClick={() => handlePageChange('prev')}
+              disabled={currentPage === 1}
+              className="absolute left-5 top-1/2 -translate-y-1/2 rounded-full bg-white/65 p-2 transition-colors hover:bg-white/80 disabled:opacity-30 z-10"
+            >
+              <IconArrowLeft className="h-6 w-6 text-black" />
+            </button>
+            <button
+              onClick={() => handlePageChange('next')}
+              disabled={currentPage === totalPages}
+              className="absolute right-5 top-1/2 -translate-y-1/2 rounded-full bg-white/65 p-2 transition-colors hover:bg-white/80 disabled:opacity-30 z-10"
+            >
+              <IconArrowRight className="h-6 w-6 text-black" />
+            </button>
           </div>
           <p className="pb-7 text-center text-body-s text-gray-800">
             스페이스바 또는 화살표를 클릭하여 다음 슬라이드로 이동하세요
