@@ -10,9 +10,9 @@
 /* eslint-disable no-console */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import type Hls from 'hls.js';
 
 import clsx from 'clsx';
-import Hls from 'hls.js';
 
 import RefreshIcon from '@/assets/icons/icon-refresh.svg?react';
 import VideoPlaybackBar from '@/components/feedback/video/VideoPlaybackBar';
@@ -109,6 +109,7 @@ export default function SlideWebcamStage({
   const stageRootRef = useRef<HTMLDivElement | null>(null);
   const clickTimeoutRef = useRef<number | null>(null);
   const hlsInstanceRef = useRef<Hls | null>(null);
+  const hlsLoadTokenRef = useRef(0);
 
   // 비디오 동기화 훅 (콜백 ref, duration, currentTime, seekTo 처리)
   const { setVideoRef: setVideoRefSync, videoElement, duration, currentTime } = useVideoSync();
@@ -116,6 +117,7 @@ export default function SlideWebcamStage({
   // HLS를 지원하는 비디오 ref 콜백
   const setVideoRef = useCallback(
     (el: HTMLVideoElement | null) => {
+      const loadToken = ++hlsLoadTokenRef.current;
       // useVideoSync에 video 요소 전달
       setVideoRefSync(el);
       // 기존 HLS 인스턴스 정리
@@ -128,47 +130,62 @@ export default function SlideWebcamStage({
       // HLS(.m3u8) URL인지 확인
       const isHls = webcamVideoUrl.includes('.m3u8');
 
-      if (isHls && Hls.isSupported()) {
-        // HLS.js를 사용하여 스트리밍
-        const hls = new Hls({
-          enableWorker: true,
-          lowLatencyMode: false,
-        });
-
-        hls.loadSource(webcamVideoUrl);
-        hls.attachMedia(el);
-
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          console.log('[SlideWebcamStage] HLS manifest 로드 완료');
-        });
-
-        hls.on(Hls.Events.ERROR, (_event, data) => {
-          if (data.fatal) {
-            console.error('[SlideWebcamStage] HLS 치명적 에러:', data);
-            switch (data.type) {
-              case Hls.ErrorTypes.NETWORK_ERROR:
-                hls.startLoad();
-                break;
-              case Hls.ErrorTypes.MEDIA_ERROR:
-                hls.recoverMediaError();
-                break;
-              default:
-                hls.destroy();
-                break;
-            }
-          }
-        });
-
-        hlsInstanceRef.current = hls;
-      } else if (isHls && el.canPlayType('application/vnd.apple.mpegurl')) {
-        // Safari는 네이티브 HLS 지원
-        el.src = webcamVideoUrl;
-      } else if (!isHls) {
+      if (!isHls) {
         // 일반 비디오 파일 (mp4, webm 등)
         el.src = webcamVideoUrl;
-      } else {
-        console.warn('[SlideWebcamStage] HLS를 지원하지 않는 브라우저입니다.');
+        return;
       }
+
+      void import('hls.js')
+        .then(({ default: HlsLib }) => {
+          if (loadToken !== hlsLoadTokenRef.current || !el) return;
+
+          if (HlsLib.isSupported()) {
+            // HLS.js를 사용하여 스트리밍
+            const hls = new HlsLib({
+              enableWorker: true,
+              lowLatencyMode: false,
+            });
+
+            hls.loadSource(webcamVideoUrl);
+            hls.attachMedia(el);
+
+            hls.on(HlsLib.Events.MANIFEST_PARSED, () => {
+              console.log('[SlideWebcamStage] HLS manifest 로드 완료');
+            });
+
+            hls.on(HlsLib.Events.ERROR, (_event, data) => {
+              if (data.fatal) {
+                console.error('[SlideWebcamStage] HLS 치명적 에러:', data);
+                switch (data.type) {
+                  case HlsLib.ErrorTypes.NETWORK_ERROR:
+                    hls.startLoad();
+                    break;
+                  case HlsLib.ErrorTypes.MEDIA_ERROR:
+                    hls.recoverMediaError();
+                    break;
+                  default:
+                    hls.destroy();
+                    break;
+                }
+              }
+            });
+
+            hlsInstanceRef.current = hls;
+            return;
+          }
+
+          if (el.canPlayType('application/vnd.apple.mpegurl')) {
+            // Safari는 네이티브 HLS 지원
+            el.src = webcamVideoUrl;
+          } else {
+            console.warn('[SlideWebcamStage] HLS를 지원하지 않는 브라우저입니다.');
+          }
+        })
+        .catch((error) => {
+          if (loadToken !== hlsLoadTokenRef.current) return;
+          console.error('[SlideWebcamStage] HLS 라이브러리 로드 실패:', error);
+        });
     },
     [setVideoRefSync, webcamVideoUrl],
   );
