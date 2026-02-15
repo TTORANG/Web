@@ -85,6 +85,27 @@ export const RecordingSection = ({
     return () => clearInterval(id);
   }, [isRecording, currentPage]);
 
+  useEffect(() => {
+    if (logContainerRef.current) {
+      const container = logContainerRef.current;
+      const currentItem = container.querySelector(`[data-page="${currentPage}"]`) as HTMLElement;
+      if (currentItem) {
+        const containerTop = container.getBoundingClientRect().top;
+        const itemTop = currentItem.getBoundingClientRect().top;
+        const scrollTarget =
+          container.scrollTop +
+          (itemTop - containerTop) -
+          container.clientHeight / 2 +
+          currentItem.clientHeight / 2;
+
+        container.scrollTo({
+          top: scrollTarget,
+          behavior: 'smooth',
+        });
+      }
+    }
+  }, [currentPage]);
+
   const handlePageChange = useCallback(
     (dir: 'next' | 'prev') => {
       setCurrentPage((p) => {
@@ -281,14 +302,20 @@ export const RecordingSection = ({
             </div>
             <div
               ref={logContainerRef}
-              className="scrollbar-hide flex max-h-32 flex-col gap-2 overflow-y-auto"
+              className="scrollbar-hide flex max-h-32 flex-col gap-2 overflow-y-auto scroll-smooth"
             >
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((idx) => {
                 const isCurrent = idx === currentPage;
                 const isVisited = slideProgress[idx]?.visited;
                 return (
-                  <div key={idx} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                  <div
+                    key={idx}
+                    data-page={idx}
+                    className={`flex items-center justify-between transition-colors duration-200 ${
+                      isCurrent ? 'bg-gray-200/50 rounded-sm' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 p-1">
                       <div
                         className={`h-2 w-2 rounded-full ${
                           isCurrent ? 'bg-main-variant1' : isVisited ? 'bg-black' : 'bg-gray-600'
