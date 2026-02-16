@@ -4,12 +4,12 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { videosApi } from '@/api/endpoints/videos';
-import { CardView, ListView } from '@/components/common';
+import { CardView, ListView, Spinner } from '@/components/common';
 import PresentationCard from '@/components/presentation/PresentationCard';
 import PresentationHeader from '@/components/presentation/PresentationHeader';
 import PresentationList from '@/components/presentation/PresentationList';
 import { DeleteVideoModal, RecordingEmptySection } from '@/components/video';
-import { useProjectVideos } from '@/hooks/useProjectVideos';
+import { usePresentationVideos } from '@/hooks/usePresentationVideos';
 import type { FilterMode, SortMode, ViewMode } from '@/types/home';
 import { showToast } from '@/utils/toast';
 
@@ -29,6 +29,7 @@ export default function VideoListPage() {
   const [sort, setSort] = useState<SortMode>('recent');
   const [filter, setFilter] = useState<FilterMode>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('card');
+  const [hasCompletedInitialLoad, setHasCompletedInitialLoad] = useState(false);
 
   // 삭제 상태
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -39,7 +40,7 @@ export default function VideoListPage() {
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
   const [thumbVersion, setThumbVersion] = useState<Record<string, number>>({});
 
-  const { data, isLoading, error, refetch } = useProjectVideos({
+  const { data, isLoading, error, refetch } = usePresentationVideos({
     projectId: projectId!,
     search: appliedQuery,
     filter,
@@ -57,6 +58,13 @@ export default function VideoListPage() {
 
   const isDebouncing = query.trim() !== appliedQuery.trim();
   const hasAppliedQuery = appliedQuery.trim().length > 0;
+
+  // 최초 진입에서는 스켈레톤 대신 중앙 스피너를 보여 깜빡임을 줄입니다.
+  useEffect(() => {
+    if (!isLoading && !hasCompletedInitialLoad) {
+      setHasCompletedInitialLoad(true);
+    }
+  }, [isLoading, hasCompletedInitialLoad]);
 
   // 업로드 성공 → 토스트 + state 정리 + refetch
   useEffect(() => {
@@ -81,7 +89,7 @@ export default function VideoListPage() {
         derivedStatus: isStuck ? 'failed' : v.status,
         isStuck,
         isFailed: v.status === 'failed' || isStuck,
-        isPending: v.status === 'processing' || !v.thumbnailUrl,
+        isPending: (v.status === 'processing' || v.status === 'uploading') && !v.thumbnailUrl,
       };
     });
   }, [rawVideos]);
@@ -118,7 +126,7 @@ export default function VideoListPage() {
 
       fresh.forEach((v) => {
         const id = String(v.videoId);
-        const isDone = v.status !== 'processing' && Boolean(v.thumbnailUrl);
+        const isDone = Boolean(v.thumbnailUrl) || v.status === 'failed';
         if (pendingIds.has(id) && isDone) doneIds.push(id);
       });
 
@@ -171,6 +179,14 @@ export default function VideoListPage() {
     [navigate, projectId],
   );
 
+  const handleUpdateVideoTitle = useCallback(
+    async (videoId: string, newTitle: string) => {
+      await videosApi.updateVideoTitle(videoId, newTitle);
+      await refetch();
+    },
+    [refetch],
+  );
+
   const openDeleteModal = useCallback((id: string, title: string) => {
     setVideoToDelete({ id, title });
     setDeleteModalOpen(true);
@@ -199,7 +215,6 @@ export default function VideoListPage() {
       showToast.success('영상을 삭제했습니다.');
       void refetch();
     } catch (err) {
-      console.error('[VideoListPage] Delete error:', err);
       showToast.error(
         '영상을 삭제하지 못했습니다.',
         err instanceof Error ? err.message : '잠시 후 다시 시도해주세요.',
@@ -266,14 +281,16 @@ export default function VideoListPage() {
     );
   }
 
-  const showEmptyRecording = !isLoading && totalCount === 0 && !hasAppliedQuery;
-  const showSkeletonUI = isLoading || isDebouncing;
+  const showInitialLoadingSpinner = !hasCompletedInitialLoad && isLoading;
+  const showEmptyRecording =
+    !showInitialLoadingSpinner && !isLoading && totalCount === 0 && !hasAppliedQuery;
+  const showSkeletonUI = !showInitialLoadingSpinner && (isLoading || isDebouncing);
 
   return (
     <div
       role="tabpanel"
-      id="tabpanel-video"
-      aria-labelledby="tab-video"
+      id="tabpanel-videos"
+      aria-labelledby="tab-videos"
       className="relative h-full w-full overflow-y-auto bg-gray-100"
     >
       <DeleteVideoModal
@@ -283,7 +300,11 @@ export default function VideoListPage() {
         onConfirm={handleConfirmDelete}
       />
 
-      {showEmptyRecording ? (
+      {showInitialLoadingSpinner ? (
+        <div className="flex h-full items-center justify-center">
+          <Spinner size={40} />
+        </div>
+      ) : showEmptyRecording ? (
         <div className="flex h-full items-center justify-center">
           <RecordingEmptySection onStart={handleStartRecording} />
         </div>
@@ -349,6 +370,7 @@ export default function VideoListPage() {
                         isPresentationPending={isPending}
                         thumbnailVersion={thumbVersion[id] ?? 0}
                         onDelete={() => openDeleteModal(id, item.title)}
+                        onUpdateTitle={(newTitle) => handleUpdateVideoTitle(id, newTitle)}
                       />
 
                       {item.isFailed && !isDeleting && (
@@ -413,6 +435,7 @@ export default function VideoListPage() {
                         isPresentationPending={isPending}
                         thumbnailVersion={thumbVersion[id] ?? 0}
                         onDelete={() => openDeleteModal(id, item.title)}
+                        onUpdateTitle={(newTitle) => handleUpdateVideoTitle(id, newTitle)}
                       />
                     </div>
                   );

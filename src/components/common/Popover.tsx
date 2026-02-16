@@ -46,7 +46,6 @@ export function Popover({
   const [innerOpen, setInnerOpen] = useState(false);
   const open = isOpen ?? innerOpen; // 부모가 isOpen 주면 우선사용, isOpen 안주면 innerOpen 사용
   const popoverRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const lastFocusedElement = useRef<HTMLElement | null>(null);
   const popoverId = useId();
@@ -133,11 +132,30 @@ export function Popover({
     'right-0': align === 'end',
     'left-1/2 -translate-x-1/2': align === 'center',
   });
+  const triggerElement = typeof trigger === 'function' ? trigger({ isOpen: open }) : trigger;
+  const triggerType = typeof triggerElement.type === 'string' ? triggerElement.type : null;
+  const useButtonSemantics = triggerType !== 'button' && triggerType !== 'a';
 
   return (
     <div ref={popoverRef} className="relative">
-      <div ref={triggerRef} className="inline-flex" onClick={handleToggle}>
-        {typeof trigger === 'function' ? trigger({ isOpen: open }) : trigger}
+      <div
+        className="inline-flex"
+        role={useButtonSemantics ? 'button' : undefined}
+        tabIndex={useButtonSemantics ? 0 : undefined}
+        aria-label={useButtonSemantics ? ariaLabel : undefined}
+        aria-haspopup={useButtonSemantics ? 'dialog' : undefined}
+        aria-expanded={useButtonSemantics ? open : undefined}
+        aria-controls={useButtonSemantics && open ? popoverId : undefined}
+        onClick={handleToggle}
+        onKeyDown={(e) => {
+          if (!useButtonSemantics) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleToggle();
+          }
+        }}
+      >
+        {triggerElement}
       </div>
 
       {open && (

@@ -1,17 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { Layout, Logo } from '@/components/common';
+import { queryKeys } from '@/api';
+import { Layout } from '@/components/common/layout/Layout';
+import { Logo } from '@/components/common/layout/Logo';
 import {
   DeviceTestSection,
   RecordExitModal,
   RecordingSection,
   StopButton,
 } from '@/components/video';
+import { getTabPath } from '@/constants/navigation';
 import { usePresentation } from '@/hooks/queries/usePresentations';
-import { useSlides } from '@/hooks/queries/useSlides';
 import { useVideoUpload } from '@/hooks/useVideoUpload';
 
 type RecordStep = 'TEST' | 'RECORDING';
@@ -19,9 +22,9 @@ type RecordStep = 'TEST' | 'RECORDING';
 export default function VideoRecordPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: presentation } = usePresentation(projectId!);
-  const { data: slidesData } = useSlides(projectId!);
 
   const [step, setStep] = useState<RecordStep>('TEST');
   const [camStream, setCamStream] = useState<MediaStream | null>(null);
@@ -67,7 +70,10 @@ export default function VideoRecordPage() {
     setStep('RECORDING');
   };
 
-  const handleRecordingFinish = async (videoBlob: Blob, durations: { [key: number]: number }) => {
+  const handleRecordingFinish = async (
+    videoBlob: Blob,
+    slideLogs: { slideId: number; timestampMs: number }[],
+  ) => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
@@ -79,8 +85,10 @@ export default function VideoRecordPage() {
       return;
     }
 
-    if (!slidesData || slidesData.length === 0) {
-      toast.error('슬라이드 정보를 불러오지 못해 업로드를 중단했습니다.');
+    if (slideLogs.length === 0) {
+      toast.error('슬라이드 기록이 올바르지 않습니다.', {
+        description: '다시 녹화해주세요.',
+      });
       return;
     }
 
@@ -88,41 +96,21 @@ export default function VideoRecordPage() {
       const numericProjectId = projectId ? parseInt(projectId.replace(/\D/g, ''), 10) : 1;
       const title = presentation?.title || '제목 없음';
 
-      let accumulatedMs = 0;
-      const slideLogs = Object.entries(durations)
-        .sort(([a], [b]) => Number(a) - Number(b))
-        .map(([pageNum, duration]) => {
-          const pageIdx = Number(pageNum) - 1;
-          const slideId = slidesData[pageIdx]?.slideId;
-
-          if (!slideId) return null;
-
-          const log = {
-            slideId: parseInt(slideId, 10),
-            timestampMs: accumulatedMs,
-          };
-
-          const slideDuration = typeof duration === 'number' ? duration : 0;
-          accumulatedMs += Math.round(slideDuration * 1000);
-
-          return log;
-        })
-        .filter((log): log is { slideId: number; timestampMs: number } => log !== null);
-
-      if (slideLogs.length === 0) {
-        toast.error('슬라이드 기록이 올바르지 않습니다.', {
-          description: '다시 녹화해주세요.',
-        });
-        return;
-      }
-
       const videoId = await uploadVideo(videoBlob, numericProjectId, title, slideLogs);
 
       if (videoId) {
+        if (projectId) {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: queryKeys.shares.videos(projectId) }),
+            queryClient.invalidateQueries({ queryKey: queryKeys.videos.list(projectId) }),
+          ]);
+        }
+
         setTimeout(() => {
           navigate(`/${projectId}/videos`, { state: { uploadSuccess: true } });
         }, 500);
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err: unknown) {
       toast.error('업로드에 실패했습니다.', {
         description: '잠시 후 다시 시도해주세요.',
@@ -142,7 +130,12 @@ export default function VideoRecordPage() {
     setCamStream(null);
     setIsExitModalOpen(false);
     toast.dismiss(UPLOAD_TOAST_ID);
-    navigate(`/${projectId}/slide`);
+    if (!projectId) {
+      navigate('/');
+      return;
+    }
+
+    navigate(getTabPath(projectId, 'slide'));
   };
 
   return (
@@ -151,7 +144,9 @@ export default function VideoRecordPage() {
       left={
         <>
           <Logo onClick={handleExitClick} />
-          <span className="text-body-m-bold text-white">영상 녹화</span>
+          <span className="text-body-m-bold" style={{ color: '#FFFFFF' }}>
+            영상 녹화
+          </span>{' '}
         </>
       }
       right={

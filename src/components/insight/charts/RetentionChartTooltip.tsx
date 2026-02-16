@@ -14,12 +14,12 @@ export function RetentionChartTooltip({
     const data = payload[0].payload as ChartDataPoint;
     return (
       <div className="rounded-lg border border-gray-100 bg-white p-3 shadow-lg">
-        <p className="mb-1 text-xs font-semibold text-gray-500">
+        <p className="mb-1 text-xs font-semibold text-gray-700">
           {hasVideo ? `재생 시간: ${label}` : `${data.tooltipTitle}`}
         </p>
         <div className="flex items-end gap-2">
           <p className="text-sm font-bold text-indigo-600">잔존율 {data.value}%</p>
-          <span className="text-xs text-gray-400">({data.sessionCount}명)</span>
+          <span className="text-xs text-gray-700">({data.sessionCount}명)</span>
         </div>
       </div>
     );

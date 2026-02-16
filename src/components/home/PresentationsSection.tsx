@@ -25,6 +25,7 @@ type Props = {
   presentations: Presentation[];
   pendingThumbnailIds: string[];
   thumbVersion: Record<string, number>;
+  mode: 'slide';
 };
 
 export default function PresentationsSection({
@@ -35,6 +36,7 @@ export default function PresentationsSection({
   presentations,
   pendingThumbnailIds,
   thumbVersion,
+  mode,
 }: Props) {
   const query = useHomeQuery();
   const sort = useHomeSort();
@@ -152,6 +154,7 @@ export default function PresentationsSection({
                   highlightQuery={appliedQuery}
                   isPresentationPending={pendingSet.has(item.projectId) || !item.thumbnailUrl}
                   thumbnailVersion={thumbVersion[item.projectId] ?? 0}
+                  mode={mode}
                 />
               )}
               empty={null}
@@ -167,6 +170,7 @@ export default function PresentationsSection({
                   highlightQuery={appliedQuery}
                   isPresentationPending={pendingSet.has(item.projectId) || !item.thumbnailUrl}
                   thumbnailVersion={thumbVersion[item.projectId] ?? 0}
+                  mode={mode}
                 />
               )}
               empty={null}

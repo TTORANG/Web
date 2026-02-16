@@ -16,6 +16,7 @@ export function useShareableVideos(projectId: string | undefined, options?: { en
     queryKey: queryKeys.shares.videos(projectId ?? ''),
     queryFn: ({ pageParam = 1 }) => getShareableVideos(projectId!, pageParam),
     initialPageParam: 1,
+    staleTime: 0,
     getNextPageParam: (lastPage) => {
       if (lastPage.resultType === 'SUCCESS' && lastPage.success?.pagination.hasNext) {
         return lastPage.success.pagination.currentPage + 1;

@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 import { getReplies } from '@/api/endpoints/comments';
 import { queryKeys } from '@/api/queryClient';
@@ -9,59 +9,51 @@ import type { Comment } from '@/types/comment';
 
 import { mapDtoToComment } from './useSlideCommentsQuery';
 
-const REPLIES_PAGE_SIZE = 20;
-
-type ReplyPageLike = {
-  comments?: Parameters<typeof mapDtoToComment>[0][];
-  pagination?: {
-    page?: number;
-    totalPages?: number;
-  };
-};
-
 function mapDtoToReply(
   dto: Parameters<typeof mapDtoToComment>[0],
   parentId: string,
   currentUserId?: string,
 ): Comment {
+  const mapped = mapDtoToComment(dto, currentUserId);
+
   return {
-    ...mapDtoToComment(dto, currentUserId),
+    ...mapped,
     isReply: true,
-    parentId,
+    parentId: mapped.parentId ?? parentId,
   };
 }
 
 /**
- * 댓글의 답글 목록 조회 (무한 스크롤)
+ * 댓글의 답글 목록 조회
  *
  * @param commentId - 부모 댓글의 서버 ID
  */
-export function useCommentRepliesInfiniteQuery(commentId?: string) {
+export function useCommentRepliesQuery(commentId?: string) {
   const userId = useAuthStore((state) => state.user?.id);
   const { shareToken } = useParams<{ shareToken?: string }>();
 
-  return useInfiniteQuery({
+  return useQuery({
     queryKey: queryKeys.comments.replies(commentId ?? ''),
-    queryFn: ({ pageParam }) => getReplies(commentId!, pageParam, REPLIES_PAGE_SIZE),
-    initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
-      const pageData = lastPage as ReplyPageLike;
-      const page = pageData.pagination?.page;
-      const totalPages = pageData.pagination?.totalPages;
+    queryFn: () => getReplies(commentId!),
+    select: (data) => {
+      const parentId = commentId!;
+      const deduped = new Map<string, Comment>();
 
-      if (typeof page !== 'number' || typeof totalPages !== 'number') {
-        return undefined;
+      for (const dto of data) {
+        const reply = mapDtoToReply(dto, parentId, userId);
+
+        // 일부 응답에서 부모 댓글이 섞여 내려오는 경우를 방어
+        if (reply.commentId === parentId) continue;
+
+        const key = reply.serverId || reply.commentId;
+        if (!key) continue;
+        if (!deduped.has(key)) {
+          deduped.set(key, reply);
+        }
       }
-      return page < totalPages ? page + 1 : undefined;
+
+      return [...deduped.values()];
     },
-    select: (data) => ({
-      replies: data.pages.flatMap((page) =>
-        ((page as ReplyPageLike).comments ?? []).map((dto) =>
-          mapDtoToReply(dto, commentId!, userId),
-        ),
-      ),
-      pageParams: data.pageParams,
-    }),
     enabled: !!commentId && !shareToken,
   });
 }

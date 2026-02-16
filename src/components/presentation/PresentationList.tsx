@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import clsx from 'clsx';
@@ -11,6 +12,7 @@ import ViewCountIcon from '@/assets/icons/icon-view-count.svg?react';
 import { HighlightText } from '@/components/common/HighlightText';
 import ThumbnailImage from '@/components/common/ThumbnailImage';
 import { getTabPath } from '@/constants/navigation';
+import { useIsDesktop } from '@/hooks';
 import { usePresentationDeletion } from '@/hooks/usePresentationDeletion';
 import { useRename } from '@/hooks/useRename';
 import type { Presentation } from '@/types/presentation';
@@ -28,9 +30,24 @@ type Props = (Presentation | VideoPresentation) & {
   isPresentationPending?: boolean;
   thumbnailVersion?: number;
   onDelete?: () => void;
-  // 비디오 전용 제목 수정 함수 추가
-  onUpdateTitle?: (newTitle: string) => Promise<void>;
 };
+
+type SlideListProps = Presentation &
+  Omit<Props, keyof Presentation | 'mode'> & {
+    mode?: 'slide';
+    onUpdateTitle?: undefined;
+  };
+
+type VideoListProps = VideoPresentation &
+  Omit<Props, keyof VideoPresentation | 'mode'> & {
+    mode: 'videos';
+    onUpdateTitle: (newTitle: string) => Promise<void>;
+  };
+
+type ListProps = SlideListProps | VideoListProps;
+
+const isVideoPresentation = (p: Presentation | VideoPresentation): p is VideoPresentation =>
+  'videoId' in p;
 
 function PresentationListSkeleton() {
   return (
@@ -83,7 +100,7 @@ function PresentationListSkeleton() {
   );
 }
 
-function PresentationList(props: Props) {
+function PresentationList(props: ListProps) {
   const {
     projectId,
     title,
@@ -92,13 +109,13 @@ function PresentationList(props: Props) {
     slideCount,
     feedbackCount,
     thumbnailUrl,
-    mode = 'slide',
     isPresentationPending,
     thumbnailVersion,
     onDelete,
-    onUpdateTitle,
     highlightQuery = '',
   } = props;
+  const mode = props.mode ?? 'slide';
+  const isDesktop = useIsDesktop();
 
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
@@ -107,11 +124,22 @@ function PresentationList(props: Props) {
   const resolvedSrc = thumbnailUrl
     ? `${thumbnailUrl}${thumbnailUrl.includes('?') ? '&' : '?'}v=${thumbnailVersion}`
     : null;
-  const isProcessing =
-    isPresentationPending ||
-    props.status === 'queued' ||
-    props.status === 'processing' ||
-    props.status === 'partial_done';
+
+  const isProcessing = (() => {
+    if (isPresentationPending) return true;
+
+    if (isVideoPresentation(props)) {
+      return props.status === 'uploading' || props.status === 'processing';
+    }
+
+    return (
+      props.status === 'queued' ||
+      props.status === 'uploading' ||
+      props.status === 'processing' ||
+      props.status === 'partial_done'
+    );
+  })();
+
   const minutes = durationSeconds > 0 ? Math.ceil(durationSeconds / 60) : null;
 
   const {
@@ -122,29 +150,25 @@ function PresentationList(props: Props) {
     setNewTitle,
     openRenameModal,
     closeRenameModal,
-    confirmRename: originalConfirmRename,
-  } = useRename({ projectId, initialTitle: title });
+    confirmRename,
+  } = useRename(
+    props.mode === 'videos'
+      ? {
+          initialTitle: title,
+          onConfirmRename: props.onUpdateTitle,
+          successMessage: '영상 이름을 변경했습니다.',
+          errorMessage: '영상 이름을 변경하지 못했습니다.',
+        }
+      : { projectId, initialTitle: title },
+  );
 
   const isVideo = 'reactionCount' in props && 'viewCount' in props;
   const commentCount = isVideo ? (props as VideoPresentation).commentCount : feedbackCount;
   const reactionCount = isVideo ? (props as VideoPresentation).reactionCount : 0;
   const viewCount = isVideo ? (props as VideoPresentation).viewCount : 0;
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
   const isRenaming = isRenameModalOpen && isRenamePending;
-
-  // 이름 변경 확인 핸들러 (비디오 모드 분기 처리)
-  const handleConfirmRename = async () => {
-    if (mode === 'videos' && onUpdateTitle) {
-      try {
-        await onUpdateTitle(newTitle);
-        closeRenameModal();
-      } catch (error) {
-        console.error('Rename failed:', error);
-      }
-    } else {
-      await originalConfirmRename();
-    }
-  };
 
   const handleListClick = () => {
     if (isRenaming) return;
@@ -186,9 +210,9 @@ function PresentationList(props: Props) {
         onClick={handleListClick}
         className={clsx(
           'relative flex w-full items-center justify-between bg-white px-5 py-4 rounded-2xl border border-gray-200 transition-all duration-250 ease-out',
-          isProcessing
-            ? 'cursor-not-allowed'
-            : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-lg',
+          isMoreMenuOpen && 'z-[60]',
+          isProcessing ? 'cursor-not-allowed' : 'cursor-pointer',
+          !isProcessing && !isMoreMenuOpen && 'hover:-translate-y-0.5 hover:shadow-lg',
         )}
         aria-disabled={isProcessing}
       >
@@ -203,86 +227,159 @@ function PresentationList(props: Props) {
         </div>
 
         {/* 본문 */}
-        <div className="flex flex-1 items-center justify-between pl-6 min-w-0">
-          <div className="flex flex-1 flex-col gap-0.5 min-w-0">
-            {/* 제목 */}
-            <div className="w-full text-body-m-bold text-gray-800 line-clamp-1">
-              <HighlightText
-                text={displayTitle}
-                query={highlightQuery}
-                highlightClassName="bg-transparent text-main"
-              />
+        {isDesktop ? (
+          // =========================
+          //          DESKTOP
+          // =========================
+          <div className="flex flex-1 items-center justify-between pl-6 min-w-0">
+            <div className="flex flex-1 flex-col gap-0.5 min-w-0">
+              {/* 제목 */}
+              <div className="w-full text-body-m-bold text-gray-800 line-clamp-1">
+                <HighlightText
+                  text={displayTitle}
+                  query={highlightQuery}
+                  highlightClassName="bg-transparent text-main"
+                />
+              </div>
+
+              <div className="flex gap-4">
+                {/* 업데이트된 날짜 */}
+                <div className="text-caption text-gray-600">{formatRelativeTime(updatedAt)}</div>
+
+                {/* 메타 정보 */}
+                <div
+                  className={clsx(
+                    'flex items-center gap-4 text-caption text-gray-600',
+                    isProcessing && 'invisible pointer-events-none',
+                  )}
+                  aria-hidden={isProcessing}
+                >
+                  {/* 소요 시간 */}
+                  {minutes !== null && (
+                    <span className="flex items-center gap-1.5">
+                      <RecentIcon className="w-4 h-4" />
+                      {minutes}분
+                    </span>
+                  )}
+
+                  {/* 구분선 */}
+                  <span className="h-3.5 w-px bg-gray-200" />
+
+                  {/* 슬라이드 수 & 피드백 정보 */}
+                  <div className="flex items-center gap-4">
+                    {mode === 'slide' && (
+                      <span className="flex items-center gap-1">
+                        <PageCountIcon className="w-4 h-4" />
+                        {slideCount} 장
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1">
+                      <CommentCountIcon className="w-4 h-4" />
+                      {commentCount ?? 0}
+                    </span>
+
+                    {isVideo && (
+                      <>
+                        <span className="flex items-center gap-1">
+                          <ReactionCountIcon className="w-4 h-4" />
+                          {reactionCount}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <ViewCountIcon className="w-4 h-4" />
+                          {viewCount}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="flex gap-4">
-              {/* 날짜 */}
+            {/* 더보기 */}
+            <div onClick={(e) => e.stopPropagation()} className="-m-2 shrink-0">
+              <Dropdown
+                trigger={({ isOpen }) => (
+                  <div className="p-2" aria-label="더보기">
+                    <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-600')} />
+                  </div>
+                )}
+                items={dropdownItems}
+                position="bottom"
+                align="end"
+                ariaLabel="더보기"
+                menuClassName="w-32"
+                onOpenChange={setIsMoreMenuOpen}
+              />
+            </div>
+          </div>
+        ) : (
+          // =========================
+          //           MOBILE
+          // =========================
+          <>
+            <div className="flex flex-1 flex-col gap-0.5 ml-2 min-w-0">
+              {/* 제목 */}
+              <div className="w-full text-body-m-bold text-gray-800 line-clamp-1">
+                <HighlightText
+                  text={displayTitle}
+                  query={highlightQuery}
+                  highlightClassName="bg-transparent text-main"
+                />
+              </div>
+
+              {/* 업데이트된 날짜 */}
               <div className="text-caption text-gray-600">{formatRelativeTime(updatedAt)}</div>
 
               {/* 메타 정보 */}
               <div
                 className={clsx(
-                  'flex items-center gap-4 text-caption text-gray-600',
+                  'flex flex-wrap items-center gap-2 text-caption text-gray-600',
                   isProcessing && 'invisible pointer-events-none',
                 )}
                 aria-hidden={isProcessing}
               >
                 {/* 소요 시간 */}
                 {minutes !== null && (
-                  <span className="flex items-center gap-1.5">
-                    <RecentIcon className="w-4 h-4" />
+                  <span className="flex items-center gap-0.5">
+                    <RecentIcon className="w-3 h-3" />
                     {minutes}분
                   </span>
                 )}
 
-                {/* 구분선 */}
-                <span className="h-3.5 w-px bg-gray-200" />
-
-                {/* 슬라이드 수 & 피드백 정보 */}
-                <div className="flex items-center gap-4">
-                  {mode === 'slide' && (
-                    <span className="flex items-center gap-1">
-                      <PageCountIcon className="w-4 h-4" />
-                      {slideCount} 장
-                    </span>
-                  )}
-                  <span className="flex items-center gap-1">
-                    <CommentCountIcon className="w-4 h-4" />
-                    {commentCount ?? 0}
+                {/* 슬라이드 수 */}
+                {mode === 'slide' && (
+                  <span className="flex items-center gap-0.5">
+                    <PageCountIcon className="w-3 h-3" />
+                    {slideCount}장
                   </span>
+                )}
 
-                  {isVideo && (
-                    <>
-                      <span className="flex items-center gap-1">
-                        <ReactionCountIcon className="w-4 h-4" />
-                        {reactionCount}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <ViewCountIcon className="w-4 h-4" />
-                        {viewCount}
-                      </span>
-                    </>
-                  )}
-                </div>
+                {/* 댓글 수 */}
+                <span className="flex items-center gap-0.5">
+                  <CommentCountIcon className="w-3 h-3" />
+                  {commentCount ?? 0}
+                </span>
               </div>
             </div>
-          </div>
 
-          {/* 더보기 */}
-          <div onClick={(e) => e.stopPropagation()} className="-m-2 shrink-0">
-            <Dropdown
-              trigger={({ isOpen }) => (
-                <div className="p-2">
-                  <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-600')} />
-                </div>
-              )}
-              items={dropdownItems}
-              position="bottom"
-              align="end"
-              ariaLabel="더보기"
-              menuClassName="w-32"
-            />
-          </div>
-        </div>
+            {/* 더보기 */}
+            <div onClick={(e) => e.stopPropagation()} className="-m-2 shrink-0">
+              <Dropdown
+                trigger={({ isOpen }) => (
+                  <div className="p-2" aria-label="더보기">
+                    <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-600')} />
+                  </div>
+                )}
+                items={dropdownItems}
+                position="bottom"
+                align="end"
+                ariaLabel="더보기"
+                menuClassName="w-32"
+                onOpenChange={setIsMoreMenuOpen}
+              />
+            </div>
+          </>
+        )}
 
         <ProcessingOverlay visible={isProcessing} variant="list" className="rounded-2xl" />
       </article>
@@ -307,7 +404,9 @@ function PresentationList(props: Props) {
           currentTitle={newTitle}
           isPending={isRenamePending}
           onClose={closeRenameModal}
-          onConfirm={handleConfirmRename} // 래핑된 핸들러로 교체
+          onConfirm={() => {
+            void confirmRename();
+          }}
           onTitleChange={setNewTitle}
         />
       </div>

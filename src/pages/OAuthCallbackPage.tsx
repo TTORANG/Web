@@ -12,8 +12,25 @@ export default function OAuthCallbackPage() {
     if (isProcessing.current) return;
     isProcessing.current = true;
 
+    const errorParam = searchParams.get('error');
     const accessToken = searchParams.get('accessToken');
     const sessionIdParam = searchParams.get('sessionId');
+
+    if (errorParam) {
+      if (window.opener) {
+        window.opener.postMessage(
+          {
+            type: 'oauth:error',
+            error: errorParam,
+          },
+          window.location.origin,
+        );
+        window.close();
+        return;
+      }
+      navigate('/', { replace: true });
+      return;
+    }
 
     // 필수 파라미터가 없으면 팝업 닫기 또는 홈으로
     if (!accessToken) {

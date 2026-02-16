@@ -7,7 +7,8 @@ import type {
   CreateFinishVideoResponseDto,
   CreateStartVideoRequestDto,
   CreateStartVideoResponseDto,
-  ReadProjectVideosResponseDto,
+  ReadPresentationVideosResponseDto,
+  ReadVideoCommentsAllResponseDto,
   ReadVideoDetailResponseDto,
   ReadVideoSlidesResponseDto,
 } from '@/api/dto/video.dto';
@@ -37,8 +38,6 @@ export const videosApi = {
       `/videos/${numericId}/chunks/${chunkIndex}`,
       formData,
       {
-        // FormData는 브라우저가 boundary를 포함한 Content-Type을 자동 설정해야 multer가 파일을 파싱할 수 있음
-        // Content-Type을 undefined로 하지 않으면 서버에서 req.file이 비어 오류가 발생함
         headers: { 'Content-Type': undefined },
       },
     );
@@ -61,13 +60,21 @@ export const videosApi = {
     const numericId = normalizeVideoId(videoId);
     return apiClient.get<ApiResponse<ReadVideoSlidesResponseDto>>(`/videos/${numericId}/slides`);
   },
+
+  /** 영상 전체 댓글/답글 목록 조회 */
+  getVideoCommentsAll: (videoId: string) => {
+    const numericId = normalizeVideoId(videoId);
+    return apiClient.get<ApiResponse<ReadVideoCommentsAllResponseDto>>(
+      `/videos/${numericId}/comments/all`,
+    );
+  },
   // DELETE /videos/{videoId} - 영상 삭제
   deleteVideo: (videoId: string) => {
     const numericId = normalizeVideoId(videoId);
     return apiClient.delete<ApiResponse<{ videoId: string }>>(`/videos/${numericId}`);
   },
 
-  getProjectVideos: (
+  getPresentationVideos: (
     projectId: string,
     params?: {
       search?: string;
@@ -83,7 +90,7 @@ export const videosApi = {
     const queryString = searchParams.toString();
     const url = `/presentations/${encodeURIComponent(projectId)}/videos${queryString ? `?${queryString}` : ''}`;
 
-    return apiClient.get<ApiResponse<ReadProjectVideosResponseDto>>(url);
+    return apiClient.get<ApiResponse<ReadPresentationVideosResponseDto>>(url);
   },
   /**
    * 영상 제목 및 생성일 조회
@@ -102,7 +109,12 @@ export const videosApi = {
     const response = await apiClient.patch<
       ApiResponse<{ videoId: string; title: string; updatedAt: string }>
     >(`/videos/${videoId}`, { title });
-    return response.data;
+
+    if (response.data.resultType === 'SUCCESS') {
+      return response.data.success;
+    }
+
+    throw new Error(response.data.error.reason);
   },
 };
 

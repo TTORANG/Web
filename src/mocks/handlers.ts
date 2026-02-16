@@ -14,7 +14,7 @@
 //   CreateFinishVideoRequestDto,
 //   CreateFinishVideoResponseDto,
 //   CreateStartVideoResponseDto,
-//   ReadProjectVideosResponseDto,
+//   ReadPresentationVideosResponseDto,
 //   ReadVideoDetailResponseDto,
 //   ReadVideoSlidesResponseDto,
 // } from '@/api/dto/video.dto';
@@ -23,7 +23,7 @@
 // import type { SlideDetail } from '@/types/slide';
 
 // import {
-//   getMockProjectAnalyticsSummary,
+//   getMockPresentationAnalyticsSummary,
 //   getMockSlideAnalytics,
 //   getMockVideoExitAnalytics,
 // } from './analytics';

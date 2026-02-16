@@ -19,19 +19,19 @@ export default function FeedbackDistributionSection({
   const max = reactions.reduce((current, reaction) => Math.max(current, reaction.count), 1);
 
   return (
-    <div className="flex min-w-80 flex-1 basis-136.75 flex-col gap-6">
+    <div className="flex min-w-0 flex-1 flex-col gap-6 rounded-lg border border-gray-200 bg-white px-5 py-4">
       <div className="flex items-center justify-between">
         <h3 className="text-body-l-bold text-gray-800">슬라이드 이모지 피드백 분포</h3>
-        <span className="text-body-l-bold text-main">총 {total}개</span>
+        <span className="text-body-l-bold text-main-variant2">총 {total}개</span>
       </div>
       <div className="flex flex-col gap-6">
         {reactions.map((react) => {
           const ratio = Math.round((react.count / max) * 100);
           return (
             <div key={react.type} className="flex items-center">
-              <div className="flex w-32.5 shrink-0 items-center gap-2">
+              <div className="flex w-8 shrink-0 items-center gap-2 sm:w-32.5">
                 <span className="text-body-l">{REACTION_CONFIG[react.type].emoji}</span>
-                <span className="text-body-m text-gray-800">
+                <span className="hidden text-body-m text-gray-800 sm:inline">
                   {REACTION_CONFIG[react.type].label}
                 </span>
               </div>
@@ -42,7 +42,7 @@ export default function FeedbackDistributionSection({
                   style={{ width: `${ratio}%` }}
                 />
               </div>
-              <div className="ml-4 w-12 shrink-0 text-right text-body-m-bold text-gray-800">
+              <div className="ml-2 w-10 shrink-0 text-right text-body-m-bold text-gray-800 sm:ml-4 sm:w-12">
                 {react.count}개
               </div>
             </div>

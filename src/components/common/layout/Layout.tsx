@@ -17,6 +17,11 @@ interface LayoutProps {
   left?: ReactNode;
   center?: ReactNode;
   right?: ReactNode;
+  /**
+   * 프로젝트 페이지 전용 모바일/태블릿(<1024px) 2줄 헤더 사용 여부
+   * - 데스크톱(>=1024px)은 기존 1줄 헤더 유지
+   */
+  mobileTwoLineHeader?: boolean;
   /** 명시적 테마 (설정 시 로컬스토리지 무시) */
   theme?: 'light' | 'dark';
   /**
@@ -29,9 +34,22 @@ interface LayoutProps {
   children?: ReactNode;
 }
 
-export function Layout({ left, center, right, theme, scrollable = false, children }: LayoutProps) {
+export function Layout({
+  left,
+  center,
+  right,
+  mobileTwoLineHeader = false,
+  theme,
+  scrollable = false,
+  children,
+}: LayoutProps) {
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
   const appliedTheme = theme ?? resolvedTheme;
+  const hasMobileTwoLineHeader = mobileTwoLineHeader && Boolean(center);
+  // fixed header 높이만큼 main에 padding-top을 주고,
+  // main 자체는 viewport 높이를 유지해 별도 calc() 없이 레이아웃을 맞춘다.
+  const mainPaddingTopClass = hasMobileTwoLineHeader ? 'pt-[6.75rem] md:pt-15' : 'pt-15';
+  const mainViewportClass = scrollable ? 'min-h-screen' : 'h-screen overflow-hidden';
 
   // 테마가 변경되거나 오버라이드될 때 document.documentElement에 적용 (모달 등 포탈 지원)
   useEffect(() => {
@@ -50,17 +68,32 @@ export function Layout({ left, center, right, theme, scrollable = false, childre
       data-theme={appliedTheme}
       className={`bg-gray-100 ${scrollable ? 'min-h-screen' : 'h-screen overflow-hidden'}`}
     >
-      <header
-        className={`fixed top-0 right-0 left-0 z-50 flex h-15 items-center justify-between border-b border-gray-200 px-4 md:px-18 ${appliedTheme === 'dark' ? 'bg-gray-200' : 'bg-white'}`}
-      >
-        <div className="flex items-center gap-6">{left ?? <Logo />}</div>
-        <div className="absolute left-1/2 -translate-x-1/2">{center}</div>
-        <div className="flex items-center gap-8">{right}</div>
+      <header className="fixed top-0 right-0 left-0 z-50 border-b border-gray-200 bg-white">
+        {hasMobileTwoLineHeader ? (
+          <>
+            <div className="flex h-15 items-center justify-between px-4 md:hidden">
+              <div className="flex min-w-0 flex-1 items-center gap-4">{left ?? <Logo />}</div>
+              <div className="flex shrink-0 items-center gap-3">{right}</div>
+            </div>
+            <div className="h-12 border-t border-gray-200 px-2 md:hidden">
+              <div className="h-full">{center}</div>
+            </div>
+            <div className="hidden h-15 items-center justify-between px-4 md:flex md:px-18">
+              <div className="flex min-w-0 items-center gap-6">{left ?? <Logo />}</div>
+              <div className="absolute left-1/2 -translate-x-1/2">{center}</div>
+              <div className="flex items-center gap-8">{right}</div>
+            </div>
+          </>
+        ) : (
+          <div className="flex h-15 items-center justify-between px-4 md:px-18">
+            <div className="flex min-w-0 items-center gap-6">{left ?? <Logo />}</div>
+            <div className="absolute left-1/2 -translate-x-1/2">{center}</div>
+            <div className="flex items-center gap-8">{right}</div>
+          </div>
+        )}
       </header>
 
-      <main
-        className={`mt-15 bg-gray-100 ${scrollable ? 'min-h-[calc(100vh-3.75rem)]' : 'h-[calc(100vh-3.75rem)] overflow-hidden'}`}
-      >
+      <main className={`${mainPaddingTopClass} bg-gray-100 ${mainViewportClass}`}>
         <div className="h-full">{children || <Outlet />}</div>
       </main>
       <LoginModal />

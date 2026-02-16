@@ -31,9 +31,11 @@ const sampleComments = [
 export function RecentCommentsSection({
   hasVideo,
   recentCommentsData,
+  onSeekCommentTime,
 }: {
   hasVideo: boolean;
   recentCommentsData?: ReadRecentCommentListResponseDto;
+  onSeekCommentTime?: (seconds: number) => void;
 }) {
   const hasRecentComments = (recentCommentsData?.comments?.length ?? 0) > 0;
   const shouldShowOverlay = !hasVideo || !hasRecentComments;
@@ -41,15 +43,16 @@ export function RecentCommentsSection({
   // 1. 영상이 없을 때 보여줄 샘플 댓글 렌더링 함수
   const renderSampleComments = () => (
     <>
-      {sampleComments.map((comment) => (
-        <RecentCommentItem
-          key={comment.commentId}
-          user={comment.user}
-          slideLabel={`슬라이드 ${comment.slideNum}`}
-          time={comment.time}
-          text={comment.text}
-          thumbFallbackClassName={thumbBase}
-        />
+      {sampleComments.map((comment, idx) => (
+        <div key={comment.commentId} className={idx > 0 ? 'hidden md:block' : ''}>
+          <RecentCommentItem
+            user={comment.user}
+            slideLabel={`슬라이드 ${comment.slideNum}`}
+            time={comment.time}
+            text={comment.text}
+            thumbFallbackClassName={thumbBase}
+          />
+        </div>
       ))}
     </>
   );
@@ -59,18 +62,23 @@ export function RecentCommentsSection({
     // 댓글이 있는 경우 매핑해서 반환
     return (
       <>
-        {recentCommentsData?.comments.slice(0, 5).map((comment) => (
-          <RecentCommentItem
-            key={comment.commentId}
-            user={comment.user.name}
-            userProfileImage={comment.user.profileImage}
-            slideLabel={comment.slide ? `슬라이드 ${comment.slide.slideNum}` : '전체'}
-            time={formatVideoTimestamp(comment.timestampMs / 1000)}
-            text={comment.content}
-            thumbUrl={comment.slide?.imageUrl}
-            thumbFallbackClassName={thumbBase}
-          />
-        ))}
+        {recentCommentsData?.comments.slice(0, 5).map((comment) => {
+          const seconds = Math.max(0, comment.timestampMs / 1000);
+          return (
+            <RecentCommentItem
+              key={comment.commentId}
+              user={comment.user.name}
+              userProfileImage={comment.user.profileImage}
+              slideLabel={comment.slide ? `슬라이드 ${comment.slide.slideNum}` : '전체'}
+              time={formatVideoTimestamp(seconds)}
+              text={comment.content}
+              thumbUrl={comment.slide?.imageUrl}
+              thumbFallbackClassName={thumbBase}
+              onThumbClick={onSeekCommentTime ? () => onSeekCommentTime(seconds) : undefined}
+              onTimeClick={onSeekCommentTime ? () => onSeekCommentTime(seconds) : undefined}
+            />
+          );
+        })}
       </>
     );
   };

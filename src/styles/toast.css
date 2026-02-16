@@ -68,7 +68,14 @@
 
   /* 닫기 버튼 */
   [data-sonner-toast] [data-close-button] {
-    @apply size-4 shrink-0;
+    @apply size-11 shrink-0;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     position: static !important;
     inset: unset !important;
     left: unset !important;

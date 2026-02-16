@@ -4,7 +4,7 @@
  */
 import { apiClient } from '@/api/client';
 import type {
-  ReadProjectAnalyticsSummaryDto,
+  ReadPresentationAnalyticsSummaryDto,
   ReadRecentCommentListResponseDto,
   ReadSlideAnalyticsResponseDto,
   ReadSlideRetentionResponseDto,
@@ -47,10 +47,10 @@ export async function getVideoAnalytics(
 }
 
 // 프로젝트 분석 요약 api 연동(상단 카드 4개 + videoId)
-export async function getProjectAnalyticsSummary(
+export async function getPresentationAnalyticsSummary(
   projectId: number,
-): Promise<ReadProjectAnalyticsSummaryDto> {
-  const response = await apiClient.get<ApiResponse<ReadProjectAnalyticsSummaryDto>>(
+): Promise<ReadPresentationAnalyticsSummaryDto> {
+  const response = await apiClient.get<ApiResponse<ReadPresentationAnalyticsSummaryDto>>(
     `/presentations/${projectId}/analytics/summary`,
   );
   // 데이터가 없으면 에러 발생 (null 반환 방지)

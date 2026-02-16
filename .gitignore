@@ -34,3 +34,10 @@ bun.lock
 *.sln
 *.sw?
 !pnpm-lock.yaml
+
+# Test coverage
+coverage
+
+# Playwright test results
+docs/reports
+artifacts

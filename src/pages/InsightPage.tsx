@@ -1,4 +1,7 @@
 ﻿// src/pages/insight/InsightPage.tsx
+import { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import { Skeleton } from '@/components/common';
 import { SummaryStatsSection } from '@/components/insight';
 import { DropOffAnalysisSection } from '@/components/insight';
@@ -6,23 +9,24 @@ import { FeedbackDistributionSection } from '@/components/insight';
 import { TopSlideCard } from '@/components/insight';
 import { RecentCommentsSection } from '@/components/insight/RecentCommentsSection';
 import { RetentionChartCard } from '@/components/insight/charts/RetentionChartCard';
+import { getTabPath } from '@/constants/navigation';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useInsightPageModel } from '@/hooks/useInsightPageModel';
 
 function InsightPageSkeleton() {
   return (
-    <div className="flex flex-col gap-6 px-18 py-8">
+    <div className="flex flex-col gap-6 px-4 py-6 md:px-18 md:py-8">
       <div className="flex flex-col gap-2">
         <Skeleton width={140} height={20} />
         <Skeleton width={220} height={14} />
       </div>
 
       <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap gap-4">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {[0, 1, 2, 3].map((idx) => (
             <div
               key={idx}
-              className="flex min-w-60 flex-1 basis-78 flex-col gap-3 rounded-lg border border-gray-200 bg-white px-5 py-4"
+              className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white px-5 py-4"
             >
               <Skeleton width="50%" height={14} />
               <Skeleton width="40%" height={22} />
@@ -35,7 +39,7 @@ function InsightPageSkeleton() {
           {[0, 1].map((idx) => (
             <div
               key={idx}
-              className="flex min-w-80 flex-1 basis-160 flex-col gap-3 rounded-lg border border-gray-200 bg-white px-5 py-4"
+              className="flex min-w-0 flex-1 basis-full flex-col gap-3 rounded-lg border border-gray-200 bg-white px-5 py-4 lg:basis-160"
             >
               <Skeleton width="40%" height={18} />
               {[0, 1, 2].map((row) => (
@@ -63,7 +67,7 @@ function InsightPageSkeleton() {
             <Skeleton width="100%" height={180} rounded={8} />
           </div>
 
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 rounded-lg border border-gray-200 bg-white px-5 py-4">
             <Skeleton width="60%" height={18} />
             <div className="flex flex-wrap items-start gap-4">
               {[0, 1, 2].map((idx) => (
@@ -87,21 +91,64 @@ function InsightPageSkeleton() {
 }
 
 export default function InsightPage() {
+  const navigate = useNavigate();
   const m = useInsightPageModel();
+  const { latestVideoId, projectIdStr, getSeekSecondsForSlide, getSlideIdByIndex } = m;
+
+  const canSeekToLatestVideo = Boolean(latestVideoId);
+
+  const navigateToVideoTime = useCallback(
+    (seconds: number) => {
+      if (!canSeekToLatestVideo || !latestVideoId) return;
+      if (!Number.isFinite(seconds) || seconds < 0) return;
+
+      const seekSeconds = Math.floor(seconds);
+      navigate(`/${projectIdStr}/videos/${latestVideoId}?t=${seekSeconds}`);
+    },
+    [canSeekToLatestVideo, latestVideoId, navigate, projectIdStr],
+  );
+
+  const navigateToSlideById = useCallback(
+    (slideId: string | null) => {
+      navigate(getTabPath(projectIdStr, 'slide', slideId ?? undefined));
+    },
+    [navigate, projectIdStr],
+  );
+
+  const navigateToSlideByIndex = useCallback(
+    (slideIndex: number) => {
+      navigateToSlideById(getSlideIdByIndex(slideIndex));
+    },
+    [getSlideIdByIndex, navigateToSlideById],
+  );
+
+  const navigateToSlideTime = useCallback(
+    (slideIndex: number) => {
+      const seekSeconds = getSeekSecondsForSlide(slideIndex);
+      if (canSeekToLatestVideo && seekSeconds !== null) {
+        navigateToVideoTime(seekSeconds);
+        return;
+      }
+
+      navigateToSlideByIndex(slideIndex);
+    },
+    [canSeekToLatestVideo, getSeekSecondsForSlide, navigateToSlideByIndex, navigateToVideoTime],
+  );
 
   return (
     <div
       role="tabpanel"
       id="tabpanel-insight"
       aria-labelledby="tab-insight"
+      tabIndex={0}
       className="h-full overflow-y-auto bg-gray-100"
     >
       {m.isLoading ? (
         <InsightPageSkeleton />
       ) : (
-        <div className="flex flex-col gap-6 px-18 py-8">
+        <div className="flex flex-col gap-6 px-4 py-6 md:px-18 md:py-8">
           {m.isError && (
-            <div className="rounded-lg border border-error/20 bg-error/10 px-4 py-3 text-body-s text-error">
+            <div className="rounded-lg border border-error/20 bg-error/10 px-4 py-3 text-body-s text-gray-800">
               데이터를 불러오는 중 문제가 발생했습니다.
               {m.errorMessage ? ` (${m.errorMessage})` : ''}
             </div>
@@ -119,6 +166,8 @@ export default function InsightPage() {
               dropOffTimes={m.dropOffTimes}
               getThumb={m.getThumb}
               showVideoDropOff={m.hasVideo}
+              onSlideThumbClick={navigateToSlideTime}
+              onVideoTimeClick={canSeekToLatestVideo ? navigateToVideoTime : undefined}
             />
 
             <RetentionChartCard
@@ -130,7 +179,7 @@ export default function InsightPage() {
             <div className="grid grid-cols-1 gap-12 py-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
               <FeedbackDistributionSection projectId={m.projectIdStr ?? ''} />
 
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-6 rounded-lg border border-gray-200 bg-white px-5 py-4">
                 <h3 className="text-body-l-bold text-gray-800">가장 많은 피드백을 받은 슬라이드</h3>
                 <div className="flex flex-wrap items-start gap-4">
                   {m.topSlides.map(({ slideId, slide, slideIndex, title }, index) => {
@@ -145,6 +194,17 @@ export default function InsightPage() {
                     const reactionMetrics = summaryReactions.filter(
                       (reaction) => reaction.count > 0,
                     );
+                    const seekSeconds = getSeekSecondsForSlide(slideIndex);
+                    const targetSlideId =
+                      slide?.slideId ?? slideId ?? getSlideIdByIndex(slideIndex);
+                    const onThumbClick = () => {
+                      if (canSeekToLatestVideo && seekSeconds !== null) {
+                        navigateToVideoTime(seekSeconds);
+                        return;
+                      }
+
+                      navigateToSlideById(targetSlideId);
+                    };
 
                     return (
                       <TopSlideCard
@@ -152,6 +212,7 @@ export default function InsightPage() {
                         title={title}
                         thumbUrl={m.getThumb(slideIndex)}
                         reactionMetrics={reactionMetrics}
+                        onThumbClick={onThumbClick}
                       />
                     );
                   })}
@@ -161,6 +222,7 @@ export default function InsightPage() {
             <RecentCommentsSection
               hasVideo={m.hasVideo}
               recentCommentsData={m.recentCommentsData}
+              onSeekCommentTime={canSeekToLatestVideo ? navigateToVideoTime : undefined}
             />
           </div>
         </div>

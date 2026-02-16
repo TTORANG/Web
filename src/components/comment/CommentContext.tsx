@@ -40,6 +40,8 @@ interface CommentContextValue {
   deleteComment?: (id: string) => void;
   /** 참조로 이동 (슬라이드/영상) */
   goToRef: (ref: CommentRef) => void;
+  /** true이면 CommentReplies에서 서버 답글 조회를 스킵 (전체 댓글이 이미 로드된 경우) */
+  skipReplyFetch?: boolean;
 }
 
 const CommentContext = createContext<CommentContextValue | null>(null);

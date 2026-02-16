@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import clsx from 'clsx';
@@ -12,7 +13,7 @@ import ThumbnailImage from '@/components/common/ThumbnailImage';
 import { getTabPath } from '@/constants/navigation';
 import { usePresentationDeletion } from '@/hooks/usePresentationDeletion';
 import { useRename } from '@/hooks/useRename';
-import type { Presentation } from '@/types/presentation';
+import type { Presentation, PresentationStatus } from '@/types/presentation';
 import type { VideoPresentation } from '@/types/video';
 import { formatRelativeTime } from '@/utils/format';
 
@@ -29,8 +30,24 @@ type Props = (Presentation | VideoPresentation) & {
   isPresentationPending?: boolean;
   thumbnailVersion?: number;
   onDelete?: () => void;
-  onUpdateTitle?: (newTitle: string) => Promise<void>;
 };
+
+type SlideCardProps = Presentation &
+  Omit<Props, keyof Presentation | 'mode'> & {
+    mode?: 'slide';
+    onUpdateTitle?: undefined;
+  };
+
+type VideoCardProps = VideoPresentation &
+  Omit<Props, keyof VideoPresentation | 'mode'> & {
+    mode: 'videos';
+    onUpdateTitle: (newTitle: string) => Promise<void>;
+  };
+
+type CardProps = SlideCardProps | VideoCardProps;
+
+const isVideoPresentation = (p: Presentation | VideoPresentation): p is VideoPresentation =>
+  'videoId' in p;
 
 function PresentationCardSkeleton() {
   return (
@@ -46,7 +63,7 @@ function PresentationCardSkeleton() {
   );
 }
 
-function PresentationCard(props: Props) {
+function PresentationCard(props: CardProps) {
   const {
     projectId,
     title,
@@ -56,12 +73,11 @@ function PresentationCard(props: Props) {
     slideCount,
     feedbackCount,
     thumbnailUrl,
-    mode = 'slide',
     isPresentationPending = false,
     thumbnailVersion,
     onDelete,
-    onUpdateTitle,
   } = props;
+  const mode = props.mode ?? 'slide';
 
   const navigate = useNavigate();
   const { isDeleteModalOpen, openDeleteModal, closeDeleteModal, confirmDelete, isPending } =
@@ -70,11 +86,26 @@ function PresentationCard(props: Props) {
   const resolvedSrc = thumbnailUrl
     ? `${thumbnailUrl}${thumbnailUrl.includes('?') ? '&' : '?'}v=${thumbnailVersion}`
     : null;
-  const isProcessing =
-    isPresentationPending ||
-    props.status === 'queued' ||
-    props.status === 'processing' ||
-    props.status === 'partial_done';
+
+  const status: PresentationStatus = props.status;
+
+  const isProcessing = (() => {
+    if (isPresentationPending) return true;
+
+    if (isVideoPresentation(props)) {
+      // video status: 'uploading' | 'processing' | 'ready' | 'failed'
+      return props.status === 'uploading' || props.status === 'processing';
+    }
+
+    // slide status: 'queued' | 'processing' | 'failed' | 'completed' | 'partial_done' | 'ready' | 'uploading'
+    return (
+      status === 'queued' ||
+      status === 'uploading' ||
+      status === 'processing' ||
+      status === 'partial_done'
+    );
+  })();
+
   const minutes = durationSeconds > 0 ? Math.ceil(durationSeconds / 60) : null;
 
   const {
@@ -85,28 +116,24 @@ function PresentationCard(props: Props) {
     setNewTitle,
     openRenameModal,
     closeRenameModal,
-    confirmRename: originalConfirmRename,
-  } = useRename({ projectId, initialTitle: title });
+    confirmRename,
+  } = useRename(
+    props.mode === 'videos'
+      ? {
+          initialTitle: title,
+          onConfirmRename: props.onUpdateTitle,
+          successMessage: '영상 이름을 변경했습니다.',
+          errorMessage: '영상 이름을 변경하지 못했습니다.',
+        }
+      : { projectId, initialTitle: title },
+  );
 
   const isVideo = 'reactionCount' in props && 'viewCount' in props;
   const totalCommentCount = isVideo ? (props as VideoPresentation).commentCount : feedbackCount;
   const reactionCount = isVideo ? (props as VideoPresentation).reactionCount : 0;
   const viewCount = isVideo ? (props as VideoPresentation).viewCount : 0;
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const isRenaming = isRenameModalOpen && isRenamePending;
-
-  const handleConfirmRename = async () => {
-    if (mode === 'videos' && onUpdateTitle) {
-      try {
-        await onUpdateTitle(newTitle);
-
-        closeRenameModal();
-      } catch (err) {
-        console.error(err);
-      }
-    } else {
-      await originalConfirmRename();
-    }
-  };
 
   const handleCardClick = () => {
     // 모달이 열려있으면 이동 안함
@@ -131,9 +158,9 @@ function PresentationCard(props: Props) {
         onClick={handleCardClick}
         className={clsx(
           'relative rounded-2xl border-none bg-white transition-all duration-250 ease-out',
-          isProcessing
-            ? 'cursor-not-allowed'
-            : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-lg',
+          isMoreMenuOpen && 'z-[60]',
+          isProcessing ? 'cursor-not-allowed' : 'cursor-pointer',
+          !isProcessing && !isMoreMenuOpen && 'hover:-translate-y-0.5 hover:shadow-lg',
         )}
         aria-disabled={isProcessing}
       >
@@ -150,6 +177,7 @@ function PresentationCard(props: Props) {
           <div className="min-h-18 text-left">
             <div className="flex justify-between gap-2">
               <div className="flex-1 min-w-0">
+                {/* 제목 */}
                 <h3 className="text-body-m-bold text-gray-800 line-clamp-2">
                   <HighlightText
                     text={displayTitle}
@@ -157,9 +185,11 @@ function PresentationCard(props: Props) {
                     highlightClassName="bg-transparent text-main"
                   />
                 </h3>
-                <p className="mt-1 text-body-s text-gray-400">{formatRelativeTime(updatedAt)}</p>
+                {/* 업데이트된 시간 */}
+                <p className="mt-1 text-body-s text-gray-600">{formatRelativeTime(updatedAt)}</p>
               </div>
 
+              {/* 더보기 */}
               <div
                 className="shrink-0 mt-1"
                 onClick={(e) => e.stopPropagation()}
@@ -167,13 +197,15 @@ function PresentationCard(props: Props) {
               >
                 <Dropdown
                   trigger={({ isOpen }) => (
-                    <div className="p-2 -m-2">
-                      <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-400')} />
+                    <div className="p-2 -m-2" aria-label="더보기">
+                      <MoreIcon className={clsx(isOpen ? 'text-main' : 'text-gray-600')} />
                     </div>
                   )}
+                  ariaLabel="더보기"
                   items={dropdownItems}
                   position="bottom"
                   align="end"
+                  onOpenChange={setIsMoreMenuOpen}
                 />
               </div>
             </div>
@@ -181,40 +213,44 @@ function PresentationCard(props: Props) {
 
           <div
             className={clsx(
-              'mt-5 flex flex-wrap items-center justify-between gap-x-1 gap-y-2 text-caption text-gray-600',
+              'md:mt-5 mt-2 flex flex-wrap items-center justify-between gap-x-1 gap-y-2 text-caption text-gray-600',
               isProcessing && 'invisible pointer-events-none',
             )}
             aria-hidden={isProcessing}
           >
+            {/* 왼쪽 영역: 비디오가 '아닐 때만' 시간과 페이지 수를 보여줌 */}
             <div className="flex items-center gap-2.5 shrink-0">
-              {minutes !== null && (
-                <div className="gap-1 flex items-center">
-                  <RecentIcon className="w-4 h-4" />
-                  <span className="ml-1">{minutes} 분</span>
-                </div>
+              {mode === 'slide' && (
+                <>
+                  {minutes !== null && (
+                    <div className="flex items-center">
+                      <RecentIcon className="w-4 h-4" />
+                      <span className="ml-1">{minutes}분</span>
+                    </div>
+                  )}
+                  <div className="flex items-center">
+                    <PageCountIcon className="w-4 h-4" />
+                    <span className="ml-1">{slideCount}장</span>
+                  </div>
+                </>
               )}
-              <div className="flex items-center">
-                <PageCountIcon className="w-4 h-4" />
-                <span className="ml-1">{slideCount} 장</span>
-              </div>
             </div>
+
+            {/* 오른쪽 영역: 댓글(공통), 반응/조회수(비디오 전용) */}
             <div className="flex items-center gap-2 shrink-0">
               <div className="flex items-center gap-1">
                 <CommentCountIcon className="w-4 h-4" />
                 <span>{totalCommentCount ?? 0}</span>
+
+                <div className="flex items-center gap-1">
+                  <ReactionCountIcon className="w-4 h-4" />
+                  <span>{reactionCount}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <ViewCountIcon className="w-4 h-4" />
+                  <span>{viewCount}</span>
+                </div>
               </div>
-              {isVideo && (
-                <>
-                  <div className="flex items-center gap-1">
-                    <ReactionCountIcon className="w-4 h-4" />
-                    <span>{reactionCount}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <ViewCountIcon className="w-4 h-4" />
-                    <span>{viewCount}</span>
-                  </div>
-                </>
-              )}
             </div>
           </div>
         </div>
@@ -239,7 +275,9 @@ function PresentationCard(props: Props) {
           currentTitle={newTitle}
           isPending={isRenamePending}
           onClose={closeRenameModal}
-          onConfirm={handleConfirmRename}
+          onConfirm={() => {
+            void confirmRename();
+          }}
           onTitleChange={setNewTitle}
         />
       </div>

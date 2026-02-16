@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { queryKeys } from '@/api/queryClient';
 import { DevFab } from '@/components/common/DevFab';
+import { usePosthogAuthSync } from '@/hooks/usePosthogAuthSync';
 import { router } from '@/router';
 import { useAuthStore } from '@/stores/authStore';
 import { useThemeListener } from '@/stores/themeStore';
@@ -15,6 +16,7 @@ import { showToast } from './utils/toast';
 
 function App() {
   useThemeListener();
+  usePosthogAuthSync();
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -22,8 +24,17 @@ function App() {
       if (event.origin !== window.location.origin) return;
       const data = event.data as
         | { type: 'oauth:callback'; accessToken?: string; sessionId?: string }
+        | { type: 'oauth:error'; error?: string }
         | undefined;
-      if (!data || data.type !== 'oauth:callback') return;
+      if (!data) return;
+
+      if (data.type === 'oauth:error') {
+        const store = useAuthStore.getState();
+        store.closeLoginModal();
+        showToast.error(data.error ?? '소셜 로그인에 실패했습니다.');
+        return;
+      }
+      if (data.type !== 'oauth:callback') return;
 
       const accessToken = data.accessToken as string | undefined;
       if (!accessToken) return;

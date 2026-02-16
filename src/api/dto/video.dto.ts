@@ -172,7 +172,7 @@ export interface CreateFinishVideoResponseDto {
  * 프로젝트별 영상 목록 조회 응답
  * GET /presentations/:projectId/videos
  */
-export interface ReadProjectVideosResponseDto {
+export interface ReadPresentationVideosResponseDto {
   videos: VideoListItemDto[];
   total?: number; // 페이지네이션용 (옵션)
 }
@@ -188,6 +188,34 @@ export interface ReadProjectVideosResponseDto {
 export interface ReadVideoDetailResponseDto {
   video: VideoDetailDto;
   timeline: VideoTimelineDto;
+}
+
+// ============================================================================
+// 영상 전체 댓글 목록 조회 DTO
+// ============================================================================
+
+/**
+ * 영상 전체 댓글/답글 항목
+ * GET /videos/:videoId/comments/all
+ */
+export interface VideoCommentDto {
+  commentId: string;
+  content: string;
+  userId: string;
+  isMine: boolean;
+  writer: string;
+  targetType: string;
+  targetId: string;
+  parentId: string | null;
+  timestampMs: number | null;
+  createdAt: string;
+}
+
+/**
+ * 영상 전체 댓글 목록 조회 응답
+ */
+export interface ReadVideoCommentsAllResponseDto {
+  comments: VideoCommentDto[];
 }
 
 // ============================================================================

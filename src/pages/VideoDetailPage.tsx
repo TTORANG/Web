@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 
-import type { ReadVideoDetailResponseDto } from '@/api/dto/video.dto';
+import type { ReadVideoDetailResponseDto, VideoCommentDto } from '@/api/dto/video.dto';
 import { getScript } from '@/api/endpoints/scripts';
 import { videosApi } from '@/api/endpoints/videos';
 import { CommentInput } from '@/components/comment';
-// CommentList 추가
 import Comment from '@/components/comment/Comment';
 import { CommentProvider } from '@/components/comment/CommentContext';
 import ScriptSection from '@/components/feedback/ScriptSection';
@@ -16,26 +15,14 @@ import { useAuthStore } from '@/stores/authStore';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { SlideListItem } from '@/types';
 import type { Comment as CommentType } from '@/types/comment';
-
-/** 서버 데이터 인터페이스 정의 */
-interface ServerReply {
-  replyId: string;
-  content: string;
-  createdAt: string;
-  user: { userId: string; name: string; profileImageUrl: string };
-}
-
-interface ServerComment {
-  commentId: string;
-  timestampMs: number;
-  content: string;
-  createdAt: string;
-  user: { userId: string; name: string; profileImageUrl: string };
-  replies?: ServerReply[];
-}
+import type { VideoTimestampFeedback } from '@/types/video';
+import { clamp, parseSeekSecondsParam } from '@/utils/video';
 
 export default function VideoDetailPage() {
   const { projectId, videoId } = useParams<{ projectId: string; videoId: string }>();
+  const [searchParams] = useSearchParams();
+  const seekParam = searchParams.get('t');
+  const requestedSeekSeconds = parseSeekSecondsParam(seekParam);
   const currentUser = useAuthStore((state) => state.user);
 
   const { initVideo, requestSeek: requestSeekAction } = useVideoFeedbackStore();
@@ -58,45 +45,95 @@ export default function VideoDetailPage() {
   const [slideIdOrder, setSlideIdOrder] = useState<string[]>([]);
 
   const desktopPlaceholderRef = useRef<HTMLDivElement>(null);
+  const initialSeekRequestedRef = useRef(false);
   const [videoStyle, setVideoStyle] = useState<React.CSSProperties>({
     position: 'fixed',
     opacity: 0,
   });
 
   const transformComments = useCallback(
-    (serverComments: ServerComment[]): CommentType[] => {
-      return [...serverComments]
-        .sort((a, b) => a.timestampMs - b.timestampMs)
-        .map((c) => ({
-          commentId: String(c.commentId),
-          serverId: String(c.commentId),
-          userId: c.user.userId,
-          userName: c.user.name,
-          userProfileImage: c.user.profileImageUrl,
-          content: c.content,
-          createdAt: c.createdAt,
-          isMine: String(c.user.userId) === String(currentUser?.id),
-          ref: { kind: 'video', seconds: c.timestampMs / 1000 },
-          isReply: false,
-          replies: (c.replies ?? [])
-            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-            .map((r) => ({
-              commentId: String(r.replyId),
-              serverId: String(r.replyId),
-              userId: r.user.userId,
-              userName: r.user.name,
-              userProfileImage: r.user.profileImageUrl,
-              content: r.content,
-              createdAt: r.createdAt,
-              isMine: r.user.userId === String(currentUser?.id),
-              isReply: true,
-              parentId: String(c.commentId),
-              replies: [],
-            })),
-        }));
+    (serverComments: VideoCommentDto[]): CommentType[] => {
+      const dedupedComments = [
+        ...new Map(serverComments.map((c) => [String(c.commentId), c])).values(),
+      ];
+      const rootTimestampById = new Map<string, number>();
+      for (const comment of dedupedComments) {
+        if (comment.parentId) continue;
+        if (typeof comment.timestampMs === 'number') {
+          rootTimestampById.set(String(comment.commentId), comment.timestampMs);
+        }
+      }
+
+      const mapped = dedupedComments.map((comment) => {
+        const commentId = String(comment.commentId);
+        const parentId = comment.parentId ? String(comment.parentId) : undefined;
+        const threadTimestampMs =
+          typeof comment.timestampMs === 'number'
+            ? comment.timestampMs
+            : parentId
+              ? rootTimestampById.get(parentId)
+              : undefined;
+
+        return {
+          commentId,
+          serverId: commentId,
+          userId: String(comment.userId),
+          userName: comment.writer || undefined,
+          content: comment.content,
+          createdAt: comment.createdAt,
+          isMine: Boolean(comment.isMine) || String(comment.userId) === String(currentUser?.id),
+          parentId,
+          isReply: Boolean(parentId),
+          ref:
+            typeof threadTimestampMs === 'number'
+              ? { kind: 'video' as const, seconds: threadTimestampMs / 1000 }
+              : undefined,
+          replies: [],
+        };
+      });
+
+      const getThreadTimestamp = (comment: CommentType) => {
+        if (comment.ref?.kind === 'video') return Math.round(comment.ref.seconds * 1000);
+        if (comment.parentId)
+          return rootTimestampById.get(comment.parentId) ?? Number.MAX_SAFE_INTEGER;
+        return Number.MAX_SAFE_INTEGER;
+      };
+
+      return mapped.sort((a, b) => {
+        const timestampDiff = getThreadTimestamp(a) - getThreadTimestamp(b);
+        if (timestampDiff !== 0) return timestampDiff;
+
+        if (a.isReply !== b.isReply) {
+          return a.isReply ? 1 : -1;
+        }
+
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      });
     },
     [currentUser?.id],
   );
+
+  const buildFeedbacks = useCallback((flatComments: CommentType[]): VideoTimestampFeedback[] => {
+    if (flatComments.length === 0) return [];
+
+    const grouped = new Map<number, CommentType[]>();
+
+    for (const comment of flatComments) {
+      const timestampMs =
+        comment.ref?.kind === 'video' ? Math.round(comment.ref.seconds * 1000) : 0;
+      const commentsAtTimestamp = grouped.get(timestampMs) ?? [];
+      commentsAtTimestamp.push(comment);
+      grouped.set(timestampMs, commentsAtTimestamp);
+    }
+
+    return [...grouped.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([timestampMs, comments]) => ({
+        timestampMs,
+        comments,
+        reactions: [],
+      }));
+  }, []);
 
   const { comments, addComment, addReply, deleteComment, updateComment } = useVideoComments({
     onMutationSuccess: () => loadData(false),
@@ -106,11 +143,19 @@ export default function VideoDetailPage() {
     async (isInitial = false) => {
       if (!videoId) return;
       try {
-        const response = await videosApi.getVideoDetail(videoId);
-        if (response.data.resultType === 'SUCCESS') {
-          const data = response.data.success!;
+        const [detailResponse, commentsResponse] = await Promise.all([
+          videosApi.getVideoDetail(videoId),
+          videosApi.getVideoCommentsAll(videoId),
+        ]);
+
+        if (detailResponse.data.resultType === 'SUCCESS') {
+          const data = detailResponse.data.success!;
           setVideoData(data);
-          const mapped = transformComments((data.timeline?.comments as ServerComment[]) ?? []);
+          const flatComments =
+            commentsResponse.data.resultType === 'SUCCESS'
+              ? transformComments(commentsResponse.data.success.comments ?? [])
+              : [];
+          const feedbacks = buildFeedbacks(flatComments);
 
           if (isInitial) {
             initVideo({
@@ -118,11 +163,7 @@ export default function VideoDetailPage() {
               title: data.video.title,
               videoUrl: data.video.hlsMasterUrl,
               duration: data.video.durationSeconds,
-              feedbacks: mapped.map((c) => ({
-                timestampMs: (c.ref?.kind === 'video' ? c.ref.seconds : 0) * 1000,
-                comments: [c],
-                reactions: [],
-              })),
+              feedbacks,
               comments: [],
               reactionEvents: [],
             });
@@ -132,11 +173,7 @@ export default function VideoDetailPage() {
               video: state.video
                 ? {
                     ...state.video,
-                    feedbacks: mapped.map((c) => ({
-                      timestampMs: (c.ref?.kind === 'video' ? c.ref.seconds : 0) * 1000,
-                      comments: [c],
-                      reactions: [],
-                    })),
+                    feedbacks,
                   }
                 : null,
             }));
@@ -146,7 +183,7 @@ export default function VideoDetailPage() {
         console.error(err);
       }
     },
-    [videoId, initVideo, transformComments],
+    [videoId, initVideo, transformComments, buildFeedbacks],
   );
 
   useEffect(() => {
@@ -166,6 +203,28 @@ export default function VideoDetailPage() {
     init();
   }, [videoId, loadData]);
 
+  useEffect(() => {
+    initialSeekRequestedRef.current = false;
+  }, [videoId, seekParam]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (initialSeekRequestedRef.current) return;
+
+    initialSeekRequestedRef.current = true;
+    if (requestedSeekSeconds === null) return;
+
+    const durationSeconds = videoData?.video.durationSeconds;
+    const safeSeekSeconds =
+      typeof durationSeconds === 'number' &&
+      Number.isFinite(durationSeconds) &&
+      durationSeconds >= 0
+        ? clamp(requestedSeekSeconds, 0, durationSeconds)
+        : requestedSeekSeconds;
+
+    requestSeekAction(safeSeekSeconds);
+  }, [isLoading, requestSeekAction, requestedSeekSeconds, videoData?.video.durationSeconds]);
+
   const contextValue = useMemo(
     () => ({
       replyingToId,
@@ -180,7 +239,6 @@ export default function VideoDetailPage() {
           await addReply(targetId, replyDraft);
           setReplyDraft('');
           setReplyingToId(null);
-          await loadData(false);
         }
       },
       cancelReply: () => {
@@ -203,10 +261,10 @@ export default function VideoDetailPage() {
           await updateComment(id, editDraft);
           setEditingId(null);
           setEditDraft('');
-          await loadData(false);
         }
       },
       deleteComment,
+      skipReplyFetch: true,
       goToRef: (ref: { kind: 'slide'; index: number } | { kind: 'video'; seconds: number }) => {
         if (ref.kind === 'video') {
           requestSeekAction(ref.seconds);
@@ -222,7 +280,6 @@ export default function VideoDetailPage() {
       updateComment,
       deleteComment,
       requestSeekAction,
-      loadData,
     ],
   );
 
@@ -243,16 +300,6 @@ export default function VideoDetailPage() {
       }
     } finally {
       setIsSubmittingComment(false);
-    }
-  };
-
-  const handleInputFocus = () => {
-    if (!commentDraft) {
-      const mins = Math.floor(currentTime / 60);
-      const secs = Math.floor(currentTime % 60)
-        .toString()
-        .padStart(2, '0');
-      setCommentDraft(`[${mins}:${secs}] `);
     }
   };
 
@@ -298,16 +345,21 @@ export default function VideoDetailPage() {
   if (isLoading) return <div className="flex h-screen items-center justify-center">Loading...</div>;
 
   return (
-    <div className="flex h-full w-full bg-white overflow-hidden">
+    <div
+      role="tabpanel"
+      id="tabpanel-videos"
+      aria-labelledby="tab-videos"
+      className="flex h-full w-full bg-white overflow-hidden"
+    >
       <div className="flex flex-1 flex-col h-full min-w-0">
-        <div className="flex shrink-0 flex-col items-center pt-10 pb-6 px-12 bg-gray-50">
+        <div className="flex shrink-0 flex-col items-center pt-10 pb-6 px-12 ">
           <div
             ref={desktopPlaceholderRef}
-            className="aspect-video w-full max-w-[800px] bg-black rounded-lg shadow-md"
+            className="aspect-video w-full max-w-[800px] rounded-lg shadow-md"
           />
         </div>
         <div className="flex-1 min-h-0 px-12 pb-6 flex flex-col items-center">
-          <div className="w-full max-w-[800px] h-full flex flex-col min-h-0 overflow-y-auto bg-white border border-gray-100 rounded-t-xl">
+          <div className="w-full max-w-[800px] h-full flex flex-col min-h-0 overflow-y-auto">
             <ScriptSection
               slides={projectSlides}
               slideChangeTimes={slideChangeTimes}
@@ -341,7 +393,6 @@ export default function VideoDetailPage() {
             onChange={setCommentDraft}
             onSubmit={handleAddMainComment}
             onCancel={() => setCommentDraft('')}
-            onFocusCapture={handleInputFocus}
             disabled={isSubmittingComment}
             className="w-full"
           />

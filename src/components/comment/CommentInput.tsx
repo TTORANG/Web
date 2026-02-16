@@ -5,9 +5,11 @@
  * FeedbackSlidePage, Comment 등에서 재사용됩니다.
  * textarea 높이 자동 조절, Enter 키 제출을 지원합니다.
  */
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 
 import clsx from 'clsx';
+
+const DEFAULT_TEXTAREA_HEIGHT = 40;
 
 interface CommentInputProps {
   /** 입력값 (controlled) */
@@ -65,6 +67,16 @@ export default function CommentInput({
 
   const isEmpty = !value.trim();
 
+  const adjustTextareaHeight = useCallback(() => {
+    if (!textareaRef.current) return;
+
+    textareaRef.current.style.height = 'auto';
+    textareaRef.current.style.height = `${Math.max(
+      textareaRef.current.scrollHeight,
+      DEFAULT_TEXTAREA_HEIGHT,
+    )}px`;
+  }, []);
+
   /** 포커스 시 초기값 설정 (값이 비어있을 때만) */
   const handleFocus = useCallback(() => {
     // 외부에서 전달된 포커스 핸들러 실행 (타임스탬프 캡처용)
@@ -83,12 +95,9 @@ export default function CommentInput({
   }, [initialValueOnFocus, value, onChange, onFocusCapture]);
 
   /** textarea 높이를 내용에 맞게 자동 조절 */
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [value]);
+  useLayoutEffect(() => {
+    adjustTextareaHeight();
+  }, [value, adjustTextareaHeight]);
 
   useEffect(() => {
     if (autoFocus && textareaRef.current) {
@@ -119,10 +128,8 @@ export default function CommentInput({
 
   const handleCancel = useCallback(() => {
     onCancel();
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
-  }, [onCancel]);
+    requestAnimationFrame(adjustTextareaHeight);
+  }, [onCancel, adjustTextareaHeight]);
 
   return (
     <div className={clsx('flex flex-col gap-1', className)}>
@@ -137,7 +144,7 @@ export default function CommentInput({
         disabled={disabled}
         aria-label={placeholder}
         className={clsx(
-          'w-full overflow-hidden resize-none bg-transparent border-b border-gray-600 pt-2 pb-2 outline-none placeholder:text-gray-600 focus:border-main transition-colors',
+          'w-full min-h-10 overflow-hidden resize-none bg-transparent border-b border-gray-600 pt-2 pb-2 outline-none placeholder:text-gray-600 focus:border-main transition-colors',
           disabled && 'opacity-50 cursor-not-allowed',
           textareaClassName ?? 'text-body-m-bold text-black',
         )}

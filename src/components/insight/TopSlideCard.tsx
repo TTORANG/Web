@@ -5,27 +5,46 @@ interface TopSlideCardProps {
   title: string;
   thumbUrl?: string;
   reactionMetrics: Reaction[];
+  onThumbClick?: () => void;
 }
 
-export default function TopSlideCard({ title, thumbUrl, reactionMetrics }: TopSlideCardProps) {
+export default function TopSlideCard({
+  title,
+  thumbUrl,
+  reactionMetrics,
+  onThumbClick,
+}: TopSlideCardProps) {
   // 상위 2개 리액션만 표시
   const topReactions = reactionMetrics.slice(0, 2);
 
+  const thumbNode = thumbUrl ? (
+    <img
+      src={thumbUrl}
+      alt={`${title} 썸네일`}
+      className="h-28.25 w-full rounded-t-lg object-cover"
+    />
+  ) : (
+    <div
+      className="h-28.25 w-full rounded-t-lg bg-gray-200"
+      role="img"
+      aria-label={`${title} 썸네일 (이미지 없음)`}
+    />
+  );
+
   return (
-    <div className="w-50.75 overflow-hidden rounded-lg border border-gray-200">
+    <div className="w-full overflow-hidden rounded-lg border border-gray-200 sm:w-50.75">
       {/* 썸네일 */}
-      {thumbUrl ? (
-        <img
-          src={thumbUrl}
-          alt={`${title} 썸네일`}
-          className="h-28.25 w-full rounded-t-lg object-cover"
-        />
+      {onThumbClick ? (
+        <button
+          type="button"
+          onClick={onThumbClick}
+          aria-label={`${title} 썸네일로 이동`}
+          className="block w-full cursor-pointer rounded-t-lg transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-main"
+        >
+          {thumbNode}
+        </button>
       ) : (
-        <div
-          className="h-28.25 w-full rounded-t-lg bg-gray-200"
-          role="img"
-          aria-label={`${title} 썸네일 (이미지 없음)`}
-        />
+        thumbNode
       )}
 
       {/* 콘텐츠 */}
@@ -44,7 +63,7 @@ export default function TopSlideCard({ title, thumbUrl, reactionMetrics }: TopSl
             </div>
           ))}
           {topReactions.length === 0 && (
-            <div className="text-body-s text-gray-400">아직 반응이 없어요.</div>
+            <div className="text-body-s text-gray-600">아직 반응이 없어요.</div>
           )}
         </div>
       </div>

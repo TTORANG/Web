@@ -63,7 +63,10 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
   const renderTrigger = (label: string, value: string, kind: MediaDeviceKind) => {
     const currentDevice = devices.find((d) => d.deviceId === value && d.kind === kind);
     return (
-      <div className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-5 py-3 text-body-m-bold text-gray-800 transition-all hover:border-main cursor-pointer">
+      <button
+        type="button"
+        className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-5 py-3 text-body-m-bold text-gray-800 transition-all hover:border-main"
+      >
         <span className="truncate">{currentDevice?.label || `${label} 선택`}</span>
         <svg
           width="16"
@@ -76,18 +79,18 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
         >
           <path d="m6 9 6 6 6-6" />
         </svg>
-      </div>
+      </button>
     );
   };
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-between py-4">
       <div className="flex w-full flex-col items-center gap-8">
-        <h2 className="text-[1.5rem] font-semibold text-black tracking-tight">
+        <h2 className="text-[1.25rem] font-semibold text-black tracking-tight md:text-[1.5rem]">
           웹캠, 마이크를 테스트해주세요.
         </h2>
 
-        <div className="flex w-full items-center justify-center min-h-0">
+        <div className="flex w-full items-center justify-center min-h-0 px-4 md:px-0">
           <div className="relative w-full max-w-140 aspect-video overflow-hidden rounded-xl bg-gray-600">
             <video
               ref={videoRef}
@@ -115,9 +118,9 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
         </div>
       </div>
 
-      <div className="flex w-full max-w-214.5 gap-4 mt-12">
+      <div className="flex w-full max-w-214.5 flex-col gap-4 px-4 mt-6 md:mt-12 md:flex-row md:px-0">
         <div className="flex flex-1 flex-col gap-2">
-          <label className="text-body-m-bold text-black/60 ml-1">웹캠</label>
+          <label className="text-body-m-bold text-black ml-1">웹캠</label>
           <Dropdown
             trigger={renderTrigger('웹캠', selectedVideo, 'videoinput')}
             items={devices
@@ -137,7 +140,7 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
         </div>
 
         <div className="flex flex-1 flex-col gap-2">
-          <label className="text-body-m-bold text-black/60 ml-1">마이크</label>
+          <label className="text-body-m-bold text-black ml-1">마이크</label>
           <Dropdown
             trigger={renderTrigger('마이크', selectedAudio, 'audioinput')}
             items={devices
@@ -153,12 +156,12 @@ export const DeviceTestSection = ({ onComplete }: DeviceTestSectionProps) => {
           />
           <div className="mt-2 flex flex-col gap-2">
             <VolumeIndicator volume={volume} />
-            <p className="text-caption text-black/40">또랑또랑한 목소리를 들려주세요.</p>
+            <p className="text-caption text-gray-600">또랑또랑한 목소리를 들려주세요.</p>
           </div>
         </div>
       </div>
 
-      <div className="mt-4 mb-8 w-full max-w-110 text-black">
+      <div className="mt-4 mb-4 w-full max-w-110 px-4 text-black md:mb-8 md:px-0">
         <ActionButton
           text="영상 녹화하기"
           disabled={hasCameraError || !stream}

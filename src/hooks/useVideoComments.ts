@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 
 import { updateComment as updateCommentApi } from '@/api/endpoints/comments';
 import { createCommentReply, createVideoComment, deleteVideoComment } from '@/api/endpoints/videos';
@@ -34,6 +34,7 @@ type UseVideoCommentsOptions = {
 export function useVideoComments(options?: UseVideoCommentsOptions) {
   const video = useVideoFeedbackStore((state) => state.video);
   const videoId = video?.videoId;
+  const isAddingReplyRef = useRef(false);
 
   const deleteCommentStore = useVideoFeedbackStore((state) => state.deleteComment);
   const updateCommentStore = useVideoFeedbackStore((state) => state.updateComment);
@@ -101,6 +102,8 @@ export function useVideoComments(options?: UseVideoCommentsOptions) {
    * 답글 추가
    */
   const addReply = async (parentId: string, content: string) => {
+    if (isAddingReplyRef.current) return;
+    isAddingReplyRef.current = true;
     try {
       // parentId로 부모 댓글 찾기 (serverId 필요)
       const allComments = video?.feedbacks.flatMap((f) => f.comments) || [];
@@ -124,6 +127,8 @@ export function useVideoComments(options?: UseVideoCommentsOptions) {
       options?.onMutationSuccess?.();
     } catch {
       showToast.error('답글을 등록하지 못했습니다.', '잠시 후 다시 시도해주세요.');
+    } finally {
+      isAddingReplyRef.current = false;
     }
   };
 
@@ -141,7 +146,14 @@ export function useVideoComments(options?: UseVideoCommentsOptions) {
     const targetServerId = targetComment ? getServerCommentId(targetComment) : null;
 
     if (!targetComment) {
-      showToast.error('댓글을 찾을 수 없습니다.');
+      // Store에 없는 댓글 = TanStack Query로 로드된 답글 (commentId가 곧 serverId)
+      try {
+        await deleteVideoComment(commentId);
+        showToast.success('댓글을 삭제했습니다.');
+        options?.onMutationSuccess?.();
+      } catch {
+        showToast.error('댓글을 삭제하지 못했습니다.', '잠시 후 다시 시도해주세요.');
+      }
       return;
     }
 
@@ -170,7 +182,16 @@ export function useVideoComments(options?: UseVideoCommentsOptions) {
     const targetComment = allComments.find((c) => c.commentId === commentId);
 
     if (!targetComment) {
-      showToast.error('댓글을 찾을 수 없습니다.');
+      // Store에 없는 댓글 = TanStack Query로 로드된 답글 (commentId가 곧 serverId)
+      try {
+        const extracted = extractTimestampFromComment(content);
+        const contentToSend = extracted ? extracted.content : content;
+        await updateCommentApi(commentId, { content: contentToSend });
+        showToast.success('댓글을 수정했습니다.');
+        options?.onMutationSuccess?.();
+      } catch {
+        showToast.error('댓글을 수정하지 못했습니다.', '잠시 후 다시 시도해주세요.');
+      }
       return;
     }
 

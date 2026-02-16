@@ -10,6 +10,8 @@ interface RecentCommentItemProps {
   text: string;
   thumbUrl?: string;
   thumbFallbackClassName: string;
+  onThumbClick?: () => void;
+  onTimeClick?: () => void;
 }
 
 export default function RecentCommentItem({
@@ -19,19 +21,37 @@ export default function RecentCommentItem({
   time,
   text,
   thumbUrl,
+  thumbFallbackClassName,
+  onThumbClick,
+  onTimeClick,
 }: RecentCommentItemProps) {
+  const thumbNode = (
+    <SlideThumb
+      src={thumbUrl}
+      alt={`${slideLabel} 썸네일`}
+      className="w-full aspect-video shrink-0 rounded object-cover md:h-19.5 md:w-35 md:aspect-auto"
+      fallbackClassName={thumbFallbackClassName}
+    />
+  );
+
   return (
-    <div className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-5 py-4 my-2">
+    <div className="flex w-full flex-col rounded-lg border border-gray-200 bg-white p-3 my-2 md:flex-row md:items-center md:justify-between md:px-5 md:py-4">
       {/* 썸네일 */}
-      <SlideThumb
-        src={thumbUrl}
-        alt={`${slideLabel} 썸네일`}
-        className="h-19.5 w-35 shrink-0 rounded object-cover"
-        fallbackClassName="h-[78px] w-[140px] shrink-0 rounded bg-gray-200"
-      />
+      {onThumbClick ? (
+        <button
+          type="button"
+          onClick={onThumbClick}
+          className="block w-full cursor-pointer rounded transition-opacity hover:opacity-90 md:w-auto focus-visible:outline-2 focus-visible:outline-main"
+          aria-label={`${slideLabel} 썸네일로 이동`}
+        >
+          {thumbNode}
+        </button>
+      ) : (
+        thumbNode
+      )}
 
       {/* 댓글 내용 */}
-      <div className="flex flex-1 items-center pl-6">
+      <div className="flex flex-1 items-center pl-0 pt-3 md:pl-6 md:pt-0">
         <div className="flex flex-1 flex-col gap-1">
           {/* 유저 정보 */}
           <div className="flex items-center gap-2">
@@ -42,7 +62,18 @@ export default function RecentCommentItem({
 
           {/* 댓글 텍스트 */}
           <div className="flex items-center gap-1 pl-10">
-            <span className="text-body-m text-main-variant1">{time}</span>
+            {onTimeClick ? (
+              <button
+                type="button"
+                onClick={onTimeClick}
+                className="cursor-pointer text-body-m text-main-variant1 hover:underline focus-visible:outline-2 focus-visible:outline-main"
+                aria-label={`영상 ${time}로 이동`}
+              >
+                {time}
+              </button>
+            ) : (
+              <span className="text-body-m text-main-variant1">{time}</span>
+            )}
             <span className="text-body-m text-gray-800">{text}</span>
           </div>
         </div>

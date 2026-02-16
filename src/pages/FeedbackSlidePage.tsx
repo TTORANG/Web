@@ -33,8 +33,8 @@ export default function FeedbackSlidePage({
 }: FeedbackSlidePageProps) {
   const { shareToken } = useParams<{ shareToken: string }>();
   const { state, actions } = useFeedbackSlide({
-    sharedSlides: sharedContent.projectContent.slides,
-    sharedComments: sharedContent.projectContent.comments,
+    sharedSlides: sharedContent.presentationContent.slides,
+    sharedComments: sharedContent.presentationContent.comments,
     shareToken,
     onShareExitSnapshotChange,
   });
@@ -78,7 +78,7 @@ export default function FeedbackSlidePage({
   }
 
   return (
-    <div className="flex h-full w-full">
+    <div className="flex h-full w-full min-w-0">
       <div className="hidden md:flex flex-1 px-35">
         <SlideViewer
           slide={currentSlide}
@@ -160,7 +160,7 @@ export default function FeedbackSlidePage({
             <SlideTitle fallbackTitle={`슬라이드 ${slideIndex + 1}`} readOnly />
             <div className="mt-3 rounded-2xl border border-gray-200 bg-gray-200 px-4 py-3 h-48 overflow-y-auto pb-4">
               <p
-                className={`text-body-s leading-relaxed break-words ${script ? 'text-black' : 'text-gray-400'}`}
+                className={`text-body-s leading-relaxed break-words ${script ? 'text-black' : 'text-gray-600'}`}
                 style={{ whiteSpace: 'pre-wrap' }}
               >
                 {script || '대본이 없습니다.'}

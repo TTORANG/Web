@@ -16,6 +16,7 @@ import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { type ShareExitSnapshot, useFeedbackVideo } from '@/pages/feedback/useFeedbackVideo';
 import type { ReadSharedContentData } from '@/types/share';
+import { countTreeComments } from '@/utils/comment';
 
 interface FeedbackVideoPageProps {
   sharedContent: ReadSharedContentData;
@@ -108,7 +109,7 @@ export default function FeedbackVideoPage({
   }, [isDesktop]);
 
   return (
-    <div className="flex h-full w-full">
+    <div className="flex h-full w-full min-w-0">
       {/* 데스크톱 뷰 */}
       <div className="hidden md:flex flex-1 px-35">
         <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-4">
@@ -122,6 +123,7 @@ export default function FeedbackVideoPage({
             currentTime={currentTime}
             onSeek={requestSeek}
             isLoading={isLoading}
+            variant="inverted"
           />
         </div>
 
@@ -155,7 +157,7 @@ export default function FeedbackVideoPage({
 
       {/* 모바일 뷰 */}
       <FeedbackMobileLayout
-        mediaSlot={<div ref={mobilePlaceholderRef} className="w-full aspect-video" />}
+        mediaSlot={<div ref={mobilePlaceholderRef} className="w-full min-w-0 aspect-video" />}
         reactionSlot={
           <ReactionButtons reactions={reactions} onToggleReaction={addReaction} showLabel={false} />
         }
@@ -165,6 +167,7 @@ export default function FeedbackVideoPage({
             slideChangeTimes={slideChangeTimes}
             currentTime={currentTime}
             onSeek={requestSeek}
+            variant="inverted"
           />
         }
         commentTabContent={
@@ -192,7 +195,7 @@ export default function FeedbackVideoPage({
             </div>
           </>
         }
-        commentCount={comments.length}
+        commentCount={countTreeComments(comments)}
       />
 
       {/* 단일 SlideWebcamStage - CSS로 위치 조정 */}

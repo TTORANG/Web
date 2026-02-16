@@ -2,12 +2,11 @@
  * @file CommentReplies.tsx
  * @description 답글 로딩/렌더링 컴포넌트
  *
- * 서버에서 답글을 무한 스크롤로 로드하고, 낙관적 답글과 병합합니다.
- * 추가 페이지가 있으면 "답글 더 보기" 버튼을 표시합니다.
+ * 서버에서 답글을 로드하고, 낙관적 답글과 병합합니다.
  */
 import { useMemo } from 'react';
 
-import { useCommentRepliesInfiniteQuery } from '@/hooks/queries/useCommentRepliesQuery';
+import { useCommentRepliesQuery } from '@/hooks/queries/useCommentRepliesQuery';
 import type { Comment as CommentType } from '@/types/comment';
 
 import Comment from './Comment';
@@ -26,20 +25,19 @@ export default function CommentReplies({
   localReplies,
   rootCommentId,
 }: CommentRepliesProps) {
-  const { data, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useCommentRepliesInfiniteQuery(serverId);
+  const { data: serverReplies } = useCommentRepliesQuery(serverId);
 
   // 서버 답글 + 낙관적 답글 병합
   const mergedReplies = useMemo(() => {
-    const serverReplies = data?.replies ?? [];
-    const serverIds = new Set(serverReplies.map((r) => r.serverId));
+    const replies = serverReplies ?? [];
+    const serverIds = new Set(replies.map((r) => r.serverId));
 
     // 낙관적 답글 = serverId가 없거나 서버에서 아직 반환되지 않은 답글
     const optimisticOnly = localReplies.filter((r) => !r.serverId || !serverIds.has(r.serverId));
 
-    const combined = [...serverReplies, ...optimisticOnly];
+    const combined = [...replies, ...optimisticOnly];
 
-    // 답글을 작성시간 기준 내림차순 정렬 (최신 답글이 위로)
+    // 답글을 작성시간 기준 오름차순 정렬 (API 스펙: 생성일 오름차순)
     combined.sort((a, b) => {
       const aTime = new Date(a.createdAt).getTime();
       const bTime = new Date(b.createdAt).getTime();
@@ -47,9 +45,9 @@ export default function CommentReplies({
     });
 
     return combined;
-  }, [data?.replies, localReplies]);
+  }, [serverReplies, localReplies]);
 
-  if (mergedReplies.length === 0 && !hasNextPage) return null;
+  if (mergedReplies.length === 0) return null;
 
   return (
     <div>
@@ -61,17 +59,6 @@ export default function CommentReplies({
           rootCommentId={rootCommentId}
         />
       ))}
-
-      {hasNextPage && (
-        <button
-          type="button"
-          onClick={() => fetchNextPage()}
-          disabled={isFetchingNextPage}
-          className="w-full py-2 pl-15 text-left text-caption-bold text-main hover:text-main-variant1 active:text-main-variant2 disabled:text-gray-400"
-        >
-          {isFetchingNextPage ? '로딩 중...' : '답글 더 보기'}
-        </button>
-      )}
     </div>
   );
 }

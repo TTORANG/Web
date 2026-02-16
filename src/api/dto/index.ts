@@ -44,7 +44,7 @@ export type {
 export type {
   CreateStartVideoRequestDto,
   CreateStartVideoResponseDto,
-  ReadProjectVideosResponseDto,
+  ReadPresentationVideosResponseDto,
   ReadVideoDetailResponseDto,
   UpdateVideoRequestDto,
   UpdateVideoResponseDto,
@@ -57,6 +57,8 @@ export type {
   VideoTimelineCommentUserDto,
   VideoTimelineDto,
   VideoTimelineReactionDto,
+  VideoCommentDto,
+  ReadVideoCommentsAllResponseDto,
 } from './video.dto';
 export type {
   CommentUserDto,
