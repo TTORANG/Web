@@ -21,12 +21,7 @@ export const useRecorder = () => {
 
   const stopRecording = useCallback(() => {
     return new Promise<void>((resolve) => {
-      if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') {
-        resolve();
-        return;
-      }
-
-      mediaRecorderRef.current.onstop = () => {
+      const finalize = () => {
         if (videoRef.current) {
           videoRef.current.pause();
           videoRef.current.srcObject = null;
@@ -39,9 +34,16 @@ export const useRecorder = () => {
         resolve();
       };
 
+      if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') {
+        finalize();
+        return;
+      }
+
+      mediaRecorderRef.current.onstop = finalize;
       mediaRecorderRef.current.stop();
     });
   }, []);
+
   const startRecording = useCallback(
     async (camStream: MediaStream) => {
       if (!camStream.active) return;
