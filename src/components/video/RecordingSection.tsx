@@ -19,7 +19,7 @@ interface SlideData {
 interface RecordingSectionProps {
   projectId: string;
   initialStream: MediaStream;
-  onFinish: (videoBlob: Blob, durations: { [key: number]: number }) => void;
+  onFinish: (videoBlob: Blob, slideLogs: { slideId: number; timestampMs: number }[]) => void;
   onExitClick?: () => void;
 }
 
@@ -32,6 +32,10 @@ export const RecordingSection = ({
   const logContainerRef = useRef<HTMLDivElement>(null);
   const slideImgRef = useRef<HTMLImageElement | null>(null);
   const camVideoRef = useRef<HTMLVideoElement>(null);
+
+  // 1. 실시간 타임라인 기록을 위한 Ref (State 비동기 누락 방지)
+  const slideLogsRef = useRef<{ slideId: number; timestampMs: number }[]>([]);
+  const startTimeRef = useRef<number>(0);
 
   const { isRecording, startRecording, stopRecording, getRecordedBlob } = useRecorder();
 
@@ -56,19 +60,35 @@ export const RecordingSection = ({
   const currentSlideId = slidesList[currentPage - 1]?.id;
   const { data: scriptData } = useScript(currentSlideId ?? '');
 
+  // 녹화 시작 및 첫 로그 생성 함수
+  const startRecordingWithLog = useCallback(
+    (stream: MediaStream) => {
+      startTimeRef.current = Date.now();
+      startRecording(stream);
+      const firstSlideId = slidesList[0]?.id;
+      if (firstSlideId) {
+        slideLogsRef.current = [{ slideId: parseInt(firstSlideId, 10), timestampMs: 0 }];
+      }
+    },
+    [startRecording, slidesList],
+  );
+
+  // 캠 프리뷰 연결
   useEffect(() => {
     if (initialStream && camVideoRef.current) {
       camVideoRef.current.srcObject = initialStream;
     }
   }, [initialStream]);
 
+  // 자동 녹화 시작 시점 제어
   useEffect(() => {
-    if (initialStream && !isRecording && !recordingStartAttempted) {
+    if (initialStream && !isRecording && !recordingStartAttempted && slidesList.length > 0) {
       setRecordingStartAttempted(true);
-      startRecording(initialStream);
+      startRecordingWithLog(initialStream);
     }
-  }, [initialStream, isRecording, recordingStartAttempted, startRecording]);
+  }, [initialStream, isRecording, recordingStartAttempted, startRecordingWithLog, slidesList]);
 
+  // 타이머 (전체 및 개별 슬라이드 시간 UI 표시용)
   useEffect(() => {
     if (!isRecording) return;
     const id = setInterval(() => {
@@ -85,22 +105,56 @@ export const RecordingSection = ({
     return () => clearInterval(id);
   }, [isRecording, currentPage]);
 
+  // 진행 상황 리스트 자동 스크롤
+  useEffect(() => {
+    if (logContainerRef.current) {
+      const container = logContainerRef.current;
+      const currentItem = container.querySelector(`[data-page="${currentPage}"]`) as HTMLElement;
+      if (currentItem) {
+        const containerTop = container.getBoundingClientRect().top;
+        const itemTop = currentItem.getBoundingClientRect().top;
+        const scrollTarget =
+          container.scrollTop +
+          (itemTop - containerTop) -
+          container.clientHeight / 2 +
+          currentItem.clientHeight / 2;
+
+        container.scrollTo({ top: scrollTarget, behavior: 'smooth' });
+      }
+    }
+  }, [currentPage]);
+
+  // 페이지 전환 및 타임라인 로그 기록
   const handlePageChange = useCallback(
     (dir: 'next' | 'prev') => {
       setCurrentPage((p) => {
         const next = dir === 'next' ? Math.min(p + 1, totalPages) : Math.max(p - 1, 1);
         if (next !== p) {
+          // UI 상태 업데이트
           setSlideProgress((prev) => ({
             ...prev,
             [next]: prev[next] || { page: next, duration: 0, visited: true },
           }));
+
+          const nextSlideId = slidesList[next - 1]?.id;
+          if (nextSlideId && startTimeRef.current) {
+            const elapsedMs = Date.now() - startTimeRef.current;
+            const lastLog = slideLogsRef.current[slideLogsRef.current.length - 1];
+            if (!lastLog || lastLog.slideId !== parseInt(nextSlideId, 10)) {
+              slideLogsRef.current.push({
+                slideId: parseInt(nextSlideId, 10),
+                timestampMs: elapsedMs,
+              });
+            }
+          }
         }
         return next;
       });
     },
-    [totalPages],
+    [totalPages, slidesList],
   );
 
+  // 키보드 이벤트 핸들러
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.code === 'Space' || e.code === 'ArrowRight') {
@@ -116,30 +170,26 @@ export const RecordingSection = ({
     return () => window.removeEventListener('keydown', handler);
   }, [handlePageChange]);
 
+  // 최종 종료 및 데이터 전달
   const handleFinish = useCallback(async () => {
     if (isFinishing || !isRecording) return;
     setIsFinishing(true);
 
     try {
       stopRecording();
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-
+      await new Promise((resolve) => setTimeout(resolve, 3000));
       const finalVideoBlob = getRecordedBlob();
 
       if (!finalVideoBlob || finalVideoBlob.size === 0) {
         throw new Error('녹화된 영상이 없습니다.');
       }
 
-      const durations = Object.fromEntries(
-        Object.entries(slideProgress).map(([k, v]) => [Number(k), v.duration]),
-      );
-
-      onFinish(finalVideoBlob, durations);
+      onFinish(finalVideoBlob, slideLogsRef.current);
     } catch (error) {
       alert(error instanceof Error ? error.message : '오류가 발생했습니다.');
       setIsFinishing(false);
     }
-  }, [isFinishing, isRecording, stopRecording, getRecordedBlob, slideProgress, onFinish]);
+  }, [isFinishing, isRecording, stopRecording, getRecordedBlob, onFinish]);
 
   return (
     <div className="fixed inset-0 z-60 bg-white">
@@ -153,12 +203,10 @@ export const RecordingSection = ({
 
       <header className="fixed left-0 top-0 z-70 flex h-15 w-full items-center justify-between border-b border-gray-200 bg-white px-18">
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-6">
-            <Logo onClick={onExitClick} />
-            <span className="hidden md:inline-flex h-7 items-center px-2 text-sm font-semibold text-gray-800 min-w-0">
-              <span className="max-w-60 truncate">{presentation?.title || '내 발표'}</span>
-            </span>
-          </div>
+          <Logo onClick={onExitClick} />
+          <span className="hidden md:inline-flex h-7 items-center px-2 text-sm font-semibold text-gray-800 min-w-0">
+            <span className="max-w-60 truncate">{presentation?.title || '내 발표'}</span>
+          </span>
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 animate-pulse rounded-full bg-error" />
             <span className="text-body-m-bold text-black">
@@ -191,63 +239,59 @@ export const RecordingSection = ({
       </header>
 
       <main className="mt-15 flex">
-        <section className="relative  h-[calc(60vh-60px)] flex flex-1 flex-col bg-white">
-          <div className="relative flex flex-1 items-center justify-center px-5 py-4">
-            <div className="relative h-full w-full max-w-[1024px]">
-              <div className="h-full w-full rounded-lg bg-gray-900 flex items-center justify-center overflow-hidden">
-                {slidesList[currentPage - 1]?.url ? (
-                  <img
-                    src={slidesList[currentPage - 1].url}
-                    alt={`슬라이드 ${currentPage}`}
-                    className="h-full w-full object-contain"
-                  />
-                ) : (
-                  <div className="text-white">슬라이드 로딩 중...</div>
-                )}
-              </div>
+        <section className="relative h-[calc(110vh-120px)] flex flex-1 flex-col bg-white">
+          <div className="relative pt-5 aspect-video w-full overflow-hidden rounded-lg flex items-center justify-center">
+            {slidesList[currentPage - 1]?.url ? (
+              <img
+                src={slidesList[currentPage - 1].url}
+                alt={`슬라이드 ${currentPage}`}
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              <div className="text-white">슬라이드 로딩 중...</div>
+            )}
 
-              <div className="absolute right-5 bottom-28 w-48 h-27 rounded-xl overflow-hidden shadow-2xl bg-black z-10">
-                <video
-                  ref={camVideoRef}
-                  autoPlay
-                  muted
-                  playsInline
-                  className="h-full w-full object-cover"
-                  style={{
-                    transform: 'scaleX(-1)',
-                    WebkitTransform: 'scaleX(-1)', // Safari용
-                  }}
-                />
-              </div>
-
-              <div className="absolute left-5 top-4 flex items-center gap-2 rounded-full bg-white/65 px-4 py-2 z-10">
-                <span className="text-body-m-bold text-black">{currentPage}</span>
-                <span className="text-body-m-bold text-black">/</span>
-                <span className="text-body-m-bold text-black">{totalPages}</span>
-              </div>
-
-              <div className="absolute right-5 top-4 flex flex-col items-start rounded-lg bg-white/65 px-4 pb-2 pt-2.5 z-10">
-                <span className="text-caption-bold text-gray-800">현재 슬라이드</span>
-                <span className="text-body-l-bold text-black">
-                  {formatTime(slideProgress[currentPage]?.duration || 0)}
-                </span>
-              </div>
-
-              <button
-                onClick={() => handlePageChange('prev')}
-                disabled={currentPage === 1}
-                className="absolute left-5 top-1/2 -translate-y-1/2 rounded-full bg-white/65 p-2 transition-colors hover:bg-white/80 disabled:opacity-30 z-10"
-              >
-                <IconArrowLeft className="h-6 w-6 text-black" />
-              </button>
-              <button
-                onClick={() => handlePageChange('next')}
-                disabled={currentPage === totalPages}
-                className="absolute right-5 top-1/2 -translate-y-1/2 rounded-full bg-white/65 p-2 transition-colors hover:bg-white/80 disabled:opacity-30 z-10"
-              >
-                <IconArrowRight className="h-6 w-6 text-black" />
-              </button>
+            <div className="absolute left-5 top-4 flex items-center gap-2 rounded-full px-4 py-2 z-10">
+              <span className="text-body-m-bold text-black">{currentPage}</span>
+              <span className="text-body-m-bold text-black">/</span>
+              <span className="text-body-m-bold text-black">{totalPages}</span>
             </div>
+          </div>
+
+          <div className="mt-4 flex justify-end">
+            <div className="mr-15 h-27 w-48 overflow-hidden rounded-xl shadow-lg">
+              <video
+                ref={camVideoRef}
+                autoPlay
+                muted
+                playsInline
+                className="h-full w-full object-cover"
+                style={{
+                  transform: 'scaleX(-1)',
+                  WebkitTransform: 'scaleX(-1)',
+                }}
+              />
+            </div>
+            <div className="absolute right-5 top-4 flex flex-col items-start rounded-lg bg-white/65 px-4 pb-2 pt-2.5 z-10">
+              <span className="text-caption-bold text-gray-800">현재 슬라이드</span>
+              <span className="text-body-l-bold text-black">
+                {formatTime(slideProgress[currentPage]?.duration || 0)}
+              </span>
+            </div>
+            <button
+              onClick={() => handlePageChange('prev')}
+              disabled={currentPage === 1}
+              className="absolute left-5 top-1/2 -translate-y-1/2 rounded-full bg-white/65 p-2 transition-colors hover:bg-white/80 disabled:opacity-30 z-10"
+            >
+              <IconArrowLeft className="h-6 w-6 text-black" />
+            </button>
+            <button
+              onClick={() => handlePageChange('next')}
+              disabled={currentPage === totalPages}
+              className="absolute right-5 top-1/2 -translate-y-1/2 rounded-full bg-white/65 p-2 transition-colors hover:bg-white/80 disabled:opacity-30 z-10"
+            >
+              <IconArrowRight className="h-6 w-6 text-black" />
+            </button>
           </div>
           <p className="pb-7 text-center text-body-s text-gray-800">
             스페이스바 또는 화살표를 클릭하여 다음 슬라이드로 이동하세요
@@ -283,14 +327,20 @@ export const RecordingSection = ({
             </div>
             <div
               ref={logContainerRef}
-              className="scrollbar-hide flex max-h-32 flex-col gap-2 overflow-y-auto"
+              className="scrollbar-hide flex max-h-32 flex-col gap-2 overflow-y-auto scroll-smooth"
             >
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((idx) => {
                 const isCurrent = idx === currentPage;
                 const isVisited = slideProgress[idx]?.visited;
                 return (
-                  <div key={idx} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                  <div
+                    key={idx}
+                    data-page={idx}
+                    className={`flex items-center justify-between transition-colors duration-200 ${
+                      isCurrent ? 'bg-gray-200/50 rounded-sm' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 p-1">
                       <div
                         className={`h-2 w-2 rounded-full ${
                           isCurrent ? 'bg-main-variant1' : isVisited ? 'bg-black' : 'bg-gray-600'
@@ -310,7 +360,9 @@ export const RecordingSection = ({
                     </div>
                     {(isVisited || isCurrent) && (
                       <span
-                        className={`tabular-nums text-body-m ${isCurrent ? 'text-black' : 'text-gray-800'}`}
+                        className={`tabular-nums text-body-m ${
+                          isCurrent ? 'text-black' : 'text-gray-800'
+                        }`}
                       >
                         {formatTime(slideProgress[idx]?.duration || 0)}
                       </span>

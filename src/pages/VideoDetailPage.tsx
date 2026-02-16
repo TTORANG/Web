@@ -5,7 +5,6 @@ import type { ReadVideoDetailResponseDto, VideoCommentDto } from '@/api/dto/vide
 import { getScript } from '@/api/endpoints/scripts';
 import { videosApi } from '@/api/endpoints/videos';
 import { CommentInput } from '@/components/comment';
-// CommentList 추가
 import Comment from '@/components/comment/Comment';
 import { CommentProvider } from '@/components/comment/CommentContext';
 import ScriptSection from '@/components/feedback/ScriptSection';
