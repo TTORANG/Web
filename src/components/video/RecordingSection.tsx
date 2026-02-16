@@ -176,8 +176,7 @@ export const RecordingSection = ({
     setIsFinishing(true);
 
     try {
-      stopRecording();
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await stopRecording();
       const finalVideoBlob = getRecordedBlob();
 
       if (!finalVideoBlob || finalVideoBlob.size === 0) {
@@ -239,7 +238,7 @@ export const RecordingSection = ({
       </header>
 
       <main className="mt-15 flex">
-        <section className="relative h-[calc(110vh-120px)] flex flex-1 flex-col bg-white">
+        <section className="relative h-[calc(100vh-120px)] flex flex-1 flex-col bg-white">
           <div className="relative pt-5 aspect-video w-full overflow-hidden rounded-lg flex items-center justify-center">
             {slidesList[currentPage - 1]?.url ? (
               <img
