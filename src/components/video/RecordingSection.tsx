@@ -33,6 +33,10 @@ export const RecordingSection = ({
   const slideImgRef = useRef<HTMLImageElement | null>(null);
   const camVideoRef = useRef<HTMLVideoElement>(null);
 
+  // 1. 실시간 타임라인 기록을 위한 Ref (State 비동기 누락 방지)
+  const slideLogsRef = useRef<{ slideId: number; timestampMs: number }[]>([]);
+  const startTimeRef = useRef<number>(0);
+
   const { isRecording, startRecording, stopRecording, getRecordedBlob } = useRecorder();
 
   const { data: presentation } = usePresentation(projectId);
@@ -56,19 +60,35 @@ export const RecordingSection = ({
   const currentSlideId = slidesList[currentPage - 1]?.id;
   const { data: scriptData } = useScript(currentSlideId ?? '');
 
+  // 녹화 시작 및 첫 로그 생성 함수
+  const startRecordingWithLog = useCallback(
+    (stream: MediaStream) => {
+      startTimeRef.current = Date.now();
+      startRecording(stream);
+      const firstSlideId = slidesList[0]?.id;
+      if (firstSlideId) {
+        slideLogsRef.current = [{ slideId: parseInt(firstSlideId, 10), timestampMs: 0 }];
+      }
+    },
+    [startRecording, slidesList],
+  );
+
+  // 캠 프리뷰 연결
   useEffect(() => {
     if (initialStream && camVideoRef.current) {
       camVideoRef.current.srcObject = initialStream;
     }
   }, [initialStream]);
 
+  // 자동 녹화 시작 시점 제어
   useEffect(() => {
-    if (initialStream && !isRecording && !recordingStartAttempted) {
+    if (initialStream && !isRecording && !recordingStartAttempted && slidesList.length > 0) {
       setRecordingStartAttempted(true);
-      startRecording(initialStream);
+      startRecordingWithLog(initialStream);
     }
-  }, [initialStream, isRecording, recordingStartAttempted, startRecording]);
+  }, [initialStream, isRecording, recordingStartAttempted, startRecordingWithLog, slidesList]);
 
+  // 타이머 (전체 및 개별 슬라이드 시간 UI 표시용)
   useEffect(() => {
     if (!isRecording) return;
     const id = setInterval(() => {
@@ -85,6 +105,7 @@ export const RecordingSection = ({
     return () => clearInterval(id);
   }, [isRecording, currentPage]);
 
+  // 진행 상황 리스트 자동 스크롤
   useEffect(() => {
     if (logContainerRef.current) {
       const container = logContainerRef.current;
@@ -98,45 +119,33 @@ export const RecordingSection = ({
           container.clientHeight / 2 +
           currentItem.clientHeight / 2;
 
-        container.scrollTo({
-          top: scrollTarget,
-          behavior: 'smooth',
-        });
+        container.scrollTo({ top: scrollTarget, behavior: 'smooth' });
       }
     }
   }, [currentPage]);
-  const [slideLogs, setSlideLogs] = useState<{ slideId: number; timestampMs: number }[]>([]);
-  const startTimeRef = useRef<number>(0);
 
-  const startRecordingWithLog = (stream: MediaStream) => {
-    startTimeRef.current = Date.now();
-    startRecording(stream);
-
-    // 첫 번째 슬라이드 로그 기록 (녹화 시작 시점과 동기화)
-    const firstSlideId = slidesList[0]?.id;
-    if (firstSlideId) {
-      setSlideLogs([{ slideId: parseInt(firstSlideId, 10), timestampMs: 0 }]);
-    }
-  };
-
+  // 페이지 전환 및 타임라인 로그 기록
   const handlePageChange = useCallback(
     (dir: 'next' | 'prev') => {
       setCurrentPage((p) => {
         const next = dir === 'next' ? Math.min(p + 1, totalPages) : Math.max(p - 1, 1);
-
         if (next !== p) {
+          // UI 상태 업데이트
           setSlideProgress((prev) => ({
             ...prev,
             [next]: prev[next] || { page: next, duration: 0, visited: true },
           }));
+
           const nextSlideId = slidesList[next - 1]?.id;
           if (nextSlideId && startTimeRef.current) {
             const elapsedMs = Date.now() - startTimeRef.current;
-
-            setSlideLogs((prev) => [
-              ...prev,
-              { slideId: parseInt(nextSlideId, 10), timestampMs: elapsedMs },
-            ]);
+            const lastLog = slideLogsRef.current[slideLogsRef.current.length - 1];
+            if (!lastLog || lastLog.slideId !== parseInt(nextSlideId, 10)) {
+              slideLogsRef.current.push({
+                slideId: parseInt(nextSlideId, 10),
+                timestampMs: elapsedMs,
+              });
+            }
           }
         }
         return next;
@@ -145,6 +154,7 @@ export const RecordingSection = ({
     [totalPages, slidesList],
   );
 
+  // 키보드 이벤트 핸들러
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.code === 'Space' || e.code === 'ArrowRight') {
@@ -160,26 +170,26 @@ export const RecordingSection = ({
     return () => window.removeEventListener('keydown', handler);
   }, [handlePageChange]);
 
+  // 최종 종료 및 데이터 전달
   const handleFinish = useCallback(async () => {
     if (isFinishing || !isRecording) return;
     setIsFinishing(true);
 
     try {
       stopRecording();
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-
+      await new Promise((resolve) => setTimeout(resolve, 3000));
       const finalVideoBlob = getRecordedBlob();
 
       if (!finalVideoBlob || finalVideoBlob.size === 0) {
         throw new Error('녹화된 영상이 없습니다.');
       }
 
-      onFinish(finalVideoBlob, slideLogs);
+      onFinish(finalVideoBlob, slideLogsRef.current);
     } catch (error) {
       alert(error instanceof Error ? error.message : '오류가 발생했습니다.');
       setIsFinishing(false);
     }
-  }, [isFinishing, isRecording, stopRecording, getRecordedBlob, slideProgress, onFinish]);
+  }, [isFinishing, isRecording, stopRecording, getRecordedBlob, onFinish]);
 
   return (
     <div className="fixed inset-0 z-60 bg-white">
@@ -193,12 +203,10 @@ export const RecordingSection = ({
 
       <header className="fixed left-0 top-0 z-70 flex h-15 w-full items-center justify-between border-b border-gray-200 bg-white px-18">
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-6">
-            <Logo onClick={onExitClick} />
-            <span className="hidden md:inline-flex h-7 items-center px-2 text-sm font-semibold text-gray-800 min-w-0">
-              <span className="max-w-60 truncate">{presentation?.title || '내 발표'}</span>
-            </span>
-          </div>
+          <Logo onClick={onExitClick} />
+          <span className="hidden md:inline-flex h-7 items-center px-2 text-sm font-semibold text-gray-800 min-w-0">
+            <span className="max-w-60 truncate">{presentation?.title || '내 발표'}</span>
+          </span>
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 animate-pulse rounded-full bg-error" />
             <span className="text-body-m-bold text-black">
@@ -231,7 +239,7 @@ export const RecordingSection = ({
       </header>
 
       <main className="mt-15 flex">
-        <section className="relative  h-[calc(110vh-120px)] flex flex-1 flex-col bg-white">
+        <section className="relative h-[calc(110vh-120px)] flex flex-1 flex-col bg-white">
           <div className="relative pt-5 aspect-video w-full overflow-hidden rounded-lg flex items-center justify-center">
             {slidesList[currentPage - 1]?.url ? (
               <img
@@ -250,10 +258,8 @@ export const RecordingSection = ({
             </div>
           </div>
 
-          {/* 캠 영역 */}
           <div className="mt-4 flex justify-end">
-            {' '}
-            <div className="mr-15 h-27 w-48 overflow-hidden rounded-xl shadow-lg ">
+            <div className="mr-15 h-27 w-48 overflow-hidden rounded-xl shadow-lg">
               <video
                 ref={camVideoRef}
                 autoPlay
@@ -354,7 +360,9 @@ export const RecordingSection = ({
                     </div>
                     {(isVisited || isCurrent) && (
                       <span
-                        className={`tabular-nums text-body-m ${isCurrent ? 'text-black' : 'text-gray-800'}`}
+                        className={`tabular-nums text-body-m ${
+                          isCurrent ? 'text-black' : 'text-gray-800'
+                        }`}
                       >
                         {formatTime(slideProgress[idx]?.duration || 0)}
                       </span>
