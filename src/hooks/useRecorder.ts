@@ -20,22 +20,28 @@ export const useRecorder = () => {
   const selectedMimeTypeRef = useRef<'video/webm' | 'video/mp4'>('video/webm');
 
   const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current?.state !== 'inactive') {
-      mediaRecorderRef.current?.stop();
-    }
-
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.srcObject = null;
-      if (videoRef.current.parentNode) {
-        document.body.removeChild(videoRef.current);
+    return new Promise<void>((resolve) => {
+      if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') {
+        resolve();
+        return;
       }
-      videoRef.current = null;
-    }
 
-    setIsRecording(false);
+      mediaRecorderRef.current.onstop = () => {
+        if (videoRef.current) {
+          videoRef.current.pause();
+          videoRef.current.srcObject = null;
+          if (videoRef.current.parentNode) {
+            document.body.removeChild(videoRef.current);
+          }
+          videoRef.current = null;
+        }
+        setIsRecording(false);
+        resolve();
+      };
+
+      mediaRecorderRef.current.stop();
+    });
   }, []);
-
   const startRecording = useCallback(
     async (camStream: MediaStream) => {
       if (!camStream.active) return;
