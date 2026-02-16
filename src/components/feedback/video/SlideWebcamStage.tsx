@@ -10,9 +10,9 @@
 /* eslint-disable no-console */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import type Hls from 'hls.js';
 
 import clsx from 'clsx';
+import type Hls from 'hls.js';
 
 import RefreshIcon from '@/assets/icons/icon-refresh.svg?react';
 import VideoPlaybackBar from '@/components/feedback/video/VideoPlaybackBar';
@@ -41,7 +41,7 @@ function MediaBox({ isMain, showPip, onToggle, label, className, children }: Med
       // 메인/작은 박스 위치 토글 로직
       return isMain
         ? 'inset-0 z-10 rounded-none' // 메인이면 전체 화면
-        : 'right-4 bottom-25 w-48 h-27 z-35 rounded-xl'; // 서브면 우측 하단 작은 박스
+        : 'right-4 bottom-20 w-48 h-27 z-35 rounded'; // 서브면 우측 하단 작은 박스
     }
     // 2. PiP 모드가 아닐 때 (모바일 등)
     // 메인이면 보이고, 서브면 완전히 숨김 (hidden으로 DOM에서 제거)

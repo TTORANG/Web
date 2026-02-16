@@ -16,6 +16,7 @@ import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { type ShareExitSnapshot, useFeedbackVideo } from '@/pages/feedback/useFeedbackVideo';
 import type { ReadSharedContentData } from '@/types/share';
+import { countTreeComments } from '@/utils/comment';
 
 interface FeedbackVideoPageProps {
   sharedContent: ReadSharedContentData;
@@ -122,6 +123,7 @@ export default function FeedbackVideoPage({
             currentTime={currentTime}
             onSeek={requestSeek}
             isLoading={isLoading}
+            variant="inverted"
           />
         </div>
 
@@ -165,6 +167,7 @@ export default function FeedbackVideoPage({
             slideChangeTimes={slideChangeTimes}
             currentTime={currentTime}
             onSeek={requestSeek}
+            variant="inverted"
           />
         }
         commentTabContent={
@@ -192,7 +195,7 @@ export default function FeedbackVideoPage({
             </div>
           </>
         }
-        commentCount={comments.length}
+        commentCount={countTreeComments(comments)}
       />
 
       {/* 단일 SlideWebcamStage - CSS로 위치 조정 */}

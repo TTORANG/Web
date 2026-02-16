@@ -41,7 +41,7 @@ export default function CommentReplies({
     combined.sort((a, b) => {
       const aTime = new Date(a.createdAt).getTime();
       const bTime = new Date(b.createdAt).getTime();
-      return aTime - bTime;
+      return bTime - aTime;
     });
 
     return combined;
