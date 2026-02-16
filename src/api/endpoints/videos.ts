@@ -38,8 +38,6 @@ export const videosApi = {
       `/videos/${numericId}/chunks/${chunkIndex}`,
       formData,
       {
-        // FormData는 브라우저가 boundary를 포함한 Content-Type을 자동 설정해야 multer가 파일을 파싱할 수 있음
-        // Content-Type을 undefined로 하지 않으면 서버에서 req.file이 비어 오류가 발생함
         headers: { 'Content-Type': undefined },
       },
     );

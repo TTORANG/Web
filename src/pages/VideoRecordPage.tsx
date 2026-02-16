@@ -15,7 +15,6 @@ import {
 } from '@/components/video';
 import { getTabPath } from '@/constants/navigation';
 import { usePresentation } from '@/hooks/queries/usePresentations';
-import { useSlides } from '@/hooks/queries/useSlides';
 import { useVideoUpload } from '@/hooks/useVideoUpload';
 
 type RecordStep = 'TEST' | 'RECORDING';
@@ -26,7 +25,6 @@ export default function VideoRecordPage() {
   const queryClient = useQueryClient();
 
   const { data: presentation } = usePresentation(projectId!);
-  const { data: slidesData } = useSlides(projectId!);
 
   const [step, setStep] = useState<RecordStep>('TEST');
   const [camStream, setCamStream] = useState<MediaStream | null>(null);
