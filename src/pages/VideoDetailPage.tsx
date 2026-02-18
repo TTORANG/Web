@@ -1,21 +1,24 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import type { ReadVideoDetailResponseDto, VideoCommentDto } from '@/api/dto/video.dto';
 import { getScript } from '@/api/endpoints/scripts';
 import { videosApi } from '@/api/endpoints/videos';
 import { CommentInput } from '@/components/comment';
-import Comment from '@/components/comment/Comment';
-import { CommentProvider } from '@/components/comment/CommentContext';
+import CommentList from '@/components/comment/CommentList';
+import FeedbackMobileLayout from '@/components/feedback/FeedbackMobileLayout';
 import ScriptSection from '@/components/feedback/ScriptSection';
+import ReactionBubble from '@/components/feedback/video/ReactionBubble';
 import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
 import { useSlides } from '@/hooks/queries/useSlides';
+import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { useVideoComments } from '@/hooks/useVideoComments';
 import { useAuthStore } from '@/stores/authStore';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { SlideListItem } from '@/types';
 import type { Comment as CommentType } from '@/types/comment';
 import type { VideoTimestampFeedback } from '@/types/video';
+import { countTreeComments } from '@/utils/comment';
 import { clamp, parseSeekSecondsParam } from '@/utils/video';
 
 export default function VideoDetailPage() {
@@ -25,6 +28,7 @@ export default function VideoDetailPage() {
   const requestedSeekSeconds = parseSeekSecondsParam(seekParam);
   const currentUser = useAuthStore((state) => state.user);
 
+  const isDesktop = useIsDesktop();
   const { initVideo, requestSeek: requestSeekAction } = useVideoFeedbackStore();
 
   const [videoData, setVideoData] = useState<ReadVideoDetailResponseDto | null>(null);
@@ -32,12 +36,7 @@ export default function VideoDetailPage() {
   const [currentTime, setCurrentTime] = useState(0);
   const [commentDraft, setCommentDraft] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  // 💡 scrollToCommentId 상태 삭제 (Unused variable 경고 해결)
-
-  const [replyingToId, setReplyingToId] = useState<string | null>(null);
-  const [replyDraft, setReplyDraft] = useState('');
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState('');
+  const [scrollToCommentId, setScrollToCommentId] = useState<string | undefined>();
 
   const { data: slidesData } = useSlides(projectId!);
   const [projectSlides, setProjectSlides] = useState<SlideListItem[]>([]);
@@ -45,6 +44,7 @@ export default function VideoDetailPage() {
   const [slideIdOrder, setSlideIdOrder] = useState<string[]>([]);
 
   const desktopPlaceholderRef = useRef<HTMLDivElement>(null);
+  const mobilePlaceholderRef = useRef<HTMLDivElement>(null);
   const initialSeekRequestedRef = useRef(false);
   const [videoStyle, setVideoStyle] = useState<React.CSSProperties>({
     position: 'fixed',
@@ -225,62 +225,27 @@ export default function VideoDetailPage() {
     requestSeekAction(safeSeekSeconds);
   }, [isLoading, requestSeekAction, requestedSeekSeconds, videoData?.video.durationSeconds]);
 
-  const contextValue = useMemo(
-    () => ({
-      replyingToId,
-      replyDraft,
-      setReplyDraft,
-      toggleReply: (id: string) => {
-        setReplyingToId((prev) => (prev === id ? null : id));
-        setReplyDraft('');
-      },
-      submitReply: async (targetId: string) => {
-        if (replyDraft.trim()) {
-          await addReply(targetId, replyDraft);
-          setReplyDraft('');
-          setReplyingToId(null);
-        }
-      },
-      cancelReply: () => {
-        setReplyingToId(null);
-        setReplyDraft('');
-      },
-      editingId,
-      editDraft,
-      setEditDraft,
-      startEdit: (id: string, content: string) => {
-        setEditingId(id);
-        setEditDraft(content);
-      },
-      cancelEdit: () => {
-        setEditingId(null);
-        setEditDraft('');
-      },
-      submitEdit: async (id: string) => {
-        if (editDraft.trim()) {
-          await updateComment(id, editDraft);
-          setEditingId(null);
-          setEditDraft('');
-        }
-      },
-      deleteComment,
-      skipReplyFetch: true,
-      goToRef: (ref: { kind: 'slide'; index: number } | { kind: 'video'; seconds: number }) => {
-        if (ref.kind === 'video') {
-          requestSeekAction(ref.seconds);
-        }
-      },
-    }),
-    [
-      replyingToId,
-      replyDraft,
-      editingId,
-      editDraft,
-      addReply,
-      updateComment,
-      deleteComment,
-      requestSeekAction,
-    ],
+  const handleGoToRef = useCallback(
+    (ref: NonNullable<CommentType['ref']>) => {
+      if (ref.kind === 'video') {
+        requestSeekAction(ref.seconds);
+      }
+    },
+    [requestSeekAction],
+  );
+
+  const handleAddReply = useCallback(
+    (targetId: string, content: string) => {
+      addReply(targetId, content);
+    },
+    [addReply],
+  );
+
+  const handleUpdateComment = useCallback(
+    (commentId: string, content: string) => {
+      updateComment(commentId, content);
+    },
+    [updateComment],
   );
 
   const handleAddMainComment = async () => {
@@ -291,12 +256,7 @@ export default function VideoDetailPage() {
       if (successId) {
         setCommentDraft('');
         await loadData(false);
-        // 💡 렌더링 후 해당 댓글로 스크롤 (상태 변수 대신 직접 DOM 접근)
-        setTimeout(() => {
-          document
-            .getElementById(`comment-${successId}`)
-            ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 300);
+        setScrollToCommentId(successId);
       }
     } finally {
       setIsSubmittingComment(false);
@@ -305,8 +265,15 @@ export default function VideoDetailPage() {
 
   useEffect(() => {
     const updatePosition = () => {
-      const rect = desktopPlaceholderRef.current?.getBoundingClientRect();
-      if (!rect || rect.width === 0) return;
+      const primaryRef = isDesktop ? desktopPlaceholderRef : mobilePlaceholderRef;
+      const fallbackRef = isDesktop ? mobilePlaceholderRef : desktopPlaceholderRef;
+
+      let rect = primaryRef.current?.getBoundingClientRect();
+      if (!rect || rect.width === 0 || rect.height === 0) {
+        rect = fallbackRef.current?.getBoundingClientRect();
+      }
+      if (!rect || rect.width === 0 || rect.height === 0) return;
+
       setVideoStyle({
         position: 'fixed',
         top: rect.top,
@@ -317,10 +284,23 @@ export default function VideoDetailPage() {
         opacity: 1,
       });
     };
+
+    const timers = [0, 50, 100, 200].map((delay) => setTimeout(updatePosition, delay));
+
+    const observer = new ResizeObserver(updatePosition);
+    if (desktopPlaceholderRef.current) observer.observe(desktopPlaceholderRef.current);
+    if (mobilePlaceholderRef.current) observer.observe(mobilePlaceholderRef.current);
+
     window.addEventListener('resize', updatePosition);
-    updatePosition();
-    return () => window.removeEventListener('resize', updatePosition);
-  }, [isLoading]);
+    window.addEventListener('scroll', updatePosition, true);
+
+    return () => {
+      timers.forEach(clearTimeout);
+      observer.disconnect();
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [isDesktop, isLoading]);
 
   useEffect(() => {
     if (!slidesData || slideIdOrder.length === 0) return;
@@ -349,66 +329,104 @@ export default function VideoDetailPage() {
       role="tabpanel"
       id="tabpanel-videos"
       aria-labelledby="tab-videos"
-      className="flex h-full w-full bg-white overflow-hidden"
+      className="flex h-full w-full bg-gray-100 overflow-hidden"
     >
-      <div className="flex flex-1 flex-col h-full min-w-0">
-        <div className="flex shrink-0 flex-col items-center pt-10 pb-6 px-12 ">
-          <div
-            ref={desktopPlaceholderRef}
-            className="aspect-video w-full max-w-[800px] rounded-lg shadow-md"
+      {/* 데스크톱 뷰 */}
+      <div className="hidden md:flex flex-1 px-35 pt-6">
+        <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-4">
+          <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <div ref={desktopPlaceholderRef} className="w-full aspect-video" />
+          </div>
+          <ScriptSection
+            slides={projectSlides}
+            slideChangeTimes={slideChangeTimes}
+            currentTime={currentTime}
+            onSeek={requestSeekAction}
           />
         </div>
-        <div className="flex-1 min-h-0 px-12 pb-6 flex flex-col items-center">
-          <div className="w-full max-w-[800px] h-full flex flex-col min-h-0 overflow-y-auto">
-            <ScriptSection
-              slides={projectSlides}
-              slideChangeTimes={slideChangeTimes}
-              currentTime={currentTime}
-              onSeek={requestSeekAction}
+
+        <aside className="ml-6 w-96 shrink-0 flex flex-col rounded-lg bg-white overflow-hidden">
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="text-body-m-bold text-gray-900">의견</h2>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto scroll-smooth">
+            <CommentList
+              comments={comments}
+              scrollToCommentId={scrollToCommentId}
+              onAddReply={handleAddReply}
+              onGoToRef={handleGoToRef}
+              onDeleteComment={deleteComment}
+              onUpdateComment={handleUpdateComment}
+              skipReplyFetch
             />
           </div>
-        </div>
+          <div className="shrink-0 border-t border-gray-100 bg-white px-4 pb-6 pt-2">
+            <CommentInput
+              value={commentDraft}
+              onChange={setCommentDraft}
+              onSubmit={handleAddMainComment}
+              onCancel={() => setCommentDraft('')}
+              disabled={isSubmittingComment}
+              className="w-full"
+            />
+          </div>
+        </aside>
       </div>
 
-      <aside className="w-[400px] shrink-0 flex flex-col border-l border-gray-200 bg-white">
-        <div className="p-4 border-b">
-          <h2 className="text-base font-bold text-gray-900">의견</h2>
-        </div>
-        <div className="flex-1 min-h-0 overflow-y-auto scroll-smooth">
-          <CommentProvider value={contextValue}>
-            <div className="flex flex-col">
-              {comments.map((comment) => (
-                <Comment
-                  key={comment.commentId}
-                  comment={comment}
-                  rootCommentId={comment.commentId}
-                />
-              ))}
-            </div>
-          </CommentProvider>
-        </div>
-        <div className="p-4 border-t border-gray-100 bg-white shrink-0">
-          <CommentInput
-            value={commentDraft}
-            onChange={setCommentDraft}
-            onSubmit={handleAddMainComment}
-            onCancel={() => setCommentDraft('')}
-            disabled={isSubmittingComment}
-            className="w-full"
+      {/* 모바일 뷰 */}
+      <FeedbackMobileLayout
+        mediaSlot={<div ref={mobilePlaceholderRef} className="w-full min-w-0 aspect-video" />}
+        reactionSlot={<></>}
+        scriptTabContent={
+          <ScriptSection
+            slides={projectSlides}
+            slideChangeTimes={slideChangeTimes}
+            currentTime={currentTime}
+            onSeek={requestSeekAction}
           />
-        </div>
-      </aside>
+        }
+        commentTabContent={
+          <>
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <CommentList
+                comments={comments}
+                scrollToCommentId={scrollToCommentId}
+                onAddReply={handleAddReply}
+                onGoToRef={handleGoToRef}
+                onDeleteComment={deleteComment}
+                onUpdateComment={handleUpdateComment}
+                skipReplyFetch
+              />
+            </div>
+            <div className="shrink-0 px-4 py-3">
+              <CommentInput
+                value={commentDraft}
+                onChange={setCommentDraft}
+                onSubmit={handleAddMainComment}
+                onCancel={() => setCommentDraft('')}
+                disabled={isSubmittingComment}
+                className="w-full"
+              />
+            </div>
+          </>
+        }
+        commentCount={countTreeComments(comments)}
+      />
 
-      <div
-        style={videoStyle}
-        className="pointer-events-auto rounded-lg overflow-hidden ring-1 ring-black/5"
-      >
+      {/* 단일 SlideWebcamStage - CSS로 위치 조정 */}
+      <div style={videoStyle} className="pointer-events-auto overflow-hidden relative">
         <SlideWebcamStage
           slides={projectSlides}
           slideChangeTimes={slideChangeTimes}
           webcamVideoUrl={videoData?.video.hlsMasterUrl || ''}
           onTimeUpdate={setCurrentTime}
+          disablePip={!isDesktop}
+          showLayoutToggle={!isDesktop}
         />
+        {/* 재생바 위 왼쪽 리액션 버블 */}
+        <div className="absolute bottom-20 left-2 z-30">
+          <ReactionBubble videoId={videoId} currentTimeMs={currentTime * 1000} />
+        </div>
       </div>
     </div>
   );
