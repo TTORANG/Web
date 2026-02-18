@@ -15,10 +15,12 @@ export function userFromAccessToken(accessToken: string, sessionIdOverride?: str
   const email = payload?.email ?? '';
   const sessionId = sessionIdOverride ?? payload?.sessionId ?? '';
 
+  const name = payload?.nickName ?? payload?.name ?? (email ? email.split('@')[0] : undefined);
+
   return {
     id,
     email,
-    name: email ? email.split('@')[0] : undefined,
+    name,
     sessionId,
     profileImage: payload?.profileImageUrl ?? undefined,
   };
