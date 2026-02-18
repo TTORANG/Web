@@ -69,6 +69,7 @@ export const queryKeys = {
     all: ['scripts'] as const,
     detail: (slideId: string) => [...queryKeys.scripts.all, 'detail', slideId] as const,
     versions: (slideId: string) => [...queryKeys.scripts.all, 'versions', slideId] as const,
+    project: (projectId: string) => [...queryKeys.scripts.all, 'project', projectId] as const,
   },
   presentations: {
     all: ['presentations'] as const,

@@ -37,3 +37,39 @@ export interface RestoreScriptResponseDto {
   createdAt: string;
   updatedAt: string;
 }
+
+/**
+ * 프로젝트 대본 항목 DTO
+ */
+export interface ProjectScriptItemDto {
+  slideId: string;
+  scriptText: string;
+}
+
+/**
+ * 프로젝트 전체 대본 조회 응답 DTO
+ */
+export interface GetProjectScriptsResponseDto {
+  message: string;
+  projectId: string;
+  scripts: ProjectScriptItemDto[];
+}
+
+/**
+ * 프로젝트 대본 일괄 수정 요청 DTO
+ */
+export interface BulkEditScriptsRequestDto {
+  scripts: ProjectScriptItemDto[];
+}
+
+/**
+ * 프로젝트 대본 일괄 수정 응답 DTO
+ */
+export interface BulkEditScriptsResponseDto {
+  message: string;
+  projectId: string;
+  requestedSlideCount: number;
+  updatedSlideCount: number;
+  unchangedSlideCount: number;
+  updatedSlideIds: string[];
+}

@@ -12,6 +12,7 @@ export * from './useSlideSelectors';
 export * from './useSlideCommentsActions';
 export * from './useSlideCommentsLoader';
 export * from './useSlideReactions';
+export * from './useScriptBulkEdit';
 export * from './queries/usePresentations';
 export * from './queries/useScript';
 export * from './queries/useSlides';
