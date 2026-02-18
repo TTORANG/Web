@@ -1,9 +1,15 @@
+import axios from 'axios';
 import type { AxiosProgressEvent } from 'axios';
 
 import type { ApiResponse } from '@/types';
 
 import { apiClient } from '../client';
-import type { UploadFileRequestDto, UploadFileResponseDto } from '../dto/files.dto';
+import type {
+  CompleteUploadRequestDto,
+  CompleteUploadResponseDto,
+  CreateUploadUrlRequestDto,
+  CreateUploadUrlResponseDto,
+} from '../dto/files.dto';
 
 type UploadOptions = {
   onUploadProgress?: (event: AxiosProgressEvent) => void;
@@ -11,28 +17,48 @@ type UploadOptions = {
 };
 
 export const filesApi = {
-  // POST /files/upload - 파일 업로드(발표자료/발표영상)
-  uploadFile: async (data: UploadFileRequestDto, options?: UploadOptions) => {
-    if (!(data.file instanceof File)) {
-      throw new Error('유효한 파일이 아닙니다.');
-    }
-
-    const formData = new FormData();
-    formData.append('file', data.file);
-    if (data.title) {
-      formData.append('title', data.title);
-    }
-
-    const response = await apiClient.post<ApiResponse<UploadFileResponseDto>>(
-      '/files/upload',
-      formData,
+  createUploadUrl: async (
+    data: CreateUploadUrlRequestDto,
+    options?: UploadOptions,
+  ): Promise<ApiResponse<CreateUploadUrlResponseDto>> => {
+    const response = await apiClient.post<ApiResponse<CreateUploadUrlResponseDto>>(
+      '/files/upload-url',
+      data,
       {
-        onUploadProgress: options?.onUploadProgress,
         signal: options?.signal,
-        headers: { 'Content-Type': undefined },
       },
     );
+    return response.data;
+  },
 
+  uploadToSignedUrl: async (
+    args: {
+      uploadUrl: string;
+      file: File;
+      contentType: string;
+    },
+    options?: UploadOptions,
+  ): Promise<void> => {
+    await axios.put(args.uploadUrl, args.file, {
+      headers: {
+        'Content-Type': args.contentType,
+      },
+      signal: options?.signal,
+      onUploadProgress: options?.onUploadProgress,
+    });
+  },
+
+  completeUpload: async (
+    data: CompleteUploadRequestDto,
+    options?: UploadOptions,
+  ): Promise<ApiResponse<CompleteUploadResponseDto>> => {
+    const response = await apiClient.post<ApiResponse<CompleteUploadResponseDto>>(
+      '/files/upload-complete',
+      data,
+      {
+        signal: options?.signal,
+      },
+    );
     return response.data;
   },
 };
