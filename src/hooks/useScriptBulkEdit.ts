@@ -28,11 +28,9 @@ const buildScriptMap = (scripts: ProjectScriptItemDto[] | undefined) => {
 export function useScriptBulkEdit() {
   const { projectId } = useParams<{ projectId: string }>();
   const { data: slides } = useSlides(projectId ?? '');
-  const {
-    data: projectScripts,
-    refetch: refetchProjectScripts,
-    isFetching: isProjectScriptsFetching,
-  } = useProjectScripts(projectId ?? '');
+  const { data: projectScripts, refetch: refetchProjectScripts } = useProjectScripts(
+    projectId ?? '',
+  );
 
   const { mutateAsync: bulkEditScripts, isPending: isSaving } = useBulkEditScripts();
 
@@ -189,7 +187,7 @@ export function useScriptBulkEdit() {
     fileInputRef,
     isModalOpen,
     isSaving,
-    isPreparingModal: isPreparingModal || (isModalOpen && isProjectScriptsFetching),
+    isPreparingModal,
     selectedFileName,
     previewItems,
     handleOpenModal,
