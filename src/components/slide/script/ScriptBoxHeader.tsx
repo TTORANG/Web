@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/common';
 
 import CommentPopover from './CommentPopover';
 import ScriptBoxEmoji from './ScriptBoxEmoji';
+import ScriptBulkEditControl from './ScriptBulkEditControl';
 import ScriptHistory from './ScriptHistory';
 import SlideTitle from './SlideTitle';
 
@@ -27,19 +28,26 @@ export default function ScriptBoxHeader({
   onToggleCollapse,
 }: ScriptBoxHeaderProps) {
   return (
-    <div className="flex h-10 items-center justify-between border-b border-gray-200 bg-white px-5 rounded-t-lg">
+    <div className="flex h-10 items-center justify-between rounded-t-lg border-b border-gray-200 bg-white px-2 sm:px-5">
       {/* 좌측: 슬라이드 제목 */}
-      {isLoading ? <Skeleton width={100} height={20} /> : <SlideTitle isCollapsed={isCollapsed} />}
+      <div className="relative z-10 min-w-0 flex-1 bg-white">
+        {isLoading ? (
+          <Skeleton width={100} height={20} />
+        ) : (
+          <SlideTitle isCollapsed={isCollapsed} />
+        )}
+      </div>
 
-      {/* 우측: 이모지, 변경기록, 의견, 접기 버튼 */}
-      <div className="flex items-center gap-3">
+      {/* 우측: 일괄 수정, 이모지, 변경기록, 의견, 접기 버튼 */}
+      <div className="ml-2 flex shrink-0 items-center gap-1.5 sm:gap-3">
         <ScriptBoxEmoji />
+        <ScriptBulkEditControl />
         <ScriptHistory />
         <CommentPopover isLoading={isLoading} />
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="flex h-6 w-6 items-center justify-center rounded bg-transparent text-gray-600 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main"
+          className="hidden h-6 w-6 items-center justify-center rounded bg-transparent text-gray-600 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main sm:flex"
           aria-label={isCollapsed ? '대본 펼치기' : '대본 접기'}
         >
           <ArrowDownIcon
