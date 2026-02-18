@@ -29,7 +29,7 @@ function App() {
       if (!data) return;
 
       if (data.type === 'oauth:error') {
-        console.error('[OAuth] 로그인 에러 수신:', data.error, '\n콜백 URL:', data.callbackUrl);
+        console.error('[OAuth] 로그인 에러 수신:', data.error);
         const store = useAuthStore.getState();
         store.closeLoginModal();
         showToast.error(data.error ?? '소셜 로그인에 실패했습니다.');
