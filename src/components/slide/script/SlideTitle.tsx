@@ -27,7 +27,7 @@ export default function SlideTitle({
   if (readOnly) {
     return (
       <span className="inline-flex h-7 items-center px-2 text-sm font-semibold text-gray-800 min-w-0">
-        <span className="max-w-40 truncate">{resolvedTitle}</span>
+        <span className="max-w-28 truncate sm:max-w-40">{resolvedTitle}</span>
       </span>
     );
   }
@@ -75,7 +75,7 @@ function SlideTitleEditable({
       onSave={handleSave}
       isCollapsed={isCollapsed}
       ariaLabel="슬라이드 이름 변경"
-      titleClassName="max-w-40 truncate"
+      titleClassName="max-w-28 truncate sm:max-w-40"
       showOnMobile
     />
   );

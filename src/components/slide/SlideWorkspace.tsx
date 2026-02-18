@@ -51,10 +51,10 @@ export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps
   }, [scriptData, updateScript]);
 
   return (
-    <div className="h-full min-h-0 flex flex-col">
+    <div className="relative h-full min-h-0 flex flex-col pb-[clamp(12rem,30vh,20rem)] md:pb-0">
       <SlideViewer isLoading={isLoading} isScriptCollapsed={isScriptCollapsed} />
 
-      <div className="shrink-0">
+      <div className="fixed inset-x-0 bottom-0 z-30 shrink-0 px-4 pb-[env(safe-area-inset-bottom)] md:static md:px-0 md:pb-0">
         <div className="mx-auto w-full" style={{ maxWidth: SLIDE_MAX_WIDTH }}>
           <ScriptBox isLoading={isLoading} onCollapsedChange={setIsScriptCollapsed} />
         </div>

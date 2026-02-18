@@ -26,7 +26,7 @@ export default function ScriptBoxEmoji() {
   const trigger = (
     <button
       type="button"
-      className="h-7 rounded bg-transparent px-2 text-gray-600 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main"
+      className="h-7 rounded bg-transparent px-1.5 text-gray-600 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main sm:px-2"
     >
       ···
     </button>
@@ -37,15 +37,17 @@ export default function ScriptBoxEmoji() {
   }
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-1.5 sm:gap-3">
       {/* 메인 이모지 카운트 */}
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-2 sm:gap-6">
         {mainEmojis.map(({ type, count }) => {
           const config = REACTION_CONFIG[type];
           return (
-            <div key={type} className="flex items-center gap-2">
-              <span className="text-base leading-6 text-gray-800">{config.emoji}</span>
-              <span className="text-base leading-6 text-gray-800">
+            <div key={type} className="flex items-center gap-1 sm:gap-2">
+              <span className="text-sm leading-5 text-gray-800 sm:text-base sm:leading-6">
+                {config.emoji}
+              </span>
+              <span className="text-xs leading-4 text-gray-800 sm:text-base sm:leading-6">
                 {formatReactionCount(count)}
               </span>
             </div>
