@@ -15,6 +15,7 @@
 | State Management |                                                                ![Zustand](https://img.shields.io/badge/Zustand-433E38?style=for-the-badge&logo=react&logoColor=white)                                                                 |
 |  Data Fetching   |   ![TanStack Query](https://img.shields.io/badge/-TanStack%20Query-FF4154?style=for-the-badge&logo=react-query&logoColor=white) ![Axios](https://img.shields.io/badge/Axios-5A29E4?style=for-the-badge&logo=axios&logoColor=white)    |
 |     Testing      | ![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=for-the-badge&logo=vitest&logoColor=white) ![Testing Library](https://img.shields.io/badge/Testing_Library-E33332?style=for-the-badge&logo=testinglibrary&logoColor=white) |
+|    E2E / A11y    |       ![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=for-the-badge&logo=playwright&logoColor=white) ![axe-core](https://img.shields.io/badge/axe--core-5A0FC8?style=for-the-badge&logo=axe&logoColor=white)       |
 |     Mocking      |                                                              ![MSW](https://img.shields.io/badge/MSW-FF6A33?style=for-the-badge&logo=mockserviceworker&logoColor=white)                                                               |
 |     Routing      |                                                        ![React Router](https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white)                                                        |
 |    Formatting    |           ![ESLint](https://img.shields.io/badge/ESLint-4B3263?style=for-the-badge&logo=eslint&logoColor=white) ![Prettier](https://img.shields.io/badge/Prettier-F7B93E?style=for-the-badge&logo=prettier&logoColor=black)           |
@@ -43,18 +44,19 @@ npm run dev:local
 
 ## 개발 명령어
 
-| 명령어                  | 설명                           |
-| ----------------------- | ------------------------------ |
-| `npm run dev`           | 개발 서버 실행                 |
-| `npm run dev:local`     | MSW 목 데이터로 개발 서버 실행 |
-| `npm run build`         | 타입 체크 + 프로덕션 빌드      |
-| `npm run type-check`    | TypeScript 타입 체크           |
-| `npm run lint`          | ESLint 검사                    |
-| `npm run prettier`      | Prettier 포맷 검사             |
-| `npm run prettier:fix`  | Prettier 자동 포맷             |
-| `npm run test`          | 테스트 실행                    |
-| `npm run test:watch`    | 테스트 워치 모드               |
-| `npm run test:coverage` | 테스트 커버리지 리포트         |
+| 명령어                        | 설명                           |
+| ----------------------------- | ------------------------------ |
+| `npm run dev`                 | 개발 서버 실행                 |
+| `npm run dev:local`           | MSW 목 데이터로 개발 서버 실행 |
+| `npm run build`               | 타입 체크 + 프로덕션 빌드      |
+| `npm run type-check`          | TypeScript 타입 체크           |
+| `npm run lint`                | ESLint 검사                    |
+| `npm run prettier`            | Prettier 포맷 검사             |
+| `npm run prettier:fix`        | Prettier 자동 포맷             |
+| `npm run test`                | 테스트 실행                    |
+| `npm run test:watch`          | 테스트 워치 모드               |
+| `npm run test:coverage`       | 테스트 커버리지 리포트         |
+| `npm run audit:mobile-tablet` | 모바일/태블릿 접근성 감사 실행 |
 
 ## 프로젝트 구조
 
