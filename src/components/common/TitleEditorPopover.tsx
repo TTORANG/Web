@@ -74,7 +74,7 @@ export function TitleEditorPopover({
           type="button"
           aria-label={ariaLabel}
           className={clsx(
-            'h-7 items-center gap-1.5 rounded-md bg-transparent px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main min-w-0',
+            'h-7 items-center gap-1.5 rounded-md bg-white px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main min-w-0',
             showOnMobile ? 'inline-flex' : 'hidden md:inline-flex',
           )}
         >

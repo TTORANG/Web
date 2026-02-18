@@ -1,7 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { RestoreScriptRequestDto, UpdateScriptRequestDto } from '@/api/dto';
-import { getScript, getScriptVersions, restoreScript, updateScript } from '@/api/endpoints/scripts';
+import type {
+  BulkEditScriptsRequestDto,
+  RestoreScriptRequestDto,
+  UpdateScriptRequestDto,
+} from '@/api/dto';
+import {
+  bulkEditScripts,
+  getProjectScripts,
+  getScript,
+  getScriptVersions,
+  restoreScript,
+  updateScript,
+} from '@/api/endpoints/scripts';
 import { queryKeys } from '@/api/queryClient';
 
 /**
@@ -60,6 +71,35 @@ export function useRestoreScript() {
     onSuccess: (_, { slideId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.scripts.detail(slideId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.scripts.versions(slideId) });
+    },
+  });
+}
+
+/**
+ * 프로젝트 전체 대본 조회
+ */
+export function useProjectScripts(projectId: string) {
+  return useQuery({
+    queryKey: queryKeys.scripts.project(projectId),
+    queryFn: () => getProjectScripts(projectId),
+    enabled: !!projectId,
+  });
+}
+
+/**
+ * 프로젝트 대본 일괄 수정
+ */
+export function useBulkEditScripts() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ projectId, data }: { projectId: string; data: BulkEditScriptsRequestDto }) =>
+      bulkEditScripts(projectId, data),
+
+    onSuccess: (_, { projectId }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.slides.list(projectId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.scripts.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.scripts.project(projectId) });
     },
   });
 }

@@ -48,14 +48,14 @@ export default function ScriptHistory() {
           type="button"
           aria-label="대본 변경 기록 보기"
           className={clsx(
-            'inline-flex h-7 items-center gap-1 rounded pl-2 pr-1.5',
+            'inline-flex h-7 shrink-0 items-center gap-1 rounded px-1.5 sm:pl-2 sm:pr-1.5',
             'outline-1 -outline-offset-1 focus-visible:outline-2 focus-visible:outline-main',
             isOpen
               ? 'bg-white text-main outline-main'
               : 'bg-white text-gray-800 outline-gray-200 hover:bg-gray-100 active:bg-gray-200',
           )}
         >
-          <span className="text-sm font-semibold leading-5">변경 기록</span>
+          <span className="hidden text-sm font-semibold leading-5 sm:inline">변경 기록</span>
           <RevertIcon className="h-4 w-4" aria-hidden="true" />
         </button>
       )}

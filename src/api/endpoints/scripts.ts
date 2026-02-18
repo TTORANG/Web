@@ -4,6 +4,9 @@
  */
 import { apiClient } from '@/api/client';
 import type {
+  BulkEditScriptsRequestDto,
+  BulkEditScriptsResponseDto,
+  GetProjectScriptsResponseDto,
   GetScriptResponseDto,
   GetScriptVersionHistoryResponseDto,
   RestoreScriptRequestDto,
@@ -82,6 +85,43 @@ export async function restoreScript(
 ): Promise<GetScriptResponseDto> {
   const response = await apiClient.post<ApiResponse<GetScriptResponseDto>>(
     `/presentations/slides/${slideId}/restore`,
+    data,
+  );
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
+}
+
+/**
+ * 프로젝트 전체 대본 조회
+ *
+ * @param projectId - 프로젝트 ID
+ */
+export async function getProjectScripts(projectId: string): Promise<GetProjectScriptsResponseDto> {
+  const response = await apiClient.get<ApiResponse<GetProjectScriptsResponseDto>>(
+    `/presentations/${projectId}/scripts`,
+  );
+
+  if (response.data.resultType === 'SUCCESS') {
+    return response.data.success;
+  }
+  throw new Error(response.data.error.reason);
+}
+
+/**
+ * 프로젝트 대본 일괄 수정
+ *
+ * @param projectId - 프로젝트 ID
+ * @param data - 일괄 수정할 대본 목록
+ */
+export async function bulkEditScripts(
+  projectId: string,
+  data: BulkEditScriptsRequestDto,
+): Promise<BulkEditScriptsResponseDto> {
+  const response = await apiClient.patch<ApiResponse<BulkEditScriptsResponseDto>>(
+    `/presentations/${projectId}/scripts/bulk-edit`,
     data,
   );
 

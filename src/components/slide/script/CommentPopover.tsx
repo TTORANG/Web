@@ -9,6 +9,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import clsx from 'clsx';
 
+import CommentCountIcon from '@/assets/icons/icon-comment-count.svg?react';
 import CommentList from '@/components/comment/CommentList';
 import { Popover, Skeleton } from '@/components/common';
 import { useSlideId } from '@/hooks';
@@ -55,16 +56,20 @@ export default function CommentPopover({ isLoading }: CommentPopoverProps) {
           type="button"
           aria-label={`의견 ${commentCount}개 보기`}
           className={clsx(
-            'inline-flex h-7 items-center gap-1 rounded px-2',
+            'inline-flex h-7 shrink-0 items-center gap-1 rounded px-1.5 sm:px-2',
             'outline-1 -outline-offset-1 focus-visible:outline-2 focus-visible:outline-main',
             isOpen
               ? 'bg-white outline-main'
               : 'bg-white outline-gray-200 hover:bg-gray-100 active:bg-gray-200',
           )}
         >
+          <CommentCountIcon
+            className={clsx('h-4 w-4', isOpen ? 'text-main' : 'text-gray-600')}
+            aria-hidden="true"
+          />
           <span
             className={clsx(
-              'text-sm font-semibold leading-5',
+              'hidden text-sm font-semibold leading-5 sm:inline',
               isOpen ? 'text-main' : 'text-gray-800',
             )}
           >

@@ -16,9 +16,13 @@ export type {
   UpdateSlideTitleRequestDto,
 } from './slides.dto';
 export type {
+  BulkEditScriptsRequestDto,
+  BulkEditScriptsResponseDto,
+  GetProjectScriptsResponseDto,
   UpdateScriptRequestDto,
   GetScriptResponseDto,
   GetScriptVersionHistoryResponseDto,
+  ProjectScriptItemDto,
   RestoreScriptResponseDto,
 } from './scripts.dto';
 export type {
