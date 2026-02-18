@@ -16,14 +16,6 @@ export default function OAuthCallbackPage() {
     const accessToken = searchParams.get('accessToken');
     const sessionIdParam = searchParams.get('sessionId');
 
-    if (import.meta.env.DEV) {
-      console.info('[OAuthCallback] params:', {
-        error: errorParam,
-        hasAccessToken: !!accessToken,
-        hasSessionId: !!sessionIdParam,
-      });
-    }
-
     if (errorParam) {
       if (window.opener) {
         window.opener.postMessage(

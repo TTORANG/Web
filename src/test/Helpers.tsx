@@ -12,11 +12,11 @@ function createTestQueryClient() {
   });
 }
 
-function Providers({ children }: { children: ReactNode }) {
-  const queryClient = createTestQueryClient();
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
-}
-
 export function renderWithProviders(ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) {
-  return render(ui, { wrapper: Providers, ...options });
+  const queryClient = createTestQueryClient();
+  const Wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+
+  return render(ui, { wrapper: Wrapper, ...options });
 }

@@ -126,8 +126,8 @@ export const useAuthStore = create<AuthState>()(
         version: PERSIST_VERSION,
         onRehydrateStorage: () => {
           return (state, error) => {
+            void state;
             if (error) {
-              console.error('[AuthStore] 하이드레이션 실패, guest 상태로 폴백:', error);
               useAuthStore.setState({
                 status: 'guest',
                 user: null,
@@ -135,8 +135,6 @@ export const useAuthStore = create<AuthState>()(
                 refreshToken: null,
                 anonymousSessionId: null,
               });
-            } else if (import.meta.env.DEV) {
-              console.debug('[AuthStore] 하이드레이션 완료:', state?.status);
             }
           };
         },

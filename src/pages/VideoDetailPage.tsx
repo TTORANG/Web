@@ -180,7 +180,7 @@ export default function VideoDetailPage() {
           }
         }
       } catch (err) {
-        console.error(err);
+        void err;
       }
     },
     [videoId, initVideo, transformComments, buildFeedbacks],

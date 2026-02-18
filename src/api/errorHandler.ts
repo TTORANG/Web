@@ -15,7 +15,7 @@ const errorHandlers: Record<number, ErrorHandler> = {
   404: (message: string) => {
     showToast.error('요청한 정보를 찾을 수 없습니다.', message);
   },
-  409: (_: string) => {
+  409: () => {
     // 영상 처리 중(slides 조회 409)에는 안내 토스트를 띄우지 않습니다.
   },
 };
