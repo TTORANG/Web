@@ -91,9 +91,7 @@ export const useMediaStream = (videoDeviceId?: string, audioDeviceId?: string) =
 
         updateVolume();
       } catch (err) {
-        if (import.meta.env.DEV) {
-          console.error('오디오 분석 설정 중 오류 발생:', err);
-        }
+        void err;
       }
     },
     [cleanupAudioAnalysis],

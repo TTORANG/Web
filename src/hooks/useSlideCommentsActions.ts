@@ -17,6 +17,7 @@ import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
 import { flatToTree } from '@/utils/comment';
 import { showToast } from '@/utils/toast';
+import { getUserDisplayName } from '@/utils/user';
 
 // ── 내부 전용 TanStack Query 훅 ─────────────────────────────
 
@@ -58,6 +59,24 @@ function useDeleteCommentMutation() {
       deleteCommentApi({ commentId: variables.commentId }),
   });
 }
+
+type CommentListCacheItem = {
+  commentId?: string;
+  parentId?: string | null;
+  parentCommentId?: string | null;
+};
+
+type CommentListCachePage = {
+  comments?: CommentListCacheItem[];
+  pagination?: {
+    total?: number;
+  };
+};
+
+type CommentListInfiniteCache = {
+  pages?: CommentListCachePage[];
+  pageParams?: unknown[];
+};
 
 // ── 슬라이드 댓글 통합 훅 ───────────────────────────────────
 
@@ -112,6 +131,93 @@ export function useSlideCommentsActions() {
     return flatToTree(sorted);
   }, [flatComments]);
 
+  const collectDeleteIds = (commentsSnapshot: Comment[], targetId: string) => {
+    const deleteIds = new Set<string>([targetId]);
+    let hasNewChild = true;
+
+    while (hasNewChild) {
+      hasNewChild = false;
+      for (const comment of commentsSnapshot) {
+        if (!comment.parentId) continue;
+        if (deleteIds.has(comment.parentId) && !deleteIds.has(comment.commentId)) {
+          deleteIds.add(comment.commentId);
+          hasNewChild = true;
+        }
+      }
+    }
+
+    return deleteIds;
+  };
+
+  const removeFromRepliesCaches = (deleteIds: Set<string>) => {
+    queryClient.setQueriesData(
+      { queryKey: [...queryKeys.comments.all, 'replies'] },
+      (oldData: unknown) => {
+        if (!Array.isArray(oldData)) return oldData;
+
+        return oldData.filter((item) => {
+          if (!item || typeof item !== 'object') return true;
+          const reply = item as CommentListCacheItem;
+          if (reply.commentId && deleteIds.has(reply.commentId)) return false;
+          if (reply.parentId && deleteIds.has(reply.parentId)) return false;
+          if (reply.parentCommentId && deleteIds.has(reply.parentCommentId)) return false;
+          return true;
+        });
+      },
+    );
+  };
+
+  const removeFromCommentListCaches = (deleteIds: Set<string>) => {
+    queryClient.setQueriesData({ queryKey: queryKeys.comments.lists() }, (oldData: unknown) => {
+      if (!oldData || typeof oldData !== 'object') return oldData;
+
+      const infiniteCache = oldData as CommentListInfiniteCache;
+      if (!Array.isArray(infiniteCache.pages)) return oldData;
+
+      let hasChanged = false;
+
+      const nextPages = infiniteCache.pages.map((page) => {
+        if (!page || typeof page !== 'object' || !Array.isArray(page.comments)) return page;
+
+        const prevLength = page.comments.length;
+        const nextComments = page.comments.filter((comment) => {
+          if (!comment || typeof comment !== 'object') return true;
+          return !comment.commentId || !deleteIds.has(comment.commentId);
+        });
+
+        const removedCount = prevLength - nextComments.length;
+        if (removedCount === 0) return page;
+
+        hasChanged = true;
+        const nextPage: CommentListCachePage = { ...page, comments: nextComments };
+        if (page.pagination && typeof page.pagination.total === 'number') {
+          nextPage.pagination = {
+            ...page.pagination,
+            total: Math.max(0, page.pagination.total - removedCount),
+          };
+        }
+        return nextPage;
+      });
+
+      if (!hasChanged) return oldData;
+      return {
+        ...infiniteCache,
+        pages: nextPages,
+      };
+    });
+  };
+
+  const snapshotQueryCaches = (queryKey: readonly unknown[]) =>
+    queryClient.getQueriesData({
+      queryKey,
+    });
+
+  const restoreQueryCaches = (snapshot: ReturnType<typeof queryClient.getQueriesData>) => {
+    snapshot.forEach(([queryKey, data]) => {
+      queryClient.setQueryData(queryKey, data);
+    });
+  };
+
   const addComment = async (content: string): Promise<string | null> => {
     if (!slideId) return null;
     const trimmedContent = content.trim();
@@ -138,7 +244,7 @@ export function useSlideCommentsActions() {
             serverId: response.commentId,
             slideId,
             userId: currentUser?.id ?? response.userId,
-            userName: currentUser?.name,
+            userName: getUserDisplayName(currentUser),
             userProfileImage: currentUser?.profileImage,
             content: trimmedContent,
             createdAt: response.createdAt,
@@ -197,7 +303,7 @@ export function useSlideCommentsActions() {
           serverId: response.replyId,
           slideId: targetSlideId,
           userId: currentUser?.id ?? response.userId,
-          userName: currentUser?.name,
+          userName: getUserDisplayName(currentUser),
           userProfileImage: currentUser?.profileImage,
           content: trimmedContent,
           createdAt: response.createdAt,
@@ -226,8 +332,11 @@ export function useSlideCommentsActions() {
   const deleteComment = async (commentId: string) => {
     const target = findComment(commentId);
     const targetSlideId = target?.slideId ?? slideId;
-    const targetServerId = target?.serverId;
+    const targetServerId = target?.serverId ?? (target ? undefined : commentId);
     const previousComments = useSlideStore.getState().slide?.comments ?? [];
+    const deleteIds = collectDeleteIds(previousComments, commentId);
+    const previousListCaches = snapshotQueryCaches(queryKeys.comments.lists());
+    const previousReplyCaches = snapshotQueryCaches([...queryKeys.comments.all, 'replies']);
 
     if (!targetSlideId) {
       showToast.error('댓글을 삭제하지 못했습니다.', '슬라이드 정보를 찾을 수 없습니다.');
@@ -236,6 +345,8 @@ export function useSlideCommentsActions() {
 
     // 낙관적 업데이트: UI에서 즉시 제거
     deleteCommentStore(commentId);
+    removeFromCommentListCaches(deleteIds);
+    removeFromRepliesCaches(deleteIds);
 
     // 서버에 저장되지 않은 댓글은 로컬에서만 삭제
     if (!targetServerId) {
@@ -249,13 +360,23 @@ export function useSlideCommentsActions() {
         slideId: targetSlideId,
         projectId,
       });
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.comments.list(targetSlideId),
-      });
+      // 즉시 재조회 시 서버 반영 지연으로 롤백처럼 보일 수 있어, 여기서는 캐시만 stale 처리
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.comments.list(targetSlideId),
+          refetchType: 'none',
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [...queryKeys.comments.all, 'replies'],
+          refetchType: 'none',
+        }),
+      ]);
       showToast.success('댓글을 삭제했습니다.');
     } catch {
       // 실패 시 롤백
       setComments(previousComments);
+      restoreQueryCaches(previousListCaches);
+      restoreQueryCaches(previousReplyCaches);
       showToast.error('댓글을 삭제하지 못했습니다.', '잠시 후 다시 시도해주세요.');
     }
   };

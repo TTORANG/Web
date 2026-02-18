@@ -124,6 +124,20 @@ export const useAuthStore = create<AuthState>()(
       {
         name: 'auth-storage',
         version: PERSIST_VERSION,
+        onRehydrateStorage: () => {
+          return (state, error) => {
+            void state;
+            if (error) {
+              useAuthStore.setState({
+                status: 'guest',
+                user: null,
+                accessToken: null,
+                refreshToken: null,
+                anonymousSessionId: null,
+              });
+            }
+          };
+        },
         migrate: (persistState, version): PersistedAuthState => {
           if (version < PERSIST_VERSION) {
             return {

@@ -29,5 +29,5 @@ export function usePosthogAuthSync() {
       hasSocialSessionRef.current = false;
       lastIdentifiedUserIdRef.current = null;
     }
-  }, [accessToken, user?.id, user?.email, user?.name, user?.sessionId]);
+  }, [accessToken, user]);
 }

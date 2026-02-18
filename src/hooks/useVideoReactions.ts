@@ -21,7 +21,6 @@ const QUERY_TIMESTAMP_STEP_MS = 5000;
 export function useVideoReactions() {
   const video = useVideoFeedbackStore((s) => s.video);
   const currentTime = useVideoFeedbackStore((s) => s.currentTime);
-  const addReactionStore = useVideoFeedbackStore((s) => s.addReaction);
 
   const currentTimestampMs = Math.round(currentTime * 1000);
   const queryTimestampMs =
@@ -35,7 +34,9 @@ export function useVideoReactions() {
   );
   const { mutate: createReactionApi } = useCreateVideoReaction();
 
-  const [optimisticDeltas, setOptimisticDeltas] = useState<Partial<Record<ReactionType, number>>>(
+  // 낙관적 반영은 "서버 카운트에 더하기"가 아니라
+  // "최소 보장 카운트(floor)"로 관리해 중복 합산(+2) 현상을 방지한다.
+  const [optimisticCounts, setOptimisticCounts] = useState<Partial<Record<ReactionType, number>>>(
     {},
   );
   const [transientActives, setTransientActives] = useState<Partial<Record<ReactionType, boolean>>>(
@@ -79,9 +80,9 @@ export function useVideoReactions() {
     return REACTION_TYPES.map((type) => {
       const isLocked = lockedTypes[type] ?? false;
 
-      // 락이 걸려있으면 optimistic delta 유지, 아니면 서버 값만 사용
+      // 락이 걸려있으면 optimistic 최소값과 서버값 중 큰 값을 사용
       const count = isLocked
-        ? Math.max(0, serverCountMap[type] + (optimisticDeltas[type] || 0))
+        ? Math.max(serverCountMap[type], optimisticCounts[type] || 0)
         : serverCountMap[type];
 
       return {
@@ -90,7 +91,7 @@ export function useVideoReactions() {
         active: transientActives[type] ?? false,
       };
     });
-  }, [video, windowReactions, optimisticDeltas, transientActives, lockedTypes]);
+  }, [video, windowReactions, optimisticCounts, transientActives, lockedTypes]);
 
   const addReaction = (type: ReactionType) => {
     if (!video) return;
@@ -104,17 +105,19 @@ export function useVideoReactions() {
     }
     lockTimers.current[type] = setTimeout(() => {
       setLockedTypes((prev) => ({ ...prev, [type]: false }));
-      // 락 해제 시 optimistic delta 초기화하여 서버 값으로 동기화
-      setOptimisticDeltas((prev) => ({ ...prev, [type]: 0 }));
+      // 락 해제 시 서버 값 우선으로 복귀
+      setOptimisticCounts((prev) => ({ ...prev, [type]: 0 }));
     }, OPTIMISTIC_LOCK_DURATION);
 
-    // 낙관적 업데이트: 카운트 +1
-    addReactionStore(type);
-
-    setOptimisticDeltas((prev) => ({
-      ...prev,
-      [type]: (prev[type] || 0) + 1,
-    }));
+    // 낙관적 업데이트: 현재 표시 카운트 기준 +1을 최소값으로 고정
+    setOptimisticCounts((prev) => {
+      const currentCount = reactions.find((reaction) => reaction.type === type)?.count ?? 0;
+      const nextCount = currentCount + 1;
+      return {
+        ...prev,
+        [type]: Math.max(prev[type] || 0, nextCount),
+      };
+    });
 
     // confetti용 transient active 표시
     setTransientActives((prev) => ({ ...prev, [type]: true }));
@@ -136,11 +139,11 @@ export function useVideoReactions() {
       },
       {
         onError: () => {
-          // 정확한 숫자보다 즉각적인 반응 경험이 중요하므로 delta만 롤백
+          // 실패 시 낙관적 최소값을 1만큼 롤백
           // 에러 토스트는 mutation의 meta.suppressErrorToast로 이미 억제됨
-          setOptimisticDeltas((prev) => ({
+          setOptimisticCounts((prev) => ({
             ...prev,
-            [type]: (prev[type] || 0) - 1,
+            [type]: Math.max(0, (prev[type] || 0) - 1),
           }));
         },
       },

@@ -36,6 +36,8 @@ export interface SocialLoginSuccessResponseDto {
 export interface JwtPayloadDto {
   id: string;
   email: string;
+  name?: string;
+  nickName?: string;
   sessionId: string;
   profileImageUrl?: string | null;
 }

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { spawn } from 'node:child_process';
+import { Buffer } from 'node:buffer';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -9,9 +10,9 @@ import { fileURLToPath } from 'node:url';
 import AxeBuilder from '@axe-core/playwright';
 import { chromium, request as playwrightRequest, webkit } from 'playwright';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const repoRoot = path.resolve(__dirname, '..', '..');
+const fileName = fileURLToPath(import.meta.url);
+const dirName = path.dirname(fileName);
+const repoRoot = path.resolve(dirName, '..', '..');
 
 const WEB_HOST = process.env.AUDIT_WEB_HOST ?? 'localhost';
 const WEB_PORT = Number(process.env.AUDIT_WEB_PORT ?? 5173);
@@ -592,9 +593,9 @@ async function run() {
     const stampedPath = path.join(reportsDir, `mobile-tablet-audit-${stamp}.md`);
     fs.writeFileSync(stampedPath, markdown);
     fs.writeFileSync(latestPath, markdown);
-    console.log(`Audit report saved: ${stampedPath}`);
-    console.log(`Latest report saved: ${latestPath}`);
-    console.log(`Artifacts saved: ${rootArtifactsDir}`);
+    process.stdout.write(`Audit report saved: ${stampedPath}\n`);
+    process.stdout.write(`Latest report saved: ${latestPath}\n`);
+    process.stdout.write(`Artifacts saved: ${rootArtifactsDir}\n`);
   } finally {
     if (devServer && !devServer.killed) {
       devServer.kill('SIGTERM');
@@ -613,6 +614,6 @@ async function run() {
 }
 
 run().catch((error) => {
-  console.error(error);
+  process.stderr.write(`${error instanceof Error ? error.stack ?? error.message : String(error)}\n`);
   process.exitCode = 1;
 });

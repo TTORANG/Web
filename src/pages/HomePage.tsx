@@ -147,7 +147,7 @@ export default function HomePage() {
         clearTimeout(timeoutId);
       }
     };
-  }, [pendingThumbnailIds]);
+  }, [pendingThumbnailIds, queryClient]);
 
   return (
     <main className="mx-auto min-h-screen max-w-4xl px-6 py-8">

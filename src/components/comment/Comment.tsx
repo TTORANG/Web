@@ -18,7 +18,6 @@ import { UserAvatar } from '@/components/common';
 import { useAuthStore } from '@/stores/authStore';
 import type { Comment as CommentType } from '@/types/comment';
 import { formatRelativeTime, formatVideoTimestamp } from '@/utils/format';
-import { getUserDisplayName } from '@/utils/user';
 
 import { useCommentContext } from './CommentContext';
 import CommentInput from './CommentInput';
@@ -60,7 +59,14 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
     skipReplyFetch,
   } = useCommentContext();
   const currentUser = useAuthStore((state) => state.user);
-  const fallbackName = getUserDisplayName(currentUser, '알 수 없음');
+  const emailLocalPart = currentUser?.email?.split('@')[0]?.toLowerCase() ?? '';
+  const normalizedCurrentUserName = currentUser?.name?.trim() ?? '';
+  const isEmailDerivedName =
+    normalizedCurrentUserName.length > 0 &&
+    emailLocalPart.length > 0 &&
+    normalizedCurrentUserName.toLowerCase() === emailLocalPart;
+  const myDisplayName =
+    normalizedCurrentUserName && !isEmailDerivedName ? normalizedCurrentUserName : '나';
 
   // userId가 익명 세션 ID 형식인지 체크 (anon_xxx 또는 UUID 형식)
   const isAnonymousId = (id?: string) => {
@@ -71,7 +77,7 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
   const authorName =
     comment.userName ??
     (comment.isMine
-      ? fallbackName
+      ? myDisplayName
       : isAnonymousId(comment.userId)
         ? '익명 사용자'
         : comment.userId);

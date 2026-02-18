@@ -25,7 +25,8 @@ export default function OAuthCallbackPage() {
           },
           window.location.origin,
         );
-        window.close();
+        // 부모 창이 메시지를 수신할 시간을 확보한 후 팝업 닫기
+        setTimeout(() => window.close(), 300);
         return;
       }
       navigate('/', { replace: true });
@@ -34,7 +35,7 @@ export default function OAuthCallbackPage() {
 
     // 필수 파라미터가 없으면 팝업 닫기 또는 홈으로
     if (!accessToken) {
-      if (window.opener) window.close();
+      if (window.opener) setTimeout(() => window.close(), 300);
       else navigate('/', { replace: true });
       return;
     }
@@ -49,7 +50,8 @@ export default function OAuthCallbackPage() {
         },
         window.location.origin,
       );
-      window.close();
+      // 부모 창이 메시지를 수신할 시간을 확보한 후 팝업 닫기
+      setTimeout(() => window.close(), 300);
       return;
     }
     navigate('/', { replace: true });

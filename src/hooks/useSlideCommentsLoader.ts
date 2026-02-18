@@ -33,6 +33,7 @@ export function useSlideCommentsLoader(
 ): CommentsPaginationState {
   const isEnabled = options?.enabled ?? true;
   const resetOnSlideChange = options?.resetOnSlideChange ?? true;
+  const mapComments = options?.mapComments;
   const { setComments } = useSlideActions();
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useSlideCommentsInfiniteQuery(slideId);
@@ -53,9 +54,7 @@ export function useSlideCommentsLoader(
     if (!data) return;
 
     const serverComments = data.pages.flatMap((p) => p.comments);
-    const mappedServerComments = options?.mapComments
-      ? options.mapComments(serverComments)
-      : serverComments;
+    const mappedServerComments = mapComments ? mapComments(serverComments) : serverComments;
     const localComments = useSlideStore.getState().slide?.comments ?? [];
     const isSameLength = localComments.length === mappedServerComments.length;
     const isSameOrderAndIdentity =
@@ -65,7 +64,7 @@ export function useSlideCommentsLoader(
     if (isSameOrderAndIdentity) return;
 
     setComments(mappedServerComments);
-  }, [data, options?.mapComments, setComments, isEnabled]);
+  }, [data, mapComments, setComments, isEnabled]);
 
   return {
     isLoading: isEnabled ? isLoading : false,

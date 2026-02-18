@@ -72,5 +72,19 @@
         "format": ["UPPER_CASE"]
       }
     ]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["**/*.js", "**/*.cjs", "**/*.mjs"],
+      "parserOptions": {
+        "project": null
+      }
+    },
+    {
+      "files": ["src/**/*.test.tsx", "src/**/*.spec.tsx"],
+      "rules": {
+        "check-file/filename-naming-convention": "off"
+      }
+    }
+  ]
 }
