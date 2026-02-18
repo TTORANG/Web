@@ -131,7 +131,7 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
         className={clsx(
           'flex gap-3 py-3 pr-4 transition-colors',
           isIndented ? 'pl-15' : 'pl-4',
-          isEditing ? 'bg-gray-100' : isActive ? 'bg-gray-200' : 'bg-gray-100',
+          isEditing ? 'bg-gray-100' : isActive ? 'bg-gray-200' : '',
         )}
       >
         <div className="w-8 shrink-0">
