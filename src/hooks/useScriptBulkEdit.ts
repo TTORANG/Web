@@ -136,6 +136,7 @@ export function useScriptBulkEdit() {
           script: paragraphs[index] ?? item.script,
         })),
       );
+      resetFileInput();
     } catch {
       showToast.error('TXT 파일을 읽지 못했습니다.', '다시 시도해주세요.');
       resetFileInput();
