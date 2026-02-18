@@ -81,31 +81,67 @@ export function useUploadFile() {
         // 업로드 시작
         setProgress({ ...initialProgress, currentStep: 'uploading' });
 
-        // 업로드 요청
-        const startResponse = await filesApi.uploadFile(data, {
-          signal: controller.signal,
-          onUploadProgress: (e: AxiosProgressEvent) => {
-            const total = e.total ?? 0;
-            if (!total) return;
-
-            const percentage = Math.round((e.loaded * 100) / total);
-
-            // 전송이 거의 끝났을 때
-            setProgress({
-              percentage,
-              currentStep: percentage >= 100 ? 'finishing' : 'uploading',
-            });
+        const uploadUrlResponse = await filesApi.createUploadUrl(
+          {
+            purpose: 'presentation_file',
+            contentType: data.file.type,
+            size: data.file.size,
+            originalFilename: data.file.name,
+            title: data.title,
           },
-        });
+          { signal: controller.signal },
+        );
 
-        // 응답 검증
-        if (startResponse.resultType === 'FAILURE') {
-          throw new Error(startResponse.error?.reason ?? '파일 업로드에 실패했어요.');
+        if (uploadUrlResponse.resultType === 'FAILURE') {
+          throw new Error(uploadUrlResponse.error?.reason ?? '업로드 URL 발급에 실패했어요.');
+        }
+
+        await filesApi.uploadToSignedUrl(
+          {
+            uploadUrl: uploadUrlResponse.success.uploadUrl,
+            file: data.file,
+            contentType: data.file.type,
+          },
+          {
+            signal: controller.signal,
+            onUploadProgress: (e: AxiosProgressEvent) => {
+              const total = e.total ?? 0;
+              if (!total) return;
+
+              const percentage = Math.round((e.loaded * 100) / total);
+
+              // 전송이 거의 끝났을 때
+              setProgress({
+                percentage,
+                currentStep: percentage >= 100 ? 'finishing' : 'uploading',
+              });
+            },
+          },
+        );
+
+        setProgress({ percentage: 100, currentStep: 'finishing' });
+
+        const completeResponse = await filesApi.completeUpload(
+          {
+            objectKey: uploadUrlResponse.success.objectKey,
+            uploadToken: uploadUrlResponse.success.uploadToken,
+          },
+          { signal: controller.signal },
+        );
+
+        if (completeResponse.resultType === 'FAILURE') {
+          throw new Error(completeResponse.error?.reason ?? '파일 업로드 완료 처리에 실패했어요.');
         }
 
         // 완료 처리
         setProgress({ percentage: 100, currentStep: 'done' });
-        return startResponse;
+        return {
+          resultType: 'SUCCESS',
+          error: null,
+          success: {
+            projectId: completeResponse.success.projectId,
+          },
+        };
       } catch (err: unknown) {
         if (
           (axios.isAxiosError(err) && err.code === 'ERR_CANCELED') ||
