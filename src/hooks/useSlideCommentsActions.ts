@@ -17,6 +17,7 @@ import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
 import { flatToTree } from '@/utils/comment';
 import { showToast } from '@/utils/toast';
+import { getUserDisplayName } from '@/utils/user';
 
 // ── 내부 전용 TanStack Query 훅 ─────────────────────────────
 
@@ -138,7 +139,7 @@ export function useSlideCommentsActions() {
             serverId: response.commentId,
             slideId,
             userId: currentUser?.id ?? response.userId,
-            userName: currentUser?.name,
+            userName: getUserDisplayName(currentUser),
             userProfileImage: currentUser?.profileImage,
             content: trimmedContent,
             createdAt: response.createdAt,
@@ -197,7 +198,7 @@ export function useSlideCommentsActions() {
           serverId: response.replyId,
           slideId: targetSlideId,
           userId: currentUser?.id ?? response.userId,
-          userName: currentUser?.name,
+          userName: getUserDisplayName(currentUser),
           userProfileImage: currentUser?.profileImage,
           content: trimmedContent,
           createdAt: response.createdAt,
