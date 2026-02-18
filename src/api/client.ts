@@ -70,6 +70,8 @@ let failedQueue: Array<{
   reject: (reason?: unknown) => void;
 }> = [];
 
+const REFRESH_QUEUE_TIMEOUT_MS = 10_000;
+
 /**
  * 대기 중인 요청 처리
  */
@@ -102,11 +104,27 @@ apiClient.interceptors.response.use(
     const reason = errorData?.reason || '알 수 없는 오류가 발생했습니다';
 
     // [401 에러 - 토큰 재발급 로직]
-    if (status === 401 && originalRequest && !originalRequest._retry) {
-      // 토큰 재발급이 이미 진행 중이면 대기
+    // OAuth 로그인 팝업이 열려있으면 재발급을 시도하지 않음.
+    // 재발급 실패 시 서버가 세션 쿠키를 무효화하여 OAuth 콜백이 실패할 수 있기 때문.
+    const isOAuthInProgress = useAuthStore.getState().isLoginModalOpen;
+    if (status === 401 && originalRequest && !originalRequest._retry && !isOAuthInProgress) {
+      // 토큰 재발급이 이미 진행 중이면 대기 (타임아웃으로 무한 대기 방지)
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
+          const timer = setTimeout(() => {
+            reject(new Error('Token refresh queue timeout'));
+          }, REFRESH_QUEUE_TIMEOUT_MS);
+
+          failedQueue.push({
+            resolve: (value?: unknown) => {
+              clearTimeout(timer);
+              resolve(value);
+            },
+            reject: (reason?: unknown) => {
+              clearTimeout(timer);
+              reject(reason);
+            },
+          });
         })
           .then(() => {
             // 토큰 재발급 완료 후 원래 요청 재시도

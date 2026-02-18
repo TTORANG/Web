@@ -16,16 +16,26 @@ export default function OAuthCallbackPage() {
     const accessToken = searchParams.get('accessToken');
     const sessionIdParam = searchParams.get('sessionId');
 
+    // 디버깅: 콜백 URL의 모든 파라미터를 로그로 출력
+    console.info('[OAuthCallback] params:', {
+      error: errorParam,
+      accessToken: accessToken ? `${accessToken.slice(0, 10)}...` : null,
+      sessionId: sessionIdParam,
+      fullUrl: window.location.href,
+    });
+
     if (errorParam) {
       if (window.opener) {
         window.opener.postMessage(
           {
             type: 'oauth:error',
             error: errorParam,
+            callbackUrl: window.location.href,
           },
           window.location.origin,
         );
-        window.close();
+        // 부모 창이 메시지를 수신할 시간을 확보한 후 팝업 닫기
+        setTimeout(() => window.close(), 300);
         return;
       }
       navigate('/', { replace: true });
@@ -34,7 +44,7 @@ export default function OAuthCallbackPage() {
 
     // 필수 파라미터가 없으면 팝업 닫기 또는 홈으로
     if (!accessToken) {
-      if (window.opener) window.close();
+      if (window.opener) setTimeout(() => window.close(), 300);
       else navigate('/', { replace: true });
       return;
     }
@@ -49,7 +59,8 @@ export default function OAuthCallbackPage() {
         },
         window.location.origin,
       );
-      window.close();
+      // 부모 창이 메시지를 수신할 시간을 확보한 후 팝업 닫기
+      setTimeout(() => window.close(), 300);
       return;
     }
     navigate('/', { replace: true });

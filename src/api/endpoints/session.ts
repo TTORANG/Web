@@ -41,7 +41,9 @@ export const sessionApi = {
     return response.data;
   },
 
-  // POST /auth/reissue - 소셜 로그인 직후 최신 사용자 정보/토큰 동기화
+  // POST /auth/reissue - 토큰 재발급
+  // 의도적으로 raw axios 사용: refresh token이 쿠키로 전송되므로 Authorization 헤더 불필요.
+  // apiClient를 사용하면 response interceptor가 401 재발급을 재귀 호출하므로 반드시 우회해야 함.
   reissueToken: async () => {
     const response = await axios.post<ApiResponse<SocialLoginSuccessResponseDto>>(
       `${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/auth/reissue`,

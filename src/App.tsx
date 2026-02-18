@@ -24,11 +24,12 @@ function App() {
       if (event.origin !== window.location.origin) return;
       const data = event.data as
         | { type: 'oauth:callback'; accessToken?: string; sessionId?: string }
-        | { type: 'oauth:error'; error?: string }
+        | { type: 'oauth:error'; error?: string; callbackUrl?: string }
         | undefined;
       if (!data) return;
 
       if (data.type === 'oauth:error') {
+        console.error('[OAuth] 로그인 에러 수신:', data.error, '\n콜백 URL:', data.callbackUrl);
         const store = useAuthStore.getState();
         store.closeLoginModal();
         showToast.error(data.error ?? '소셜 로그인에 실패했습니다.');
@@ -37,7 +38,10 @@ function App() {
       if (data.type !== 'oauth:callback') return;
 
       const accessToken = data.accessToken as string | undefined;
-      if (!accessToken) return;
+      if (!accessToken) {
+        console.warn('[OAuth] 콜백 수신했으나 accessToken 없음:', data);
+        return;
+      }
 
       const sessionIdFromCallback = data.sessionId ?? undefined;
 
@@ -84,12 +88,15 @@ function App() {
             );
           }
         } catch {
-          /** intentionally ignored */
+          showToast.error(
+            '임시 작업을 계정으로 가져오지 못했습니다.',
+            '잠시 후 다시 시도해주세요.',
+          );
         }
       }
 
-      // 목록은 무조건 갱신
-      await queryClient.invalidateQueries({
+      // 목록 갱신 (로그인 성공과 무관한 후속 작업이므로 fire-and-forget)
+      queryClient.invalidateQueries({
         queryKey: queryKeys.presentations.lists(),
       });
     };

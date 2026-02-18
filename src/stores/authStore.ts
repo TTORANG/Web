@@ -124,6 +124,22 @@ export const useAuthStore = create<AuthState>()(
       {
         name: 'auth-storage',
         version: PERSIST_VERSION,
+        onRehydrateStorage: () => {
+          return (state, error) => {
+            if (error) {
+              console.error('[AuthStore] 하이드레이션 실패, guest 상태로 폴백:', error);
+              useAuthStore.setState({
+                status: 'guest',
+                user: null,
+                accessToken: null,
+                refreshToken: null,
+                anonymousSessionId: null,
+              });
+            } else if (import.meta.env.DEV) {
+              console.debug('[AuthStore] 하이드레이션 완료:', state?.status);
+            }
+          };
+        },
         migrate: (persistState, version): PersistedAuthState => {
           if (version < PERSIST_VERSION) {
             return {

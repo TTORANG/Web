@@ -1,19 +1,14 @@
-import { useAuthStore } from '@/stores/authStore';
 import { showToast } from '@/utils/toast';
 
 type ErrorHandler = (message: string) => void;
 
 /**
  * HTTP 상태 코드별 에러 처리 전략
+ *
+ * 401은 client.ts 인터셉터에서 토큰 재발급 → 실패 시 logout까지 전담 처리.
+ * 여기서 중복 처리하면 재발급 진행 중에 토큰이 사라지는 치명적 버그가 발생하므로 제거.
  */
 const errorHandlers: Record<number, ErrorHandler> = {
-  401: () => {
-    const { accessToken } = useAuthStore.getState();
-    // 로그인 상태일 때만 만료 처리 (비로그인 상태에서는 토스트 금지)
-    if (!accessToken) return;
-    useAuthStore.getState().logout();
-    showToast.error('로그인이 만료되었습니다.', '다시 로그인해주세요.');
-  },
   403: (message: string) => {
     showToast.error('권한이 없습니다.', message || '접근 권한을 확인해주세요.');
   },
