@@ -1,7 +1,7 @@
 <aside>
 
 ## 전체 레이어 구조
-
+```
 src/
 ├── api/
 │ ├── dto/ # [서버 규격] Request/Response 인터페이스 정의함
@@ -21,7 +21,7 @@ src/
 │
 └── types/ # [도메인 모델] 앱 내부에서 공통으로 쓰는 순수 데이터 타입임
 └── presentation.ts # camelCase로 정제된 프로젝트 모델임
-
+```
 </aside>
 
 ## 1. 레이어 구조 및 역할
