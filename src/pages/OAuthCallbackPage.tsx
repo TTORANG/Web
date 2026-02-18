@@ -16,13 +16,13 @@ export default function OAuthCallbackPage() {
     const accessToken = searchParams.get('accessToken');
     const sessionIdParam = searchParams.get('sessionId');
 
-    // 디버깅: 콜백 URL의 모든 파라미터를 로그로 출력
-    console.info('[OAuthCallback] params:', {
-      error: errorParam,
-      accessToken: accessToken ? `${accessToken.slice(0, 10)}...` : null,
-      sessionId: sessionIdParam,
-      fullUrl: window.location.href,
-    });
+    if (import.meta.env.DEV) {
+      console.info('[OAuthCallback] params:', {
+        error: errorParam,
+        hasAccessToken: !!accessToken,
+        hasSessionId: !!sessionIdParam,
+      });
+    }
 
     if (errorParam) {
       if (window.opener) {
@@ -30,7 +30,6 @@ export default function OAuthCallbackPage() {
           {
             type: 'oauth:error',
             error: errorParam,
-            callbackUrl: window.location.href,
           },
           window.location.origin,
         );
