@@ -8,6 +8,7 @@ import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
 import FeedbackMobileLayout from '@/components/feedback/FeedbackMobileLayout';
 import ScriptSection from '@/components/feedback/ScriptSection';
+import ReactionBubble from '@/components/feedback/video/ReactionBubble';
 import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
@@ -413,7 +414,7 @@ export default function VideoDetailPage() {
       />
 
       {/* 단일 SlideWebcamStage - CSS로 위치 조정 */}
-      <div style={videoStyle} className="pointer-events-auto overflow-hidden">
+      <div style={videoStyle} className="pointer-events-auto overflow-hidden relative">
         <SlideWebcamStage
           slides={projectSlides}
           slideChangeTimes={slideChangeTimes}
@@ -422,6 +423,10 @@ export default function VideoDetailPage() {
           disablePip={!isDesktop}
           showLayoutToggle={!isDesktop}
         />
+        {/* 재생바 위 왼쪽 리액션 버블 */}
+        <div className="absolute bottom-20 left-2 z-30">
+          <ReactionBubble videoId={videoId} currentTimeMs={currentTime * 1000} />
+        </div>
       </div>
     </div>
   );
