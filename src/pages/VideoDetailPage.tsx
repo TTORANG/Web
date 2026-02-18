@@ -349,30 +349,24 @@ export default function VideoDetailPage() {
       role="tabpanel"
       id="tabpanel-videos"
       aria-labelledby="tab-videos"
-      className="flex h-full w-full bg-white overflow-hidden"
+      className="flex h-full w-full bg-gray-100 overflow-hidden px-35 pt-6"
     >
-      <div className="flex flex-1 flex-col h-full min-w-0">
-        <div className="flex shrink-0 flex-col items-center pt-10 pb-6 px-12 ">
-          <div
-            ref={desktopPlaceholderRef}
-            className="aspect-video w-full max-w-[800px] rounded-lg shadow-md"
-          />
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-4">
+        {/* 비디오 위치 placeholder */}
+        <div className="flex-1 min-w-0 flex flex-col justify-center">
+          <div ref={desktopPlaceholderRef} className="w-full aspect-video rounded-lg shadow-md" />
         </div>
-        <div className="flex-1 min-h-0 px-12 pb-6 flex flex-col items-center">
-          <div className="w-full max-w-[800px] h-full flex flex-col min-h-0 overflow-y-auto">
-            <ScriptSection
-              slides={projectSlides}
-              slideChangeTimes={slideChangeTimes}
-              currentTime={currentTime}
-              onSeek={requestSeekAction}
-            />
-          </div>
-        </div>
+        <ScriptSection
+          slides={projectSlides}
+          slideChangeTimes={slideChangeTimes}
+          currentTime={currentTime}
+          onSeek={requestSeekAction}
+        />
       </div>
 
-      <aside className="w-[400px] shrink-0 flex flex-col border-l border-gray-200 bg-white">
-        <div className="p-4 border-b">
-          <h2 className="text-base font-bold text-gray-900">의견</h2>
+      <aside className="ml-6 w-96 shrink-0 flex flex-col rounded-lg bg-white overflow-hidden">
+        <div className="p-4 border-b border-gray-200">
+          <h2 className="text-body-m-bold text-gray-900">의견</h2>
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto scroll-smooth">
           <CommentProvider value={contextValue}>
@@ -387,7 +381,7 @@ export default function VideoDetailPage() {
             </div>
           </CommentProvider>
         </div>
-        <div className="p-4 border-t border-gray-100 bg-white shrink-0">
+        <div className="shrink-0 border-t border-gray-100 bg-white px-4 pb-6 pt-2">
           <CommentInput
             value={commentDraft}
             onChange={setCommentDraft}
@@ -399,10 +393,8 @@ export default function VideoDetailPage() {
         </div>
       </aside>
 
-      <div
-        style={videoStyle}
-        className="pointer-events-auto rounded-lg overflow-hidden ring-1 ring-black/5"
-      >
+      {/* 단일 SlideWebcamStage - CSS로 위치 조정 */}
+      <div style={videoStyle} className="pointer-events-auto overflow-hidden ring-1 ring-black/5">
         <SlideWebcamStage
           slides={projectSlides}
           slideChangeTimes={slideChangeTimes}
