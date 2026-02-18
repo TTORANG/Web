@@ -1,12 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import type { ReadVideoDetailResponseDto, VideoCommentDto } from '@/api/dto/video.dto';
 import { getScript } from '@/api/endpoints/scripts';
 import { videosApi } from '@/api/endpoints/videos';
 import { CommentInput } from '@/components/comment';
-import Comment from '@/components/comment/Comment';
-import { CommentProvider } from '@/components/comment/CommentContext';
+import CommentList from '@/components/comment/CommentList';
 import ScriptSection from '@/components/feedback/ScriptSection';
 import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
 import { useSlides } from '@/hooks/queries/useSlides';
@@ -32,12 +31,7 @@ export default function VideoDetailPage() {
   const [currentTime, setCurrentTime] = useState(0);
   const [commentDraft, setCommentDraft] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  // 💡 scrollToCommentId 상태 삭제 (Unused variable 경고 해결)
-
-  const [replyingToId, setReplyingToId] = useState<string | null>(null);
-  const [replyDraft, setReplyDraft] = useState('');
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState('');
+  const [scrollToCommentId, setScrollToCommentId] = useState<string | undefined>();
 
   const { data: slidesData } = useSlides(projectId!);
   const [projectSlides, setProjectSlides] = useState<SlideListItem[]>([]);
@@ -225,62 +219,27 @@ export default function VideoDetailPage() {
     requestSeekAction(safeSeekSeconds);
   }, [isLoading, requestSeekAction, requestedSeekSeconds, videoData?.video.durationSeconds]);
 
-  const contextValue = useMemo(
-    () => ({
-      replyingToId,
-      replyDraft,
-      setReplyDraft,
-      toggleReply: (id: string) => {
-        setReplyingToId((prev) => (prev === id ? null : id));
-        setReplyDraft('');
-      },
-      submitReply: async (targetId: string) => {
-        if (replyDraft.trim()) {
-          await addReply(targetId, replyDraft);
-          setReplyDraft('');
-          setReplyingToId(null);
-        }
-      },
-      cancelReply: () => {
-        setReplyingToId(null);
-        setReplyDraft('');
-      },
-      editingId,
-      editDraft,
-      setEditDraft,
-      startEdit: (id: string, content: string) => {
-        setEditingId(id);
-        setEditDraft(content);
-      },
-      cancelEdit: () => {
-        setEditingId(null);
-        setEditDraft('');
-      },
-      submitEdit: async (id: string) => {
-        if (editDraft.trim()) {
-          await updateComment(id, editDraft);
-          setEditingId(null);
-          setEditDraft('');
-        }
-      },
-      deleteComment,
-      skipReplyFetch: true,
-      goToRef: (ref: { kind: 'slide'; index: number } | { kind: 'video'; seconds: number }) => {
-        if (ref.kind === 'video') {
-          requestSeekAction(ref.seconds);
-        }
-      },
-    }),
-    [
-      replyingToId,
-      replyDraft,
-      editingId,
-      editDraft,
-      addReply,
-      updateComment,
-      deleteComment,
-      requestSeekAction,
-    ],
+  const handleGoToRef = useCallback(
+    (ref: NonNullable<CommentType['ref']>) => {
+      if (ref.kind === 'video') {
+        requestSeekAction(ref.seconds);
+      }
+    },
+    [requestSeekAction],
+  );
+
+  const handleAddReply = useCallback(
+    (targetId: string, content: string) => {
+      addReply(targetId, content);
+    },
+    [addReply],
+  );
+
+  const handleUpdateComment = useCallback(
+    (commentId: string, content: string) => {
+      updateComment(commentId, content);
+    },
+    [updateComment],
   );
 
   const handleAddMainComment = async () => {
@@ -291,12 +250,7 @@ export default function VideoDetailPage() {
       if (successId) {
         setCommentDraft('');
         await loadData(false);
-        // 💡 렌더링 후 해당 댓글로 스크롤 (상태 변수 대신 직접 DOM 접근)
-        setTimeout(() => {
-          document
-            .getElementById(`comment-${successId}`)
-            ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 300);
+        setScrollToCommentId(successId);
       }
     } finally {
       setIsSubmittingComment(false);
@@ -369,17 +323,15 @@ export default function VideoDetailPage() {
           <h2 className="text-body-m-bold text-gray-900">의견</h2>
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto scroll-smooth">
-          <CommentProvider value={contextValue}>
-            <div className="flex flex-col">
-              {comments.map((comment) => (
-                <Comment
-                  key={comment.commentId}
-                  comment={comment}
-                  rootCommentId={comment.commentId}
-                />
-              ))}
-            </div>
-          </CommentProvider>
+          <CommentList
+            comments={comments}
+            scrollToCommentId={scrollToCommentId}
+            onAddReply={handleAddReply}
+            onGoToRef={handleGoToRef}
+            onDeleteComment={deleteComment}
+            onUpdateComment={handleUpdateComment}
+            skipReplyFetch
+          />
         </div>
         <div className="shrink-0 border-t border-gray-100 bg-white px-4 pb-6 pt-2">
           <CommentInput
@@ -394,7 +346,7 @@ export default function VideoDetailPage() {
       </aside>
 
       {/* 단일 SlideWebcamStage - CSS로 위치 조정 */}
-      <div style={videoStyle} className="pointer-events-auto overflow-hidden ring-1 ring-black/5">
+      <div style={videoStyle} className="pointer-events-auto overflow-hidden">
         <SlideWebcamStage
           slides={projectSlides}
           slideChangeTimes={slideChangeTimes}
