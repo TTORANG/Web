@@ -75,7 +75,7 @@ export function Layout({
               <div className="flex min-w-0 flex-1 items-center gap-4">{left ?? <Logo />}</div>
               <div className="flex shrink-0 items-center gap-3">{right}</div>
             </div>
-            <div className="h-12 border-t border-gray-200 px-2 md:hidden">
+            <div className="h-12 px-2 md:hidden">
               <div className="h-full">{center}</div>
             </div>
             <div className="hidden h-15 items-center justify-between px-4 md:flex md:px-18">
