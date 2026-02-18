@@ -5,7 +5,7 @@ import { useScriptBulkEdit } from '@/hooks/useScriptBulkEdit';
 
 import ScriptBulkEditModal from './ScriptBulkEditModal';
 
-export default function ScriptBulkEditControl() {
+function ScriptBulkEditControl() {
   const {
     projectId,
     fileInputRef,
@@ -56,3 +56,5 @@ export default function ScriptBulkEditControl() {
     </>
   );
 }
+
+export default ScriptBulkEditControl;

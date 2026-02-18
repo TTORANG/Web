@@ -18,7 +18,7 @@ interface ScriptBulkEditModalProps {
   onScriptChange: (index: number, value: string) => void;
 }
 
-export default function ScriptBulkEditModal({
+function ScriptBulkEditModal({
   isOpen,
   isSaving,
   isPreparingModal,
@@ -146,3 +146,5 @@ export default function ScriptBulkEditModal({
     </Modal>
   );
 }
+
+export default ScriptBulkEditModal;
