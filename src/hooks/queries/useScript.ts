@@ -38,12 +38,8 @@ export function useUpdateScript() {
     mutationFn: ({ slideId, data }: { slideId: string; data: UpdateScriptRequestDto }) =>
       updateScript(slideId, data),
 
-    onMutate: async ({ slideId }) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.scripts.detail(slideId) });
-    },
-
-    onSuccess: (savedScript, { slideId }) => {
-      queryClient.setQueryData(queryKeys.scripts.detail(slideId), savedScript);
+    onSuccess: (_, { slideId }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.scripts.detail(slideId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.scripts.versions(slideId) });
     },
   });

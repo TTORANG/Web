@@ -7,10 +7,10 @@
  * - ScriptBox 접힘 상태를 관리하고 SlideViewer에 전달
  * - Zustand store로 슬라이드 상태 관리
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { SLIDE_MAX_WIDTH } from '@/constants/layout';
-import { useSlideActions, useSlideId, useSlideScript } from '@/hooks';
+import { useSlideActions, useSlideId } from '@/hooks';
 import { useScript } from '@/hooks/queries/useScript';
 import { useSlideCommentsLoader } from '@/hooks/useSlideCommentsLoader';
 import type { SlideListItem } from '@/types/slide';
@@ -27,10 +27,7 @@ export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps
   const [isScriptCollapsed, setIsScriptCollapsed] = useState(false);
   const { initSlide, updateScript, updateSlide } = useSlideActions();
   const slideId = useSlideId();
-  const script = useSlideScript();
   const { data: scriptData } = useScript(slideId);
-  const lastSyncedSlideIdRef = useRef<string>('');
-  const lastSyncedScriptRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!slide) return;
@@ -48,28 +45,10 @@ export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps
   useSlideCommentsLoader(slide?.slideId);
 
   useEffect(() => {
-    if (lastSyncedSlideIdRef.current !== slideId) {
-      lastSyncedSlideIdRef.current = slideId;
-      lastSyncedScriptRef.current = null;
+    if (scriptData) {
+      updateScript(scriptData.scriptText);
     }
-  }, [slideId]);
-
-  useEffect(() => {
-    if (!scriptData) return;
-
-    const serverScript = scriptData.scriptText;
-    const hasSyncedOnce = lastSyncedScriptRef.current !== null;
-    const hasLocalEditAfterSync = hasSyncedOnce && script !== lastSyncedScriptRef.current;
-
-    // 로컬 편집이 있는 동안에는 서버 응답으로 덮어쓰지 않습니다.
-    if (hasLocalEditAfterSync && script !== serverScript) return;
-
-    if (script !== serverScript) {
-      updateScript(serverScript);
-    }
-
-    lastSyncedScriptRef.current = serverScript;
-  }, [script, scriptData, updateScript]);
+  }, [scriptData, updateScript]);
 
   return (
     <div className="relative h-full min-h-0 flex flex-col pb-[clamp(12rem,30vh,20rem)] md:pb-0">
