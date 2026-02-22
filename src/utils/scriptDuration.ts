@@ -47,6 +47,7 @@ const DEFAULT_SCRIPT_READING_SPEED_OPTION = speedOptionByCharsPerMinute.get(
 export function normalizeScriptReadingSpeed(speed?: number | string | null): number {
   const parsed = typeof speed === 'string' ? Number(speed) : speed;
   if (!Number.isFinite(parsed)) return DEFAULT_SCRIPT_READING_SPEED;
+  if (!parsed) return DEFAULT_SCRIPT_READING_SPEED;
   const rounded = Math.round(parsed);
   return Math.min(SCRIPT_READING_SPEED_MAX, Math.max(SCRIPT_READING_SPEED_MIN, rounded));
 }
