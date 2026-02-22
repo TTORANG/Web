@@ -86,9 +86,9 @@ describe('formatRelativeTime', () => {
     expect(result).toContain('방금');
   });
 
-  it('normalizes future "just now" to past "just now"', () => {
-    const nearFuture = new Date(Date.now() + 30_000).toISOString();
-    expect(formatRelativeTime(nearFuture)).toBe('방금 전');
+  it('forces future server timestamps to be rendered as past based on client clock', () => {
+    const future = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+    expect(formatRelativeTime(future)).toBe('방금 전');
   });
 
   it('returns original string for invalid dates', () => {

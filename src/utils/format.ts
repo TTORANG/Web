@@ -29,8 +29,12 @@ export function formatRelativeTime(date: string): string {
   const d = dayjs(date);
   if (!d.isValid()) return date;
 
-  const relative = d.fromNow();
-  return relative === '방금 후' ? '방금 전' : relative;
+  // 서버/클라이언트 시계 차이로 미래 시간이 들어와도 항상 과거 기준으로 렌더링한다.
+  const oneSecondAgo = dayjs().subtract(1, 'second');
+  const adjusted = d.subtract(1, 'second');
+  const effective = adjusted.isAfter(oneSecondAgo) ? oneSecondAgo : adjusted;
+
+  return effective.fromNow();
 }
 
 /**
