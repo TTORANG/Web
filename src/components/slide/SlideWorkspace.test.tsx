@@ -52,7 +52,7 @@ describe('SlideWorkspace', () => {
     useSlideStore.setState({ slide: null });
   });
 
-  it('keeps local script when stale server script arrives for current slide', () => {
+  it('로컬 편집 후 서버값이 일치했다가 다시 stale로 돌아와도 로컬 대본을 유지한다', () => {
     const slide = buildSlide();
     const view = render(<SlideWorkspace slide={slide} />);
 
@@ -66,6 +66,18 @@ describe('SlideWorkspace', () => {
     projectScriptsData = {
       message: 'ok',
       projectId: 'project-1',
+      scripts: [{ slideId: 'slide-1', scriptText: 'client-latest' }],
+    };
+
+    act(() => {
+      view.rerender(<SlideWorkspace slide={slide} />);
+    });
+
+    expect(useSlideStore.getState().slide?.script).toBe('client-latest');
+
+    projectScriptsData = {
+      message: 'ok',
+      projectId: 'project-1',
       scripts: [{ slideId: 'slide-1', scriptText: 'server-stale' }],
     };
 
@@ -74,5 +86,24 @@ describe('SlideWorkspace', () => {
     });
 
     expect(useSlideStore.getState().slide?.script).toBe('client-latest');
+  });
+
+  it('로컬 편집이 없으면 서버 최신 대본으로 동기화한다', () => {
+    const slide = buildSlide();
+    const view = render(<SlideWorkspace slide={slide} />);
+
+    expect(useSlideStore.getState().slide?.script).toBe('server-initial');
+
+    projectScriptsData = {
+      message: 'ok',
+      projectId: 'project-1',
+      scripts: [{ slideId: 'slide-1', scriptText: 'server-updated' }],
+    };
+
+    act(() => {
+      view.rerender(<SlideWorkspace slide={slide} />);
+    });
+
+    expect(useSlideStore.getState().slide?.script).toBe('server-updated');
   });
 });

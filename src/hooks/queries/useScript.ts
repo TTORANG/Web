@@ -64,8 +64,14 @@ export function useUpdateScript() {
       await queryClient.cancelQueries({ queryKey: queryKeys.scripts.detail(slideId) });
     },
 
-    onSuccess: (savedScript, { slideId, projectId }) => {
-      queryClient.setQueryData(queryKeys.scripts.detail(slideId), savedScript);
+    onSuccess: (savedScript, { slideId, projectId, data }) => {
+      const clientScriptText = data.script;
+
+      queryClient.setQueryData<GetScriptResponseDto>(queryKeys.scripts.detail(slideId), {
+        ...savedScript,
+        scriptText: clientScriptText,
+        charCount: clientScriptText.length,
+      });
 
       const matchedProjectIds = new Set<string>();
 
@@ -79,7 +85,7 @@ export function useUpdateScript() {
             const nextSlides = slides.map((slide) => {
               if (slide.slideId !== slideId) return slide;
               hasUpdated = true;
-              return { ...slide, script: savedScript.scriptText };
+              return { ...slide, script: clientScriptText };
             });
 
             if (hasUpdated) {
@@ -107,7 +113,7 @@ export function useUpdateScript() {
             const nextSlides = slides.map((slide) => {
               if (slide.slideId !== slideId) return slide;
               hasUpdated = true;
-              return { ...slide, script: savedScript.scriptText };
+              return { ...slide, script: clientScriptText };
             });
 
             if (!hasUpdated) return;
@@ -132,7 +138,7 @@ export function useUpdateScript() {
               const nextScripts = projectScripts.scripts.map((scriptItem) => {
                 if (scriptItem.slideId !== slideId) return scriptItem;
                 hasUpdated = true;
-                return { ...scriptItem, scriptText: savedScript.scriptText };
+                return { ...scriptItem, scriptText: clientScriptText };
               });
 
               if (!hasUpdated) return projectScripts;
@@ -155,7 +161,7 @@ export function useUpdateScript() {
             const nextScripts = projectScripts.scripts.map((scriptItem) => {
               if (scriptItem.slideId !== slideId) return scriptItem;
               hasUpdated = true;
-              return { ...scriptItem, scriptText: savedScript.scriptText };
+              return { ...scriptItem, scriptText: clientScriptText };
             });
 
             if (!hasUpdated) return;
