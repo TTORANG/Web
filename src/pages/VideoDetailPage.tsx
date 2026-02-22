@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import type { ReadVideoDetailResponseDto, VideoCommentDto } from '@/api/dto/video.dto';
-import { getScript } from '@/api/endpoints/scripts';
 import { videosApi } from '@/api/endpoints/videos';
 import { CommentInput } from '@/components/comment';
 import CommentList from '@/components/comment/CommentList';
@@ -10,6 +9,7 @@ import FeedbackMobileLayout from '@/components/feedback/FeedbackMobileLayout';
 import ScriptSection from '@/components/feedback/ScriptSection';
 import ReactionBubble from '@/components/feedback/video/ReactionBubble';
 import SlideWebcamStage from '@/components/feedback/video/SlideWebcamStage';
+import { useProjectScripts } from '@/hooks/queries/useScript';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { useVideoComments } from '@/hooks/useVideoComments';
@@ -38,7 +38,11 @@ export default function VideoDetailPage() {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [scrollToCommentId, setScrollToCommentId] = useState<string | undefined>();
 
-  const { data: slidesData } = useSlides(projectId!);
+  const { data: slidesData } = useSlides(projectId!, { liveSync: false });
+  const { data: projectScripts } = useProjectScripts(projectId ?? '', {
+    enabled: !!projectId,
+    staleTime: 1000 * 60 * 10,
+  });
   const [projectSlides, setProjectSlides] = useState<SlideListItem[]>([]);
   const [slideChangeTimes, setSlideChangeTimes] = useState<number[]>([]);
   const [slideIdOrder, setSlideIdOrder] = useState<string[]>([]);
@@ -304,23 +308,24 @@ export default function VideoDetailPage() {
 
   useEffect(() => {
     if (!slidesData || slideIdOrder.length === 0) return;
-    const loadScripts = async () => {
-      const ordered = await Promise.all(
-        slideIdOrder.map(async (id) => {
-          const slideBase = slidesData.find((s) => String(s.slideId) === String(id));
-          if (!slideBase) return null;
-          try {
-            const scriptRes = await getScript(String(id));
-            return { ...slideBase, script: scriptRes.scriptText || '' };
-          } catch {
-            return { ...slideBase, script: slideBase.script || '' };
-          }
-        }),
-      );
-      setProjectSlides(ordered.filter((s): s is SlideListItem => s !== null));
-    };
-    loadScripts();
-  }, [slidesData, slideIdOrder]);
+    const slideMap = new Map(slidesData.map((slide) => [String(slide.slideId), slide]));
+    const projectScriptMap = new Map(
+      (projectScripts?.scripts ?? []).map((item) => [String(item.slideId), item.scriptText]),
+    );
+    const orderedSlides = slideIdOrder
+      .map((id) => {
+        const slide = slideMap.get(String(id));
+        if (!slide) return undefined;
+
+        return {
+          ...slide,
+          script: projectScriptMap.get(String(id)) ?? slide.script ?? '',
+        };
+      })
+      .filter((slide): slide is SlideListItem => Boolean(slide));
+
+    setProjectSlides(orderedSlides);
+  }, [projectScripts, slideIdOrder, slidesData]);
 
   if (isLoading) return <div className="flex h-screen items-center justify-center">Loading...</div>;
 
