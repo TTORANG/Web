@@ -48,10 +48,12 @@ export default function ScriptBoxContent() {
             type="button"
             onClick={() => setIsSpeedModalOpen(true)}
             aria-label={`읽기 속도 설정 열기 (현재 예상 시간 ${estimatedDuration})`}
-            className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-gray-200 bg-white/95 px-2.5 py-1 text-gray-500 shadow-sm transition-colors hover:bg-gray-100 hover:text-gray-700 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main"
+            className="inline-flex min-h-9 items-center gap-2 rounded-md bg-white px-3 py-1.5 text-gray-700 transition-colors hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main"
           >
-            <span className="text-xs leading-4">{estimatedDuration}</span>
-            <IconSetting className="size-3.5 shrink-0" aria-hidden="true" />
+            <span aria-live="polite" aria-atomic="true" className="text-sm font-semibold leading-4">
+              {estimatedDuration}
+            </span>
+            <IconSetting className="size-4 shrink-0 text-gray-700" aria-hidden="true" />
           </button>
         </div>
       </div>
