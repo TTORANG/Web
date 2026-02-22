@@ -43,7 +43,7 @@ export function useInsightPageModel(): InsightModel {
   const projectIdStr = projectId ?? '';
   const projectIdNum = projectIdStr ? Number(projectIdStr) : 0;
 
-  const slidesQuery = useSlides(projectIdStr);
+  const slidesQuery = useSlides(projectIdStr, { liveSync: false });
   const slideAnalyticsQuery = useSlideAnalytics(projectIdNum);
   const summaryAnalyticsQuery = usePresentationAnalyticsSummary(projectIdNum);
   const recentCommentsQuery = useRecentComments(projectIdNum);

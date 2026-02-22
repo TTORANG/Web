@@ -14,6 +14,9 @@ const EMPTY_COMMENTS: Comment[] = [];
 /** 슬라이드 ID 구독 */
 export const useSlideId = () => useSlideStore((state) => state.slide?.slideId ?? '');
 
+/** 프로젝트 ID 구독 */
+export const useSlideProjectId = () => useSlideStore((state) => state.slide?.projectId ?? '');
+
 /** 슬라이드 제목 구독 */
 export const useSlideTitle = () =>
   useSlideStore((state) => (state.slide ? state.slide.title : null));

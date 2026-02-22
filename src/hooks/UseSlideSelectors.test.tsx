@@ -8,6 +8,7 @@ import {
   useSlideActions,
   useSlideComments,
   useSlideId,
+  useSlideProjectId,
   useSlideScript,
   useSlideThumb,
   useSlideTitle,
@@ -29,6 +30,11 @@ describe('useSlideSelectors', () => {
     it('useSlideTitle returns null', () => {
       const { result } = renderHook(() => useSlideTitle());
       expect(result.current).toBeNull();
+    });
+
+    it('useSlideProjectId returns empty string', () => {
+      const { result } = renderHook(() => useSlideProjectId());
+      expect(result.current).toBe('');
     });
 
     it('useSlideThumb returns empty string', () => {
@@ -68,6 +74,11 @@ describe('useSlideSelectors', () => {
     it('useSlideTitle returns title', () => {
       const { result } = renderHook(() => useSlideTitle());
       expect(result.current).toBe('Test Title');
+    });
+
+    it('useSlideProjectId returns projectId', () => {
+      const { result } = renderHook(() => useSlideProjectId());
+      expect(result.current).toBe(slide.projectId);
     });
 
     it('useSlideTitle preserves null title', () => {
