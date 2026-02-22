@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { videosApi } from '@/api/endpoints/videos';
+import { queryKeys } from '@/api/queryClient';
 import type { FilterMode, SortMode } from '@/types/home';
 import type { VideoPresentation } from '@/types/video';
 
@@ -17,13 +18,20 @@ export function usePresentationVideos({
   filter,
   sort,
 }: UsePresentationVideosParams) {
+  const normalizedFilter = filter && filter !== 'all' ? filter : undefined;
+  const normalizedSort = sort || undefined;
+
   return useQuery({
-    queryKey: ['videos', projectId, search, filter, sort],
+    queryKey: queryKeys.videos.list(projectId, {
+      search,
+      filter: normalizedFilter,
+      sort: normalizedSort,
+    }),
     queryFn: async () => {
       const response = await videosApi.getPresentationVideos(projectId, {
         search,
-        filter: filter && filter !== 'all' ? filter : undefined,
-        sort: sort || undefined,
+        filter: normalizedFilter,
+        sort: normalizedSort,
       });
 
       if (response.data.resultType === 'FAILURE') {
