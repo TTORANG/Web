@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { useQueryClient } from '@tanstack/react-query';
+import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { videosApi } from '@/api/endpoints/videos';
@@ -21,6 +21,22 @@ const SKELETON_LIST_COUNT = 4;
 
 type DeleteTarget = { id: string; title: string } | null;
 type VideoListQueryData = { videos: VideoPresentation[]; total: number };
+
+function updateVideoListCache(
+  queryClient: QueryClient,
+  projectId: string,
+  updater: (data: VideoListQueryData) => VideoListQueryData | undefined,
+) {
+  queryClient.setQueriesData<VideoListQueryData>(
+    {
+      queryKey: queryKeys.videos.listPrefix(projectId),
+    },
+    (oldData) => {
+      if (!oldData) return undefined;
+      return updater(oldData);
+    },
+  );
+}
 
 export default function VideoListPage() {
   const navigate = useNavigate();
@@ -193,32 +209,25 @@ export default function VideoListPage() {
       if (!projectId) return;
 
       const updatedVideo = await videosApi.updateVideoTitle(videoId, newTitle);
-      queryClient.setQueriesData<VideoListQueryData>(
-        {
-          queryKey: queryKeys.videos.listPrefix(projectId),
-        },
-        (oldData) => {
-          if (!oldData) return oldData;
-
-          let hasUpdated = false;
-          const nextVideos = oldData.videos.map((video) => {
-            if (String(video.videoId) !== String(videoId)) return video;
-            hasUpdated = true;
-            return {
-              ...video,
-              title: updatedVideo.title,
-              updatedAt: updatedVideo.updatedAt,
-            };
-          });
-
-          if (!hasUpdated) return oldData;
-
+      updateVideoListCache(queryClient, projectId, (oldData) => {
+        let hasUpdated = false;
+        const nextVideos = oldData.videos.map((video) => {
+          if (String(video.videoId) !== String(videoId)) return video;
+          hasUpdated = true;
           return {
-            ...oldData,
-            videos: nextVideos,
+            ...video,
+            title: updatedVideo.title,
+            updatedAt: updatedVideo.updatedAt,
           };
-        },
-      );
+        });
+
+        if (!hasUpdated) return oldData;
+
+        return {
+          ...oldData,
+          videos: nextVideos,
+        };
+      });
 
       void queryClient.invalidateQueries({
         queryKey: queryKeys.videos.listPrefix(projectId),
@@ -254,22 +263,16 @@ export default function VideoListPage() {
       }
 
       showToast.success('영상을 삭제했습니다.');
-      queryClient.setQueriesData<VideoListQueryData>(
-        {
-          queryKey: queryKeys.videos.listPrefix(projectId),
-        },
-        (oldData) => {
-          if (!oldData) return oldData;
-          const nextVideos = oldData.videos.filter((video) => String(video.videoId) !== String(id));
-          if (nextVideos.length === oldData.videos.length) return oldData;
+      updateVideoListCache(queryClient, projectId, (oldData) => {
+        const nextVideos = oldData.videos.filter((video) => String(video.videoId) !== String(id));
+        if (nextVideos.length === oldData.videos.length) return oldData;
 
-          return {
-            ...oldData,
-            videos: nextVideos,
-            total: Math.max(0, oldData.total - 1),
-          };
-        },
-      );
+        return {
+          ...oldData,
+          videos: nextVideos,
+          total: Math.max(0, oldData.total - 1),
+        };
+      });
       setPendingIds((prev) => {
         const next = new Set(prev);
         next.delete(id);
