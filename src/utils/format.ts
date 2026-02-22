@@ -27,7 +27,10 @@ export function formatTimestamp(date?: string | Date): string {
  */
 export function formatRelativeTime(date: string): string {
   const d = dayjs(date);
-  return d.isValid() ? d.fromNow() : date;
+  if (!d.isValid()) return date;
+
+  const relative = d.fromNow();
+  return relative === '방금 후' ? '방금 전' : relative;
 }
 
 /**
