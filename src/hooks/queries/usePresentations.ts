@@ -8,6 +8,7 @@ import {
   getPresentation,
   updatePresentation,
 } from '@/api/endpoints/presentations';
+import { DEMO_PRESENTATION_DETAIL, isDemoProject } from '@/constants/demoProject';
 import type { Presentation, PresentationListResponse } from '@/types/presentation';
 import { showToast } from '@/utils/toast';
 
@@ -44,9 +45,12 @@ export function usePresentationsWithFilters(
  * @param projectId - 프로젝트 ID
  */
 export function usePresentation(projectId: string) {
+  const isDemo = isDemoProject(projectId);
+
   return useQuery({
     queryKey: queryKeys.presentations.detail(projectId),
-    queryFn: () => getPresentation(projectId),
+    queryFn: () =>
+      isDemo ? Promise.resolve(DEMO_PRESENTATION_DETAIL) : getPresentation(projectId),
     enabled: !!projectId,
   });
 }
@@ -59,8 +63,24 @@ export function usePresentation(projectId: string) {
 export function useUpdatePresentation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ projectId, data }: { projectId: string; data: UpdatePresentationRequestDto }) =>
-      updatePresentation(projectId, data),
+    mutationFn: ({
+      projectId,
+      data,
+    }: {
+      projectId: string;
+      data: UpdatePresentationRequestDto;
+    }) => {
+      if (isDemoProject(projectId)) {
+        return Promise.resolve({
+          projectId,
+          title: data.title ?? DEMO_PRESENTATION_DETAIL.title,
+          userName: DEMO_PRESENTATION_DETAIL.userName ?? '또랑 팀',
+          updatedAt: new Date().toISOString(),
+        });
+      }
+
+      return updatePresentation(projectId, data);
+    },
 
     onSuccess: (updatePresentation) => {
       // Detail 캐시는 기존 데이터에 title/updatedAt만 반영

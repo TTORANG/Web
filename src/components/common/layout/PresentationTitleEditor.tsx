@@ -8,6 +8,8 @@
  */
 import { useLocation, useParams } from 'react-router-dom';
 
+import { DEMO_PRESENTATION } from '@/constants/demoPresentation';
+import { isDemoProject } from '@/constants/demoProject';
 import { usePresentation, useUpdatePresentation } from '@/hooks/queries/usePresentations';
 import { showToast } from '@/utils/toast';
 
@@ -23,6 +25,7 @@ export function PresentationTitleEditor({
   titleOverride,
 }: PresentationTitleEditorProps) {
   const { projectId } = useParams<{ projectId: string }>();
+  const isDemoProjectId = isDemoProject(projectId);
   const { pathname } = useLocation();
   const { data: presentation } = usePresentation(projectId ?? '');
 
@@ -32,11 +35,22 @@ export function PresentationTitleEditor({
     /^\/[^/]+\/(slide|insight|videos)(\/[^/]+)?$/.test(pathname) || pathname.endsWith('/videos');
   const titleClassName = isProjectTabPath ? 'max-w-52 truncate' : undefined;
 
-  if (readOnlyContent) {
+  if (readOnlyContent || isDemoProjectId) {
+    const resolvedReadOnlyContent =
+      readOnlyContent ??
+      (isDemoProjectId ? (
+        <div className="grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-2 text-body-s text-gray-800">
+          <span className="text-gray-600 text-body-s-bold">게시자</span>
+          <span className="text-gray-800 text-body-s">{DEMO_PRESENTATION.publisherName}</span>
+          <span className="text-gray-600 text-body-s-bold">게시 날짜</span>
+          <span className="text-gray-800 text-body-s">{DEMO_PRESENTATION.postedAtLabel}</span>
+        </div>
+      ) : null);
+
     return (
       <TitleEditorPopover
         title={resolvedTitle}
-        readOnlyContent={readOnlyContent}
+        readOnlyContent={resolvedReadOnlyContent}
         ariaLabel="발표 정보"
         titleClassName={titleClassName}
       />

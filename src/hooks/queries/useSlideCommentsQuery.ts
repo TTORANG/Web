@@ -1,20 +1,32 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 
-import type { CommentWithUserDto } from '@/api/dto';
+import type { CommentWithUserDto, GetSlideCommentsResponseDto } from '@/api/dto';
 import { getSlideComments } from '@/api/endpoints/comments';
 import { queryKeys } from '@/api/queryClient';
+import { DEMO_SLIDE_COMMENTS_BY_SLIDE_ID, isDemoSlideId } from '@/constants/demoProject';
 import { useAuthStore } from '@/stores/authStore';
 import type { Comment } from '@/types/comment';
 
 const COMMENTS_PAGE_SIZE = 20;
 
-type SlideCommentsPageLike = {
-  comments?: CommentWithUserDto[];
-  pagination?: {
-    page?: number;
-    totalPages?: number;
+function mapDemoCommentToDto(comment: Comment): CommentWithUserDto {
+  const parentId = comment.parentId ?? null;
+  const commentId = comment.serverId ?? comment.commentId;
+
+  return {
+    commentId,
+    content: comment.content,
+    user: {
+      userId: comment.userId,
+      nickName: comment.userName ?? '데모 사용자',
+      profileImageUrl: comment.userProfileImage ?? null,
+    },
+    createdAt: comment.createdAt,
+    updatedAt: comment.createdAt,
+    parentId,
+    parentCommentId: parentId,
   };
-};
+}
 
 export function mapDtoToComment(dto: CommentWithUserDto, currentUserId?: string): Comment {
   const parentId = dto.parentId ?? dto.parentCommentId ?? undefined;
@@ -42,26 +54,38 @@ export function mapDtoToComment(dto: CommentWithUserDto, currentUserId?: string)
  */
 export function useSlideCommentsInfiniteQuery(slideId?: string) {
   const userId = useAuthStore((state) => state.user?.id);
+  const isDemo = isDemoSlideId(slideId);
 
   return useInfiniteQuery({
     queryKey: queryKeys.comments.list(slideId ?? ''),
-    queryFn: ({ pageParam }) => getSlideComments(slideId!, pageParam, COMMENTS_PAGE_SIZE),
+    queryFn: ({ pageParam }) => {
+      if (isDemo) {
+        const demoComments = (DEMO_SLIDE_COMMENTS_BY_SLIDE_ID[slideId ?? ''] ?? []).map(
+          mapDemoCommentToDto,
+        );
+
+        return Promise.resolve({
+          comments: demoComments,
+          pagination: {
+            page: typeof pageParam === 'number' ? pageParam : 1,
+            limit: COMMENTS_PAGE_SIZE,
+            total: demoComments.length,
+            totalPages: 1,
+          },
+        } satisfies GetSlideCommentsResponseDto);
+      }
+
+      return getSlideComments(slideId!, pageParam, COMMENTS_PAGE_SIZE);
+    },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
-      const page = (lastPage as SlideCommentsPageLike).pagination?.page;
-      const totalPages = (lastPage as SlideCommentsPageLike).pagination?.totalPages;
-
-      if (typeof page !== 'number' || typeof totalPages !== 'number') {
-        return undefined;
-      }
+      const { page, totalPages } = lastPage.pagination;
       return page < totalPages ? page + 1 : undefined;
     },
     select: (data) => ({
       pages: data.pages.map((page) => ({
         ...page,
-        comments: ((page as SlideCommentsPageLike).comments ?? []).map((dto) =>
-          mapDtoToComment(dto, userId),
-        ),
+        comments: page.comments.map((dto) => mapDtoToComment(dto, userId)),
       })),
       pageParams: data.pageParams,
     }),

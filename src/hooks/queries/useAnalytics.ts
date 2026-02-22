@@ -12,6 +12,10 @@ import {
 } from '@/api/endpoints/analytics';
 import { queryKeys } from '@/api/queryClient';
 
+type QueryHookOptions = {
+  enabled?: boolean;
+};
+
 /**
  * 이탈 기록 Mutation 훅
  *
@@ -28,11 +32,13 @@ export function useRecordExit() {
  *
  * @param projectId - 프로젝트 ID
  */
-export function useSlideAnalytics(projectId: number) {
+export function useSlideAnalytics(projectId: number, options?: QueryHookOptions) {
+  const isEnabled = options?.enabled ?? true;
+
   return useQuery({
     queryKey: queryKeys.analytics.slides(projectId),
     queryFn: () => getSlideAnalytics(projectId),
-    enabled: !!projectId,
+    enabled: !!projectId && isEnabled,
   });
 }
 
@@ -41,11 +47,13 @@ export function useSlideAnalytics(projectId: number) {
  *
  * @param videoId - 영상 ID
  */
-export function useVideoAnalytics(videoId: number) {
+export function useVideoAnalytics(videoId: number, options?: QueryHookOptions) {
+  const isEnabled = options?.enabled ?? true;
+
   return useQuery({
     queryKey: queryKeys.analytics.videoExits(videoId),
     queryFn: () => getVideoAnalytics(videoId),
-    enabled: !!videoId,
+    enabled: !!videoId && isEnabled,
   });
 }
 
@@ -54,11 +62,13 @@ export function useVideoAnalytics(videoId: number) {
  *
  * @param projectId - 프로젝트 ID
  */
-export function usePresentationAnalyticsSummary(projectId: number) {
+export function usePresentationAnalyticsSummary(projectId: number, options?: QueryHookOptions) {
+  const isEnabled = options?.enabled ?? true;
+
   return useQuery({
     queryKey: queryKeys.analytics.summary(projectId),
     queryFn: () => getPresentationAnalyticsSummary(projectId),
-    enabled: !!projectId,
+    enabled: !!projectId && isEnabled,
   });
 }
 
@@ -67,11 +77,13 @@ export function usePresentationAnalyticsSummary(projectId: number) {
  *
  * @param projectId - 프로젝트 ID
  */
-export function useSlideRetention(projectId: number) {
+export function useSlideRetention(projectId: number, options?: QueryHookOptions) {
+  const isEnabled = options?.enabled ?? true;
+
   return useQuery({
     queryKey: queryKeys.analytics.slideRetention(projectId),
     queryFn: () => getSlideRetention(projectId),
-    enabled: !!projectId,
+    enabled: !!projectId && isEnabled,
   });
 }
 
@@ -80,11 +92,13 @@ export function useSlideRetention(projectId: number) {
  *
  * @param videoId - 영상 ID
  */
-export function useVideoRetention(videoId: number) {
+export function useVideoRetention(videoId: number, options?: QueryHookOptions) {
+  const isEnabled = options?.enabled ?? true;
+
   return useQuery({
     queryKey: queryKeys.analytics.videoRetention(videoId),
     queryFn: () => getVideoRetention(videoId),
-    enabled: !!videoId,
+    enabled: !!videoId && isEnabled,
   });
 }
 
@@ -93,10 +107,12 @@ export function useVideoRetention(videoId: number) {
  *
  * @param projectId - 프로젝트 ID
  */
-export function useRecentComments(projectId: number) {
+export function useRecentComments(projectId: number, options?: QueryHookOptions) {
+  const isEnabled = options?.enabled ?? true;
+
   return useQuery({
     queryKey: queryKeys.analytics.comments(projectId),
     queryFn: () => getRecentComments(projectId),
-    enabled: !!projectId,
+    enabled: !!projectId && isEnabled,
   });
 }

@@ -1,4 +1,4 @@
-import { Suspense, lazy, type ReactNode } from 'react';
+import { type ReactNode, Suspense, lazy } from 'react';
 import { Navigate, createBrowserRouter } from 'react-router-dom';
 
 import {
@@ -10,8 +10,11 @@ import {
   ShareButton,
   Spinner,
 } from '@/components/common';
+import DemoFeedbackHeaderCenter from '@/components/demo/DemoFeedbackHeaderCenter';
+import DemoFeedbackHeaderLeft from '@/components/demo/DemoFeedbackHeaderLeft';
 
 const DevTestPage = lazy(() => import('@/pages/dev-test/DevTestPage'));
+const DemoFeedbackPage = lazy(() => import('@/pages/DemoFeedbackPage'));
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const InsightPage = lazy(() => import('@/pages/InsightPage'));
 const OAuthCallbackPage = lazy(() => import('@/pages/OAuthCallbackPage'));
@@ -50,6 +53,17 @@ export const router = createBrowserRouter([
   {
     path: '/auth/callback',
     element: withRouteSuspense(<OAuthCallbackPage />),
+  },
+  {
+    path: '/demo/feedback',
+    element: (
+      <Layout
+        theme="dark"
+        left={<DemoFeedbackHeaderLeft />}
+        center={<DemoFeedbackHeaderCenter />}
+      />
+    ),
+    children: [{ index: true, element: withRouteSuspense(<DemoFeedbackPage />) }],
   },
   {
     path: '/:projectId',

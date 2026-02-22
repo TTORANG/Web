@@ -3,12 +3,16 @@ import { describe, expect, it } from 'vitest';
 import type { ReactionEvent } from '@/types/video';
 
 import {
+  DEFAULT_VIDEO_PLAYBACK_RATE,
+  VIDEO_PLAYBACK_RATE_MAX,
+  VIDEO_PLAYBACK_RATE_MIN,
   clamp,
   computeSegmentHighlights,
   computeSegmentHighlightsFromFeedbacks,
   computeUserActiveHighlights,
   getOverlappingFeedbacks,
   getSlideIndexFromTime,
+  normalizeVideoPlaybackRate,
   parseSeekSecondsParam,
 } from './video';
 
@@ -70,6 +74,21 @@ describe('parseSeekSecondsParam', () => {
     const parsed = parseSeekSecondsParam('999');
     expect(parsed).toBe(999);
     expect(clamp(parsed!, 0, 120)).toBe(120);
+  });
+});
+
+describe('normalizeVideoPlaybackRate', () => {
+  it('returns default playback rate for invalid values', () => {
+    expect(normalizeVideoPlaybackRate()).toBe(DEFAULT_VIDEO_PLAYBACK_RATE);
+    expect(normalizeVideoPlaybackRate(null)).toBe(DEFAULT_VIDEO_PLAYBACK_RATE);
+    expect(normalizeVideoPlaybackRate('abc')).toBe(DEFAULT_VIDEO_PLAYBACK_RATE);
+  });
+
+  it('clamps and snaps values in 0.25 increments', () => {
+    expect(normalizeVideoPlaybackRate(0.1)).toBe(VIDEO_PLAYBACK_RATE_MIN);
+    expect(normalizeVideoPlaybackRate(3.8)).toBe(VIDEO_PLAYBACK_RATE_MAX);
+    expect(normalizeVideoPlaybackRate(1.37)).toBe(1.25);
+    expect(normalizeVideoPlaybackRate('1.62')).toBe(1.5);
   });
 });
 

@@ -13,6 +13,7 @@ import PresentationListSkeleton from '@/components/presentation/PresentationList
 import VideoPresentationCard from '@/components/presentation/VideoPresentationCard';
 import VideoPresentationList from '@/components/presentation/VideoPresentationList';
 import { DeleteVideoModal, RecordingEmptySection } from '@/components/video';
+import { DEMO_SHARE_PATH, isDemoProject } from '@/constants/demoProject';
 import { usePresentationVideos } from '@/hooks/usePresentationVideos';
 import type { FilterMode, SortMode, ViewMode } from '@/types/home';
 import type { VideoPresentation } from '@/types/video';
@@ -72,6 +73,7 @@ export default function VideoListPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { projectId } = useParams<{ projectId: string }>();
+  const isDemoProjectId = isDemoProject(projectId);
   const queryClient = useQueryClient();
 
   // UI 상태
@@ -175,6 +177,7 @@ export default function VideoListPage() {
 
   // 폴링: pendingIds가 있을 때만 3초마다 refetch → 완료된 id 제거 + thumbVersion bump
   useEffect(() => {
+    if (isDemoProjectId) return;
     if (pendingIds.size === 0) return;
 
     let cancelled = false;
@@ -218,14 +221,23 @@ export default function VideoListPage() {
       cancelled = true;
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [pendingIds, refetch]);
+  }, [isDemoProjectId, pendingIds, refetch]);
 
   const handleStartRecording = useCallback(() => {
+    if (isDemoProjectId) {
+      navigate(DEMO_SHARE_PATH);
+      return;
+    }
     navigate(`/${projectId}/video/record`);
-  }, [navigate, projectId]);
+  }, [isDemoProjectId, navigate, projectId]);
 
   const handleVideoClick = useCallback(
     (videoId: string, status: string) => {
+      if (isDemoProjectId) {
+        navigate(DEMO_SHARE_PATH);
+        return;
+      }
+
       if (status === 'processing') {
         toast.info('영상을 처리하고 있습니다.', {
           description: '처리가 완료되면 확인할 수 있습니다.',
@@ -240,12 +252,33 @@ export default function VideoListPage() {
       }
       navigate(`/${projectId}/videos/${videoId}`);
     },
-    [navigate, projectId],
+    [isDemoProjectId, navigate, projectId],
   );
 
   const handleUpdateVideoTitle = useCallback(
     async (videoId: string, newTitle: string) => {
       if (!projectId) return;
+      if (isDemoProjectId) {
+        updateVideoListCache(queryClient, projectId, (oldData) => {
+          let hasUpdated = false;
+          const nextVideos = oldData.videos.map((video) => {
+            if (String(video.videoId) !== String(videoId)) return video;
+            hasUpdated = true;
+            return {
+              ...video,
+              title: newTitle,
+              updatedAt: new Date().toISOString(),
+            };
+          });
+
+          if (!hasUpdated) return oldData;
+          return {
+            ...oldData,
+            videos: nextVideos,
+          };
+        });
+        return;
+      }
 
       const updatedVideo = await videosApi.updateVideoTitle(videoId, newTitle);
       updateVideoListCache(queryClient, projectId, (oldData) => {
@@ -272,7 +305,7 @@ export default function VideoListPage() {
         queryKey: queryKeys.videos.listPrefix(projectId),
       });
     },
-    [projectId, queryClient],
+    [isDemoProjectId, projectId, queryClient],
   );
 
   const handleDownloadVideo = useCallback(async (video: VideoPresentation) => {
@@ -331,6 +364,26 @@ export default function VideoListPage() {
     setDeletingVideoIds((prev) => new Set(prev).add(id));
 
     try {
+      if (isDemoProjectId) {
+        showToast.success('영상을 삭제했습니다.');
+        updateVideoListCache(queryClient, projectId, (oldData) => {
+          const nextVideos = oldData.videos.filter((video) => String(video.videoId) !== String(id));
+          if (nextVideos.length === oldData.videos.length) return oldData;
+
+          return {
+            ...oldData,
+            videos: nextVideos,
+            total: Math.max(0, oldData.total - 1),
+          };
+        });
+        setPendingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+        return;
+      }
+
       const response = await videosApi.deleteVideo(id);
 
       if (response.data.resultType !== 'SUCCESS') {
@@ -370,7 +423,7 @@ export default function VideoListPage() {
       });
       setVideoToDelete(null);
     }
-  }, [videoToDelete, projectId, closeDeleteModal, queryClient]);
+  }, [videoToDelete, projectId, closeDeleteModal, isDemoProjectId, queryClient]);
 
   const renderSkeleton = () => {
     if (viewMode === 'card') {
@@ -519,6 +572,7 @@ export default function VideoListPage() {
                         thumbnailVersion={thumbVersion[id] ?? 0}
                         onDelete={() => openDeleteModal(id, item.title)}
                         onUpdateTitle={(newTitle) => handleUpdateVideoTitle(id, newTitle)}
+                        onOpen={isDemoProjectId ? () => navigate(DEMO_SHARE_PATH) : undefined}
                         onDownload={() => {
                           void handleDownloadVideo(item);
                         }}
@@ -586,6 +640,7 @@ export default function VideoListPage() {
                         thumbnailVersion={thumbVersion[id] ?? 0}
                         onDelete={() => openDeleteModal(id, item.title)}
                         onUpdateTitle={(newTitle) => handleUpdateVideoTitle(id, newTitle)}
+                        onOpen={isDemoProjectId ? () => navigate(DEMO_SHARE_PATH) : undefined}
                         onDownload={() => {
                           void handleDownloadVideo(item);
                         }}

@@ -14,7 +14,11 @@ import { estimateScriptDurationSeconds, formatScriptDuration } from '@/utils/scr
 
 import ScriptReadingSpeedModal from './ScriptReadingSpeedModal';
 
-export default function ScriptBoxContent() {
+interface ScriptBoxContentProps {
+  readOnly?: boolean;
+}
+
+export default function ScriptBoxContent({ readOnly = false }: ScriptBoxContentProps) {
   const [isSpeedModalOpen, setIsSpeedModalOpen] = useState(false);
   const script = useSlideScript();
   const { updateScript } = useSlideActions();
@@ -27,6 +31,7 @@ export default function ScriptBoxContent() {
   }, [script, selectedSpeed]);
 
   const handleChange = (value: string) => {
+    if (readOnly) return;
     updateScript(value);
     autoSave(value);
   };
@@ -53,9 +58,10 @@ export default function ScriptBoxContent() {
         <textarea
           value={script}
           onChange={(e) => handleChange(e.target.value)}
-          onBlur={flushSave}
-          placeholder="슬라이드 대본을 입력하세요..."
+          onBlur={readOnly ? undefined : flushSave}
+          placeholder={readOnly ? '데모 대본 (읽기 전용)' : '슬라이드 대본을 입력하세요...'}
           aria-label="슬라이드 대본"
+          readOnly={readOnly}
           className="h-full w-full resize-none overflow-y-auto border-none bg-transparent pb-10 text-base leading-relaxed text-gray-800 outline-none placeholder:text-gray-600"
         />
 
@@ -76,7 +82,8 @@ export default function ScriptBoxContent() {
             type="button"
             onClick={() => setIsSpeedModalOpen(true)}
             aria-label={`읽기 속도 설정 열기 (현재 예상 시간 ${estimatedDuration})`}
-            className="pointer-events-auto inline-flex min-h-9 items-center gap-2 rounded-full bg-transparent px-0 py-1.5 text-gray-600 transition-colors hover:text-gray-700 active:text-gray-800 focus-visible:outline-2 focus-visible:outline-main"
+            className="pointer-events-auto inline-flex min-h-9 items-center gap-2 rounded-full bg-transparent px-0 py-1.5 text-gray-600 transition-colors hover:text-gray-700 active:text-gray-800 focus-visible:outline-2 focus-visible:outline-main disabled:pointer-events-none disabled:opacity-60"
+            disabled={readOnly}
           >
             <span aria-live="polite" aria-atomic="true" className="text-sm font-semibold leading-4">
               {estimatedDuration}

@@ -51,9 +51,18 @@ export default function ProgressBar({
   const [isHoveringEmoji, setIsHoveringEmoji] = useState(false);
   const [hoverSlideIndex, setHoverSlideIndex] = useState<number | null>(null);
 
-  const max = Math.max(duration, 0);
-  const basePercent = max > 0 ? (currentTime / max) * 100 : 0;
-  const progressPercentage = scrubPercent !== null ? scrubPercent * 100 : basePercent;
+  const clampPercent = (percent: number) => Math.min(100, Math.max(0, percent));
+  const max = Number.isFinite(duration) && duration > 0 ? duration : 0;
+  const basePercent = max > 0 && Number.isFinite(currentTime) ? (currentTime / max) * 100 : 0;
+  const progressPercentage = clampPercent(scrubPercent !== null ? scrubPercent * 100 : basePercent);
+  const thumbLeft =
+    progressPercentage <= 0
+      ? '1px'
+      : progressPercentage >= 100
+        ? 'calc(100% - 1px)'
+        : `${progressPercentage}%`;
+  const thumbTranslateX =
+    progressPercentage <= 0 ? '0%' : progressPercentage >= 100 ? '-100%' : '-50%';
 
   // 마우스 X 좌표 → 비율 (0~1) 변환
   const getPercentFromClientX = useCallback(
@@ -213,8 +222,11 @@ export default function ProgressBar({
 
       {/* 진행 핸들 */}
       <div
-        className="absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-[#4F5BFF] shadow transition-[width,height] duration-150 group-hover:h-4 group-hover:w-4"
-        style={{ left: `${progressPercentage}%`, marginLeft: '-6px' }}
+        className="absolute top-1/2 h-3 w-3 rounded-full bg-[#4F5BFF] shadow transition-[width,height] duration-150 group-hover:h-4 group-hover:w-4"
+        style={{
+          left: thumbLeft,
+          transform: `translate(${thumbTranslateX}, -50%)`,
+        }}
       />
 
       {/* 호버 시 썸네일 + 시간 미리보기 */}
@@ -234,7 +246,7 @@ export default function ProgressBar({
             />
           )}
 
-          <div className="rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.66)] px-3 py-1 text-xs font-medium tabular-nums text-[#ffffff] whitespace-nowrap">
+          <div className="rounded-full bg-[rgba(18,18,20,0.78)] px-3 py-1 text-xs font-medium tabular-nums text-[#ffffff] whitespace-nowrap backdrop-blur-[6px]">
             {formatVideoTimestamp(hoverX * max)}
           </div>
         </div>

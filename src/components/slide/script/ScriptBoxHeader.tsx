@@ -19,12 +19,14 @@ import SlideTitle from './SlideTitle';
 interface ScriptBoxHeaderProps {
   isCollapsed: boolean;
   isLoading?: boolean;
+  readOnly?: boolean;
   onToggleCollapse: () => void;
 }
 
 export default function ScriptBoxHeader({
   isCollapsed,
   isLoading,
+  readOnly = false,
   onToggleCollapse,
 }: ScriptBoxHeaderProps) {
   return (
@@ -34,16 +36,23 @@ export default function ScriptBoxHeader({
         {isLoading ? (
           <Skeleton width={100} height={20} />
         ) : (
-          <SlideTitle isCollapsed={isCollapsed} />
+          <SlideTitle isCollapsed={isCollapsed} readOnly={readOnly} />
         )}
       </div>
 
       {/* 우측: 일괄 수정, 이모지, 변경기록, 의견, 접기 버튼 */}
       <div className="ml-2 flex shrink-0 items-center gap-1.5 sm:gap-3">
-        <ScriptBoxEmoji />
-        <ScriptBulkEditControl />
-        <ScriptHistory />
-        <CommentPopover isLoading={isLoading} />
+        <div
+          className={clsx(
+            'flex items-center gap-1.5 sm:gap-3',
+            readOnly && 'pointer-events-none opacity-60',
+          )}
+        >
+          <ScriptBoxEmoji />
+          <ScriptBulkEditControl />
+          <ScriptHistory />
+          <CommentPopover isLoading={isLoading} />
+        </div>
         <button
           type="button"
           onClick={onToggleCollapse}

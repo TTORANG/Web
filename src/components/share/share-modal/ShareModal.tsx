@@ -11,6 +11,7 @@ import kakaoTalkIcon from '@/assets/sns-icons/kakaotalk-icon@4x.webp';
 import xIcon from '@/assets/sns-icons/x-icon@4x.webp';
 import { Dropdown, type DropdownItem } from '@/components/common/Dropdown';
 import { Modal } from '@/components/common/Modal';
+import { DEMO_SHAREABLE_VIDEOS, DEMO_SHARE_PATH, isDemoProject } from '@/constants/demoProject';
 import { useCreateShareLink, useShareableVideos } from '@/hooks/queries/useShares';
 import { type ShareType, useShareStore } from '@/stores/shareStore';
 import { formatTimestamp } from '@/utils/format';
@@ -25,6 +26,7 @@ function shareTypeLabel(type: ShareType) {
 }
 export function ShareModal() {
   const { projectId } = useParams<{ projectId: string }>();
+  const isDemoMode = isDemoProject(projectId);
   // zustand 값 구독(읽기)
   const isOpen = useShareStore((s) => s.isShareModalOpen);
   const step = useShareStore((s) => s.step);
@@ -47,7 +49,7 @@ export function ShareModal() {
     fetchNextPage,
     isFetchingNextPage,
   } = useShareableVideos(projectId, {
-    enabled: isOpen && shareType === 'slide_script_video',
+    enabled: !isDemoMode && isOpen && shareType === 'slide_script_video',
   });
 
   // 공유 링크 생성 mutation
@@ -55,11 +57,12 @@ export function ShareModal() {
 
   // 영상 목록 (모든 페이지의 videos를 flat하게 병합)
   const videos = useMemo(() => {
+    if (isDemoMode) return DEMO_SHAREABLE_VIDEOS;
     if (!videosData?.pages) return [];
     return videosData.pages.flatMap(
       (page) => (page.resultType === 'SUCCESS' && page.success?.videos) || [],
     );
-  }, [videosData]);
+  }, [isDemoMode, videosData]);
 
   // 선택된 비디오 바뀔 때만 다시 계산
   const selectedVideo = useMemo(() => {
@@ -87,17 +90,19 @@ export function ShareModal() {
 
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
+      if (isDemoMode) return;
       const [target] = entries;
       if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
         fetchNextPage();
       }
     },
-    [hasNextPage, isFetchingNextPage, fetchNextPage],
+    [fetchNextPage, hasNextPage, isDemoMode, isFetchingNextPage],
   );
 
   useEffect(() => {
     const element = observerTarget.current;
     if (!element) return;
+    if (isDemoMode) return;
 
     const observer = new IntersectionObserver(handleObserver, {
       threshold: 0.5,
@@ -106,7 +111,7 @@ export function ShareModal() {
     observer.observe(element);
 
     return () => observer.disconnect();
-  }, [handleObserver]);
+  }, [handleObserver, isDemoMode]);
 
   // 사용자 클립보드에 url 복사
   const handleCopy = async () => {
@@ -123,6 +128,12 @@ export function ShareModal() {
     if (!projectId) return;
     // 영상포함 유형일때 비디오 없으면 공유 링크 생성X
     if (shareType === 'slide_script_video' && !selectedVideoId) return;
+
+    if (isDemoMode) {
+      setShareUrl(`${window.location.origin}${DEMO_SHARE_PATH}`);
+      setStep('result');
+      return;
+    }
 
     try {
       // API scope 값 변환 (slide_script -> slides_script)
@@ -151,6 +162,9 @@ export function ShareModal() {
       showToast.error('공유 링크를 만들지 못했습니다.');
     }
   };
+
+  const isGenerating = isDemoMode ? false : createShareLinkMutation.isPending;
+  const isLoadingVideoOptions = isDemoMode ? false : isLoadingVideos;
   const shareTypeItems: DropdownItem[] = [
     {
       id: 'slide_script',
@@ -216,7 +230,7 @@ export function ShareModal() {
     <div className="flex flex-col gap-2">
       <label className="text-body-m-bold text-gray-600">공유할 녹화 영상</label>
       <div className="max-h-80 overflow-y-auto rounded-lg border border-gray-200">
-        {isLoadingVideos ? (
+        {isLoadingVideoOptions ? (
           <div className="flex items-center justify-center py-8">
             <span className="text-body-m text-gray-600">영상 목록을 불러오는 중...</span>
           </div>
@@ -263,9 +277,9 @@ export function ShareModal() {
               );
             })}
             {/* 무한 스크롤 observer target */}
-            <div ref={observerTarget} className="h-4 w-full" />
+            {!isDemoMode && <div ref={observerTarget} className="h-4 w-full" />}
             {/* 다음 페이지 로딩 중 */}
-            {isFetchingNextPage && (
+            {!isDemoMode && isFetchingNextPage && (
               <div className="flex items-center justify-center py-4">
                 <span className="text-body-s text-gray-600">추가 영상을 불러오는 중...</span>
               </div>
@@ -284,21 +298,17 @@ export function ShareModal() {
         <button
           type="button"
           onClick={handleGenerate}
-          disabled={
-            (shareType === 'slide_script_video' && !selectedVideoId) ||
-            createShareLinkMutation.isPending
-          }
+          disabled={(shareType === 'slide_script_video' && !selectedVideoId) || isGenerating}
           className={clsx(
             'mt-4 h-14 w-full rounded-lg text-body-m-bold text-white transition flex items-center justify-center gap-2',
-            (shareType === 'slide_script_video' && !selectedVideoId) ||
-              createShareLinkMutation.isPending
+            (shareType === 'slide_script_video' && !selectedVideoId) || isGenerating
               ? 'bg-gray-400 cursor-not-allowed'
               : 'bg-main hover:opacity-90',
           )}
         >
           <span className="flex items-center gap-2">
-            {createShareLinkMutation.isPending ? '생성 중...' : '공유 링크 생성'}
-            {!createShareLinkMutation.isPending && <IconLink />}
+            {isGenerating ? '생성 중...' : '공유 링크 생성'}
+            {!isGenerating && <IconLink />}
           </span>
         </button>
       </div>

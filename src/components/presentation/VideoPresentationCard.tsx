@@ -25,6 +25,7 @@ type VideoPresentationCardProps = VideoPresentation & {
   onDelete: () => void;
   onUpdateTitle: (newTitle: string) => Promise<void>;
   onDownload?: () => void;
+  onOpen?: () => void;
 };
 
 export default function VideoPresentationCard({
@@ -43,6 +44,7 @@ export default function VideoPresentationCard({
   onDelete,
   onUpdateTitle,
   onDownload,
+  onOpen,
 }: VideoPresentationCardProps) {
   const navigate = useNavigate();
 
@@ -75,6 +77,11 @@ export default function VideoPresentationCard({
   const handleCardClick = () => {
     if (isRenameModalOpen || isRenaming) return;
     if (isProcessing) return;
+
+    if (onOpen) {
+      onOpen();
+      return;
+    }
 
     navigate(`/${projectId}/videos/${videoId}`);
   };

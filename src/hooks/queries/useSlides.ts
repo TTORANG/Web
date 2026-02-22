@@ -8,6 +8,12 @@ import { isAxiosError } from 'axios';
 import type { GetSlideResponseDto, UpdateSlideTitleRequestDto } from '@/api/dto';
 import { getSlides, updateSlide } from '@/api/endpoints/slides';
 import { queryKeys } from '@/api/queryClient';
+import {
+  DEMO_SLIDES,
+  getDemoSlideById,
+  isDemoProject,
+  isDemoSlideId,
+} from '@/constants/demoProject';
 import type { SlideListItem } from '@/types/slide';
 
 type UseSlidesOptions = {
@@ -29,20 +35,24 @@ export function useSlides(
   projectId: string,
   { enabled: isEnabled = true, liveSync = false, pollingIntervalMs = 15000 }: UseSlidesOptions = {},
 ) {
+  const isDemo = isDemoProject(projectId);
+
   return useQuery({
     queryKey: queryKeys.slides.list(projectId),
-    queryFn: () => getSlides(projectId),
+    queryFn: () => (isDemo ? Promise.resolve(DEMO_SLIDES) : getSlides(projectId)),
     enabled: !!projectId && isEnabled,
-    retry: false,
-    refetchInterval: liveSync
-      ? (query) => {
-          const error = query.state.error;
-          if (isAxiosError(error) && error.response?.status === 401) {
-            return false;
+    retry: isDemo ? 0 : false,
+    refetchInterval: isDemo
+      ? false
+      : liveSync
+        ? (query) => {
+            const error = query.state.error;
+            if (isAxiosError(error) && error.response?.status === 401) {
+              return false;
+            }
+            return pollingIntervalMs;
           }
-          return pollingIntervalMs;
-        }
-      : false,
+        : false,
     refetchIntervalInBackground: false,
   });
 }
@@ -61,8 +71,20 @@ export function useUpdateSlide() {
   };
 
   return useMutation({
-    mutationFn: ({ slideId, data }: { slideId: string; data: UpdateSlideTitleRequestDto }) =>
-      updateSlide(slideId, data),
+    mutationFn: ({ slideId, data }: { slideId: string; data: UpdateSlideTitleRequestDto }) => {
+      if (isDemoSlideId(slideId)) {
+        const slide = getDemoSlideById(slideId);
+        return Promise.resolve({
+          slideId,
+          title: data.title ?? slide?.title ?? null,
+          slideNum: slide?.slideNum ?? 1,
+          imageUrl: slide?.imageUrl ?? '',
+          updatedAt: new Date().toISOString(),
+        });
+      }
+
+      return updateSlide(slideId, data);
+    },
 
     onMutate: async ({ slideId, data }): Promise<OptimisticContext> => {
       await queryClient.cancelQueries({ queryKey: queryKeys.slides.detail(slideId) });

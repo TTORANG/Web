@@ -26,6 +26,7 @@ type VideoPresentationListProps = VideoPresentation & {
   onDelete: () => void;
   onUpdateTitle: (newTitle: string) => Promise<void>;
   onDownload?: () => void;
+  onOpen?: () => void;
 };
 
 export default function VideoPresentationList({
@@ -44,6 +45,7 @@ export default function VideoPresentationList({
   onDelete,
   onUpdateTitle,
   onDownload,
+  onOpen,
   highlightQuery = '',
 }: VideoPresentationListProps) {
   const isDesktop = useIsDesktop();
@@ -79,6 +81,11 @@ export default function VideoPresentationList({
   const handleListClick = () => {
     if (isRenaming) return;
     if (isProcessing) return;
+
+    if (onOpen) {
+      onOpen();
+      return;
+    }
 
     navigate(`/${projectId}/videos/${videoId}`);
   };
