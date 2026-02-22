@@ -13,6 +13,7 @@ export interface ChartDataPoint {
   sessionCount: number;
   originalTime?: number;
   seekSeconds?: number;
+  slideIndex?: number;
   thumbUrl?: string;
 }
 
@@ -25,12 +26,31 @@ export type InsightTopSlide = {
   feedbackCount: number;
 };
 
+export type InsightDataSourceOption = {
+  key: string;
+  label: string;
+  subLabel?: string;
+  thumbnailUrl?: string;
+  kind: 'slide' | 'video';
+  videoId: string | null;
+};
+
 export type InsightModel = {
   projectIdStr: string;
   projectIdNum: number;
   latestVideoId: string | null;
+  selectedVideoId: string | null;
 
   hasVideo: boolean;
+  isVideoSource: boolean;
+  dataSourceOptions: InsightDataSourceOption[];
+  selectedDataSourceKey: string;
+  selectedDataSourceLabel: string;
+  selectedDataSourceSubLabel?: string;
+  onSelectDataSource: (sourceKey: string) => void;
+  feedbackDistributionTitle: string;
+  feedbackDistributionCounts?: Record<ReactionType, number>;
+  feedbackDistributionTotalCount?: number;
 
   summaryStats: SummaryStat[];
 

@@ -83,4 +83,12 @@ describe('RecentCommentsSection', () => {
     expect(screen.getByText('도입')).toBeInTheDocument();
     expect(screen.getByText('슬라이드 2')).toBeInTheDocument();
   });
+
+  it('shows video-selection guide when analysis source is not video', () => {
+    render(<RecentCommentsSection hasVideo isVideoSource={false} recentCommentsData={undefined} />);
+
+    expect(
+      screen.getByText('분석 대상을 영상으로 선택하면 최근 댓글 피드백을 볼 수 있어요.'),
+    ).toBeInTheDocument();
+  });
 });

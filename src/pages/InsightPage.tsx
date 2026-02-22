@@ -2,7 +2,10 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Skeleton } from '@/components/common';
+import clsx from 'clsx';
+
+import { Dropdown, Skeleton } from '@/components/common';
+import type { DropdownItem } from '@/components/common/Dropdown';
 import { SummaryStatsSection } from '@/components/insight';
 import { DropOffAnalysisSection } from '@/components/insight';
 import { FeedbackDistributionSection } from '@/components/insight';
@@ -24,9 +27,9 @@ function InsightPageSkeleton() {
 
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {[0, 1, 2, 3].map((idx) => (
+          {['summary-1', 'summary-2', 'summary-3', 'summary-4'].map((skeletonKey) => (
             <div
-              key={idx}
+              key={skeletonKey}
               className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white px-5 py-4"
             >
               <Skeleton width="50%" height={14} />
@@ -37,14 +40,14 @@ function InsightPageSkeleton() {
         </div>
 
         <div className="flex flex-wrap gap-4">
-          {[0, 1].map((idx) => (
+          {['dropoff-1', 'dropoff-2'].map((skeletonKey) => (
             <div
-              key={idx}
+              key={skeletonKey}
               className="flex min-w-0 flex-1 basis-full flex-col gap-3 rounded-lg border border-gray-200 bg-white px-5 py-4 lg:basis-160"
             >
               <Skeleton width="40%" height={18} />
-              {[0, 1, 2].map((row) => (
-                <div key={row} className="flex items-center gap-4">
+              {['row-1', 'row-2', 'row-3'].map((rowKey) => (
+                <div key={rowKey} className="flex items-center gap-4">
                   <Skeleton width={120} height={68} rounded={8} />
                   <div className="flex-1">
                     <Skeleton width="60%" height={14} className="mb-2" />
@@ -71,8 +74,8 @@ function InsightPageSkeleton() {
           <div className="flex flex-col gap-6 rounded-lg border border-gray-200 bg-white px-5 py-4">
             <Skeleton width="60%" height={18} />
             <div className="flex flex-wrap items-start gap-4">
-              {[0, 1, 2].map((idx) => (
-                <Skeleton.Card key={idx} />
+              {['top-slide-1', 'top-slide-2', 'top-slide-3'].map((skeletonKey) => (
+                <Skeleton.Card key={skeletonKey} />
               ))}
             </div>
           </div>
@@ -81,8 +84,8 @@ function InsightPageSkeleton() {
         <div className="rounded-lg border border-gray-200 bg-white px-5 py-4">
           <Skeleton width="30%" height={18} className="mb-4" />
           <div className="flex flex-col gap-3">
-            {[0, 1, 2].map((idx) => (
-              <Skeleton.ListItem key={idx} />
+            {['comment-1', 'comment-2', 'comment-3'].map((skeletonKey) => (
+              <Skeleton.ListItem key={skeletonKey} />
             ))}
           </div>
         </div>
@@ -94,13 +97,76 @@ function InsightPageSkeleton() {
 export default function InsightPage() {
   const navigate = useNavigate();
   const m = useInsightPageModel();
-  const { latestVideoId, projectIdStr, getSeekSecondsForSlide, getSlideIdByIndex } = m;
+  const { selectedVideoId, projectIdStr, getSeekSecondsForSlide, getSlideIdByIndex } = m;
+  const selectedDataSourceOption = m.dataSourceOptions.find(
+    (option) => option.key === m.selectedDataSourceKey,
+  );
 
-  const canSeekToLatestVideo = Boolean(latestVideoId);
+  const canSeekToSelectedVideo = Boolean(selectedVideoId && m.isVideoSource);
+
+  const dataSourceItems: DropdownItem[] = m.dataSourceOptions.map((option) => {
+    const isSelectedItem = option.key === m.selectedDataSourceKey;
+    const subLabelClassName = clsx(
+      'mt-0.5 block truncate text-caption',
+      isSelectedItem ? 'text-white/90' : 'text-gray-600',
+    );
+
+    return {
+      id: option.key,
+      label:
+        option.kind === 'video' ? (
+          <div className="flex min-w-0 items-center gap-3">
+            {option.thumbnailUrl ? (
+              <img
+                src={option.thumbnailUrl}
+                alt={`${option.label} 썸네일`}
+                className="h-9 w-16 shrink-0 rounded-sm object-cover"
+              />
+            ) : (
+              <div
+                className="h-9 w-16 shrink-0 rounded-sm bg-gray-200"
+                role="img"
+                aria-label={`${option.label} 썸네일 없음`}
+              />
+            )}
+            <span className="min-w-0 leading-tight text-current">
+              <span className="block truncate text-body-m-bold">{option.label}</span>
+              {option.subLabel && <span className={subLabelClassName}>{option.subLabel}</span>}
+            </span>
+          </div>
+        ) : option.subLabel ? (
+          <div className="flex flex-col leading-tight text-current">
+            <span className="text-body-m-bold">{option.label}</span>
+            <span className={subLabelClassName}>{option.subLabel}</span>
+          </div>
+        ) : (
+          <span className="text-current">{option.label}</span>
+        ),
+      onClick: () => m.onSelectDataSource(option.key),
+      selected: isSelectedItem,
+    };
+  });
+
+  const selectedThumbNode =
+    selectedDataSourceOption?.kind === 'video' ? (
+      selectedDataSourceOption.thumbnailUrl ? (
+        <img
+          src={selectedDataSourceOption.thumbnailUrl}
+          alt={`${m.selectedDataSourceLabel} 썸네일`}
+          className="h-9 w-16 shrink-0 rounded-sm object-cover"
+        />
+      ) : (
+        <div
+          className="h-9 w-16 shrink-0 rounded-sm bg-gray-200"
+          role="img"
+          aria-label={`${m.selectedDataSourceLabel} 썸네일 없음`}
+        />
+      )
+    ) : null;
 
   const navigateToVideoTime = useCallback(
     (seconds: number) => {
-      if (!canSeekToLatestVideo || !latestVideoId) return;
+      if (!canSeekToSelectedVideo || !selectedVideoId) return;
       if (!Number.isFinite(seconds) || seconds < 0) return;
 
       const seekSeconds = Math.floor(seconds);
@@ -108,9 +174,9 @@ export default function InsightPage() {
         navigate(`${DEMO_SHARE_PATH}?t=${seekSeconds}`);
         return;
       }
-      navigate(`/${projectIdStr}/videos/${latestVideoId}?t=${seekSeconds}`);
+      navigate(`/${projectIdStr}/videos/${selectedVideoId}?t=${seekSeconds}`);
     },
-    [canSeekToLatestVideo, latestVideoId, navigate, projectIdStr],
+    [canSeekToSelectedVideo, navigate, projectIdStr, selectedVideoId],
   );
 
   const navigateToSlideById = useCallback(
@@ -130,14 +196,14 @@ export default function InsightPage() {
   const navigateToSlideTime = useCallback(
     (slideIndex: number) => {
       const seekSeconds = getSeekSecondsForSlide(slideIndex);
-      if (canSeekToLatestVideo && seekSeconds !== null) {
+      if (canSeekToSelectedVideo && seekSeconds !== null) {
         navigateToVideoTime(seekSeconds);
         return;
       }
 
       navigateToSlideByIndex(slideIndex);
     },
-    [canSeekToLatestVideo, getSeekSecondsForSlide, navigateToSlideByIndex, navigateToVideoTime],
+    [canSeekToSelectedVideo, getSeekSecondsForSlide, navigateToSlideByIndex, navigateToVideoTime],
   );
 
   return (
@@ -158,9 +224,63 @@ export default function InsightPage() {
               {m.errorMessage ? ` (${m.errorMessage})` : ''}
             </div>
           )}
-          <div className="flex flex-col gap-1">
-            <h1 className="text-body-l-bold text-gray-800">발표 인사이트</h1>
-            <p className="text-body-s text-gray-600">발표 자료 분석 결과를 확인하세요</p>
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div className="flex flex-col gap-1">
+              <h1 className="text-body-l-bold text-gray-800">발표 인사이트</h1>
+              <p className="text-body-s text-gray-600">발표 자료 분석 결과를 확인하세요</p>
+            </div>
+
+            {m.hasVideo && (
+              <div className="w-full md:w-80">
+                <p className="mb-2 text-body-s text-gray-600">분석 대상</p>
+                <Dropdown
+                  trigger={({ isOpen }) => (
+                    <button
+                      type="button"
+                      className={clsx(
+                        'flex w-full items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-5 py-3 text-left',
+                        'cursor-pointer',
+                        isOpen && 'border-gray-400',
+                      )}
+                    >
+                      <span className="flex min-w-0 items-center gap-3 text-left">
+                        {selectedThumbNode}
+                        <span className="block truncate text-body-m-bold text-gray-800">
+                          {m.selectedDataSourceLabel}
+                          {m.selectedDataSourceSubLabel && (
+                            <span className="mt-0.5 block truncate text-caption text-gray-700">
+                              {m.selectedDataSourceSubLabel}
+                            </span>
+                          )}
+                        </span>
+                      </span>
+                      <svg
+                        className={clsx(
+                          'h-4 w-4 shrink-0 text-gray-600 transition-transform',
+                          isOpen && 'rotate-180',
+                        )}
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden
+                      >
+                        <path
+                          d="M6 9l6 6 6-6"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  )}
+                  items={dataSourceItems}
+                  className="w-full"
+                  menuClassName="max-h-72 w-full overflow-y-auto"
+                  align="start"
+                  ariaLabel="인사이트 분석 대상 선택"
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-4">
@@ -170,65 +290,82 @@ export default function InsightPage() {
               dropOffSlides={m.dropOffSlides}
               dropOffTimes={m.dropOffTimes}
               getThumb={m.getThumb}
-              showVideoDropOff={m.hasVideo}
+              showVideoDropOff={m.isVideoSource}
               onSlideThumbClick={navigateToSlideTime}
-              onVideoTimeClick={canSeekToLatestVideo ? navigateToVideoTime : undefined}
+              onVideoTimeClick={canSeekToSelectedVideo ? navigateToVideoTime : undefined}
             />
 
             <RetentionChartCard
               title={m.retentionTitle}
               data={m.retentionData}
               isVideo={m.retentionIsVideo}
-              onVideoTimeClick={canSeekToLatestVideo ? navigateToVideoTime : undefined}
+              onVideoTimeClick={canSeekToSelectedVideo ? navigateToVideoTime : undefined}
+              onSlidePointClick={navigateToSlideTime}
             />
 
             <div className="grid grid-cols-1 gap-12 py-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-              <FeedbackDistributionSection projectId={m.projectIdStr ?? ''} />
+              <FeedbackDistributionSection
+                projectId={m.projectIdStr ?? ''}
+                title={m.feedbackDistributionTitle}
+                reactionCounts={m.feedbackDistributionCounts}
+                totalCount={m.feedbackDistributionTotalCount}
+              />
 
               <div className="flex flex-col gap-6 rounded-lg border border-gray-200 bg-white px-5 py-4">
-                <h3 className="text-body-l-bold text-gray-800">가장 많은 피드백을 받은 슬라이드</h3>
+                <h3 className="text-body-l-bold text-gray-800">
+                  {m.isVideoSource
+                    ? '영상에서 반응이 가장 많았던 슬라이드'
+                    : '가장 많은 피드백을 받은 슬라이드'}
+                </h3>
                 <div className="flex flex-wrap items-start gap-4">
-                  {m.topSlides.map(({ slideId, slide, slideIndex, title }, index) => {
-                    const summary = m.topSlideReactionSummaries?.[index];
-                    const baseReactions = createDefaultReactions();
-                    const summaryReactions = summary
-                      ? baseReactions.map((reaction) => ({
-                          ...reaction,
-                          count: summary[reaction.type] ?? 0,
-                        }))
-                      : baseReactions;
-                    const reactionMetrics = summaryReactions.filter(
-                      (reaction) => reaction.count > 0,
-                    );
-                    const seekSeconds = getSeekSecondsForSlide(slideIndex);
-                    const targetSlideId =
-                      slide?.slideId ?? slideId ?? getSlideIdByIndex(slideIndex);
-                    const onThumbClick = () => {
-                      if (canSeekToLatestVideo && seekSeconds !== null) {
-                        navigateToVideoTime(seekSeconds);
-                        return;
-                      }
+                  {m.topSlides.length > 0 ? (
+                    m.topSlides.map(({ slideId, slide, slideIndex, title }, index) => {
+                      const summary = m.topSlideReactionSummaries?.[index];
+                      const baseReactions = createDefaultReactions();
+                      const summaryReactions = summary
+                        ? baseReactions.map((reaction) => ({
+                            ...reaction,
+                            count: summary[reaction.type] ?? 0,
+                          }))
+                        : baseReactions;
+                      const reactionMetrics = summaryReactions
+                        .filter((reaction) => reaction.count > 0)
+                        .sort((a, b) => b.count - a.count);
+                      const seekSeconds = getSeekSecondsForSlide(slideIndex);
+                      const targetSlideId =
+                        slide?.slideId ?? slideId ?? getSlideIdByIndex(slideIndex);
+                      const onThumbClick = () => {
+                        if (canSeekToSelectedVideo && seekSeconds !== null) {
+                          navigateToVideoTime(seekSeconds);
+                          return;
+                        }
 
-                      navigateToSlideById(targetSlideId);
-                    };
+                        navigateToSlideById(targetSlideId);
+                      };
 
-                    return (
-                      <TopSlideCard
-                        key={slideId ?? slide?.slideId ?? `slide-${slideIndex}`}
-                        title={title}
-                        thumbUrl={m.getThumb(slideIndex)}
-                        reactionMetrics={reactionMetrics}
-                        onThumbClick={onThumbClick}
-                      />
-                    );
-                  })}
+                      return (
+                        <TopSlideCard
+                          key={slideId ?? slide?.slideId ?? `slide-${slideIndex}`}
+                          title={title}
+                          thumbUrl={m.getThumb(slideIndex)}
+                          reactionMetrics={reactionMetrics}
+                          onThumbClick={onThumbClick}
+                        />
+                      );
+                    })
+                  ) : (
+                    <p className="w-full rounded-lg border border-dashed border-gray-300 px-4 py-6 text-body-s text-gray-600">
+                      데이터를 분석 중이거나 결과가 없습니다.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
             <RecentCommentsSection
               hasVideo={m.hasVideo}
+              isVideoSource={m.isVideoSource}
               recentCommentsData={m.recentCommentsData}
-              onSeekCommentTime={canSeekToLatestVideo ? navigateToVideoTime : undefined}
+              onSeekCommentTime={canSeekToSelectedVideo ? navigateToVideoTime : undefined}
             />
           </div>
         </div>
