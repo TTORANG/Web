@@ -110,6 +110,7 @@ type SlideWebcamStageProps = {
   disablePip?: boolean;
   showLayoutToggle?: boolean;
   layoutToggleLabel?: ReactNode;
+  layoutToggleAriaLabel?: string;
   segmentHighlights?: SegmentHighlight[];
 };
 
@@ -123,12 +124,8 @@ export default function SlideWebcamStage({
   onVideoEvent,
   disablePip = false,
   showLayoutToggle = false,
-  layoutToggleLabel = (
-    <div className="text-caption flex items-center justify-center gap-1.5">
-      <span>웹캠·슬라이드</span>
-      <RefreshIcon className="w-3.5 h-3.5" />
-    </div>
-  ),
+  layoutToggleLabel = <RefreshIcon className="h-4 w-4" />,
+  layoutToggleAriaLabel = '웹캠/슬라이드 위치 전환',
 }: SlideWebcamStageProps) {
   const stageRootRef = useRef<HTMLDivElement | null>(null);
   const clickTimeoutRef = useRef<number | null>(null);
@@ -559,7 +556,13 @@ export default function SlideWebcamStage({
             slides={slides}
             slideChangeTimes={slideChangeTimes}
             layoutToggle={
-              showLayoutToggle ? { label: layoutToggleLabel, onToggle: toggleLayout } : undefined
+              showLayoutToggle
+                ? {
+                    label: layoutToggleLabel,
+                    onToggle: toggleLayout,
+                    ariaLabel: layoutToggleAriaLabel,
+                  }
+                : undefined
             }
           />
         </div>
