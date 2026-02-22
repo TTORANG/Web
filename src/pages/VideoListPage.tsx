@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
@@ -7,9 +7,11 @@ import { toast } from 'sonner';
 import { videosApi } from '@/api/endpoints/videos';
 import { queryKeys } from '@/api/queryClient';
 import { CardView, ListView, Spinner } from '@/components/common';
-import PresentationCard from '@/components/presentation/PresentationCard';
+import PresentationCardSkeleton from '@/components/presentation/PresentationCardSkeleton';
 import PresentationHeader from '@/components/presentation/PresentationHeader';
-import PresentationList from '@/components/presentation/PresentationList';
+import PresentationListSkeleton from '@/components/presentation/PresentationListSkeleton';
+import VideoPresentationCard from '@/components/presentation/VideoPresentationCard';
+import VideoPresentationList from '@/components/presentation/VideoPresentationList';
 import { DeleteVideoModal, RecordingEmptySection } from '@/components/video';
 import { usePresentationVideos } from '@/hooks/usePresentationVideos';
 import type { FilterMode, SortMode, ViewMode } from '@/types/home';
@@ -18,9 +20,37 @@ import { showToast } from '@/utils/toast';
 
 const SKELETON_CARD_COUNT = 6;
 const SKELETON_LIST_COUNT = 4;
+const DEFAULT_VIDEO_EXTENSION = 'mp4';
 
 type DeleteTarget = { id: string; title: string } | null;
 type VideoListQueryData = { videos: VideoPresentation[]; total: number };
+
+function sanitizeFilename(fileName: string): string {
+  const sanitized = fileName.replace(/[\\/:*?"<>|]+/g, '_').trim();
+  return sanitized.length > 0 ? sanitized : 'video';
+}
+
+function parseFileExtension(url: string): string {
+  try {
+    const pathname = new URL(url, window.location.origin).pathname;
+    const fileName = pathname.split('/').pop() ?? '';
+    const matched = fileName.match(/\.([a-zA-Z0-9]+)$/);
+    return matched?.[1]?.toLowerCase() || DEFAULT_VIDEO_EXTENSION;
+  } catch {
+    return DEFAULT_VIDEO_EXTENSION;
+  }
+}
+
+function startVideoDownload(downloadUrl: string, title: string) {
+  const link = document.createElement('a');
+  link.href = downloadUrl;
+  link.download = `${sanitizeFilename(title)}.${parseFileExtension(downloadUrl)}`;
+  link.rel = 'noopener noreferrer';
+  link.target = '_blank';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
 
 function updateVideoListCache(
   queryClient: QueryClient,
@@ -56,6 +86,7 @@ export default function VideoListPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [videoToDelete, setVideoToDelete] = useState<DeleteTarget>(null);
   const [deletingVideoIds, setDeletingVideoIds] = useState<Set<string>>(new Set());
+  const downloadingVideoIdsRef = useRef<Set<string>>(new Set());
 
   // 썸네일/처리 폴링 상태
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
@@ -66,10 +97,18 @@ export default function VideoListPage() {
     search: appliedQuery,
     filter,
     sort,
+    enabled: Boolean(projectId),
+  });
+  const hasActiveFilters = filter !== null && filter !== 'all';
+  const needsBaseTotal = hasActiveFilters || appliedQuery.trim().length > 0;
+  const { data: baseData, isLoading: isBaseLoading } = usePresentationVideos({
+    projectId: projectId!,
+    filter: 'all',
+    enabled: Boolean(projectId) && needsBaseTotal,
   });
 
   const rawVideos = useMemo(() => data?.videos ?? [], [data?.videos]);
-  const totalCount = data?.total ?? 0;
+  const totalCount = needsBaseTotal ? (baseData?.total ?? 0) : (data?.total ?? 0);
 
   // 검색 디바운스
   useEffect(() => {
@@ -236,6 +275,42 @@ export default function VideoListPage() {
     [projectId, queryClient],
   );
 
+  const handleDownloadVideo = useCallback(async (video: VideoPresentation) => {
+    const videoId = String(video.videoId ?? '');
+    if (!videoId) {
+      showToast.error('영상 다운로드에 실패했습니다.', '유효하지 않은 영상 ID입니다.');
+      return;
+    }
+
+    if (video.status !== 'ready') {
+      showToast.info('영상 처리 완료 후 다운로드할 수 있습니다.');
+      return;
+    }
+
+    if (downloadingVideoIdsRef.current.has(videoId)) {
+      return;
+    }
+
+    downloadingVideoIdsRef.current.add(videoId);
+
+    try {
+      const downloadUrl = video.downloadUrl?.trim();
+      if (!downloadUrl) {
+        throw new Error('목록 응답에 다운로드 URL이 없습니다.');
+      }
+
+      startVideoDownload(downloadUrl, video.title);
+      showToast.success('영상 다운로드를 시작했습니다.');
+    } catch (err) {
+      showToast.error(
+        '영상 다운로드에 실패했습니다.',
+        err instanceof Error ? err.message : '잠시 후 다시 시도해주세요.',
+      );
+    } finally {
+      downloadingVideoIdsRef.current.delete(videoId);
+    }
+  }, []);
+
   const openDeleteModal = useCallback((id: string, title: string) => {
     setVideoToDelete({ id, title });
     setDeleteModalOpen(true);
@@ -302,7 +377,7 @@ export default function VideoListPage() {
       return (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: SKELETON_CARD_COUNT }).map((_, i) => (
-            <PresentationCard.Skeleton key={i} />
+            <PresentationCardSkeleton key={i} />
           ))}
         </div>
       );
@@ -310,7 +385,7 @@ export default function VideoListPage() {
     return (
       <div className="flex flex-col gap-3">
         {Array.from({ length: SKELETON_LIST_COUNT }).map((_, i) => (
-          <PresentationList.Skeleton key={i} />
+          <PresentationListSkeleton key={i} />
         ))}
       </div>
     );
@@ -350,9 +425,15 @@ export default function VideoListPage() {
   }
 
   const showInitialLoadingSpinner = !hasCompletedInitialLoad && isLoading;
+  const isWaitingForTotalCount = needsBaseTotal && isBaseLoading && rawVideos.length === 0;
   const showEmptyRecording =
-    !showInitialLoadingSpinner && !isLoading && totalCount === 0 && !hasAppliedQuery;
-  const showSkeletonUI = !showInitialLoadingSpinner && (isLoading || isDebouncing);
+    !showInitialLoadingSpinner &&
+    !isLoading &&
+    !isWaitingForTotalCount &&
+    totalCount === 0 &&
+    !hasAppliedQuery;
+  const showSkeletonUI =
+    !showInitialLoadingSpinner && (isLoading || isDebouncing || isWaitingForTotalCount);
 
   return (
     <div
@@ -360,6 +441,7 @@ export default function VideoListPage() {
       id="tabpanel-videos"
       aria-labelledby="tab-videos"
       className="relative h-full w-full overflow-y-auto bg-gray-100"
+      style={{ scrollbarGutter: 'stable' }}
     >
       <DeleteVideoModal
         isOpen={deleteModalOpen}
@@ -386,8 +468,7 @@ export default function VideoListPage() {
           <div className="mb-4 flex justify-end">
             <button
               onClick={handleStartRecording}
-              disabled={isLoading}
-              className="px-6 py-2.5 bg-main hover:bg-main-variant2 disabled:bg-gray-600 text-white rounded-lg font-semibold transition-all duration-200 active:scale-[0.98]"
+              className="px-6 py-2.5 bg-main hover:bg-main-variant2 text-white rounded-lg font-semibold transition-all duration-200 active:scale-[0.98]"
             >
               영상 녹화하기
             </button>
@@ -432,13 +513,15 @@ export default function VideoListPage() {
                       className="relative"
                       onClick={() => handleVideoClick(id, item.derivedStatus)}
                     >
-                      <PresentationCard
+                      <VideoPresentationCard
                         {...item}
-                        mode="videos"
                         isPresentationPending={isPending}
                         thumbnailVersion={thumbVersion[id] ?? 0}
                         onDelete={() => openDeleteModal(id, item.title)}
                         onUpdateTitle={(newTitle) => handleUpdateVideoTitle(id, newTitle)}
+                        onDownload={() => {
+                          void handleDownloadVideo(item);
+                        }}
                       />
 
                       {item.isFailed && !isDeleting && (
@@ -497,13 +580,15 @@ export default function VideoListPage() {
 
                   return (
                     <div onClick={() => handleVideoClick(id, item.derivedStatus)}>
-                      <PresentationList
+                      <VideoPresentationList
                         {...item}
-                        mode="videos"
                         isPresentationPending={isPending}
                         thumbnailVersion={thumbVersion[id] ?? 0}
                         onDelete={() => openDeleteModal(id, item.title)}
                         onUpdateTitle={(newTitle) => handleUpdateVideoTitle(id, newTitle)}
+                        onDownload={() => {
+                          void handleDownloadVideo(item);
+                        }}
                       />
                     </div>
                   );

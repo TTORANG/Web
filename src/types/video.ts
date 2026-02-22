@@ -97,5 +97,6 @@ export interface VideoPresentation extends Presentation {
   commentCount: number;
   reactionCount: number;
   viewCount: number;
+  downloadUrl?: string | null;
   status: 'uploading' | 'processing' | 'ready' | 'failed';
 }

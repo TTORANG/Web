@@ -18,6 +18,7 @@ const MAX_HIGHLIGHTS = 10;
 interface VideoPlaybackBarProps {
   videoElement: HTMLVideoElement | null;
   duration: number;
+  isMediaReady?: boolean;
   fullscreenTargetRef?: React.RefObject<HTMLElement>;
   slides?: SlideListItem[];
   slideChangeTimes?: number[];
@@ -30,6 +31,7 @@ interface VideoPlaybackBarProps {
 export default function VideoPlaybackBar({
   videoElement,
   duration,
+  isMediaReady = true,
   fullscreenTargetRef,
   slides,
   slideChangeTimes,
@@ -47,6 +49,7 @@ export default function VideoPlaybackBar({
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
+  const isControlDisabled = !videoElement || !isMediaReady;
 
   useEffect(() => {
     if (!videoElement) return;
@@ -67,7 +70,7 @@ export default function VideoPlaybackBar({
   }, [videoElement]);
 
   const handleSeek = (time: number) => {
-    if (!videoElement) return;
+    if (isControlDisabled || !videoElement) return;
 
     // eslint-disable-next-line react-hooks/immutability -- DOM API
     videoElement.currentTime = time;
@@ -75,7 +78,7 @@ export default function VideoPlaybackBar({
   };
 
   const togglePlay = useCallback(async () => {
-    if (!videoElement) return;
+    if (isControlDisabled || !videoElement) return;
 
     if (videoElement.paused) {
       try {
@@ -86,7 +89,7 @@ export default function VideoPlaybackBar({
     } else {
       videoElement.pause();
     }
-  }, [videoElement]);
+  }, [isControlDisabled, videoElement]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -95,13 +98,14 @@ export default function VideoPlaybackBar({
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
+      if (isControlDisabled) return;
       e.preventDefault();
       void togglePlay();
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [togglePlay]);
+  }, [isControlDisabled, togglePlay]);
 
   const handleVolumeChange = (v: number) => {
     setVolume(v);
@@ -127,6 +131,7 @@ export default function VideoPlaybackBar({
       <ProgressBar
         currentTime={currentTime}
         duration={duration}
+        disabled={isControlDisabled}
         onSeek={handleSeek}
         slides={slides}
         slideChangeTimes={slideChangeTimes}
@@ -138,8 +143,9 @@ export default function VideoPlaybackBar({
           <button
             type="button"
             onClick={togglePlay}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.66)]"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.66)] disabled:cursor-not-allowed disabled:opacity-60"
             aria-label={isPlaying ? '일시정지' : '재생'}
+            disabled={isControlDisabled}
           >
             <img
               src={isPlaying ? pauseIcon : playIcon}
@@ -153,6 +159,7 @@ export default function VideoPlaybackBar({
             onVolumeChange={handleVolumeChange}
             currentTime={currentTime}
             duration={duration}
+            isTimestampReady={isMediaReady}
           />
         </div>
 

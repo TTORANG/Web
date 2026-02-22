@@ -69,7 +69,7 @@ export default function SlideThumbnail({
       </span>
 
       {/* 썸네일 */}
-      <div className="relative flex-1 rounded overflow-hidden bg-gray-200">
+      <div className="relative flex-1 aspect-video rounded overflow-hidden bg-gray-200">
         <SlideImage
           src={slide.imageUrl}
           alt={`슬라이드 ${index + 1}: ${getSlideTitle(slide.title, index + 1)}`}

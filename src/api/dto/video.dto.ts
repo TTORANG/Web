@@ -24,6 +24,7 @@ export interface VideoListItemDto {
   status: VideoStatus;
   durationSeconds: number;
   thumbnailUrl: string | null;
+  hlsMasterUrl?: string | null;
   createdAt: string;
 }
 

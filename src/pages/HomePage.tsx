@@ -172,7 +172,6 @@ export default function HomePage() {
         presentations={presentations}
         pendingThumbnailIds={pendingThumbnailIds}
         thumbVersion={thumbVersion}
-        mode="slide"
       />
     </main>
   );

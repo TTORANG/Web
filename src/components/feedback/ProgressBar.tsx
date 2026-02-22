@@ -8,6 +8,8 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import clsx from 'clsx';
+
 import { REACTION_CONFIG } from '@/constants/reaction';
 import type { SlideListItem } from '@/types/slide';
 import type { SegmentHighlight } from '@/types/video';
@@ -19,6 +21,8 @@ interface ProgressBarProps {
   currentTime: number;
   /** 비디오 총 길이 (초) */
   duration: number;
+  /** 비활성화 여부 */
+  disabled?: boolean;
   /** seek 콜백 */
   onSeek: (time: number) => void;
   /** 슬라이드 목록 (썸네일 미리보기용) */
@@ -32,6 +36,7 @@ interface ProgressBarProps {
 export default function ProgressBar({
   currentTime,
   duration,
+  disabled = false,
   onSeek,
   slides,
   slideChangeTimes,
@@ -91,11 +96,13 @@ export default function ProgressBar({
   );
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (disabled) return;
     const p = getPercentFromClientX(e.clientX);
     onSeek(p * max);
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (disabled) return;
     updateHoverState(e.clientX);
     if (isScrubbing) {
       const p = getPercentFromClientX(e.clientX);
@@ -105,6 +112,7 @@ export default function ProgressBar({
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (disabled) return;
     e.preventDefault();
     const p = getPercentFromClientX(e.clientX);
     setIsScrubbing(true);
@@ -123,6 +131,7 @@ export default function ProgressBar({
   // 전역 마우스 이벤트로 스크러빙 처리 (바 밖에서도 동작)
   useEffect(() => {
     if (!isScrubbing) return;
+    if (disabled) return;
 
     const onMove = (e: MouseEvent) => {
       updateHoverState(e.clientX);
@@ -143,7 +152,7 @@ export default function ProgressBar({
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
     };
-  }, [isScrubbing, max, onSeek, getPercentFromClientX, updateHoverState]);
+  }, [disabled, isScrubbing, max, onSeek, getPercentFromClientX, updateHoverState]);
 
   return (
     <div
@@ -153,7 +162,12 @@ export default function ProgressBar({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onMouseDown={handleMouseDown}
-      className="group relative h-1 w-full cursor-pointer rounded-full bg-[rgba(26,26,26,0.66)] transition-all duration-150 hover:h-1.5 hover:ring-2 hover:ring-[#4F5BFF]/30 select-none before:content-[''] before:absolute before:-inset-y-3 before:inset-x-0"
+      className={clsx(
+        "group relative h-1 w-full rounded-full bg-[rgba(26,26,26,0.66)] transition-all duration-150 select-none before:content-[''] before:absolute before:-inset-y-3 before:inset-x-0",
+        disabled
+          ? 'cursor-not-allowed opacity-70'
+          : 'cursor-pointer hover:h-1.5 hover:ring-2 hover:ring-[#4F5BFF]/30',
+      )}
     >
       {/* 프로그레스바 위 흰색 마커 (슬라이드 전환 시점) */}
       {slideChangeTimes?.map((time, index) => {
@@ -179,6 +193,7 @@ export default function ProgressBar({
             onMouseEnter={() => setIsHoveringEmoji(true)}
             onMouseLeave={() => setIsHoveringEmoji(false)}
             onClick={(e) => {
+              if (disabled) return;
               e.stopPropagation();
               onSeek(segment.startTime);
             }}
@@ -203,7 +218,7 @@ export default function ProgressBar({
       />
 
       {/* 호버 시 썸네일 + 시간 미리보기 */}
-      {(isHoveringBar || isScrubbing) && !isHoveringEmoji && hoverX !== null && (
+      {!disabled && (isHoveringBar || isScrubbing) && !isHoveringEmoji && hoverX !== null && (
         <div
           className="absolute -top-33 flex flex-col items-center gap-2 pointer-events-none"
           style={{

@@ -19,6 +19,8 @@ interface VolumeControlProps {
   currentTime: number;
   /** 비디오 총 길이 (초) */
   duration: number;
+  /** 재생 시간 표시 가능 여부 */
+  isTimestampReady?: boolean;
 }
 
 export default function VolumeControl({
@@ -26,8 +28,11 @@ export default function VolumeControl({
   onVolumeChange,
   currentTime,
   duration,
+  isTimestampReady = true,
 }: VolumeControlProps) {
   const volumePercent = Math.round(volume * 100);
+  const currentTimeLabel = isTimestampReady ? formatVideoTimestamp(currentTime) : '--:--';
+  const durationLabel = isTimestampReady ? formatVideoTimestamp(duration) : '--:--';
 
   const volumeTrackStyle: React.CSSProperties = {
     background: `linear-gradient(
@@ -82,9 +87,9 @@ export default function VolumeControl({
 
       {/* 시간 표시 - hover 시 오른쪽으로 슬라이드 */}
       <div className="whitespace-nowrap rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.66)] px-3 py-2 text-caption tabular-nums text-[#ffffff] transition-all duration-150 group-hover/vol:translate-x-19">
-        <span>{formatVideoTimestamp(currentTime)}</span>
+        <span>{currentTimeLabel}</span>
         <span className="mx-1">/</span>
-        <span>{formatVideoTimestamp(duration)}</span>
+        <span>{durationLabel}</span>
       </div>
     </div>
   );
