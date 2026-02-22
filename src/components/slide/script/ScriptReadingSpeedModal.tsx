@@ -18,8 +18,7 @@ interface ScriptReadingSpeedModalProps {
 
 export default function ScriptReadingSpeedModal({ isOpen, onClose }: ScriptReadingSpeedModalProps) {
   const { projectId } = useParams<{ projectId: string }>();
-  const activeProjectId = isOpen ? (projectId ?? '') : '';
-  const { data: projectScripts } = useProjectScripts(activeProjectId);
+  const { data: projectScripts } = useProjectScripts(projectId ?? '');
   const slideId = useSlideId();
   const script = useSlideScript();
   const { speedOptions, selectedSpeed, selectedPreset, setSelectedSpeed } = useScriptReadingSpeed();
