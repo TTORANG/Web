@@ -1,17 +1,24 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useQueryClient } from '@tanstack/react-query';
+
 import { slideView } from '@/api/endpoints/analytics';
 import { createReply } from '@/api/endpoints/comments';
-import { getSharedComments } from '@/api/endpoints/shares';
+import { queryKeys } from '@/api/queryClient';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useHotkey, useSlideComments } from '@/hooks';
+import { useSharedComments } from '@/hooks/queries/useSharedComments';
 import { useSlideCommentsActions } from '@/hooks/useSlideCommentsActions';
 import { useSlideNavigation } from '@/hooks/useSlideNavigation';
 import { useSlideReactions } from '@/hooks/useSlideReactions';
 import { useAuthStore } from '@/stores/authStore';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Comment } from '@/types/comment';
-import type { SharedPresentationComment, SharedPresentationSlide } from '@/types/share';
+import type {
+  ReadSharedCommentsData,
+  SharedPresentationComment,
+  SharedPresentationSlide,
+} from '@/types/share';
 import { flatToTree } from '@/utils/comment';
 import { normalizeSharedSlides } from '@/utils/sharedContent';
 import { showToast } from '@/utils/toast';
@@ -62,6 +69,8 @@ export const useFeedbackSlide = ({
   shareToken,
   onShareExitSnapshotChange,
 }: UseFeedbackSlideOptions) => {
+  const queryClient = useQueryClient();
+  const sessionId = useAuthStore((state) => state.user?.sessionId);
   const slides = useMemo(() => normalizeSharedSlides(sharedSlides), [sharedSlides]);
 
   const totalSlides = slides.length;
@@ -123,21 +132,35 @@ export const useFeedbackSlide = ({
     );
   }, [slides]);
 
-  // 서버에서 최신 댓글 목록을 가져와서 store 업데이트
-  const reloadComments = useCallback(async () => {
-    if (!shareToken) return null;
+  const { data: sharedCommentsData, isFetching: isCommentsLoading } = useSharedComments(
+    shareToken ?? '',
+    sessionId,
+    {
+      enabled: !!shareToken,
+      initialData: {
+        comments: sharedComments,
+      },
+      staleTime: 0,
+    },
+  );
 
-    try {
-      const { user } = useAuthStore.getState();
-      const sessionId = user?.sessionId;
-      const data = await getSharedComments(shareToken, sessionId);
-      const slideComments = mapSharedSlideComments(data.comments, sharedSlideMeta);
-      setComments(slideComments);
-      return data.comments;
-    } catch {
-      return null;
-    }
-  }, [shareToken, setComments, sharedSlideMeta]);
+  // 서버 댓글 목록을 store에 동기화
+  useEffect(() => {
+    if (!sharedCommentsData) return;
+    const slideComments = mapSharedSlideComments(sharedCommentsData.comments, sharedSlideMeta);
+    setComments(slideComments);
+  }, [setComments, sharedCommentsData, sharedSlideMeta]);
+
+  const invalidateSharedComments = useCallback(async (): Promise<ReadSharedCommentsData | null> => {
+    if (!shareToken) return null;
+    const sharedCommentsKey = queryKeys.shares.comments(shareToken, sessionId);
+
+    await queryClient.invalidateQueries({
+      queryKey: sharedCommentsKey,
+    });
+
+    return queryClient.getQueryData<ReadSharedCommentsData>(sharedCommentsKey) ?? null;
+  }, [queryClient, sessionId, shareToken]);
 
   const { addComment, deleteComment, updateComment } = useSlideCommentsActions();
 
@@ -161,7 +184,7 @@ export const useFeedbackSlide = ({
   const handleAddComment = async () => {
     if (!commentDraft.trim()) return;
     const serverId = await addComment(commentDraft);
-    await reloadComments();
+    await invalidateSharedComments();
     if (serverId) {
       setScrollToCommentId(serverId);
     }
@@ -191,7 +214,7 @@ export const useFeedbackSlide = ({
     // 최상위 부모의 serverId로 답글 작성
     try {
       const response = await createReply(rootParentServerId, { content: trimmedContent });
-      await reloadComments();
+      await invalidateSharedComments();
 
       // 작성한 답글로 스크롤
       if (response.replyId) {
@@ -204,21 +227,13 @@ export const useFeedbackSlide = ({
 
   const handleDeleteComment = async (commentId: string) => {
     await deleteComment(commentId);
-    await reloadComments();
+    await invalidateSharedComments();
   };
 
   const handleUpdateComment = async (commentId: string, content: string) => {
     await updateComment(commentId, content);
-    await reloadComments();
+    await invalidateSharedComments();
   };
-
-  // 초기 댓글 로딩
-  useEffect(() => {
-    const initialComments = mapSharedSlideComments(sharedComments, sharedSlideMeta);
-    if (initialComments.length > 0) {
-      setComments(initialComments);
-    }
-  }, [sharedComments, sharedSlideMeta, setComments]);
 
   const handleGoToRef = useCallback(
     (ref: NonNullable<Comment['ref']>) => {
@@ -285,7 +300,7 @@ export const useFeedbackSlide = ({
       scrollToCommentId,
       reactions,
       isLoading: false,
-      isCommentsLoading: false,
+      isCommentsLoading,
       commentsHasNextPage: false,
       commentsIsFetchingNextPage: false,
       isFirst: navigation.isFirst,
