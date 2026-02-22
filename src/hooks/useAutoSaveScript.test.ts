@@ -7,6 +7,17 @@ import { showToast } from '@/utils/toast';
 
 import { useAutoSaveScript } from './useAutoSaveScript';
 
+function createDeferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+
+  return { promise, resolve, reject };
+}
+
 // Mock useUpdateScript
 const mockMutateAsync = vi.fn();
 vi.mock('@/hooks/queries/useScript', () => ({
@@ -122,5 +133,117 @@ describe('useAutoSaveScript', () => {
       vi.advanceTimersByTime(500);
     });
     expect(mockMutateAsync).toHaveBeenCalledTimes(1); // not called again
+  });
+
+  it('retries pending script when browser comes back online', async () => {
+    mockMutateAsync.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce({});
+    const { result } = renderHook(() => useAutoSaveScript());
+
+    act(() => {
+      result.current.autoSave('offline draft');
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(500);
+    });
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      window.dispatchEvent(new Event('online'));
+      await Promise.resolve();
+    });
+
+    expect(mockMutateAsync).toHaveBeenCalledTimes(2);
+    expect(mockMutateAsync).toHaveBeenLastCalledWith({
+      slideId: 'slide-1',
+      data: { script: 'offline draft' },
+    });
+  });
+
+  it('flushes pending script immediately on online event before debounce delay', async () => {
+    mockMutateAsync.mockResolvedValue({});
+    const { result } = renderHook(() => useAutoSaveScript());
+
+    act(() => {
+      result.current.autoSave('quick draft');
+    });
+    expect(mockMutateAsync).not.toHaveBeenCalled();
+
+    await act(async () => {
+      window.dispatchEvent(new Event('online'));
+      await Promise.resolve();
+    });
+
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+    expect(mockMutateAsync).toHaveBeenCalledWith({
+      slideId: 'slide-1',
+      data: { script: 'quick draft' },
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(500);
+    });
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('flushSave saves immediately without waiting for debounce', async () => {
+    mockMutateAsync.mockResolvedValue({});
+    const { result } = renderHook(() => useAutoSaveScript());
+
+    act(() => {
+      result.current.autoSave('blur draft');
+    });
+    expect(mockMutateAsync).not.toHaveBeenCalled();
+
+    await act(async () => {
+      result.current.flushSave();
+      await Promise.resolve();
+    });
+
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+    expect(mockMutateAsync).toHaveBeenCalledWith({
+      slideId: 'slide-1',
+      data: { script: 'blur draft' },
+    });
+  });
+
+  it('saves newer pending script after in-flight save completes', async () => {
+    const firstSave = createDeferred<object>();
+    mockMutateAsync.mockImplementationOnce(() => firstSave.promise).mockResolvedValueOnce({});
+
+    const { result } = renderHook(() => useAutoSaveScript());
+
+    act(() => {
+      result.current.autoSave('first');
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(500);
+    });
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+    expect(mockMutateAsync).toHaveBeenNthCalledWith(1, {
+      slideId: 'slide-1',
+      data: { script: 'first' },
+    });
+
+    act(() => {
+      result.current.autoSave('second');
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(500);
+    });
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      firstSave.resolve({});
+      await Promise.resolve();
+    });
+
+    expect(mockMutateAsync).toHaveBeenCalledTimes(2);
+    expect(mockMutateAsync).toHaveBeenNthCalledWith(2, {
+      slideId: 'slide-1',
+      data: { script: 'second' },
+    });
   });
 });
