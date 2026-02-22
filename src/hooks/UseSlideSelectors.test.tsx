@@ -27,9 +27,9 @@ describe('useSlideSelectors', () => {
       expect(result.current).toBe('');
     });
 
-    it('useSlideTitle returns empty string', () => {
+    it('useSlideTitle returns null', () => {
       const { result } = renderHook(() => useSlideTitle());
-      expect(result.current).toBe('');
+      expect(result.current).toBeNull();
     });
 
     it('useSlideProjectId returns empty string', () => {
@@ -79,6 +79,12 @@ describe('useSlideSelectors', () => {
     it('useSlideProjectId returns projectId', () => {
       const { result } = renderHook(() => useSlideProjectId());
       expect(result.current).toBe(slide.projectId);
+    });
+
+    it('useSlideTitle preserves null title', () => {
+      useSlideStore.getState().initSlide(createMockSlide({ title: null }));
+      const { result } = renderHook(() => useSlideTitle());
+      expect(result.current).toBeNull();
     });
 
     it('useSlideThumb returns imageUrl', () => {

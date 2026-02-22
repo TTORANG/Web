@@ -3,6 +3,7 @@ import type {
   ReadSlideAnalyticsResponseDto,
   ReadVideoExitAnalyticsResponseDto,
 } from '@/api/dto/analytics.dto';
+import { getSlideTitle } from '@/utils/slideTitle';
 
 import { MOCK_SLIDES } from './slides';
 
@@ -28,7 +29,7 @@ export const getMockSlideAnalytics = (projectId: string): ReadSlideAnalyticsResp
     slides: slidesToUse.map((slide, index) => ({
       slideId: slide.slideId,
       slideNum: index + 1,
-      title: slide.title || `슬라이드 ${index + 1}`,
+      title: getSlideTitle(slide.title, index + 1),
       viewCount: Math.floor(Math.random() * 1000) + 100,
       exitCount: Math.floor(Math.random() * 50),
       exitRate: Math.random() * 0.3,

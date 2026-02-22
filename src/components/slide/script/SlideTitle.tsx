@@ -7,6 +7,8 @@
  */
 import { TitleEditorPopover } from '@/components/common';
 import { useSlideActions, useSlideId, useSlideTitle, useUpdateSlide } from '@/hooks';
+import { useSlideStore } from '@/stores/slideStore';
+import { getSlideTitle } from '@/utils/slideTitle';
 
 interface SlideTitleProps {
   isCollapsed?: boolean;
@@ -21,8 +23,14 @@ export default function SlideTitle({
   readOnly = false,
 }: SlideTitleProps) {
   const title = useSlideTitle();
-  const resolvedFallback = fallbackTitle?.trim() ? fallbackTitle : undefined;
-  const resolvedTitle = title?.trim() ? title : (resolvedFallback ?? '');
+  const slideNum = useSlideStore((state) => state.slide?.slideNum);
+  const resolvedFallback = fallbackTitle?.trim()
+    ? fallbackTitle
+    : slideNum != null
+      ? getSlideTitle(undefined, slideNum)
+      : '';
+  const resolvedTitle =
+    slideNum != null ? getSlideTitle(title, slideNum) : title?.trim() ? title : resolvedFallback;
 
   if (readOnly) {
     return (
@@ -35,7 +43,8 @@ export default function SlideTitle({
   return (
     <SlideTitleEditable
       title={resolvedTitle}
-      fallbackTitle={resolvedFallback}
+      inputTitle={title ?? ''}
+      inputPlaceholder={resolvedFallback || undefined}
       isCollapsed={isCollapsed}
     />
   );
@@ -43,11 +52,13 @@ export default function SlideTitle({
 
 function SlideTitleEditable({
   title,
-  fallbackTitle,
+  inputTitle,
+  inputPlaceholder,
   isCollapsed,
 }: {
   title: string;
-  fallbackTitle?: string;
+  inputTitle: string;
+  inputPlaceholder?: string;
   isCollapsed: boolean;
 }) {
   const slideId = useSlideId();
@@ -57,13 +68,25 @@ function SlideTitleEditable({
 
   const handleSave = (newTitle: string, close: () => void) => {
     const trimmedTitle = newTitle.trim();
-    const nextTitle = trimmedTitle || storeTitle || fallbackTitle;
-    if (!nextTitle) return;
+    const previousTitle = storeTitle;
+    const currentTitle = storeTitle?.trim() ?? '';
+    const nextTitle = trimmedTitle || currentTitle;
+    if (!nextTitle || nextTitle === currentTitle) {
+      close();
+      return;
+    }
 
     updateSlide({ title: nextTitle });
 
     if (slideId) {
-      updateSlideApi({ slideId, data: { title: nextTitle } });
+      updateSlideApi(
+        { slideId, data: { title: nextTitle } },
+        {
+          onError: () => {
+            updateSlide({ title: previousTitle });
+          },
+        },
+      );
     }
 
     close();
@@ -72,6 +95,8 @@ function SlideTitleEditable({
   return (
     <TitleEditorPopover
       title={title}
+      inputTitle={inputTitle}
+      inputPlaceholder={inputPlaceholder}
       onSave={handleSave}
       isCollapsed={isCollapsed}
       ariaLabel="슬라이드 이름 변경"

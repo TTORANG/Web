@@ -19,6 +19,7 @@ import VideoPlaybackBar from '@/components/feedback/video/VideoPlaybackBar';
 import { useVideoSync } from '@/hooks/useVideoSync';
 import type { SlideListItem } from '@/types/slide';
 import type { SegmentHighlight } from '@/types/video';
+import { getSlideTitle } from '@/utils/slideTitle';
 import { getSlideIndexFromTime } from '@/utils/video';
 
 const LAYOUT_STORAGE_KEY = 'feedback-video-layout';
@@ -329,7 +330,7 @@ export default function SlideWebcamStage({
           >
             <img
               src={activeSlide.imageUrl}
-              alt={`슬라이드 ${activeIndex + 1} - ${activeSlide.title}`}
+              alt={`슬라이드 ${activeIndex + 1} - ${getSlideTitle(activeSlide.title, activeIndex + 1)}`}
               className={clsx(
                 'h-full w-full',
                 // 슬라이드는 메인일 때 전체 보기(contain), 작은 박스일 땐 꽉 차게(cover)

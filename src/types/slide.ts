@@ -10,7 +10,7 @@ export interface SlideListItem {
   script: string;
   slideId: string;
   projectId: string;
-  title: string;
+  title: string | null;
   slideNum: number;
   imageUrl: string;
   createdAt: string;

@@ -4,6 +4,7 @@
  */
 import type { SharedPresentationSlide } from '@/types/share';
 import type { SlideDetail } from '@/types/slide';
+import { getSlideTitle } from '@/utils/slideTitle';
 
 export const SHARED_PROJECT_ID = 'shared';
 
@@ -25,7 +26,7 @@ export function normalizeSharedSlides(rawSlides: SharedPresentationSlide[]): Sli
       return {
         slideId: slide.slideId,
         projectId: SHARED_PROJECT_ID,
-        title: slide.title ?? `슬라이드 ${slideNum}`,
+        title: getSlideTitle(slide.title, slideNum),
         slideNum,
         imageUrl: slide.imageUrl,
         createdAt: now,

@@ -4,7 +4,7 @@
 export interface CreateSlideResponseDto {
   slideId: string;
   projectId: string;
-  title: string;
+  title: string | null;
   slideNum: number;
   imageUrl: string;
   createdAt: string;
@@ -24,7 +24,7 @@ export interface UpdateSlideTitleRequestDto {
 export interface GetSlideResponseDto {
   slideId: string;
   projectId: string;
-  title: string;
+  title: string | null;
   slideNum: number;
   imageUrl: string;
   prevSlideId: string | null;
@@ -37,7 +37,7 @@ export interface GetSlideResponseDto {
  */
 export interface UpdateSlideResponseDto {
   slideId: string;
-  title: string;
+  title: string | null;
   slideNum: number;
   imageUrl: string;
   updatedAt: string;
