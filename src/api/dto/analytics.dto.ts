@@ -176,6 +176,7 @@ export interface RecentCommentUserDto {
   nickName: string;
   name: string;
   profileImage?: string;
+  profileImageUrl?: string | null;
 }
 
 /**

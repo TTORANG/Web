@@ -68,7 +68,9 @@ export function RecentCommentsSection({
             <RecentCommentItem
               key={comment.commentId}
               user={comment.user.name}
-              userProfileImage={comment.user.profileImage}
+              userProfileImage={
+                comment.user.profileImage ?? comment.user.profileImageUrl ?? undefined
+              }
               slideLabel={comment.slide ? `슬라이드 ${comment.slide.slideNum}` : '전체'}
               time={formatVideoTimestamp(seconds)}
               text={comment.content}
