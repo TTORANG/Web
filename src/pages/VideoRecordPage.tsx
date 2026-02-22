@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { queryKeys } from '@/api';
+import { videosApi } from '@/api/endpoints/videos';
 import { Layout } from '@/components/common/layout/Layout';
 import { Logo } from '@/components/common/layout/Logo';
 import {
@@ -14,11 +15,21 @@ import {
   StopButton,
 } from '@/components/video';
 import { getTabPath } from '@/constants/navigation';
-import { usePresentation } from '@/hooks/queries/usePresentations';
 import { useProjectEntryPrefetch } from '@/hooks/queries/useProjectEntryPrefetch';
 import { useVideoUpload } from '@/hooks/useVideoUpload';
 
 type RecordStep = 'TEST' | 'RECORDING';
+type VideosListCacheData = {
+  total?: number;
+  videos?: unknown[];
+};
+
+const getVideoCount = (data: VideosListCacheData | undefined) => {
+  if (!data) return 0;
+  if (typeof data.total === 'number' && Number.isFinite(data.total)) return data.total;
+  if (Array.isArray(data.videos)) return data.videos.length;
+  return 0;
+};
 
 export default function VideoRecordPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -26,8 +37,6 @@ export default function VideoRecordPage() {
   const queryClient = useQueryClient();
 
   useProjectEntryPrefetch(projectId);
-
-  const { data: presentation } = usePresentation(projectId!);
 
   const [step, setStep] = useState<RecordStep>('TEST');
   const [camStream, setCamStream] = useState<MediaStream | null>(null);
@@ -97,7 +106,28 @@ export default function VideoRecordPage() {
 
     try {
       const numericProjectId = projectId ? parseInt(projectId.replace(/\D/g, ''), 10) : 1;
-      const title = presentation?.title || '제목 없음';
+      let practiceVideoNumber = 1;
+      if (projectId) {
+        try {
+          const response = await videosApi.getPresentationVideos(projectId);
+          if (response.data.resultType === 'SUCCESS') {
+            practiceVideoNumber = getVideoCount(response.data.success) + 1;
+          }
+        } catch {
+          const cachedVideoListQueries = queryClient.getQueriesData<VideosListCacheData>({
+            queryKey: queryKeys.videos.listPrefix(projectId),
+          });
+          const hasCachedVideoList = cachedVideoListQueries.some(([, data]) => data !== undefined);
+          const cachedVideoCount = cachedVideoListQueries.reduce(
+            (max, [, data]) => Math.max(max, getVideoCount(data)),
+            0,
+          );
+          if (hasCachedVideoList) {
+            practiceVideoNumber = cachedVideoCount + 1;
+          }
+        }
+      }
+      const title = `연습 영상 ${practiceVideoNumber}`;
 
       const videoId = await uploadVideo(videoBlob, numericProjectId, title, slideLogs);
 

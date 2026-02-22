@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   BulkEditScriptsRequestDto,
   GetProjectScriptsResponseDto,
+  GetScriptResponseDto,
   RestoreScriptRequestDto,
   UpdateScriptRequestDto,
 } from '@/api/dto';
@@ -226,10 +227,155 @@ export function useProjectScripts(
  */
 export function useBulkEditScripts() {
   const queryClient = useQueryClient();
+  type BulkEditOptimisticContext = {
+    previousSlides?: SlideListItem[];
+    hadSlidesQuery: boolean;
+    previousProjectScripts?: GetProjectScriptsResponseDto;
+    hadProjectScriptsQuery: boolean;
+    previousScriptDetails: Array<{
+      slideId: string;
+      detail?: GetScriptResponseDto;
+      hadDetailQuery: boolean;
+    }>;
+  };
 
   return useMutation({
     mutationFn: ({ projectId, data }: { projectId: string; data: BulkEditScriptsRequestDto }) =>
       bulkEditScripts(projectId, data),
+
+    onMutate: async ({ projectId, data }): Promise<BulkEditOptimisticContext> => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.slides.list(projectId) });
+      await queryClient.cancelQueries({ queryKey: queryKeys.scripts.project(projectId) });
+      await Promise.all(
+        data.scripts.map(({ slideId }) =>
+          queryClient.cancelQueries({ queryKey: queryKeys.scripts.detail(slideId) }),
+        ),
+      );
+
+      const slidesQueryKey = queryKeys.slides.list(projectId);
+      const projectScriptsQueryKey = queryKeys.scripts.project(projectId);
+      const hadSlidesQuery = queryClient.getQueryState(slidesQueryKey) !== undefined;
+      const hadProjectScriptsQuery =
+        queryClient.getQueryState(projectScriptsQueryKey) !== undefined;
+
+      const previousSlides = queryClient.getQueryData<SlideListItem[]>(slidesQueryKey);
+      const previousProjectScripts =
+        queryClient.getQueryData<GetProjectScriptsResponseDto>(projectScriptsQueryKey);
+      const previousScriptDetails = data.scripts.map(({ slideId }) => {
+        const detailQueryKey = queryKeys.scripts.detail(slideId);
+        return {
+          slideId,
+          detail: queryClient.getQueryData<GetScriptResponseDto>(detailQueryKey),
+          hadDetailQuery: queryClient.getQueryState(detailQueryKey) !== undefined,
+        };
+      });
+
+      const nextScriptMap = new Map(
+        data.scripts.map(({ slideId, scriptText }) => [slideId, scriptText]),
+      );
+
+      queryClient.setQueryData<SlideListItem[]>(slidesQueryKey, (slides) => {
+        if (!slides) return slides;
+
+        let hasUpdated = false;
+        const nextSlides = slides.map((slide) => {
+          const nextScriptText = nextScriptMap.get(slide.slideId);
+          if (typeof nextScriptText !== 'string' || slide.script === nextScriptText) {
+            return slide;
+          }
+          hasUpdated = true;
+          return {
+            ...slide,
+            script: nextScriptText,
+          };
+        });
+
+        return hasUpdated ? nextSlides : slides;
+      });
+
+      queryClient.setQueryData<GetProjectScriptsResponseDto>(
+        projectScriptsQueryKey,
+        (projectScripts) => {
+          if (!projectScripts) return projectScripts;
+
+          let hasUpdated = false;
+          const nextScripts = projectScripts.scripts.map((scriptItem) => {
+            const nextScriptText = nextScriptMap.get(scriptItem.slideId);
+            if (typeof nextScriptText !== 'string' || scriptItem.scriptText === nextScriptText) {
+              return scriptItem;
+            }
+            hasUpdated = true;
+            return {
+              ...scriptItem,
+              scriptText: nextScriptText,
+            };
+          });
+
+          if (!hasUpdated) return projectScripts;
+
+          return {
+            ...projectScripts,
+            scripts: nextScripts,
+          };
+        },
+      );
+
+      data.scripts.forEach(({ slideId, scriptText }) => {
+        queryClient.setQueryData<GetScriptResponseDto | undefined>(
+          queryKeys.scripts.detail(slideId),
+          (scriptDetail) => {
+            if (!scriptDetail || scriptDetail.scriptText === scriptText) return scriptDetail;
+
+            return {
+              ...scriptDetail,
+              scriptText,
+            };
+          },
+        );
+      });
+
+      return {
+        previousSlides,
+        hadSlidesQuery,
+        previousProjectScripts,
+        hadProjectScriptsQuery,
+        previousScriptDetails,
+      };
+    },
+
+    onError: (_error, { projectId }, context) => {
+      if (!context) return;
+
+      const slidesQueryKey = queryKeys.slides.list(projectId);
+      const projectScriptsQueryKey = queryKeys.scripts.project(projectId);
+
+      if (context.hadSlidesQuery) {
+        queryClient.setQueryData<SlideListItem[] | undefined>(
+          slidesQueryKey,
+          context.previousSlides,
+        );
+      } else {
+        queryClient.removeQueries({ queryKey: slidesQueryKey, exact: true });
+      }
+
+      if (context.hadProjectScriptsQuery) {
+        queryClient.setQueryData<GetProjectScriptsResponseDto | undefined>(
+          projectScriptsQueryKey,
+          context.previousProjectScripts,
+        );
+      } else {
+        queryClient.removeQueries({ queryKey: projectScriptsQueryKey, exact: true });
+      }
+
+      context.previousScriptDetails.forEach(({ slideId, detail, hadDetailQuery }) => {
+        const detailQueryKey = queryKeys.scripts.detail(slideId);
+        if (hadDetailQuery) {
+          queryClient.setQueryData<GetScriptResponseDto | undefined>(detailQueryKey, detail);
+        } else {
+          queryClient.removeQueries({ queryKey: detailQueryKey, exact: true });
+        }
+      });
+    },
 
     onSuccess: (_, { projectId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.slides.list(projectId) });
