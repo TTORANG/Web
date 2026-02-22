@@ -16,6 +16,9 @@ import type { SegmentHighlight } from '@/types/video';
 import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
 
+const PERCENT_UPDATE_EPSILON = 0.0001;
+const SEEK_UPDATE_EPSILON_SECONDS = 1 / 60;
+
 interface ProgressBarProps {
   /** 현재 재생 시간 (초) */
   currentTime: number;
@@ -43,6 +46,7 @@ export default function ProgressBar({
   segmentHighlights,
 }: ProgressBarProps) {
   const progressBarRef = useRef<HTMLDivElement>(null);
+  const lastSeekSecondsRef = useRef<number | null>(null);
 
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [scrubPercent, setScrubPercent] = useState<number | null>(null);
@@ -96,16 +100,52 @@ export default function ProgressBar({
   const updateHoverState = useCallback(
     (clientX: number) => {
       const p = getPercentFromClientX(clientX);
-      setHoverX(p);
+      setHoverX((prev) =>
+        prev !== null && Math.abs(prev - p) <= PERCENT_UPDATE_EPSILON ? prev : p,
+      );
 
       const hoverTime = p * max;
-      setHoverSlideIndex(computeSlideIndex(hoverTime));
+      const nextSlideIndex = computeSlideIndex(hoverTime);
+      setHoverSlideIndex((prev) => (prev === nextSlideIndex ? prev : nextSlideIndex));
     },
     [getPercentFromClientX, max, computeSlideIndex],
   );
 
+  const updateScrubStateByPercent = useCallback(
+    (p: number) => {
+      setScrubPercent((prev) =>
+        prev !== null && Math.abs(prev - p) <= PERCENT_UPDATE_EPSILON ? prev : p,
+      );
+      setHoverX((prev) =>
+        prev !== null && Math.abs(prev - p) <= PERCENT_UPDATE_EPSILON ? prev : p,
+      );
+      const nextSlideIndex = computeSlideIndex(p * max);
+      setHoverSlideIndex((prev) => (prev === nextSlideIndex ? prev : nextSlideIndex));
+    },
+    [computeSlideIndex, max],
+  );
+
+  const seekByPercent = useCallback(
+    (p: number) => {
+      if (max <= 0) return;
+      const nextSeekSeconds = p * max;
+      const prevSeekSeconds = lastSeekSecondsRef.current;
+      if (
+        prevSeekSeconds !== null &&
+        Math.abs(nextSeekSeconds - prevSeekSeconds) <= SEEK_UPDATE_EPSILON_SECONDS
+      ) {
+        return;
+      }
+
+      lastSeekSecondsRef.current = nextSeekSeconds;
+      onSeek(nextSeekSeconds);
+    },
+    [max, onSeek],
+  );
+
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (disabled) return;
+    if (max <= 0) return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
 
     e.preventDefault();
@@ -118,11 +158,9 @@ export default function ProgressBar({
 
     const p = getPercentFromClientX(e.clientX);
     setIsScrubbing(true);
-    setScrubPercent(p);
     setIsHoveringBar(true);
-    setHoverX(p);
-    setHoverSlideIndex(computeSlideIndex(p * max));
-    onSeek(p * max);
+    updateScrubStateByPercent(p);
+    seekByPercent(p);
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -134,10 +172,8 @@ export default function ProgressBar({
       }
 
       const p = getPercentFromClientX(e.clientX);
-      setScrubPercent(p);
-      setHoverX(p);
-      setHoverSlideIndex(computeSlideIndex(p * max));
-      onSeek(p * max);
+      updateScrubStateByPercent(p);
+      seekByPercent(p);
       return;
     }
 
@@ -165,6 +201,7 @@ export default function ProgressBar({
     setIsHoveringBar(false);
     setHoverX(null);
     setHoverSlideIndex(null);
+    lastSeekSecondsRef.current = null;
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
