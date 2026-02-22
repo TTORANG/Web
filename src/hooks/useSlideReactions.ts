@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { getTotalReactions } from '@/api/endpoints/reactions';
 import { queryKeys } from '@/api/queryClient';
+import { DEMO_TOTAL_REACTIONS_SUMMARY, isDemoProject } from '@/constants/demoProject';
 import { OPTIMISTIC_LOCK_DURATION, createDefaultReactions } from '@/constants/reaction';
 import { useSlideStore } from '@/stores/slideStore';
 import type { Reaction, ReactionType } from '@/types/script';
@@ -119,9 +120,14 @@ export function useSlideReactions() {
 }
 
 export function useSlideReactionsTotal(projectId: string) {
+  const isDemoProjectId = isDemoProject(projectId);
+
   return useQuery({
     queryKey: queryKeys.reactions.total(projectId),
-    queryFn: () => getTotalReactions(projectId),
+    queryFn: () =>
+      isDemoProjectId
+        ? Promise.resolve(DEMO_TOTAL_REACTIONS_SUMMARY)
+        : getTotalReactions(projectId),
     enabled: !!projectId,
   });
 }

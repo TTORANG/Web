@@ -16,6 +16,13 @@ import {
   updateScript,
 } from '@/api/endpoints/scripts';
 import { queryKeys } from '@/api/queryClient';
+import {
+  DEMO_PROJECT_SCRIPTS,
+  DEMO_SCRIPT_VERSIONS_BY_SLIDE_ID,
+  getDemoScript,
+  isDemoProject,
+  isDemoSlideId,
+} from '@/constants/demoProject';
 import type { SlideListItem } from '@/types/slide';
 
 interface UpdateScriptMutationVariables {
@@ -45,7 +52,8 @@ export function useScript(
 
   return useQuery({
     queryKey: queryKeys.scripts.detail(slideId),
-    queryFn: () => getScript(slideId),
+    queryFn: () =>
+      isDemoSlideId(slideId) ? Promise.resolve(getDemoScript(slideId)) : getScript(slideId),
     enabled: !!slideId && isEnabled,
     staleTime: options?.staleTime,
   });
@@ -58,7 +66,18 @@ export function useUpdateScript() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ slideId, data }: UpdateScriptMutationVariables) => updateScript(slideId, data),
+    mutationFn: ({ slideId, projectId, data }: UpdateScriptMutationVariables) => {
+      if (isDemoSlideId(slideId) || isDemoProject(projectId)) {
+        return Promise.resolve({
+          ...getDemoScript(slideId),
+          scriptText: data.script,
+          charCount: data.script.length,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+
+      return updateScript(slideId, data);
+    },
 
     onMutate: async ({ slideId }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.scripts.detail(slideId) });
@@ -186,7 +205,10 @@ export function useUpdateScript() {
 export function useScriptVersions(slideId: string) {
   return useQuery({
     queryKey: queryKeys.scripts.versions(slideId),
-    queryFn: () => getScriptVersions(slideId),
+    queryFn: () =>
+      isDemoSlideId(slideId)
+        ? Promise.resolve(DEMO_SCRIPT_VERSIONS_BY_SLIDE_ID[slideId] ?? [])
+        : getScriptVersions(slideId),
     enabled: !!slideId,
   });
 }
@@ -198,8 +220,20 @@ export function useRestoreScript() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ slideId, data }: { slideId: string; data: RestoreScriptRequestDto }) =>
-      restoreScript(slideId, data),
+    mutationFn: ({ slideId, data }: { slideId: string; data: RestoreScriptRequestDto }) => {
+      if (isDemoSlideId(slideId)) {
+        const versions = DEMO_SCRIPT_VERSIONS_BY_SLIDE_ID[slideId] ?? [];
+        const matched = versions.find((item) => item.versionNumber === data.version);
+        return Promise.resolve({
+          ...getDemoScript(slideId),
+          scriptText: matched?.scriptText ?? getDemoScript(slideId).scriptText,
+          charCount: (matched?.scriptText ?? getDemoScript(slideId).scriptText).length,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+
+      return restoreScript(slideId, data);
+    },
 
     onSuccess: (_, { slideId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.scripts.detail(slideId) });
@@ -222,7 +256,10 @@ export function useProjectScripts(
 
   return useQuery({
     queryKey: queryKeys.scripts.project(projectId),
-    queryFn: () => getProjectScripts(projectId),
+    queryFn: () =>
+      isDemoProject(projectId)
+        ? Promise.resolve(DEMO_PROJECT_SCRIPTS)
+        : getProjectScripts(projectId),
     enabled: !!projectId && isEnabled,
     staleTime: options?.staleTime,
   });

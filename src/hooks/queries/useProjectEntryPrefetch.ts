@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getProjectScripts } from '@/api/endpoints/scripts';
 import { getSlides } from '@/api/endpoints/slides';
 import { queryKeys } from '@/api/queryClient';
+import { isDemoProject } from '@/constants/demoProject';
 
 /**
  * 프로젝트 진입 시 슬라이드/대본 데이터를 한 번 미리 적재합니다.
@@ -15,6 +16,7 @@ export function useProjectEntryPrefetch(projectId?: string) {
 
   useEffect(() => {
     if (!projectId) return;
+    if (isDemoProject(projectId)) return;
     if (prefetchedProjectIdsRef.current.has(projectId)) return;
 
     prefetchedProjectIdsRef.current.add(projectId);

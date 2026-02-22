@@ -12,6 +12,17 @@ import type {
 } from '@/api/dto/analytics.dto';
 import type { ChartDataPoint, InsightModel, InsightTopSlide } from '@/components/insight/types';
 import {
+  DEMO_ANALYTICS_SUMMARY,
+  DEMO_RECENT_COMMENTS,
+  DEMO_SLIDE_ANALYTICS,
+  DEMO_SLIDE_RETENTION,
+  DEMO_VIDEO_EXIT_ANALYTICS,
+  DEMO_VIDEO_ID,
+  DEMO_VIDEO_RETENTION,
+  DEMO_VIDEO_SLIDES_TIMELINE,
+  isDemoProject,
+} from '@/constants/demoProject';
+import {
   usePresentationAnalyticsSummary,
   useRecentComments,
   useSlideAnalytics,
@@ -41,26 +52,32 @@ const normalizeRate = (rate: number) => (rate <= 1 ? rate * 100 : rate);
 export function useInsightPageModel(): InsightModel {
   const { projectId } = useParams<{ projectId: string }>();
   const projectIdStr = projectId ?? '';
+  const isDemoProjectId = isDemoProject(projectIdStr);
   const projectIdNum = projectIdStr ? Number(projectIdStr) : 0;
 
   const slidesQuery = useSlides(projectIdStr, { liveSync: false });
-  const slideAnalyticsQuery = useSlideAnalytics(projectIdNum);
-  const summaryAnalyticsQuery = usePresentationAnalyticsSummary(projectIdNum);
-  const recentCommentsQuery = useRecentComments(projectIdNum);
+  const slideAnalyticsQuery = useSlideAnalytics(projectIdNum, { enabled: !isDemoProjectId });
+  const summaryAnalyticsQuery = usePresentationAnalyticsSummary(projectIdNum, {
+    enabled: !isDemoProjectId,
+  });
+  const recentCommentsQuery = useRecentComments(projectIdNum, { enabled: !isDemoProjectId });
 
   const { data: slides } = slidesQuery;
-  const { data: slideAnalytics } = slideAnalyticsQuery;
-  const { data: summaryAnalytics } = summaryAnalyticsQuery;
-  const { data: recentCommentsData } = recentCommentsQuery;
+  const slideAnalytics = isDemoProjectId ? DEMO_SLIDE_ANALYTICS : slideAnalyticsQuery.data;
+  const summaryAnalytics = isDemoProjectId ? DEMO_ANALYTICS_SUMMARY : summaryAnalyticsQuery.data;
+  const recentCommentsData = isDemoProjectId ? DEMO_RECENT_COMMENTS : recentCommentsQuery.data;
 
-  const latestVideoId = summaryAnalytics?.videoIds?.[summaryAnalytics.videoIds.length - 1] ?? null;
+  const latestVideoId =
+    (isDemoProjectId
+      ? DEMO_VIDEO_ID
+      : summaryAnalytics?.videoIds?.[summaryAnalytics.videoIds.length - 1]) ?? null;
   const videoIdNum = latestVideoId ? Number(latestVideoId) : 0;
-  const hasVideo = !!videoIdNum;
+  const hasVideo = isDemoProjectId ? true : !!videoIdNum;
 
-  const videoAnalyticsQuery = useVideoAnalytics(videoIdNum);
-  const videoSlidesQuery = useVideoSlides(videoIdNum);
-  const { data: videoExitAnalytics } = videoAnalyticsQuery;
-  const { data: videoSlidesTimeline } = videoSlidesQuery;
+  const videoAnalyticsQuery = useVideoAnalytics(videoIdNum, { enabled: !isDemoProjectId });
+  const videoSlidesQuery = useVideoSlides(videoIdNum, { enabled: !isDemoProjectId });
+  const videoExitAnalytics = isDemoProjectId ? DEMO_VIDEO_EXIT_ANALYTICS : videoAnalyticsQuery.data;
+  const videoSlidesTimeline = isDemoProjectId ? DEMO_VIDEO_SLIDES_TIMELINE : videoSlidesQuery.data;
 
   // ---- Summary stats ----
   const computedSummaryStats = useMemo<SummaryStat[]>(() => {
@@ -274,10 +291,10 @@ export function useInsightPageModel(): InsightModel {
   }, [dropOffTimeline, slideList, videoExitAnalytics]);
 
   // ---- Retention(잔존율) ----
-  const videoRetentionQuery = useVideoRetention(videoIdNum);
-  const slideRetentionQuery = useSlideRetention(projectIdNum);
-  const { data: videoRetentionRes } = videoRetentionQuery;
-  const { data: slideRetentionRes } = slideRetentionQuery;
+  const videoRetentionQuery = useVideoRetention(videoIdNum, { enabled: !isDemoProjectId });
+  const slideRetentionQuery = useSlideRetention(projectIdNum, { enabled: !isDemoProjectId });
+  const videoRetentionRes = isDemoProjectId ? DEMO_VIDEO_RETENTION : videoRetentionQuery.data;
+  const slideRetentionRes = isDemoProjectId ? DEMO_SLIDE_RETENTION : slideRetentionQuery.data;
 
   const videoChartData = useMemo<ChartDataPoint[]>(() => {
     if (!videoRetentionRes?.videoRetention) return [];
@@ -318,7 +335,7 @@ export function useInsightPageModel(): InsightModel {
   const isLoading = queryStates.some(
     (query) => query.isLoading || (query.isFetching && !query.data),
   );
-  const firstError = queryStates.find((query) => query.isError)?.error;
+  const firstError = isDemoProjectId ? null : queryStates.find((query) => query.isError)?.error;
   const isError = Boolean(firstError);
   const errorMessage = isAxiosError(firstError)
     ? (firstError.response?.data?.message ?? firstError.message)

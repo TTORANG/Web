@@ -9,6 +9,7 @@ import { FeedbackDistributionSection } from '@/components/insight';
 import { TopSlideCard } from '@/components/insight';
 import { RecentCommentsSection } from '@/components/insight/RecentCommentsSection';
 import { RetentionChartCard } from '@/components/insight/charts/RetentionChartCard';
+import { DEMO_SHARE_PATH, isDemoProject } from '@/constants/demoProject';
 import { getTabPath } from '@/constants/navigation';
 import { createDefaultReactions } from '@/constants/reaction';
 import { useInsightPageModel } from '@/hooks/useInsightPageModel';
@@ -103,6 +104,10 @@ export default function InsightPage() {
       if (!Number.isFinite(seconds) || seconds < 0) return;
 
       const seekSeconds = Math.floor(seconds);
+      if (isDemoProject(projectIdStr)) {
+        navigate(`${DEMO_SHARE_PATH}?t=${seekSeconds}`);
+        return;
+      }
       navigate(`/${projectIdStr}/videos/${latestVideoId}?t=${seekSeconds}`);
     },
     [canSeekToLatestVideo, latestVideoId, navigate, projectIdStr],

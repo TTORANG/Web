@@ -9,6 +9,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { isDemoProject } from '@/constants/demoProject';
 import { SLIDE_MAX_WIDTH } from '@/constants/layout';
 import { useSlideActions, useSlideId, useSlideScript } from '@/hooks';
 import { useProjectScripts, useScript } from '@/hooks/queries/useScript';
@@ -33,6 +34,7 @@ export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps
   const hasLocalEditLockRef = useRef(false);
 
   const projectId = slide?.projectId ?? '';
+  const isDemoProjectId = isDemoProject(projectId);
   const currentSlideId = slide?.slideId ?? '';
   const { data: projectScripts } = useProjectScripts(projectId, {
     enabled: !!projectId,
@@ -106,7 +108,7 @@ export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps
     lastSyncedScriptRef.current = serverScript;
   }, [resolvedServerScript, script, slideId, updateScript]);
 
-  useSlideCommentsLoader(slide?.slideId);
+  useSlideCommentsLoader(slide?.slideId, { enabled: !isDemoProjectId });
 
   return (
     <div className="relative h-full min-h-0 flex flex-col pb-[clamp(12rem,30vh,20rem)] md:pb-0">
@@ -114,7 +116,11 @@ export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps
 
       <div className="fixed inset-x-0 bottom-0 z-30 shrink-0 px-4 pb-[env(safe-area-inset-bottom)] md:static md:px-0 md:pb-0">
         <div className="mx-auto w-full" style={{ maxWidth: SLIDE_MAX_WIDTH }}>
-          <ScriptBox isLoading={isLoading} onCollapsedChange={setIsScriptCollapsed} />
+          <ScriptBox
+            isLoading={isLoading}
+            readOnly={isDemoProjectId}
+            onCollapsedChange={setIsScriptCollapsed}
+          />
         </div>
       </div>
     </div>

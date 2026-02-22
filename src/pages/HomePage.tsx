@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -18,6 +19,7 @@ const ACCEPTED_FILES_TYPES = '.pptx,.pdf';
 // const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { uploadFile, cancelUpload, isUploading, progress, error } = useUploadFile();
   const accessToken = useAuthStore((state) => state.accessToken);
@@ -87,6 +89,7 @@ export default function HomePage() {
   const totalCount = needsBaseTotal ? (baseData?.total ?? 0) : (filteredData?.total ?? 0);
   const filteredCount = filteredData?.total ?? 0;
   const isEmpty = !isLoading && totalCount === 0;
+  const showDemoCtas = !isLoggedIn && isEmpty && progress.currentStep === 'preparing';
 
   // pendingThumbnailIds 최신값을 ref에 동기화
   useEffect(() => {
@@ -161,6 +164,10 @@ export default function HomePage() {
         error={error}
         onFileSelected={onFileSelected}
         isEmpty={isEmpty}
+        showDemoCtas={showDemoCtas}
+        onGoToDemoSlide={() => navigate('/demo/slide')}
+        onGoToDemoInsight={() => navigate('/demo/insight')}
+        onGoToDemoFeedback={() => navigate('/demo/feedback')}
       />
 
       {/* 내발표 */}

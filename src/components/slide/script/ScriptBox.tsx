@@ -16,10 +16,15 @@ import ScriptBoxHeader from './ScriptBoxHeader';
 
 interface ScriptBoxProps {
   isLoading?: boolean;
+  readOnly?: boolean;
   onCollapsedChange?: (collapsed: boolean) => void;
 }
 
-export default function ScriptBox({ isLoading, onCollapsedChange }: ScriptBoxProps) {
+export default function ScriptBox({
+  isLoading,
+  readOnly = false,
+  onCollapsedChange,
+}: ScriptBoxProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   /**
@@ -45,6 +50,7 @@ export default function ScriptBox({ isLoading, onCollapsedChange }: ScriptBoxPro
         <ScriptBoxHeader
           isCollapsed={isCollapsed}
           isLoading={isLoading}
+          readOnly={readOnly}
           onToggleCollapse={handleToggleCollapse}
         />
       </div>
@@ -57,7 +63,7 @@ export default function ScriptBox({ isLoading, onCollapsedChange }: ScriptBoxPro
               <Skeleton.Text lines={4} lineHeight={16} gap={10} lastLineWidth={0.6} />
             </div>
           ) : (
-            <ScriptBoxContent />
+            <ScriptBoxContent readOnly={readOnly} />
           )}
         </div>
       )}
