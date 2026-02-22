@@ -4,6 +4,7 @@ import { useScriptReadingSpeedStore } from '@/stores/scriptReadingSpeedStore';
 import {
   SCRIPT_READING_SPEED_OPTIONS,
   type ScriptReadingSpeedPresetId,
+  getScriptReadingSpeedOption,
   getScriptReadingSpeedPreset,
   normalizeScriptReadingSpeed,
 } from '@/utils/scriptDuration';
@@ -20,8 +21,7 @@ export function useScriptReadingSpeed() {
   );
 
   const setSelectedPresetId = (presetId: ScriptReadingSpeedPresetId) => {
-    const selectedOption = SCRIPT_READING_SPEED_OPTIONS.find((option) => option.id === presetId);
-    if (!selectedOption) return;
+    const selectedOption = getScriptReadingSpeedOption(presetId);
     setSpeed(selectedOption.charsPerMinute);
   };
 

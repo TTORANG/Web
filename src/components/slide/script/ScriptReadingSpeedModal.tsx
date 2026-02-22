@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
+import clsx from 'clsx';
+
 import { Dropdown, Modal } from '@/components/common';
 import type { DropdownItem } from '@/components/common/Dropdown';
 import { useProjectScripts, useScriptReadingSpeed, useSlideId, useSlideScript } from '@/hooks';
@@ -65,11 +67,17 @@ export default function ScriptReadingSpeedModal({ isOpen, onClose }: ScriptReadi
             trigger={({ isOpen }) => (
               <button
                 type="button"
-                className={`flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-5 py-3 ${isOpen ? 'border-gray-400' : ''}`}
+                className={clsx(
+                  'flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-5 py-3',
+                  isOpen && 'border-gray-400',
+                )}
               >
                 <span className="text-body-m-bold text-gray-800">{presetLabel}</span>
                 <svg
-                  className={`h-4 w-4 text-gray-600 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                  className={clsx(
+                    'h-4 w-4 text-gray-600 transition-transform',
+                    isOpen && 'rotate-180',
+                  )}
                   viewBox="0 0 24 24"
                   fill="none"
                   aria-hidden
