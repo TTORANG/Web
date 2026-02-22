@@ -58,7 +58,18 @@ export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps
 
     const isSameSlide = slide.slideId === slideId;
     if (isSameSlide) {
-      updateSlide(nextSlide);
+      // 같은 슬라이드에서는 로컬 편집 중인 script를 우선 유지합니다.
+      // script 동기화는 아래 effect(로컬 편집 감지 포함)에서만 처리합니다.
+      updateSlide({
+        slideId: nextSlide.slideId,
+        projectId: nextSlide.projectId,
+        title: nextSlide.title,
+        slideNum: nextSlide.slideNum,
+        imageUrl: nextSlide.imageUrl,
+        createdAt: nextSlide.createdAt,
+        updatedAt: nextSlide.updatedAt,
+        startTime: nextSlide.startTime,
+      });
       return;
     }
 

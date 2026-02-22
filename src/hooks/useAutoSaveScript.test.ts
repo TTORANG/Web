@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useSlideStore } from '@/stores/slideStore';
 import { createMockSlide } from '@/test/fixtures';
-import { showToast } from '@/utils/toast';
 
 import { useAutoSaveScript } from './useAutoSaveScript';
 
@@ -27,17 +26,10 @@ vi.mock('@/hooks/queries/useScript', () => ({
   }),
 }));
 
-// Mock showToast
-vi.mock('@/utils/toast', () => ({
-  showToast: {
-    success: vi.fn(),
-    error: vi.fn(),
-  },
-}));
-
 describe('useAutoSaveScript', () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-02-22T15:10:00Z'));
     vi.clearAllMocks();
     useSlideStore
       .getState()
@@ -70,7 +62,7 @@ describe('useAutoSaveScript', () => {
     });
   });
 
-  it('shows success toast on save', async () => {
+  it('sets saved status and lastSavedAt when save succeeds', async () => {
     mockMutateAsync.mockResolvedValue({});
     const { result } = renderHook(() => useAutoSaveScript());
 
@@ -82,10 +74,11 @@ describe('useAutoSaveScript', () => {
       vi.advanceTimersByTime(500);
     });
 
-    expect(showToast.success).toHaveBeenCalled();
+    expect(result.current.saveStatus).toBe('saved');
+    expect(result.current.lastSavedAt).not.toBeNull();
   });
 
-  it('shows error toast on failure', async () => {
+  it('sets error status when save fails', async () => {
     mockMutateAsync.mockRejectedValue(new Error('fail'));
     const { result } = renderHook(() => useAutoSaveScript());
 
@@ -97,7 +90,8 @@ describe('useAutoSaveScript', () => {
       vi.advanceTimersByTime(500);
     });
 
-    expect(showToast.error).toHaveBeenCalled();
+    expect(result.current.saveStatus).toBe('error');
+    expect(result.current.lastSavedAt).toBeNull();
   });
 
   it('skips save when slideId is empty', async () => {
