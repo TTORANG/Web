@@ -9,6 +9,7 @@ import { videosApi } from '@/api/endpoints/videos';
 import { useSharedComments } from '@/hooks/queries/useSharedComments';
 import { useVideoComments } from '@/hooks/useVideoComments';
 import { useVideoReactions } from '@/hooks/useVideoReactions';
+import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { ReadSharedContentData } from '@/types/share';
 
 import { useFeedbackVideo } from './useFeedbackVideo';
@@ -113,6 +114,7 @@ describe('useFeedbackVideo', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    useVideoFeedbackStore.setState({ video: null, currentTime: 0, seekTo: null });
 
     mockedUseParams.mockReturnValue({ shareToken: 'share-token' });
     mockedUseQueryClient.mockReturnValue({
@@ -194,6 +196,23 @@ describe('useFeedbackVideo', () => {
 
     expect(mockedVideosApi.getVideoDetail).toHaveBeenCalledTimes(1);
     expect(mockedVideosApi.getVideoSlides).toHaveBeenCalledTimes(1);
+  });
+
+  it('공유 제목이 비어 있으면 상세 API를 호출해 제목을 보정한다', async () => {
+    const contentWithoutTitle: ReadSharedContentData = {
+      ...baseSharedContent,
+      presentationContent: {
+        ...baseSharedContent.presentationContent,
+        title: '',
+      },
+    };
+
+    const { result } = renderHook(() => useFeedbackVideo(contentWithoutTitle));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(mockedVideosApi.getVideoDetail).toHaveBeenCalledTimes(1);
+    expect(mockedVideosApi.getVideoSlides).not.toHaveBeenCalled();
   });
 
   it('댓글 등록 시 공유 댓글 invalidate를 1회 호출한다', async () => {

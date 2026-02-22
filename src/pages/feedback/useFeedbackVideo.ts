@@ -221,11 +221,14 @@ export function useFeedbackVideo(
       const videoId = content.presentationContent.video?.videoId ?? '';
       const normalizedVideoId = String(videoId);
       let videoUrl = toPlayableVideoUrl(content.presentationContent.video?.videoUrl);
-      let videoTitle = content.presentationContent.title || '공유 영상';
+      const hasOriginalTitle =
+        typeof content.presentationContent.title === 'string' &&
+        content.presentationContent.title.trim().length > 0;
+      let videoTitle = hasOriginalTitle ? content.presentationContent.title : '공유 영상';
       let duration = 0;
       let timelineSlides: Array<{ slideId: string; timestampMs: number }> = fallbackTimelineSlides;
       const hasSharedTimeline = fallbackTimelineSlides.length > 0;
-      const needsVideoDetail = !videoUrl || !videoTitle;
+      const needsVideoDetail = !videoUrl || !hasOriginalTitle;
 
       if (normalizedVideoId) {
         const [detailResult, timelineResult] = await Promise.allSettled([
