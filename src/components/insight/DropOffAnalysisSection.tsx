@@ -1,4 +1,5 @@
 ﻿import type { DropOffSlide, DropOffTime } from '@/types/insight';
+import { getSlideTitle } from '@/utils/slideTitle';
 
 import SlideThumb from './SlideThumb';
 
@@ -131,7 +132,7 @@ export default function DropOffAnalysisSection({
               >
                 {renderSlideThumb(
                   item.slideIndex,
-                  `슬라이드 ${item.slideIndex + 1} 썸네일`,
+                  `${getSlideTitle(undefined, item.slideIndex + 1)} 썸네일`,
                   'h-12 w-20 shrink-0 rounded object-cover md:h-16.75 md:w-30',
                   'h-12 w-20 shrink-0 rounded bg-gray-200 md:h-[67px] md:w-[120px]',
                 )}

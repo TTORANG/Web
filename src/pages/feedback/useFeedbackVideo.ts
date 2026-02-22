@@ -19,6 +19,7 @@ import type { SlideDetail } from '@/types/slide';
 import type { VideoTimestampFeedback } from '@/types/video';
 import { formatVideoTimestamp } from '@/utils/format';
 import { SHARED_PROJECT_ID, normalizeSharedSlides } from '@/utils/sharedContent';
+import { getSlideTitle } from '@/utils/slideTitle';
 import { getSlideIndexFromTime } from '@/utils/video';
 
 // 타임라인 데이터 없을때, 슬라이드 1장당 10초로 균등분배
@@ -60,7 +61,7 @@ function toPlayableVideoUrl(url?: string | null): string {
 // 슬라이드 목록과 타임라인 배열 만드는 함수
 function mapSlidesByTimeline(
   sourceSlides: SlideDetail[],
-  timeline: Array<{ slideId: string; timestampMs: number }>,
+  timeline: Array<{ slideId: string; title?: string | null; timestampMs: number }>,
 ): { slides: SlideDetail[]; slideChangeTimes: number[] } {
   if (!timeline.length) {
     const slides = sourceSlides.map((slide, index) => ({
@@ -94,7 +95,7 @@ function mapSlidesByTimeline(
     return {
       slideId: String(item.slideId),
       projectId: fallbackProjectId,
-      title: `슬라이드 ${index + 1}`,
+      title: getSlideTitle(item.title, index + 1),
       slideNum: index + 1,
       imageUrl: '',
       createdAt: now,
@@ -206,6 +207,7 @@ export function useFeedbackVideo(
         )
         .map((slide) => ({
           slideId: String(slide.slideId),
+          title: slide.title,
           timestampMs: normalizeTimestampMs(slide.timestampMs),
         }));
 
@@ -214,7 +216,8 @@ export function useFeedbackVideo(
       let videoUrl = toPlayableVideoUrl(content.presentationContent.video?.videoUrl);
       let videoTitle = content.presentationContent.title || '공유 영상';
       let duration = 0;
-      let timelineSlides: Array<{ slideId: string; timestampMs: number }> = fallbackTimelineSlides;
+      let timelineSlides: Array<{ slideId: string; title?: string | null; timestampMs: number }> =
+        fallbackTimelineSlides;
 
       if (normalizedVideoId) {
         const [detailResult, timelineResult] = await Promise.allSettled([
@@ -239,6 +242,7 @@ export function useFeedbackVideo(
         ) {
           timelineSlides = timelineResult.value.data.success.slides.map((slide) => ({
             slideId: String(slide.slideId),
+            title: slide.title,
             timestampMs: slide.timestampMs,
           }));
         }

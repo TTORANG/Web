@@ -5,7 +5,7 @@
  * readOnlyContent가 제공되면 InfoIcon + 정보 팝오버를 표시하고,
  * 없으면 ArrowDownIcon + 편집 팝오버를 표시합니다.
  */
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import clsx from 'clsx';
 
@@ -17,6 +17,8 @@ import { TextField } from './TextField';
 
 interface TitleEditorPopoverProps {
   title: string;
+  inputTitle?: string;
+  inputPlaceholder?: string;
   onSave?: (newTitle: string, close: () => void) => void;
   readOnlyContent?: ReactNode;
   isCollapsed?: boolean;
@@ -28,6 +30,8 @@ interface TitleEditorPopoverProps {
 
 export function TitleEditorPopover({
   title,
+  inputTitle,
+  inputPlaceholder,
   onSave,
   readOnlyContent,
   isCollapsed = false,
@@ -36,11 +40,9 @@ export function TitleEditorPopover({
   titleClassName = 'max-w-60 truncate',
   showOnMobile = false,
 }: TitleEditorPopoverProps) {
-  const [editTitle, setEditTitle] = useState(title);
-
-  useEffect(() => {
-    setEditTitle(title);
-  }, [title]);
+  const resolvedInputTitle = inputTitle ?? title;
+  const inputResetKey = `${resolvedInputTitle}::${inputPlaceholder ?? ''}`;
+  const [editTitle, setEditTitle] = useState(resolvedInputTitle);
 
   if (readOnlyContent) {
     return (
@@ -69,6 +71,7 @@ export function TitleEditorPopover({
 
   return (
     <Popover
+      key={inputResetKey}
       trigger={({ isOpen }) => (
         <button
           type="button"
@@ -107,6 +110,7 @@ export function TitleEditorPopover({
             disabled={isPending}
             aria-label={ariaLabel}
             className="h-9 flex-1 text-sm"
+            placeholder={inputPlaceholder}
             spellCheck={false}
           />
           <button

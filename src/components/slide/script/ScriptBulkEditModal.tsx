@@ -3,6 +3,7 @@ import type { ChangeEvent, RefObject } from 'react';
 import UploadIcon from '@/assets/icons/icon-upload.svg?react';
 import { Modal, SlideImage } from '@/components/common';
 import type { ScriptBulkEditPreviewItem } from '@/hooks/useScriptBulkEdit';
+import { getSlideTitle } from '@/utils/slideTitle';
 
 interface ScriptBulkEditModalProps {
   isOpen: boolean;
@@ -94,7 +95,7 @@ function ScriptBulkEditModal({
                     {slide.imageUrl ? (
                       <SlideImage
                         src={slide.imageUrl}
-                        alt={`${slide.title || `슬라이드 ${slide.slideNum ?? index + 1}`}`}
+                        alt={getSlideTitle(slide.title, slide.slideNum ?? index + 1)}
                         loading="lazy"
                         fetchPriority="low"
                       />
@@ -107,7 +108,7 @@ function ScriptBulkEditModal({
                   <div className="flex w-full flex-col gap-1 md:h-31.5">
                     <div className="flex min-w-0 items-center gap-2 text-xs leading-5 text-gray-700 sm:text-sm">
                       <span className="truncate font-semibold text-gray-800">
-                        {slide.title || `슬라이드 ${slide.slideNum ?? index + 1}`}
+                        {getSlideTitle(slide.title, slide.slideNum ?? index + 1)}
                       </span>
                     </div>
                     <textarea
@@ -115,7 +116,7 @@ function ScriptBulkEditModal({
                       onChange={(event) => onScriptChange(index, event.target.value)}
                       rows={3}
                       className="h-30 w-full resize-none rounded-md border border-gray-200 bg-white p-2 text-xs leading-5 text-gray-800 outline-none focus-visible:border-main sm:p-3 sm:text-sm sm:leading-6 md:h-auto md:min-h-0 md:flex-1"
-                      aria-label={`${slide.title || `슬라이드 ${slide.slideNum ?? index + 1}`} 대본`}
+                      aria-label={`${getSlideTitle(slide.title, slide.slideNum ?? index + 1)} 대본`}
                     />
                   </div>
                 </div>

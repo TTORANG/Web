@@ -18,6 +18,7 @@ import SlideTitle from '@/components/slide/script/SlideTitle';
 import { createDefaultReactions } from '@/constants/reaction';
 import type { ReadSharedContentData } from '@/types/share';
 import { countTreeComments } from '@/utils/comment';
+import { getSlideTitle } from '@/utils/slideTitle';
 
 import { useFeedbackSlide } from './feedback/useFeedbackSlide';
 import type { ShareExitSnapshot } from './feedback/useFeedbackVideo';
@@ -130,7 +131,7 @@ export default function FeedbackSlidePage({
           currentSlide ? (
             <img
               src={currentSlide.imageUrl}
-              alt={currentSlide.title}
+              alt={getSlideTitle(currentSlide.title, slideIndex + 1)}
               className="max-h-full max-w-full"
             />
           ) : (
@@ -157,7 +158,7 @@ export default function FeedbackSlidePage({
         }
         scriptTabContent={
           <div className="px-4 py-4">
-            <SlideTitle fallbackTitle={`슬라이드 ${slideIndex + 1}`} readOnly />
+            <SlideTitle fallbackTitle={getSlideTitle(undefined, slideIndex + 1)} readOnly />
             <div className="mt-3 rounded-2xl border border-gray-200 bg-gray-200 px-4 py-3 h-48 overflow-y-auto pb-4">
               <p
                 className={`text-body-s leading-relaxed break-words ${script ? 'text-black' : 'text-gray-600'}`}

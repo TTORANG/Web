@@ -3,6 +3,7 @@
  * @description 피드백 화면 좌측 슬라이드 뷰어
  */
 import type { SlideListItem } from '@/types/slide';
+import { getSlideTitle } from '@/utils/slideTitle';
 
 import SlideInfoPanel from './slide/SlideInfoPanel';
 
@@ -39,7 +40,11 @@ export default function SlideViewer({
     <div className="flex-1 flex items-start justify-center min-w-0 bg-gray-100">
       <div className="flex flex-col max-w-full max-h-full">
         <div className="flex items-center justify-center">
-          <img src={slide.imageUrl} alt={slide.title} className="max-w-full max-h-full shadow-lg" />
+          <img
+            src={slide.imageUrl}
+            alt={getSlideTitle(slide.title, slideIndex + 1)}
+            className="max-w-full max-h-full shadow-lg"
+          />
         </div>
 
         <SlideInfoPanel

@@ -2,6 +2,7 @@
 import type { ReadRecentCommentListResponseDto } from '@/api/dto/analytics.dto';
 import { RecentCommentItem } from '@/components/insight';
 import { formatVideoTimestamp } from '@/utils/format';
+import { getSlideTitle } from '@/utils/slideTitle';
 
 const thumbBase = 'bg-gray-100 rounded-lg aspect-video';
 const sampleComments = [
@@ -47,7 +48,7 @@ export function RecentCommentsSection({
         <div key={comment.commentId} className={idx > 0 ? 'hidden md:block' : ''}>
           <RecentCommentItem
             user={comment.user}
-            slideLabel={`슬라이드 ${comment.slideNum}`}
+            slideLabel={getSlideTitle(undefined, comment.slideNum)}
             time={comment.time}
             text={comment.text}
             thumbFallbackClassName={thumbBase}
@@ -64,6 +65,9 @@ export function RecentCommentsSection({
       <>
         {recentCommentsData?.comments.slice(0, 5).map((comment) => {
           const seconds = Math.max(0, comment.timestampMs / 1000);
+          const slideLabel = comment.slide
+            ? getSlideTitle(comment.slide.title, comment.slide.slideNum)
+            : '전체';
           return (
             <RecentCommentItem
               key={comment.commentId}
@@ -71,7 +75,7 @@ export function RecentCommentsSection({
               userProfileImage={
                 comment.user.profileImage ?? comment.user.profileImageUrl ?? undefined
               }
-              slideLabel={comment.slide ? `슬라이드 ${comment.slide.slideNum}` : '전체'}
+              slideLabel={slideLabel}
               time={formatVideoTimestamp(seconds)}
               text={comment.content}
               thumbUrl={comment.slide?.imageUrl}

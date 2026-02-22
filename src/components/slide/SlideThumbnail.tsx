@@ -12,6 +12,7 @@ import clsx from 'clsx';
 import { SlideImage } from '@/components/common';
 import { getTabPath } from '@/constants/navigation';
 import type { SlideListItem } from '@/types/slide';
+import { getSlideTitle } from '@/utils/slideTitle';
 
 interface SlideThumbnailProps {
   /** 슬라이드 데이터 */
@@ -71,7 +72,7 @@ export default function SlideThumbnail({
       <div className="relative flex-1 rounded overflow-hidden bg-gray-200">
         <SlideImage
           src={slide.imageUrl}
-          alt={`슬라이드 ${index + 1}: ${slide.title}`}
+          alt={`슬라이드 ${index + 1}: ${getSlideTitle(slide.title, index + 1)}`}
           loading="lazy"
           decoding="async"
           fetchPriority="low"
