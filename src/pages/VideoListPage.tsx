@@ -26,6 +26,18 @@ const DEFAULT_VIDEO_EXTENSION = 'mp4';
 type DeleteTarget = { id: string; title: string } | null;
 type VideoListQueryData = { videos: VideoPresentation[]; total: number };
 
+function isVideoPendingStatus(status: VideoPresentation['status']): boolean {
+  return status === 'uploading' || status === 'processing';
+}
+
+function isSameIdSet(a: Set<string>, b: Set<string>): boolean {
+  if (a.size !== b.size) return false;
+  for (const value of a) {
+    if (!b.has(value)) return false;
+  }
+  return true;
+}
+
 function sanitizeFilename(fileName: string): string {
   const sanitized = fileName.replace(/[\\/:*?"<>|]+/g, '_').trim();
   return sanitized.length > 0 ? sanitized : 'video';
@@ -155,27 +167,25 @@ export default function VideoListPage() {
         derivedStatus: isStuck ? 'failed' : v.status,
         isStuck,
         isFailed: v.status === 'failed' || isStuck,
-        isPending: (v.status === 'processing' || v.status === 'uploading') && !v.thumbnailUrl,
+        isPending: isVideoPendingStatus(v.status) && !v.thumbnailUrl,
       };
     });
   }, [rawVideos]);
 
   const hasResults = videos.length > 0;
 
-  // pendingIds 갱신: processing or thumbnail 없음인 videoId를 Set에 추가
+  // pendingIds 갱신: 상태가 processing/uploading인 videoId만 유지
   useEffect(() => {
-    if (videos.length === 0) return;
+    const nextPendingIds = new Set(
+      videos
+        .filter((video) => isVideoPendingStatus(video.status))
+        .map((video) => String(video.videoId)),
+    );
 
-    setPendingIds((prev) => {
-      const next = new Set(prev);
-      videos.forEach((v) => {
-        if (v.isPending) next.add(String(v.videoId));
-      });
-      return next;
-    });
+    setPendingIds((prev) => (isSameIdSet(prev, nextPendingIds) ? prev : nextPendingIds));
   }, [videos]);
 
-  // 폴링: pendingIds가 있을 때만 3초마다 refetch → 완료된 id 제거 + thumbVersion bump
+  // 폴링: pendingIds가 있을 때만 3초마다 refetch → ready/failed가 되면 pending 해제
   useEffect(() => {
     if (isDemoProjectId) return;
     if (pendingIds.size === 0) return;
@@ -193,7 +203,7 @@ export default function VideoListPage() {
 
       fresh.forEach((v) => {
         const id = String(v.videoId);
-        const isDone = Boolean(v.thumbnailUrl) || v.status === 'failed';
+        const isDone = !isVideoPendingStatus(v.status);
         if (pendingIds.has(id) && isDone) doneIds.push(id);
       });
 
