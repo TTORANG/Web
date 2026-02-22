@@ -39,7 +39,9 @@ describe('useAutoSaveScript', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.clearAllMocks();
-    useSlideStore.getState().initSlide(createMockSlide({ slideId: 'slide-1' }));
+    useSlideStore
+      .getState()
+      .initSlide(createMockSlide({ slideId: 'slide-1', projectId: 'project-1' }));
   });
 
   afterEach(() => {
@@ -63,6 +65,7 @@ describe('useAutoSaveScript', () => {
 
     expect(mockMutateAsync).toHaveBeenCalledWith({
       slideId: 'slide-1',
+      projectId: 'project-1',
       data: { script: 'new script' },
     });
   });
@@ -156,6 +159,7 @@ describe('useAutoSaveScript', () => {
     expect(mockMutateAsync).toHaveBeenCalledTimes(2);
     expect(mockMutateAsync).toHaveBeenLastCalledWith({
       slideId: 'slide-1',
+      projectId: 'project-1',
       data: { script: 'offline draft' },
     });
   });
@@ -177,6 +181,7 @@ describe('useAutoSaveScript', () => {
     expect(mockMutateAsync).toHaveBeenCalledTimes(1);
     expect(mockMutateAsync).toHaveBeenCalledWith({
       slideId: 'slide-1',
+      projectId: 'project-1',
       data: { script: 'quick draft' },
     });
 
@@ -203,6 +208,7 @@ describe('useAutoSaveScript', () => {
     expect(mockMutateAsync).toHaveBeenCalledTimes(1);
     expect(mockMutateAsync).toHaveBeenCalledWith({
       slideId: 'slide-1',
+      projectId: 'project-1',
       data: { script: 'blur draft' },
     });
   });
@@ -223,6 +229,7 @@ describe('useAutoSaveScript', () => {
     expect(mockMutateAsync).toHaveBeenCalledTimes(1);
     expect(mockMutateAsync).toHaveBeenNthCalledWith(1, {
       slideId: 'slide-1',
+      projectId: 'project-1',
       data: { script: 'first' },
     });
 
@@ -243,6 +250,7 @@ describe('useAutoSaveScript', () => {
     expect(mockMutateAsync).toHaveBeenCalledTimes(2);
     expect(mockMutateAsync).toHaveBeenNthCalledWith(2, {
       slideId: 'slide-1',
+      projectId: 'project-1',
       data: { script: 'second' },
     });
   });
