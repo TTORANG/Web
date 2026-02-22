@@ -30,6 +30,7 @@ export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps
   const script = useSlideScript();
   const lastSyncedSlideIdRef = useRef<string>('');
   const lastSyncedScriptRef = useRef<string | null>(null);
+  const hasLocalEditLockRef = useRef(false);
 
   const projectId = slide?.projectId ?? '';
   const currentSlideId = slide?.slideId ?? '';
@@ -80,6 +81,7 @@ export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps
     if (lastSyncedSlideIdRef.current !== slideId) {
       lastSyncedSlideIdRef.current = slideId;
       lastSyncedScriptRef.current = null;
+      hasLocalEditLockRef.current = false;
     }
   }, [slideId]);
 
@@ -90,8 +92,12 @@ export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps
     const hasSyncedOnce = lastSyncedScriptRef.current !== null;
     const hasLocalEditAfterSync = hasSyncedOnce && script !== lastSyncedScriptRef.current;
 
-    // 로컬 편집 중에는 서버 값으로 덮어쓰지 않습니다.
-    if (hasLocalEditAfterSync && script !== serverScript) return;
+    if (hasLocalEditAfterSync) {
+      hasLocalEditLockRef.current = true;
+    }
+
+    // 로컬 편집이 감지된 슬라이드는 세션 동안 서버 재동기화를 잠급니다.
+    if (hasLocalEditLockRef.current && script !== serverScript) return;
 
     if (script !== serverScript) {
       updateScript(serverScript);
