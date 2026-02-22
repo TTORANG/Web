@@ -17,6 +17,8 @@ import {
 
 import clsx from 'clsx';
 
+import { cn } from '@/utils/css.ts';
+
 type PopoverPosition = 'top' | 'bottom';
 type PopoverAlign = 'start' | 'end' | 'center';
 
@@ -165,7 +167,7 @@ export function Popover({
           role="dialog"
           aria-label={ariaLabel}
           aria-modal="false"
-          className={clsx(
+          className={cn(
             'absolute z-50',
             positionClasses,
             alignClasses,

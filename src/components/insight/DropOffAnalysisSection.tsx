@@ -59,7 +59,7 @@ export default function DropOffAnalysisSection({
   return (
     <div className="flex flex-wrap gap-4">
       {/* 슬라이드 이탈 */}
-      <div className="flex min-w-0 flex-1 basis-full flex-col gap-1 rounded-lg border border-gray-200 bg-white px-5 py-4 lg:basis-160">
+      <div className="flex min-w-0 flex-1 basis-full flex-col gap-1 rounded-lg border border-gray-200 bg-white px-5 py-4 md:basis-[calc(50%-0.5rem)]">
         <h3 className="text-body-l-bold text-gray-800">가장 많이 이탈한 슬라이드</h3>
 
         {!hasSlideDropOff ? (
@@ -116,7 +116,7 @@ export default function DropOffAnalysisSection({
 
       {/* 영상 구간 이탈 */}
       {showVideoDropOff && (
-        <div className="flex min-w-0 flex-1 basis-full flex-col gap-1 rounded-lg border border-gray-200 bg-white px-5 py-4 lg:basis-160">
+        <div className="flex min-w-0 flex-1 basis-full flex-col gap-1 rounded-lg border border-gray-200 bg-white px-5 py-4 md:basis-[calc(50%-0.5rem)]">
           <h3 className="text-body-l-bold text-gray-800">가장 많이 이탈한 영상 구간</h3>
           {!hasVideoDropOff ? (
             <div className="mt-4 flex h-24 items-center justify-center text-gray-600">

@@ -3,8 +3,8 @@
  * @description 볼륨 컨트롤 + 시간 표시 컴포넌트
  *
  * - 볼륨 아이콘 클릭: 음소거 토글
- * - 호버 시 슬라이더 펼쳐짐
- * - 시간 표시가 오른쪽으로 슬라이드
+ * - 호버/포커스 시 우측으로 슬라이더 확장
+ * - 시간 표시는 고정 위치 유지
  */
 import muteIcon from '@/assets/playbackBar-icons/mute-icon.webp';
 import unmuteIcon from '@/assets/playbackBar-icons/unmute-icon.webp';
@@ -47,29 +47,23 @@ export default function VolumeControl({
   };
 
   return (
-    <div className="group/vol relative flex items-center gap-1">
-      {/* 볼륨 아이콘 - pill 위에 보이도록 z-10 */}
-      <button
-        type="button"
-        onClick={toggleMute}
-        className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.66)]"
-        aria-label={volume === 0 ? '음소거 해제' : '음소거'}
-      >
-        <img
-          src={volume === 0 ? muteIcon : unmuteIcon}
-          alt={volume === 0 ? '음소거 해제' : '음소거'}
-          className="h-7 w-7"
-        />
-      </button>
+    <div className="flex items-center gap-1.5">
+      <div className="group/vol flex items-center">
+        <div className="flex h-8 w-8 items-center overflow-hidden rounded-full bg-[rgba(18,18,20,0.78)] backdrop-blur-[6px] transition-[width,padding] duration-150 ease-out group-hover/vol:w-[6.25rem] group-hover/vol:pr-2 group-focus-within/vol:w-[6.25rem] group-focus-within/vol:pr-2">
+          <button
+            type="button"
+            onClick={toggleMute}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(18,18,20,0.78)] backdrop-blur-[6px] transition-colors duration-150 hover:bg-[rgba(18,18,20,0.88)]"
+            aria-label={volume === 0 ? '음소거 해제' : '음소거'}
+          >
+            <img
+              src={volume === 0 ? muteIcon : unmuteIcon}
+              alt={volume === 0 ? '음소거 해제' : '음소거'}
+              className="h-7 w-7"
+            />
+          </button>
 
-      {/* pill: 기본은 숨김 -> hover 시 나타남 */}
-      <div className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 opacity-0 group-hover/vol:opacity-100 transition-opacity duration-150">
-        <div className="flex items-center gap-1 rounded-full bg-[#000000]/45 px-3 h-8">
-          {/* 아이콘 자리 (왼쪽에 실제 아이콘이 있으므로 빈공간) */}
-          <div className="h-7 w-5 shrink-0" />
-
-          {/* 볼륨 슬라이더 */}
-          <div className="w-13 pointer-events-auto flex items-center">
+          <div className="ml-2 flex w-13 items-center opacity-0 transition-opacity duration-100 group-hover/vol:opacity-100 group-focus-within/vol:opacity-100">
             <input
               type="range"
               min={0}
@@ -78,15 +72,14 @@ export default function VolumeControl({
               value={volume}
               onChange={(e) => onVolumeChange(Number(e.target.value))}
               style={volumeTrackStyle}
-              className="volume-range block w-full h-0.5 cursor-pointer appearance-none rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#FFFFFF] [&::-moz-range-thumb]:h-2 [&::-moz-range-thumb]:w-2 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#FFFFFF] [&::-moz-range-thumb]:border-0"
+              className="volume-range block h-0.5 w-full cursor-pointer appearance-none rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#FFFFFF] [&::-moz-range-thumb]:h-2 [&::-moz-range-thumb]:w-2 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#FFFFFF] [&::-moz-range-thumb]:border-0"
               aria-label="볼륨"
             />
           </div>
         </div>
       </div>
 
-      {/* 시간 표시 - hover 시 오른쪽으로 슬라이드 */}
-      <div className="whitespace-nowrap rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.66)] px-3 py-2 text-caption tabular-nums text-[#ffffff] transition-all duration-150 group-hover/vol:translate-x-19">
+      <div className="whitespace-nowrap rounded-full bg-[rgba(18,18,20,0.78)] px-3 py-2 text-caption tabular-nums text-[#ffffff] backdrop-blur-[6px]">
         <span>{currentTimeLabel}</span>
         <span className="mx-1">/</span>
         <span>{durationLabel}</span>

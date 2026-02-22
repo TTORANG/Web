@@ -69,10 +69,10 @@ export default function ReactionButtons({
         const config = REACTION_CONFIG[reaction.type];
         const isLastOdd = isGrid && total % 2 === 1 && index === total - 1;
         const baseBtn = showLabel
-          ? 'flex items-center justify-between px-2 py-2 rounded-full border transition text-body-m focus-visible:outline-2 focus-visible:outline-main w-42.25'
+          ? 'flex items-center justify-between px-2 py-2 rounded-full border transition-colors text-body-m focus-visible:outline-2 focus-visible:outline-main w-42.25'
           : isCompact
-            ? 'flex w-full min-w-0 items-center justify-center gap-1 px-2 py-2 rounded-full border transition text-body-m focus-visible:outline-2 focus-visible:outline-main'
-            : 'flex items-center gap-2 px-3 py-2 rounded-full border transition text-body-m focus-visible:outline-2 focus-visible:outline-main';
+            ? 'flex w-full min-w-0 items-center justify-center gap-1 px-2 py-2 rounded-full border transition-colors text-body-m focus-visible:outline-2 focus-visible:outline-main'
+            : 'flex items-center gap-2 px-3 py-2 rounded-full border transition-colors text-body-m focus-visible:outline-2 focus-visible:outline-main';
 
         const shakeLevel = shakeIntensities[reaction.type] || 0;
 
