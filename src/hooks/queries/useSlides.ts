@@ -8,27 +8,40 @@ import type { UpdateSlideTitleRequestDto } from '@/api/dto';
 import { getSlides, updateSlide } from '@/api/endpoints/slides';
 import { queryKeys } from '@/api/queryClient';
 
+type UseSlidesOptions = {
+  enabled?: boolean;
+  liveSync?: boolean;
+  pollingIntervalMs?: number;
+};
+
 /**
  * 슬라이드 목록 조회
  *
  * @param projectId - 프로젝트 ID
+ * @param options - 조회 옵션
+ * @param options.enabled - 쿼리 활성화 여부 (기본값: true)
+ * @param options.liveSync - 폴링 기반 라이브 동기화 여부 (기본값: false)
+ * @param options.pollingIntervalMs - 라이브 동기화 폴링 간격(ms) (기본값: 15000)
  */
-export function useSlides(projectId: string) {
+export function useSlides(
+  projectId: string,
+  { enabled: isEnabled = true, liveSync = false, pollingIntervalMs = 15000 }: UseSlidesOptions = {},
+) {
   return useQuery({
     queryKey: queryKeys.slides.list(projectId),
     queryFn: () => getSlides(projectId),
-    enabled: !!projectId,
+    enabled: !!projectId && isEnabled,
     retry: false,
-    // 🔄 서버가 웹소켓 브로드캐스트를 안하므로 임시로 폴링 추가
-    // TODO: 서버에서 broadcastNewComment 호출 후 제거
-    refetchInterval: (query) => {
-      const error = query.state.error;
-      if (isAxiosError(error) && error.response?.status === 401) {
-        return false;
-      }
-      return 3000;
-    }, // 3초마다 자동 갱신 (401이면 중단)
-    refetchIntervalInBackground: false, // 탭이 백그라운드일 때는 멈춤
+    refetchInterval: liveSync
+      ? (query) => {
+          const error = query.state.error;
+          if (isAxiosError(error) && error.response?.status === 401) {
+            return false;
+          }
+          return pollingIntervalMs;
+        }
+      : false,
+    refetchIntervalInBackground: false,
   });
 }
 
