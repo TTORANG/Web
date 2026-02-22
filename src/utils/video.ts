@@ -8,9 +8,27 @@ import type { ReactionEvent, SegmentHighlight } from '@/types/video';
 
 /** 세그먼트 버킷 크기 (초) */
 export const SEGMENT_BUCKET_SIZE = 5;
+export const VIDEO_PLAYBACK_RATE_STORAGE_KEY = 'ttorang-video-playback-rate';
+export const VIDEO_PLAYBACK_RATE_MIN = 0.25;
+export const VIDEO_PLAYBACK_RATE_MAX = 3;
+export const VIDEO_PLAYBACK_RATE_STEP = 0.25;
+export const DEFAULT_VIDEO_PLAYBACK_RATE = 1;
+export const VIDEO_PLAYBACK_RATE_PRESETS = [1, 1.25, 1.5, 2, 3] as const;
 
 export const normalizeVideoMimeType = (mimeType?: string): 'video/webm' | 'video/mp4' =>
   mimeType?.startsWith('video/mp4') ? 'video/mp4' : 'video/webm';
+
+/**
+ * 재생 배속 값을 0.25 단위로 정규화
+ */
+export function normalizeVideoPlaybackRate(rate?: number | string | null): number {
+  const parsed = typeof rate === 'string' ? Number(rate) : rate;
+  if (typeof parsed !== 'number' || !Number.isFinite(parsed)) return DEFAULT_VIDEO_PLAYBACK_RATE;
+
+  const clamped = clamp(parsed, VIDEO_PLAYBACK_RATE_MIN, VIDEO_PLAYBACK_RATE_MAX);
+  const snapped = Math.round(clamped / VIDEO_PLAYBACK_RATE_STEP) * VIDEO_PLAYBACK_RATE_STEP;
+  return Number(snapped.toFixed(2));
+}
 
 /**
  * 현재 재생 시간에 해당하는 슬라이드 인덱스를 계산

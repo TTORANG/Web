@@ -8,12 +8,24 @@ import pauseIcon from '@/assets/playbackBar-icons/pause-icon.webp';
 import playIcon from '@/assets/playbackBar-icons/play-icon.webp';
 import fullscreenIcon from '@/assets/playbackBar-icons/sizeupdown-icon.webp';
 import ProgressBar from '@/components/feedback/ProgressBar';
+import PlaybackSpeedControl from '@/components/feedback/video/PlaybackSpeedControl';
 import VolumeControl from '@/components/feedback/video/VolumeControl';
 import { useVideoReactionHighlights } from '@/hooks/queries/useVideoReactionQueries';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { SlideListItem } from '@/types/slide';
+import {
+  DEFAULT_VIDEO_PLAYBACK_RATE,
+  VIDEO_PLAYBACK_RATE_STORAGE_KEY,
+  normalizeVideoPlaybackRate,
+} from '@/utils/video';
 
 const MAX_HIGHLIGHTS = 10;
+
+function getStoredPlaybackRate(): number {
+  if (typeof window === 'undefined') return DEFAULT_VIDEO_PLAYBACK_RATE;
+  const stored = window.localStorage.getItem(VIDEO_PLAYBACK_RATE_STORAGE_KEY);
+  return normalizeVideoPlaybackRate(stored);
+}
 
 interface VideoPlaybackBarProps {
   videoElement: HTMLVideoElement | null;
@@ -49,6 +61,7 @@ export default function VideoPlaybackBar({
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
+  const [playbackRate, setPlaybackRate] = useState(() => getStoredPlaybackRate());
   const isControlDisabled = !videoElement || !isMediaReady;
 
   useEffect(() => {
@@ -68,6 +81,16 @@ export default function VideoPlaybackBar({
       videoElement.removeEventListener('pause', onPause);
     };
   }, [videoElement]);
+
+  useEffect(() => {
+    if (!videoElement) return;
+
+    const normalizedRate = normalizeVideoPlaybackRate(playbackRate);
+    // eslint-disable-next-line react-hooks/immutability -- DOM API
+    videoElement.playbackRate = normalizedRate;
+    // eslint-disable-next-line react-hooks/immutability -- DOM API
+    videoElement.defaultPlaybackRate = normalizedRate;
+  }, [playbackRate, videoElement]);
 
   const handleSeek = (time: number) => {
     if (isControlDisabled || !videoElement) return;
@@ -113,6 +136,15 @@ export default function VideoPlaybackBar({
     if (videoElement) videoElement.volume = v;
   };
 
+  const handlePlaybackRateChange = (nextRate: number) => {
+    const normalizedRate = normalizeVideoPlaybackRate(nextRate);
+    setPlaybackRate(normalizedRate);
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(VIDEO_PLAYBACK_RATE_STORAGE_KEY, String(normalizedRate));
+    }
+  };
+
   const toggleFullscreen = async () => {
     const target = fullscreenTargetRef?.current;
     const root = target ?? (videoElement?.closest('[data-stage-root]') as HTMLElement | null);
@@ -143,7 +175,7 @@ export default function VideoPlaybackBar({
           <button
             type="button"
             onClick={togglePlay}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.66)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-[rgba(18,18,20,0.78)] backdrop-blur-[6px] transition-colors duration-150 hover:bg-[rgba(18,18,20,0.88)] disabled:cursor-not-allowed disabled:opacity-60"
             aria-label={isPlaying ? '일시정지' : '재생'}
             disabled={isControlDisabled}
           >
@@ -168,16 +200,22 @@ export default function VideoPlaybackBar({
             <button
               type="button"
               onClick={layoutToggle.onToggle}
-              className="h-9 px-3 rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.66)] text-xs text-[#ffffff] whitespace-nowrap"
+              className="h-9 rounded-full bg-[rgba(18,18,20,0.78)] px-3 text-xs whitespace-nowrap text-[#ffffff] backdrop-blur-[6px] transition-colors duration-150 hover:bg-[rgba(18,18,20,0.88)]"
             >
               {layoutToggle.label}
             </button>
           )}
 
+          <PlaybackSpeedControl
+            playbackRate={playbackRate}
+            onPlaybackRateChange={handlePlaybackRateChange}
+            disabled={isControlDisabled}
+          />
+
           <button
             type="button"
             onClick={toggleFullscreen}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.66)]"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-[rgba(18,18,20,0.78)] backdrop-blur-[6px] transition-colors duration-150 hover:bg-[rgba(18,18,20,0.88)]"
             aria-label="전체화면"
           >
             <img src={fullscreenIcon} alt="전체화면" className="h-7 w-7" />
