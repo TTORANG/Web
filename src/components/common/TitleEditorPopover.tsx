@@ -41,8 +41,13 @@ export function TitleEditorPopover({
   showOnMobile = false,
 }: TitleEditorPopoverProps) {
   const resolvedInputTitle = inputTitle ?? title;
-  const inputResetKey = `${resolvedInputTitle}::${inputPlaceholder ?? ''}`;
   const [editTitle, setEditTitle] = useState(resolvedInputTitle);
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) return;
+    // Popover를 열 때마다 현재 슬라이드 기준 입력값으로 초기화합니다.
+    setEditTitle(resolvedInputTitle);
+  };
 
   if (readOnlyContent) {
     return (
@@ -71,7 +76,7 @@ export function TitleEditorPopover({
 
   return (
     <Popover
-      key={inputResetKey}
+      onOpenChange={handleOpenChange}
       trigger={({ isOpen }) => (
         <button
           type="button"
