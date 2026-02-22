@@ -12,9 +12,9 @@ export default function StopButton({ label = '종료', disabled = false, onClick
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex items-center gap-1 rounded-full bg-gray-400 px-3 py-2 transition-colors hover:opacity-80 focus-visible:outline-2 focus-visible:outline-main disabled:cursor-not-allowed disabled:opacity-50"
+      className="inline-flex shrink-0 items-center gap-1 rounded-full bg-gray-400 px-3 py-2 whitespace-nowrap transition-colors hover:opacity-80 focus-visible:outline-2 focus-visible:outline-main disabled:cursor-not-allowed disabled:opacity-50"
     >
-      <span className="text-caption-bold text-black">{label}</span>
+      <span className="text-caption-bold whitespace-nowrap text-black">{label}</span>
       <IconStop className="h-4 w-4 text-black" />
     </button>
   );
