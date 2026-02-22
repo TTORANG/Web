@@ -76,12 +76,15 @@ export function useUpdateSlide() {
       });
 
       if (typeof data.title === 'string') {
+        const optimisticTitle = data.title;
         queryClient.setQueryData<GetSlideResponseDto | undefined>(
           queryKeys.slides.detail(slideId),
-          (old) => (old ? { ...old, title: data.title } : old),
+          (old) => (old ? { ...old, title: optimisticTitle } : old),
         );
         queryClient.setQueriesData<SlideListItem[]>({ queryKey: queryKeys.slides.lists() }, (old) =>
-          old?.map((item) => (item.slideId === slideId ? { ...item, title: data.title } : item)),
+          old?.map((item) =>
+            item.slideId === slideId ? { ...item, title: optimisticTitle } : item,
+          ),
         );
       }
 
