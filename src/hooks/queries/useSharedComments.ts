@@ -6,6 +6,8 @@ import type { ReadSharedCommentsData } from '@/types/share';
 
 type UseSharedCommentsOptions = {
   initialData?: ReadSharedCommentsData;
+  enabled?: boolean;
+  staleTime?: number;
 };
 
 export function useSharedComments(
@@ -13,10 +15,13 @@ export function useSharedComments(
   sessionId?: string,
   options: UseSharedCommentsOptions = {},
 ) {
+  const isEnabled = options.enabled ?? true;
+
   return useQuery({
     queryKey: queryKeys.shares.comments(shareToken, sessionId),
     queryFn: () => getSharedComments(shareToken, sessionId),
-    enabled: !!shareToken,
+    enabled: !!shareToken && isEnabled,
     initialData: options.initialData,
+    staleTime: options.staleTime,
   });
 }

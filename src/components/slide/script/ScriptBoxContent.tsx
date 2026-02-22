@@ -40,15 +40,15 @@ export default function ScriptBoxContent() {
           onBlur={flushSave}
           placeholder="슬라이드 대본을 입력하세요..."
           aria-label="슬라이드 대본"
-          className="h-full w-full resize-none overflow-y-auto border-none bg-transparent pb-8 pr-28 text-base leading-relaxed text-gray-800 outline-none placeholder:text-gray-600"
+          className="h-full w-full resize-none overflow-y-auto border-none bg-transparent pb-8 text-base leading-relaxed text-gray-800 outline-none placeholder:text-gray-600"
         />
 
-        <div className="absolute bottom-3 right-4">
+        <div className="pointer-events-none absolute bottom-3 right-4 z-10">
           <button
             type="button"
             onClick={() => setIsSpeedModalOpen(true)}
             aria-label={`읽기 속도 설정 열기 (현재 예상 시간 ${estimatedDuration})`}
-            className="inline-flex min-h-9 items-center gap-2 rounded-md bg-white px-3 py-1.5 text-gray-700 transition-colors hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main"
+            className="pointer-events-auto inline-flex min-h-9 items-center gap-2 rounded-full border border-gray-200 bg-white/95 px-3 py-1.5 text-gray-700 shadow-xs backdrop-blur-sm transition-colors hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-main"
           >
             <span aria-live="polite" aria-atomic="true" className="text-sm font-semibold leading-4">
               {estimatedDuration}

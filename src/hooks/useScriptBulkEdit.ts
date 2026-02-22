@@ -1,11 +1,17 @@
 import { type ChangeEvent, useCallback, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { useQueryClient } from '@tanstack/react-query';
+
 import type { ProjectScriptItemDto } from '@/api/dto';
+import { getProjectScripts } from '@/api/endpoints/scripts';
+import { queryKeys } from '@/api/queryClient';
 import { useBulkEditScripts, useProjectScripts } from '@/hooks/queries/useScript';
 import { useSlides } from '@/hooks/queries/useSlides';
 import type { SlideListItem } from '@/types/slide';
 import { showToast } from '@/utils/toast';
+
+const PROJECT_SCRIPTS_STALE_TIME_MS = 1000 * 60 * 10;
 
 const normalizeTxt = (text: string) => text.replace(/^\uFEFF/, '').replace(/\r\n|\r/g, '\n');
 
@@ -27,10 +33,12 @@ const buildScriptMap = (scripts: ProjectScriptItemDto[] | undefined) => {
 
 export function useScriptBulkEdit() {
   const { projectId } = useParams<{ projectId: string }>();
-  const { data: slides } = useSlides(projectId ?? '');
-  const { data: projectScripts, refetch: refetchProjectScripts } = useProjectScripts(
-    projectId ?? '',
-  );
+  const queryClient = useQueryClient();
+  const { data: slides } = useSlides(projectId ?? '', { liveSync: false });
+  const { data: projectScripts } = useProjectScripts(projectId ?? '', {
+    enabled: false,
+    staleTime: PROJECT_SCRIPTS_STALE_TIME_MS,
+  });
 
   const { mutateAsync: bulkEditScripts, isPending: isSaving } = useBulkEditScripts();
 
@@ -72,8 +80,18 @@ export function useScriptBulkEdit() {
     setIsPreparingModal(true);
 
     try {
-      const response = await refetchProjectScripts();
-      setDraftFromSource(response.data?.scripts ?? projectScripts?.scripts);
+      let latestScripts = projectScripts?.scripts;
+
+      if (!latestScripts) {
+        const response = await queryClient.ensureQueryData({
+          queryKey: queryKeys.scripts.project(projectId),
+          queryFn: () => getProjectScripts(projectId),
+          staleTime: PROJECT_SCRIPTS_STALE_TIME_MS,
+        });
+        latestScripts = response.scripts;
+      }
+
+      setDraftFromSource(latestScripts);
     } catch {
       setDraftFromSource(projectScripts?.scripts);
       showToast.error(

@@ -7,11 +7,11 @@
  * - ScriptBox 접힘 상태를 관리하고 SlideViewer에 전달
  * - Zustand store로 슬라이드 상태 관리
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { SLIDE_MAX_WIDTH } from '@/constants/layout';
 import { useSlideActions, useSlideId, useSlideScript } from '@/hooks';
-import { useScript } from '@/hooks/queries/useScript';
+import { useProjectScripts, useScript } from '@/hooks/queries/useScript';
 import { useSlideCommentsLoader } from '@/hooks/useSlideCommentsLoader';
 import type { SlideListItem } from '@/types/slide';
 
@@ -28,24 +28,42 @@ export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps
   const { initSlide, updateScript, updateSlide } = useSlideActions();
   const slideId = useSlideId();
   const script = useSlideScript();
-  const { data: scriptData } = useScript(slideId);
   const lastSyncedSlideIdRef = useRef<string>('');
   const lastSyncedScriptRef = useRef<string | null>(null);
 
+  const projectId = slide?.projectId ?? '';
+  const currentSlideId = slide?.slideId ?? '';
+  const { data: projectScripts } = useProjectScripts(projectId, {
+    enabled: !!projectId,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const projectScript = useMemo(() => {
+    if (!currentSlideId) return undefined;
+    return projectScripts?.scripts.find((item) => item.slideId === currentSlideId)?.scriptText;
+  }, [projectScripts, currentSlideId]);
+
+  const shouldFetchDetailScript = !projectScript && !slide?.script;
+  const { data: scriptData } = useScript(currentSlideId, {
+    enabled: shouldFetchDetailScript,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const resolvedServerScript = projectScript ?? slide?.script ?? scriptData?.scriptText ?? '';
+
   useEffect(() => {
     if (!slide) return;
+    const nextSlide =
+      resolvedServerScript !== slide.script ? { ...slide, script: resolvedServerScript } : slide;
 
     const isSameSlide = slide.slideId === slideId;
     if (isSameSlide) {
-      updateSlide(slide);
+      updateSlide(nextSlide);
       return;
     }
 
-    initSlide(slide);
-    updateScript('');
-  }, [slide, slideId, initSlide, updateScript, updateSlide]);
-
-  useSlideCommentsLoader(slide?.slideId);
+    initSlide(nextSlide);
+  }, [slide, slideId, initSlide, resolvedServerScript, updateSlide]);
 
   useEffect(() => {
     if (lastSyncedSlideIdRef.current !== slideId) {
@@ -55,13 +73,13 @@ export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps
   }, [slideId]);
 
   useEffect(() => {
-    if (!scriptData) return;
+    if (!slideId) return;
 
-    const serverScript = scriptData.scriptText;
+    const serverScript = resolvedServerScript;
     const hasSyncedOnce = lastSyncedScriptRef.current !== null;
     const hasLocalEditAfterSync = hasSyncedOnce && script !== lastSyncedScriptRef.current;
 
-    // 로컬 편집이 있는 동안에는 서버 응답으로 덮어쓰지 않습니다.
+    // 로컬 편집 중에는 서버 값으로 덮어쓰지 않습니다.
     if (hasLocalEditAfterSync && script !== serverScript) return;
 
     if (script !== serverScript) {
@@ -69,7 +87,9 @@ export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps
     }
 
     lastSyncedScriptRef.current = serverScript;
-  }, [script, scriptData, updateScript]);
+  }, [resolvedServerScript, script, slideId, updateScript]);
+
+  useSlideCommentsLoader(slide?.slideId);
 
   return (
     <div className="relative h-full min-h-0 flex flex-col pb-[clamp(12rem,30vh,20rem)] md:pb-0">

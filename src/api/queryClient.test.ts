@@ -60,6 +60,22 @@ describe('queryKeys', () => {
     });
   });
 
+  describe('videos', () => {
+    it('builds list prefix key with projectId', () => {
+      expect(queryKeys.videos.listPrefix('p1')).toEqual(['videos', 'list', 'p1']);
+    });
+
+    it('builds list key with params', () => {
+      expect(
+        queryKeys.videos.list('p1', { search: 'abc', filter: 'ready', sort: 'recent' }),
+      ).toEqual(['videos', 'list', 'p1', { search: 'abc', filter: 'ready', sort: 'recent' }]);
+    });
+
+    it('builds list key without params', () => {
+      expect(queryKeys.videos.list('p1')).toEqual(['videos', 'list', 'p1', {}]);
+    });
+  });
+
   describe('shares', () => {
     it('builds content key with sessionId', () => {
       expect(queryKeys.shares.content('token1', 'sess1')).toEqual([

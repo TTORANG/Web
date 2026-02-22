@@ -8,6 +8,7 @@ import {
   useSlideActions,
   useSlideComments,
   useSlideId,
+  useSlideProjectId,
   useSlideScript,
   useSlideThumb,
   useSlideTitle,
@@ -28,6 +29,11 @@ describe('useSlideSelectors', () => {
 
     it('useSlideTitle returns empty string', () => {
       const { result } = renderHook(() => useSlideTitle());
+      expect(result.current).toBe('');
+    });
+
+    it('useSlideProjectId returns empty string', () => {
+      const { result } = renderHook(() => useSlideProjectId());
       expect(result.current).toBe('');
     });
 
@@ -68,6 +74,11 @@ describe('useSlideSelectors', () => {
     it('useSlideTitle returns title', () => {
       const { result } = renderHook(() => useSlideTitle());
       expect(result.current).toBe('Test Title');
+    });
+
+    it('useSlideProjectId returns projectId', () => {
+      const { result } = renderHook(() => useSlideProjectId());
+      expect(result.current).toBe(slide.projectId);
     });
 
     it('useSlideThumb returns imageUrl', () => {
