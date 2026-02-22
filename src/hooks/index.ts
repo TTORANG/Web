@@ -7,6 +7,7 @@ export * from './useAutoSaveScript';
 export * from './useDebounce';
 export * from './useHotkey';
 export * from './useMediaQuery';
+export * from './useScriptReadingSpeed';
 export * from './useSlideNavigation';
 export * from './useSlideSelectors';
 export * from './useSlideCommentsActions';

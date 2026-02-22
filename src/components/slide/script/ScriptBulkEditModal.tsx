@@ -1,8 +1,11 @@
+import { useMemo } from 'react';
 import type { ChangeEvent, RefObject } from 'react';
 
 import UploadIcon from '@/assets/icons/icon-upload.svg?react';
 import { Modal, SlideImage } from '@/components/common';
 import type { ScriptBulkEditPreviewItem } from '@/hooks/useScriptBulkEdit';
+import { useScriptReadingSpeed } from '@/hooks/useScriptReadingSpeed';
+import { estimateScriptsDurationSeconds, formatScriptDuration } from '@/utils/scriptDuration';
 
 interface ScriptBulkEditModalProps {
   isOpen: boolean;
@@ -31,6 +34,15 @@ function ScriptBulkEditModal({
   onFileChange,
   onScriptChange,
 }: ScriptBulkEditModalProps) {
+  const { selectedSpeed } = useScriptReadingSpeed();
+  const totalDuration = useMemo(() => {
+    const durationSeconds = estimateScriptsDurationSeconds(
+      previewItems.map((item) => item.script),
+      selectedSpeed,
+    );
+    return formatScriptDuration(durationSeconds);
+  }, [previewItems, selectedSpeed]);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -62,6 +74,11 @@ function ScriptBulkEditModal({
               <span className="font-semibold text-gray-800">{selectedFileName}</span>
             </p>
           ) : null}
+          <p className="text-sm text-gray-600">
+            전체 예상 읽기 시간:{' '}
+            <span className="font-semibold text-gray-800">{totalDuration}</span>{' '}
+            <span>(분당 {selectedSpeed}자 기준)</span>
+          </p>
         </div>
 
         <button
