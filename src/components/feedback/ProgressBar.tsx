@@ -4,9 +4,9 @@
  *
  * - 클릭/드래그로 seek
  * - 호버 시 썸네일 + 시간 미리보기
- * - 전역 마우스 이벤트로 바 밖에서도 스크러빙 가능
+ * - pointer 이벤트로 모바일/데스크톱 스크러빙 공통 처리
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import clsx from 'clsx';
 
@@ -15,6 +15,9 @@ import type { SlideListItem } from '@/types/slide';
 import type { SegmentHighlight } from '@/types/video';
 import { formatVideoTimestamp } from '@/utils/format';
 import { getSlideIndexFromTime } from '@/utils/video';
+
+const PERCENT_UPDATE_EPSILON = 0.0001;
+const SEEK_UPDATE_EPSILON_SECONDS = 1 / 60;
 
 interface ProgressBarProps {
   /** 현재 재생 시간 (초) */
@@ -43,6 +46,7 @@ export default function ProgressBar({
   segmentHighlights,
 }: ProgressBarProps) {
   const progressBarRef = useRef<HTMLDivElement>(null);
+  const lastSeekSecondsRef = useRef<number | null>(null);
 
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [scrubPercent, setScrubPercent] = useState<number | null>(null);
@@ -96,86 +100,143 @@ export default function ProgressBar({
   const updateHoverState = useCallback(
     (clientX: number) => {
       const p = getPercentFromClientX(clientX);
-      setHoverX(p);
+      setHoverX((prev) =>
+        prev !== null && Math.abs(prev - p) <= PERCENT_UPDATE_EPSILON ? prev : p,
+      );
 
       const hoverTime = p * max;
-      setHoverSlideIndex(computeSlideIndex(hoverTime));
+      const nextSlideIndex = computeSlideIndex(hoverTime);
+      setHoverSlideIndex((prev) => (prev === nextSlideIndex ? prev : nextSlideIndex));
     },
     [getPercentFromClientX, max, computeSlideIndex],
   );
 
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const updateScrubStateByPercent = useCallback(
+    (p: number) => {
+      setScrubPercent((prev) =>
+        prev !== null && Math.abs(prev - p) <= PERCENT_UPDATE_EPSILON ? prev : p,
+      );
+      setHoverX((prev) =>
+        prev !== null && Math.abs(prev - p) <= PERCENT_UPDATE_EPSILON ? prev : p,
+      );
+      const nextSlideIndex = computeSlideIndex(p * max);
+      setHoverSlideIndex((prev) => (prev === nextSlideIndex ? prev : nextSlideIndex));
+    },
+    [computeSlideIndex, max],
+  );
+
+  const seekByPercent = useCallback(
+    (p: number) => {
+      if (max <= 0) return;
+      const nextSeekSeconds = p * max;
+      const prevSeekSeconds = lastSeekSecondsRef.current;
+      if (
+        prevSeekSeconds !== null &&
+        Math.abs(nextSeekSeconds - prevSeekSeconds) <= SEEK_UPDATE_EPSILON_SECONDS
+      ) {
+        return;
+      }
+
+      lastSeekSecondsRef.current = nextSeekSeconds;
+      onSeek(nextSeekSeconds);
+    },
+    [max, onSeek],
+  );
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (disabled) return;
+    if (max <= 0) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+    e.preventDefault();
+
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // no-op: 일부 환경에서는 pointer capture를 지원하지 않을 수 있음
+    }
+
     const p = getPercentFromClientX(e.clientX);
-    onSeek(p * max);
+    setIsScrubbing(true);
+    setIsHoveringBar(true);
+    updateScrubStateByPercent(p);
+    seekByPercent(p);
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (disabled) return;
-    updateHoverState(e.clientX);
+
     if (isScrubbing) {
+      if (e.pointerType === 'touch') {
+        e.preventDefault();
+      }
+
       const p = getPercentFromClientX(e.clientX);
-      setScrubPercent(p);
-      onSeek(p * max);
+      updateScrubStateByPercent(p);
+      seekByPercent(p);
+      return;
+    }
+
+    if (e.pointerType === 'mouse') {
+      updateHoverState(e.clientX);
     }
   };
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handlePointerEnter = (e: React.PointerEvent<HTMLDivElement>) => {
     if (disabled) return;
-    e.preventDefault();
-    const p = getPercentFromClientX(e.clientX);
-    setIsScrubbing(true);
-    setScrubPercent(p);
-    onSeek(p * max);
+    if (e.pointerType === 'mouse') {
+      setIsHoveringBar(true);
+    }
   };
 
-  const handleMouseEnter = () => setIsHoveringBar(true);
+  const clearScrubState = (pointerId: number, currentTarget: HTMLDivElement) => {
+    try {
+      currentTarget.releasePointerCapture(pointerId);
+    } catch {
+      // no-op
+    }
 
-  const handleMouseLeave = () => {
+    setIsScrubbing(false);
+    setScrubPercent(null);
     setIsHoveringBar(false);
     setHoverX(null);
     setHoverSlideIndex(null);
+    lastSeekSecondsRef.current = null;
   };
 
-  // 전역 마우스 이벤트로 스크러빙 처리 (바 밖에서도 동작)
-  useEffect(() => {
-    if (!isScrubbing) return;
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     if (disabled) return;
+    clearScrubState(e.pointerId, e.currentTarget);
+  };
 
-    const onMove = (e: MouseEvent) => {
-      updateHoverState(e.clientX);
-      const p = getPercentFromClientX(e.clientX);
-      setScrubPercent(p);
-      onSeek(p * max);
-    };
+  const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (disabled) return;
+    clearScrubState(e.pointerId, e.currentTarget);
+  };
 
-    const onUp = () => {
-      setIsScrubbing(false);
-      setScrubPercent(null);
-    };
-
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
-  }, [disabled, isScrubbing, max, onSeek, getPercentFromClientX, updateHoverState]);
+  const handlePointerLeave = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isScrubbing) return;
+    if (e.pointerType === 'mouse') {
+      setIsHoveringBar(false);
+      setHoverX(null);
+      setHoverSlideIndex(null);
+    }
+  };
 
   return (
     <div
       ref={progressBarRef}
-      onClick={handleClick}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onMouseDown={handleMouseDown}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
       className={clsx(
         "group relative h-1 w-full rounded-full bg-[rgba(26,26,26,0.66)] transition-all duration-150 select-none before:content-[''] before:absolute before:-inset-y-3 before:inset-x-0",
         disabled
           ? 'cursor-not-allowed opacity-70'
-          : 'cursor-pointer hover:h-1.5 hover:ring-2 hover:ring-[#4F5BFF]/30',
+          : 'touch-none cursor-pointer hover:h-1.5 hover:ring-2 hover:ring-[#4F5BFF]/30',
       )}
     >
       {/* 프로그레스바 위 흰색 마커 (슬라이드 전환 시점) */}

@@ -14,6 +14,7 @@ import VideoPresentationCard from '@/components/presentation/VideoPresentationCa
 import VideoPresentationList from '@/components/presentation/VideoPresentationList';
 import { DeleteVideoModal, RecordingEmptySection } from '@/components/video';
 import { DEMO_SHARE_PATH, isDemoProject } from '@/constants/demoProject';
+import { useIsDesktop } from '@/hooks';
 import { usePresentationVideos } from '@/hooks/usePresentationVideos';
 import type { FilterMode, SortMode, ViewMode } from '@/types/home';
 import type { VideoPresentation } from '@/types/video';
@@ -25,6 +26,18 @@ const DEFAULT_VIDEO_EXTENSION = 'mp4';
 
 type DeleteTarget = { id: string; title: string } | null;
 type VideoListQueryData = { videos: VideoPresentation[]; total: number };
+
+function isVideoPendingStatus(status: VideoPresentation['status']): boolean {
+  return status === 'uploading' || status === 'processing';
+}
+
+function isSameIdSet(a: Set<string>, b: Set<string>): boolean {
+  if (a.size !== b.size) return false;
+  for (const value of a) {
+    if (!b.has(value)) return false;
+  }
+  return true;
+}
 
 function sanitizeFilename(fileName: string): string {
   const sanitized = fileName.replace(/[\\/:*?"<>|]+/g, '_').trim();
@@ -74,6 +87,7 @@ export default function VideoListPage() {
   const location = useLocation();
   const { projectId } = useParams<{ projectId: string }>();
   const isDemoProjectId = isDemoProject(projectId);
+  const isDesktop = useIsDesktop();
   const queryClient = useQueryClient();
 
   // UI 상태
@@ -155,27 +169,25 @@ export default function VideoListPage() {
         derivedStatus: isStuck ? 'failed' : v.status,
         isStuck,
         isFailed: v.status === 'failed' || isStuck,
-        isPending: (v.status === 'processing' || v.status === 'uploading') && !v.thumbnailUrl,
+        isPending: isVideoPendingStatus(v.status) && !v.thumbnailUrl,
       };
     });
   }, [rawVideos]);
 
   const hasResults = videos.length > 0;
 
-  // pendingIds 갱신: processing or thumbnail 없음인 videoId를 Set에 추가
+  // pendingIds 갱신: 상태가 processing/uploading인 videoId만 유지
   useEffect(() => {
-    if (videos.length === 0) return;
+    const nextPendingIds = new Set(
+      videos
+        .filter((video) => isVideoPendingStatus(video.status))
+        .map((video) => String(video.videoId)),
+    );
 
-    setPendingIds((prev) => {
-      const next = new Set(prev);
-      videos.forEach((v) => {
-        if (v.isPending) next.add(String(v.videoId));
-      });
-      return next;
-    });
+    setPendingIds((prev) => (isSameIdSet(prev, nextPendingIds) ? prev : nextPendingIds));
   }, [videos]);
 
-  // 폴링: pendingIds가 있을 때만 3초마다 refetch → 완료된 id 제거 + thumbVersion bump
+  // 폴링: pendingIds가 있을 때만 3초마다 refetch → ready/failed가 되면 pending 해제
   useEffect(() => {
     if (isDemoProjectId) return;
     if (pendingIds.size === 0) return;
@@ -193,7 +205,7 @@ export default function VideoListPage() {
 
       fresh.forEach((v) => {
         const id = String(v.videoId);
-        const isDone = Boolean(v.thumbnailUrl) || v.status === 'failed';
+        const isDone = !isVideoPendingStatus(v.status);
         if (pendingIds.has(id) && isDone) doneIds.push(id);
       });
 
@@ -428,7 +440,7 @@ export default function VideoListPage() {
   const renderSkeleton = () => {
     if (viewMode === 'card') {
       return (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: SKELETON_CARD_COUNT }).map((_, i) => (
             <PresentationCardSkeleton key={i} />
           ))}
@@ -494,7 +506,7 @@ export default function VideoListPage() {
       id="tabpanel-videos"
       aria-labelledby="tab-videos"
       className="relative h-full w-full overflow-y-auto bg-gray-100"
-      style={{ scrollbarGutter: 'stable' }}
+      style={{ scrollbarGutter: isDesktop ? 'stable' : 'auto' }}
     >
       <DeleteVideoModal
         isOpen={deleteModalOpen}
@@ -512,16 +524,16 @@ export default function VideoListPage() {
           <RecordingEmptySection onStart={handleStartRecording} />
         </div>
       ) : (
-        <main className="flex h-full flex-col px-18 py-8">
+        <main className="flex h-full flex-col px-4 py-6 md:px-18 md:py-8">
           <div className="mb-6">
             <h1 className="text-body-l-bold text-gray-800 mb-1">녹화된 영상</h1>
             <p className="text-body-s text-gray-600">발표 연습 영상을 선택해서 확인하세요</p>
           </div>
 
-          <div className="mb-4 flex justify-end">
+          <div className="mb-4 flex justify-center md:justify-end">
             <button
               onClick={handleStartRecording}
-              className="px-6 py-2.5 bg-main hover:bg-main-variant2 text-white rounded-lg font-semibold transition-all duration-200 active:scale-[0.98]"
+              className="w-full px-6 py-2.5 bg-main hover:bg-main-variant2 text-white rounded-lg font-semibold transition-all duration-200 active:scale-[0.98] md:w-auto"
             >
               영상 녹화하기
             </button>
@@ -544,7 +556,7 @@ export default function VideoListPage() {
             {showSkeletonUI ? (
               renderSkeleton()
             ) : !hasResults ? (
-              <div className="flex items-center justify-center p-40">
+              <div className="flex items-center justify-center p-8 md:p-40">
                 <p className="text-body-m text-gray-500">
                   {hasAppliedQuery
                     ? `'${appliedQuery}'에 대한 검색 결과를 찾지 못했어요.`
@@ -555,7 +567,7 @@ export default function VideoListPage() {
               <CardView
                 items={videos}
                 getKey={(item) => String(item.videoId)}
-                className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-3"
+                className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3"
                 renderCard={(item) => {
                   const id = String(item.videoId);
                   const isDeleting = deletingVideoIds.has(id);

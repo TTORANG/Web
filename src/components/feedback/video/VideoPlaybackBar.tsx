@@ -37,6 +37,7 @@ interface VideoPlaybackBarProps {
   layoutToggle?: {
     label: ReactNode;
     onToggle: () => void;
+    ariaLabel?: string;
   };
 }
 
@@ -196,21 +197,22 @@ export default function VideoPlaybackBar({
         </div>
 
         <div className="flex items-center gap-1">
-          {layoutToggle && (
-            <button
-              type="button"
-              onClick={layoutToggle.onToggle}
-              className="h-9 rounded-full bg-[rgba(18,18,20,0.78)] px-3 text-xs whitespace-nowrap text-[#ffffff] backdrop-blur-[6px] transition-colors duration-150 hover:bg-[rgba(18,18,20,0.88)]"
-            >
-              {layoutToggle.label}
-            </button>
-          )}
-
           <PlaybackSpeedControl
             playbackRate={playbackRate}
             onPlaybackRateChange={handlePlaybackRateChange}
             disabled={isControlDisabled}
           />
+
+          {layoutToggle && (
+            <button
+              type="button"
+              onClick={layoutToggle.onToggle}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-[rgba(18,18,20,0.78)] text-[#ffffff] backdrop-blur-[6px] transition-colors duration-150 hover:bg-[rgba(18,18,20,0.88)]"
+              aria-label={layoutToggle.ariaLabel ?? '웹캠/슬라이드 전환'}
+            >
+              {layoutToggle.label}
+            </button>
+          )}
 
           <button
             type="button"

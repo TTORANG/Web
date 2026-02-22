@@ -110,6 +110,7 @@ type SlideWebcamStageProps = {
   disablePip?: boolean;
   showLayoutToggle?: boolean;
   layoutToggleLabel?: ReactNode;
+  layoutToggleAriaLabel?: string;
   segmentHighlights?: SegmentHighlight[];
 };
 
@@ -123,17 +124,14 @@ export default function SlideWebcamStage({
   onVideoEvent,
   disablePip = false,
   showLayoutToggle = false,
-  layoutToggleLabel = (
-    <div className="text-caption flex items-center justify-center gap-1.5">
-      <span>웹캠·슬라이드</span>
-      <RefreshIcon className="w-3.5 h-3.5" />
-    </div>
-  ),
+  layoutToggleLabel = <RefreshIcon className="h-4 w-4" />,
+  layoutToggleAriaLabel = '웹캠/슬라이드 위치 전환',
 }: SlideWebcamStageProps) {
   const stageRootRef = useRef<HTMLDivElement | null>(null);
   const clickTimeoutRef = useRef<number | null>(null);
   const hlsInstanceRef = useRef<Hls | null>(null);
   const hlsLoadTokenRef = useRef(0);
+  const [isStageFullscreen, setIsStageFullscreen] = useState(false);
   const [videoLoadState, setVideoLoadState] = useState<VideoLoadState>(() =>
     webcamVideoUrl ? 'loading' : 'idle',
   );
@@ -311,6 +309,19 @@ export default function SlideWebcamStage({
     localStorage.setItem(LAYOUT_STORAGE_KEY, layout);
   }, [layout]);
 
+  useEffect(() => {
+    const syncFullscreenState = () => {
+      const stageRoot = stageRootRef.current;
+      setIsStageFullscreen(Boolean(stageRoot) && document.fullscreenElement === stageRoot);
+    };
+
+    syncFullscreenState();
+    document.addEventListener('fullscreenchange', syncFullscreenState);
+    return () => {
+      document.removeEventListener('fullscreenchange', syncFullscreenState);
+    };
+  }, []);
+
   // onTimeUpdate 콜백 호출
   useEffect(() => {
     onTimeUpdate?.(currentTime);
@@ -431,9 +442,31 @@ export default function SlideWebcamStage({
     setLayout((prev) => (prev === 'slide-main' ? 'webcam-main' : 'slide-main'));
   };
 
+  const fullscreenFrameStyle: React.CSSProperties | undefined = isStageFullscreen
+    ? {
+        width: 'min(100vw, calc(100vh * 16 / 9))',
+        height: 'min(100vh, calc(100vw * 9 / 16))',
+        maxWidth: '100vw',
+        maxHeight: '100vh',
+      }
+    : undefined;
+
   return (
-    <div ref={stageRootRef} className="flex-1 min-w-0 flex flex-col justify-center" data-stage-root>
-      <div className="relative w-full aspect-video bg-gray-900 rounded-xl">
+    <div
+      ref={stageRootRef}
+      className={clsx(
+        'flex-1 min-w-0 flex flex-col justify-center',
+        isStageFullscreen && 'h-full w-full items-center justify-center bg-black',
+      )}
+      data-stage-root
+    >
+      <div
+        className={clsx(
+          'relative w-full bg-gray-900',
+          isStageFullscreen ? 'overflow-hidden rounded-none' : 'aspect-video rounded-xl',
+        )}
+        style={fullscreenFrameStyle}
+      >
         {/* 슬라이드도 "메인/작은 박스" 위치가 토글되도록 class를 바꿈 */}
         {/* 슬라이드 + 웹캠 영역 (PiP 또는 단일) */}
         {/* 1. 슬라이드 영역 - 슬라이드가 있을 때만 렌더링 */}
@@ -523,7 +556,13 @@ export default function SlideWebcamStage({
             slides={slides}
             slideChangeTimes={slideChangeTimes}
             layoutToggle={
-              showLayoutToggle ? { label: layoutToggleLabel, onToggle: toggleLayout } : undefined
+              showLayoutToggle
+                ? {
+                    label: layoutToggleLabel,
+                    onToggle: toggleLayout,
+                    ariaLabel: layoutToggleAriaLabel,
+                  }
+                : undefined
             }
           />
         </div>

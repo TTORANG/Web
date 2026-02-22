@@ -1,10 +1,13 @@
-import { useEffect } from 'react';
+import { type TouchEventHandler, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { SlideList, SlideWorkspace } from '@/components/slide';
 import { getTabPath, setLastSlideId } from '@/constants/navigation';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { showToast } from '@/utils/toast';
+
+const MOBILE_SWIPE_THRESHOLD_PX = 48;
+const MOBILE_TAP_MAX_DISTANCE_PX = 12;
 
 export default function SlidePage() {
   const { projectId, slideId: routeSlideId } = useParams<{ projectId: string; slideId?: string }>();
@@ -64,6 +67,54 @@ export default function SlidePage() {
   const goNext = () => {
     if (!slides || !hasNext || !projectId) return;
     navigate(getTabPath(projectId, 'slide', slides[currentIndex + 1].slideId), { replace: true });
+  };
+
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const handleViewerTouchStart: TouchEventHandler<HTMLElement> = (event) => {
+    if (event.touches.length !== 1) {
+      touchStartRef.current = null;
+      return;
+    }
+    const touch = event.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleViewerTouchEnd: TouchEventHandler<HTMLElement> = (event) => {
+    const touchStart = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!touchStart || event.changedTouches.length !== 1) return;
+
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - touchStart.x;
+    const deltaY = touch.clientY - touchStart.y;
+    const absDeltaX = Math.abs(deltaX);
+    const absDeltaY = Math.abs(deltaY);
+
+    if (absDeltaX >= MOBILE_SWIPE_THRESHOLD_PX && absDeltaX > absDeltaY) {
+      if (deltaX > 0) {
+        goPrev();
+      } else {
+        goNext();
+      }
+      return;
+    }
+
+    if (absDeltaX > MOBILE_TAP_MAX_DISTANCE_PX || absDeltaY > MOBILE_TAP_MAX_DISTANCE_PX) {
+      return;
+    }
+
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const isLeftHalf = touch.clientX - bounds.left < bounds.width / 2;
+    if (isLeftHalf) {
+      goPrev();
+    } else {
+      goNext();
+    }
+  };
+
+  const handleViewerTouchCancel: TouchEventHandler<HTMLElement> = () => {
+    touchStartRef.current = null;
   };
 
   return (
@@ -128,7 +179,13 @@ export default function SlidePage() {
         </div>
 
         <div className="min-h-0 flex-1 overflow-hidden">
-          <SlideWorkspace slide={currentSlide} isLoading={isLoading} />
+          <SlideWorkspace
+            slide={currentSlide}
+            isLoading={isLoading}
+            onViewerTouchStart={handleViewerTouchStart}
+            onViewerTouchEnd={handleViewerTouchEnd}
+            onViewerTouchCancel={handleViewerTouchCancel}
+          />
         </div>
       </div>
     </div>

@@ -31,15 +31,17 @@ const sampleComments = [
 
 export function RecentCommentsSection({
   hasVideo,
+  isVideoSource = true,
   recentCommentsData,
   onSeekCommentTime,
 }: {
   hasVideo: boolean;
+  isVideoSource?: boolean;
   recentCommentsData?: ReadRecentCommentListResponseDto;
   onSeekCommentTime?: (seconds: number) => void;
 }) {
   const hasRecentComments = (recentCommentsData?.comments?.length ?? 0) > 0;
-  const shouldShowOverlay = !hasVideo || !hasRecentComments;
+  const shouldShowOverlay = !hasVideo || !isVideoSource || !hasRecentComments;
 
   // 1. 영상이 없을 때 보여줄 샘플 댓글 렌더링 함수
   const renderSampleComments = () => (
@@ -125,6 +127,12 @@ export function RecentCommentsSection({
                     <li>• 영상 잔존율 그래프</li>
                     <li>• 타임라인 기반 댓글 피드백</li>
                   </ul>
+                </>
+              ) : !isVideoSource ? (
+                <>
+                  <p className="text-body-l-bold" style={{ color: 'var(--color-black)' }}>
+                    분석 대상을 영상으로 선택하면 최근 댓글 피드백을 볼 수 있어요.
+                  </p>
                 </>
               ) : (
                 <>

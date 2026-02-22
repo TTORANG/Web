@@ -12,9 +12,16 @@ interface Props {
   data: ChartDataPoint[];
   isVideo: boolean;
   onVideoTimeClick?: (seconds: number) => void;
+  onSlidePointClick?: (slideIndex: number) => void;
 }
 
-export function RetentionChartCard({ title, data, isVideo, onVideoTimeClick }: Props) {
+export function RetentionChartCard({
+  title,
+  data,
+  isVideo,
+  onVideoTimeClick,
+  onSlidePointClick,
+}: Props) {
   const needsRotation = data.length > 10;
 
   return (
@@ -35,6 +42,7 @@ export function RetentionChartCard({ title, data, isVideo, onVideoTimeClick }: P
               isVideo={isVideo}
               needsRotation={needsRotation}
               onVideoTimeClick={onVideoTimeClick}
+              onSlidePointClick={onSlidePointClick}
             />
           </Suspense>
         ) : (

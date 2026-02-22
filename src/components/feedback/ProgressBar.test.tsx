@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import ProgressBar from './ProgressBar';
@@ -41,5 +41,59 @@ describe('Feedback ProgressBar', () => {
       left: '1px',
       transform: 'translate(0%, -50%)',
     });
+  });
+
+  it('supports touch scrubbing and updates seek continuously', () => {
+    const onSeek = vi.fn();
+    const { container } = render(
+      <ProgressBar currentTime={0} duration={100} onSeek={onSeek} disabled={false} />,
+    );
+    const bar = container.firstElementChild as HTMLDivElement;
+    expect(bar).toBeTruthy();
+
+    bar.getBoundingClientRect = () =>
+      ({
+        x: 0,
+        y: 0,
+        top: 0,
+        right: 200,
+        bottom: 12,
+        left: 0,
+        width: 200,
+        height: 12,
+        toJSON: () => ({}),
+      }) as DOMRect;
+
+    fireEvent.pointerDown(bar, { pointerId: 1, pointerType: 'touch', clientX: 20 });
+    fireEvent.pointerMove(bar, { pointerId: 1, pointerType: 'touch', clientX: 120 });
+    fireEvent.pointerUp(bar, { pointerId: 1, pointerType: 'touch', clientX: 120 });
+
+    expect(onSeek).toHaveBeenCalledWith(10);
+    expect(onSeek).toHaveBeenCalledWith(60);
+  });
+
+  it('shows time preview while touch scrubbing', () => {
+    const { container } = render(
+      <ProgressBar currentTime={0} duration={100} onSeek={vi.fn()} disabled={false} />,
+    );
+    const bar = container.firstElementChild as HTMLDivElement;
+    expect(bar).toBeTruthy();
+
+    bar.getBoundingClientRect = () =>
+      ({
+        x: 0,
+        y: 0,
+        top: 0,
+        right: 200,
+        bottom: 12,
+        left: 0,
+        width: 200,
+        height: 12,
+        toJSON: () => ({}),
+      }) as DOMRect;
+
+    fireEvent.pointerDown(bar, { pointerId: 2, pointerType: 'touch', clientX: 20 });
+
+    expect(container).toHaveTextContent('0:10');
   });
 });

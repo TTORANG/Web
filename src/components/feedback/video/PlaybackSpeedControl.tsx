@@ -67,7 +67,7 @@ export default function PlaybackSpeedControl({
         <button
           type="button"
           className={clsx(
-            'h-9 min-w-14 rounded-full bg-[rgba(18,18,20,0.78)] px-3 text-caption font-semi-bold tabular-nums text-[#ffffff] transition-colors duration-150 hover:bg-[rgba(18,18,20,0.88)]',
+            'inline-flex h-8 min-w-14 items-center justify-center rounded-full bg-[rgba(18,18,20,0.78)] px-3 text-caption font-semi-bold tabular-nums text-[#ffffff] transition-colors duration-150 hover:bg-[rgba(18,18,20,0.88)]',
             isOpen && 'bg-[rgba(18,18,20,0.88)]',
             disabled && 'cursor-not-allowed opacity-60',
           )}

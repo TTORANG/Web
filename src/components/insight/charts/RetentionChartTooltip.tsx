@@ -10,27 +10,36 @@ export function RetentionChartTooltip({
   label,
   hasVideo,
   onVideoTimeClick,
+  onSlidePointClick,
 }: TooltipContentProps<ValueType, NameType> & {
   hasVideo: boolean;
   onVideoTimeClick?: (seconds: number) => void;
+  onSlidePointClick?: (slideIndex: number) => void;
 }) {
   if (active && payload && payload.length) {
     const data = payload[0].payload as ChartDataPoint;
     const labelText = String(label ?? data.tooltipTitle);
-    const canSeek =
+    const canSeekVideo =
       hasVideo &&
       typeof onVideoTimeClick === 'function' &&
       typeof data.seekSeconds === 'number' &&
       Number.isFinite(data.seekSeconds);
+    const canSeekSlide =
+      !hasVideo &&
+      typeof onSlidePointClick === 'function' &&
+      typeof data.slideIndex === 'number' &&
+      Number.isInteger(data.slideIndex) &&
+      data.slideIndex >= 0;
+    const canSeek = canSeekVideo || canSeekSlide;
 
     const content = (
       <>
-        {hasVideo && (
+        {(hasVideo || data.thumbUrl) && (
           <div className="mb-2 h-24 w-42 overflow-hidden rounded bg-gray-100">
             {data.thumbUrl ? (
               <img
                 src={data.thumbUrl}
-                alt={`${labelText} 시점 썸네일`}
+                alt={hasVideo ? `${labelText} 시점 썸네일` : `${data.tooltipTitle} 썸네일`}
                 className="h-full w-full object-cover"
               />
             ) : (
@@ -54,16 +63,27 @@ export function RetentionChartTooltip({
 
     if (canSeek) {
       const seekSeconds = data.seekSeconds;
+      const slideIndex = data.slideIndex;
       return (
         <button
           type="button"
           className="rounded-lg border border-gray-100 bg-white p-3 text-left shadow-lg focus-visible:outline-2 focus-visible:outline-main"
           onClick={() => {
-            if (typeof seekSeconds === 'number') {
+            if (canSeekVideo && typeof seekSeconds === 'number') {
               onVideoTimeClick(seekSeconds);
+              return;
+            }
+
+            if (
+              canSeekSlide &&
+              typeof slideIndex === 'number' &&
+              Number.isInteger(slideIndex) &&
+              slideIndex >= 0
+            ) {
+              onSlidePointClick(slideIndex);
             }
           }}
-          aria-label={`영상 ${labelText}로 이동`}
+          aria-label={hasVideo ? `영상 ${labelText}로 이동` : `${data.tooltipTitle}로 이동`}
         >
           {content}
         </button>

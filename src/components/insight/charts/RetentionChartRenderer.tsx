@@ -17,6 +17,7 @@ interface Props {
   isVideo: boolean;
   needsRotation: boolean;
   onVideoTimeClick?: (seconds: number) => void;
+  onSlidePointClick?: (slideIndex: number) => void;
 }
 
 export default function RetentionChartRenderer({
@@ -24,20 +25,36 @@ export default function RetentionChartRenderer({
   isVideo,
   needsRotation,
   onVideoTimeClick,
+  onSlidePointClick,
 }: Props) {
-  const canSeekOnChart = isVideo && typeof onVideoTimeClick === 'function';
+  const canSeekVideoOnChart = isVideo && typeof onVideoTimeClick === 'function';
+  const canSeekSlideOnChart = !isVideo && typeof onSlidePointClick === 'function';
+  const canSeekOnChart = canSeekVideoOnChart || canSeekSlideOnChart;
 
   const handleSeekByActiveIndex = (activeIndex: number | TooltipIndex | undefined) => {
-    if (!onVideoTimeClick) return;
-
     const resolvedIndex = typeof activeIndex === 'number' ? activeIndex : Number(activeIndex);
     if (!Number.isInteger(resolvedIndex)) return;
     if (resolvedIndex < 0 || resolvedIndex >= data.length) return;
 
-    const seekSeconds = data[resolvedIndex]?.seekSeconds;
-    if (typeof seekSeconds !== 'number' || !Number.isFinite(seekSeconds)) return;
+    const point = data[resolvedIndex];
+    if (!point) return;
 
-    onVideoTimeClick(seekSeconds);
+    if (canSeekVideoOnChart) {
+      const seekSeconds = point.seekSeconds;
+      if (typeof seekSeconds !== 'number' || !Number.isFinite(seekSeconds)) return;
+
+      onVideoTimeClick?.(seekSeconds);
+      return;
+    }
+
+    if (canSeekSlideOnChart) {
+      const slideIndex = point.slideIndex;
+      if (typeof slideIndex !== 'number' || !Number.isInteger(slideIndex) || slideIndex < 0) {
+        return;
+      }
+
+      onSlidePointClick?.(slideIndex);
+    }
   };
 
   return (
@@ -92,6 +109,7 @@ export default function RetentionChartRenderer({
               {...props}
               hasVideo={isVideo}
               onVideoTimeClick={onVideoTimeClick}
+              onSlidePointClick={onSlidePointClick}
             />
           )}
           wrapperStyle={{ pointerEvents: 'auto' }}

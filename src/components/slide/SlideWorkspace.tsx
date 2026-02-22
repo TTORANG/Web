@@ -7,7 +7,7 @@
  * - ScriptBox 접힘 상태를 관리하고 SlideViewer에 전달
  * - Zustand store로 슬라이드 상태 관리
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { type TouchEventHandler, useEffect, useMemo, useRef, useState } from 'react';
 
 import { isDemoProject } from '@/constants/demoProject';
 import { SLIDE_MAX_WIDTH } from '@/constants/layout';
@@ -22,9 +22,18 @@ import { ScriptBox } from './script';
 interface SlideWorkspaceProps {
   slide?: SlideListItem;
   isLoading?: boolean;
+  onViewerTouchStart?: TouchEventHandler<HTMLElement>;
+  onViewerTouchEnd?: TouchEventHandler<HTMLElement>;
+  onViewerTouchCancel?: TouchEventHandler<HTMLElement>;
 }
 
-export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps) {
+export default function SlideWorkspace({
+  slide,
+  isLoading,
+  onViewerTouchStart,
+  onViewerTouchEnd,
+  onViewerTouchCancel,
+}: SlideWorkspaceProps) {
   const [isScriptCollapsed, setIsScriptCollapsed] = useState(false);
   const { initSlide, updateScript, updateSlide } = useSlideActions();
   const slideId = useSlideId();
@@ -112,7 +121,13 @@ export default function SlideWorkspace({ slide, isLoading }: SlideWorkspaceProps
 
   return (
     <div className="relative h-full min-h-0 flex flex-col pb-[clamp(12rem,30vh,20rem)] md:pb-0">
-      <SlideViewer isLoading={isLoading} isScriptCollapsed={isScriptCollapsed} />
+      <SlideViewer
+        isLoading={isLoading}
+        isScriptCollapsed={isScriptCollapsed}
+        onTouchStart={onViewerTouchStart}
+        onTouchEnd={onViewerTouchEnd}
+        onTouchCancel={onViewerTouchCancel}
+      />
 
       <div className="fixed inset-x-0 bottom-0 z-30 shrink-0 px-4 pb-[env(safe-area-inset-bottom)] md:static md:px-0 md:pb-0">
         <div className="mx-auto w-full" style={{ maxWidth: SLIDE_MAX_WIDTH }}>

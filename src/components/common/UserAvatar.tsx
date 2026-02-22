@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import clsx from 'clsx';
 
 interface UserAvatarProps {
@@ -26,21 +28,27 @@ export function UserAvatar({
   className,
   iconClassName,
 }: UserAvatarProps) {
-  if (isSafeAvatarSrc(src)) {
+  const safeSrc = isSafeAvatarSrc(src) ? src : null;
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+
+  if (safeSrc && safeSrc !== failedSrc) {
     return (
       <img
-        src={src}
+        src={safeSrc}
         alt={alt}
         width={size}
         height={size}
         className={clsx('rounded-full object-cover', className)}
         style={{ backgroundColor: 'var(--color-gray-200)' }}
+        onError={() => setFailedSrc(safeSrc)}
       />
     );
   }
 
   return (
     <div
+      role="img"
+      aria-label={alt}
       className={clsx('flex items-center justify-center rounded-full', className)}
       style={{ width: size, height: size, backgroundColor: 'var(--color-gray-200)' }}
     >

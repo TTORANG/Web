@@ -1,27 +1,38 @@
 import { REACTION_CONFIG, createDefaultReactions } from '@/constants/reaction';
 import { useSlideReactionsTotal } from '@/hooks/useSlideReactions';
+import type { ReactionType } from '@/types/script';
 import type { Reaction } from '@/types/script';
 
 interface FeedbackDistributionSectionProps {
   projectId: string;
+  title?: string;
+  reactionCounts?: Record<ReactionType, number>;
+  totalCount?: number;
 }
 
 export default function FeedbackDistributionSection({
   projectId,
+  title,
+  reactionCounts,
+  totalCount,
 }: FeedbackDistributionSectionProps) {
   const { data } = useSlideReactionsTotal(projectId);
   const baseReactions = createDefaultReactions();
+  const resolvedCounts = reactionCounts ?? data?.totalReactions;
   const reactions: Reaction[] = baseReactions.map((reaction) => ({
     ...reaction,
-    count: data?.totalReactions[reaction.type] ?? 0,
+    count: resolvedCounts?.[reaction.type] ?? 0,
   }));
-  const total = reactions.reduce((sum, reaction) => sum + reaction.count, 0);
+  const total =
+    typeof totalCount === 'number'
+      ? totalCount
+      : reactions.reduce((sum, reaction) => sum + reaction.count, 0);
   const max = reactions.reduce((current, reaction) => Math.max(current, reaction.count), 1);
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-6 rounded-lg border border-gray-200 bg-white px-5 py-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-body-l-bold text-gray-800">슬라이드 이모지 피드백 분포</h3>
+        <h3 className="text-body-l-bold text-gray-800">{title ?? '슬라이드 이모지 피드백 분포'}</h3>
         <span className="text-body-l-bold text-main-variant2">총 {total}개</span>
       </div>
       <div className="flex flex-col gap-6">

@@ -65,7 +65,7 @@ export default function FeedbackMobileLayout({
       <div className="flex-1 min-w-0 min-h-0 flex flex-col bg-gray-100 overflow-x-hidden">
         <div className="px-5 shrink-0 min-w-0">
           {navigationSlot ? <div className="py-4">{navigationSlot}</div> : <div className="h-4" />}
-          <div className="relative z-10 py-2 min-w-0">{reactionSlot}</div>
+          <div className="relative z-10 min-w-0">{reactionSlot}</div>
         </div>
 
         {/* 탭 메뉴 */}
