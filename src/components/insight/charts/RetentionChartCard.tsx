@@ -2,6 +2,7 @@
 import { Suspense, lazy } from 'react';
 
 import { Spinner } from '@/components/common';
+
 import type { ChartDataPoint } from '../types';
 
 const RetentionChartRenderer = lazy(() => import('./RetentionChartRenderer'));
@@ -10,9 +11,10 @@ interface Props {
   title: string;
   data: ChartDataPoint[];
   isVideo: boolean;
+  onVideoTimeClick?: (seconds: number) => void;
 }
 
-export function RetentionChartCard({ title, data, isVideo }: Props) {
+export function RetentionChartCard({ title, data, isVideo, onVideoTimeClick }: Props) {
   const needsRotation = data.length > 10;
 
   return (
@@ -28,7 +30,12 @@ export function RetentionChartCard({ title, data, isVideo }: Props) {
               </div>
             }
           >
-            <RetentionChartRenderer data={data} isVideo={isVideo} needsRotation={needsRotation} />
+            <RetentionChartRenderer
+              data={data}
+              isVideo={isVideo}
+              needsRotation={needsRotation}
+              onVideoTimeClick={onVideoTimeClick}
+            />
           </Suspense>
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-gray-600">

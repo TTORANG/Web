@@ -12,6 +12,8 @@ export interface ChartDataPoint {
   tooltipTitle: string;
   sessionCount: number;
   originalTime?: number;
+  seekSeconds?: number;
+  thumbUrl?: string;
 }
 
 export type InsightTopSlide = {

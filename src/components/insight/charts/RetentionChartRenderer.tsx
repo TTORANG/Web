@@ -7,6 +7,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import type { TooltipIndex } from 'recharts';
 
 import type { ChartDataPoint } from '../types';
 import { RetentionChartTooltip } from './RetentionChartTooltip';
@@ -15,14 +16,48 @@ interface Props {
   data: ChartDataPoint[];
   isVideo: boolean;
   needsRotation: boolean;
+  onVideoTimeClick?: (seconds: number) => void;
 }
 
-export default function RetentionChartRenderer({ data, isVideo, needsRotation }: Props) {
+export default function RetentionChartRenderer({
+  data,
+  isVideo,
+  needsRotation,
+  onVideoTimeClick,
+}: Props) {
+  const canSeekOnChart = isVideo && typeof onVideoTimeClick === 'function';
+
+  const handleSeekByActiveIndex = (activeIndex: number | TooltipIndex | undefined) => {
+    if (!onVideoTimeClick) return;
+
+    const resolvedIndex = typeof activeIndex === 'number' ? activeIndex : Number(activeIndex);
+    if (!Number.isInteger(resolvedIndex)) return;
+    if (resolvedIndex < 0 || resolvedIndex >= data.length) return;
+
+    const seekSeconds = data[resolvedIndex]?.seekSeconds;
+    if (typeof seekSeconds !== 'number' || !Number.isFinite(seekSeconds)) return;
+
+    onVideoTimeClick(seekSeconds);
+  };
+
   return (
     <ResponsiveContainer width="100%" height={300} minWidth={0}>
-      <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: needsRotation ? 40 : 0 }}>
+      <AreaChart
+        data={data}
+        margin={{ top: 10, right: 10, left: -20, bottom: needsRotation ? 40 : 0 }}
+        style={canSeekOnChart ? { cursor: 'pointer' } : undefined}
+        onClick={
+          canSeekOnChart ? (state) => handleSeekByActiveIndex(state.activeTooltipIndex) : undefined
+        }
+      >
         <defs>
-          <linearGradient id={`colorRate-${isVideo ? 'video' : 'slide'}`} x1="0" y1="0" x2="0" y2="1">
+          <linearGradient
+            id={`colorRate-${isVideo ? 'video' : 'slide'}`}
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="1"
+          >
             <stop offset="5%" stopColor="var(--color-main)" stopOpacity={0.2} />
             <stop offset="95%" stopColor="var(--color-main)" stopOpacity={0} />
           </linearGradient>
@@ -52,7 +87,14 @@ export default function RetentionChartRenderer({ data, isVideo, needsRotation }:
         />
 
         <Tooltip
-          content={(props) => <RetentionChartTooltip {...props} hasVideo={isVideo} />}
+          content={(props) => (
+            <RetentionChartTooltip
+              {...props}
+              hasVideo={isVideo}
+              onVideoTimeClick={onVideoTimeClick}
+            />
+          )}
+          wrapperStyle={{ pointerEvents: 'auto' }}
           cursor={{ stroke: 'var(--color-error)', strokeDasharray: '4 4', strokeWidth: 1 }}
         />
 
