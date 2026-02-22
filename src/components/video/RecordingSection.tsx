@@ -7,6 +7,7 @@ import { usePresentation } from '@/hooks/queries/usePresentations';
 import { useProjectScripts } from '@/hooks/queries/useScript';
 import { useSlides } from '@/hooks/queries/useSlides';
 import { useRecorder } from '@/hooks/useRecorder';
+import { getSlideTitle } from '@/utils/slideTitle';
 
 import StopButton from './StopButton';
 
@@ -59,10 +60,11 @@ export const RecordingSection = ({
     );
 
     return (
-      slidesData?.map((slide) => ({
+      slidesData?.map((slide, index) => ({
         id: slide.slideId,
         url: slide.imageUrl,
         script: projectScriptMap.get(String(slide.slideId)) ?? slide.script ?? '',
+        title: getSlideTitle(slide.title, slide.slideNum ?? index + 1),
       })) ?? []
     );
   }, [projectScripts, slidesData]);
@@ -376,7 +378,7 @@ export const RecordingSection = ({
                               : 'text-gray-600'
                         }`}
                       >
-                        슬라이드 {idx}
+                        {slidesList[idx - 1]?.title}
                       </span>
                     </div>
                     {(isVisited || isCurrent) && (

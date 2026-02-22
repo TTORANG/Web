@@ -1,6 +1,7 @@
 import { createRef } from 'react';
 
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { ScriptBulkEditPreviewItem } from '@/hooks/useScriptBulkEdit';
@@ -15,6 +16,7 @@ const baseProps = {
   fileInputRef: createRef<HTMLInputElement>(),
   onClose: vi.fn(),
   onSave: vi.fn(),
+  onDownloadTxt: vi.fn(),
   onOpenFilePicker: vi.fn(),
   onFileChange: vi.fn(),
   onScriptChange: vi.fn(),
@@ -71,5 +73,23 @@ describe('ScriptBulkEditModal', () => {
 
     expect(screen.getByText('도입')).toBeInTheDocument();
     expect(screen.getByLabelText('도입 대본')).toBeInTheDocument();
+  });
+
+  it('calls onDownloadTxt when clicking 파일로 저장하기', async () => {
+    const user = userEvent.setup();
+    const onDownloadTxt = vi.fn();
+    const previewItems = [createPreviewItem()];
+
+    render(
+      <ScriptBulkEditModal
+        {...baseProps}
+        previewItems={previewItems}
+        onDownloadTxt={onDownloadTxt}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: '파일로 저장하기' }));
+
+    expect(onDownloadTxt).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { ChangeEvent, RefObject } from 'react';
 
+import DownloadIcon from '@/assets/icons/icon-download.svg?react';
 import UploadIcon from '@/assets/icons/icon-upload.svg?react';
 import { Modal, SlideImage } from '@/components/common';
 import type { ScriptBulkEditPreviewItem } from '@/hooks/useScriptBulkEdit';
@@ -17,6 +18,7 @@ interface ScriptBulkEditModalProps {
   fileInputRef: RefObject<HTMLInputElement | null>;
   onClose: () => void;
   onSave: () => void;
+  onDownloadTxt: () => void;
   onOpenFilePicker: () => void;
   onFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onScriptChange: (index: number, value: string) => void;
@@ -31,6 +33,7 @@ function ScriptBulkEditModal({
   fileInputRef,
   onClose,
   onSave,
+  onDownloadTxt,
   onOpenFilePicker,
   onFileChange,
   onScriptChange,
@@ -82,16 +85,28 @@ function ScriptBulkEditModal({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={onOpenFilePicker}
-          disabled={isSaving || isPreparingModal}
-          aria-label="파일에서 대본 가져오기"
-          className="inline-flex h-8 shrink-0 items-center gap-1 rounded-md border border-gray-200 bg-white px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <UploadIcon className="h-4 w-4" aria-hidden="true" />
-          파일에서 가져오기
-        </button>
+        <div className="flex flex-col shrink-0 gap-2">
+          <button
+            type="button"
+            onClick={onDownloadTxt}
+            disabled={isSaving || isPreparingModal || previewItems.length < 1}
+            aria-label="파일로 저장하기"
+            className="inline-flex h-8 shrink-0 justify-center items-center gap-1 rounded-md border border-gray-200 bg-white px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <DownloadIcon className="h-4 w-4" aria-hidden="true" />
+            파일로 저장하기
+          </button>
+          <button
+            type="button"
+            onClick={onOpenFilePicker}
+            disabled={isSaving || isPreparingModal}
+            aria-label="파일에서 대본 가져오기"
+            className="inline-flex h-8 shrink-0 justify-center items-center gap-1 rounded-md border border-gray-200 bg-white px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <UploadIcon className="h-4 w-4" aria-hidden="true" />
+            파일에서 가져오기
+          </button>
+        </div>
       </div>
 
       <div className="max-h-[58vh] w-full space-y-2 overflow-y-auto">

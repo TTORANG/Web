@@ -12,6 +12,7 @@ import type { SlideListItem } from '@/types/slide';
 import { showToast } from '@/utils/toast';
 
 const PROJECT_SCRIPTS_STALE_TIME_MS = 1000 * 60 * 10;
+const SCRIPT_EXPORT_FILENAME = 'scripts-bulk-edit.txt';
 
 const normalizeTxt = (text: string) => text.replace(/^\uFEFF/, '').replace(/\r\n|\r/g, '\n');
 
@@ -30,6 +31,9 @@ export interface ScriptBulkEditPreviewItem {
 const buildScriptMap = (scripts: ProjectScriptItemDto[] | undefined) => {
   return new Map((scripts ?? []).map((item) => [item.slideId, item.scriptText]));
 };
+
+const buildTxtFromPreviewItems = (items: ScriptBulkEditPreviewItem[]) =>
+  items.map((item) => normalizeTxt(item.script)).join('\n\n');
 
 export function useScriptBulkEdit() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -200,6 +204,29 @@ export function useScriptBulkEdit() {
     }
   };
 
+  const handleDownloadTxt = () => {
+    if (previewItems.length < 1) {
+      showToast.error('내보낼 대본이 없습니다.');
+      return;
+    }
+
+    try {
+      const content = buildTxtFromPreviewItems(previewItems);
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = SCRIPT_EXPORT_FILENAME;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectUrl);
+      showToast.success('TXT 파일로 저장했습니다.');
+    } catch {
+      showToast.error('파일 저장에 실패했습니다.', '다시 시도해주세요.');
+    }
+  };
+
   return {
     projectId,
     fileInputRef,
@@ -214,5 +241,6 @@ export function useScriptBulkEdit() {
     handleFileChange,
     handlePreviewScriptChange,
     handleSaveBulkEdit,
+    handleDownloadTxt,
   };
 }

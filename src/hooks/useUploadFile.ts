@@ -21,6 +21,15 @@ const initialProgress: UploadProgress = {
   currentStep: 'preparing',
 };
 
+const stripFileExtension = (fileName: string) => {
+  const normalized = fileName.trim();
+  if (!normalized) return '';
+
+  const lastDotIndex = normalized.lastIndexOf('.');
+  if (lastDotIndex <= 0) return normalized;
+  return normalized.slice(0, lastDotIndex);
+};
+
 /**
  * 파일 업로드 훅
  *
@@ -63,6 +72,9 @@ export function useUploadFile() {
       setProgress({ ...initialProgress, currentStep: 'preparing' });
 
       try {
+        const normalizedTitle =
+          stripFileExtension(data.title) || stripFileExtension(data.file.name) || data.file.name;
+
         /**
          * 익명 세션 발급
          * - accessToken이 없거나
@@ -87,7 +99,7 @@ export function useUploadFile() {
             contentType: data.file.type,
             size: data.file.size,
             originalFilename: data.file.name,
-            title: data.title,
+            title: normalizedTitle,
           },
           { signal: controller.signal },
         );

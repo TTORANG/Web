@@ -86,7 +86,7 @@ describe('useUploadFile', () => {
         contentType: 'application/pdf',
         size: file.size,
         originalFilename: 'deck.pdf',
-        title: 'deck.pdf',
+        title: 'deck',
       },
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );

@@ -20,6 +20,7 @@ function ScriptBulkEditControl() {
     handleFileChange,
     handlePreviewScriptChange,
     handleSaveBulkEdit,
+    handleDownloadTxt,
   } = useScriptBulkEdit();
 
   return (
@@ -49,6 +50,7 @@ function ScriptBulkEditControl() {
         fileInputRef={fileInputRef}
         onClose={handleCloseModal}
         onSave={handleSaveBulkEdit}
+        onDownloadTxt={handleDownloadTxt}
         onOpenFilePicker={handleOpenFilePicker}
         onFileChange={handleFileChange}
         onScriptChange={handlePreviewScriptChange}
