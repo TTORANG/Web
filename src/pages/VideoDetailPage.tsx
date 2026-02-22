@@ -33,6 +33,8 @@ export default function VideoDetailPage() {
 
   const [videoData, setVideoData] = useState<ReadVideoDetailResponseDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [commentDraft, setCommentDraft] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -144,68 +146,99 @@ export default function VideoDetailPage() {
   });
 
   const loadData = useCallback(
-    async (isInitial = false) => {
-      if (!videoId) return;
+    async (isInitial = false): Promise<boolean> => {
+      if (!videoId) return false;
+
       try {
-        const [detailResponse, commentsResponse] = await Promise.all([
+        const [detailResult, commentsResult] = await Promise.allSettled([
           videosApi.getVideoDetail(videoId),
           videosApi.getVideoCommentsAll(videoId),
         ]);
 
-        if (detailResponse.data.resultType === 'SUCCESS') {
-          const data = detailResponse.data.success!;
-          setVideoData(data);
-          const flatComments =
-            commentsResponse.data.resultType === 'SUCCESS'
-              ? transformComments(commentsResponse.data.success.comments ?? [])
-              : [];
-          const feedbacks = buildFeedbacks(flatComments);
+        if (detailResult.status !== 'fulfilled') return false;
+        if (detailResult.value.data.resultType !== 'SUCCESS') return false;
 
-          if (isInitial) {
-            initVideo({
-              videoId: data.video.videoId,
-              title: data.video.title,
-              videoUrl: data.video.hlsMasterUrl,
-              duration: data.video.durationSeconds,
-              feedbacks,
-              comments: [],
-              reactionEvents: [],
-            });
-          } else {
-            useVideoFeedbackStore.setState((state) => ({
-              ...state,
-              video: state.video
-                ? {
-                    ...state.video,
-                    feedbacks,
-                  }
-                : null,
-            }));
-          }
+        const data = detailResult.value.data.success!;
+        const flatComments =
+          commentsResult.status === 'fulfilled' &&
+          commentsResult.value.data.resultType === 'SUCCESS'
+            ? transformComments(commentsResult.value.data.success.comments ?? [])
+            : [];
+        const feedbacks = buildFeedbacks(flatComments);
+
+        setVideoData(data);
+
+        if (isInitial) {
+          initVideo({
+            videoId: data.video.videoId,
+            title: data.video.title,
+            videoUrl: data.video.hlsMasterUrl,
+            duration: data.video.durationSeconds,
+            feedbacks,
+            comments: [],
+            reactionEvents: [],
+          });
+        } else {
+          useVideoFeedbackStore.setState((state) => ({
+            ...state,
+            video: state.video
+              ? {
+                  ...state.video,
+                  feedbacks,
+                }
+              : null,
+          }));
         }
-      } catch (err) {
-        void err;
+
+        return true;
+      } catch {
+        return false;
       }
     },
     [videoId, initVideo, transformComments, buildFeedbacks],
   );
 
   useEffect(() => {
+    let cancelled = false;
+
     const init = async () => {
       setIsLoading(true);
-      await loadData(true);
+      setLoadError(null);
+
+      const loaded = await loadData(true);
+      if (cancelled) return;
+
+      if (!loaded) {
+        setLoadError('영상 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+        setIsLoading(false);
+        return;
+      }
+
       if (videoId) {
-        const slidesRes = await videosApi.getVideoSlides(videoId);
-        if (slidesRes.data.resultType === 'SUCCESS') {
-          const slides = slidesRes.data.success.slides;
-          setSlideIdOrder(slides.map((s) => s.slideId));
-          setSlideChangeTimes(slides.map((s) => s.timestampMs / 1000));
+        try {
+          const slidesRes = await videosApi.getVideoSlides(videoId);
+          if (cancelled) return;
+
+          if (slidesRes.data.resultType === 'SUCCESS') {
+            const slides = slidesRes.data.success.slides;
+            setSlideIdOrder(slides.map((s) => s.slideId));
+            setSlideChangeTimes(slides.map((s) => s.timestampMs / 1000));
+          }
+        } catch {
+          // 슬라이드 로딩 실패는 비디오 재생을 막지 않는다.
         }
       }
-      setIsLoading(false);
+
+      if (!cancelled) {
+        setIsLoading(false);
+      }
     };
-    init();
-  }, [videoId, loadData]);
+    void init();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [videoId, loadData, reloadToken]);
 
   useEffect(() => {
     initialSeekRequestedRef.current = false;
@@ -327,7 +360,20 @@ export default function VideoDetailPage() {
     setProjectSlides(orderedSlides);
   }, [projectScripts, slideIdOrder, slidesData]);
 
-  if (isLoading) return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  if (loadError) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-3 text-center px-4">
+        <p className="text-body-m text-gray-700">{loadError}</p>
+        <button
+          type="button"
+          onClick={() => setReloadToken((prev) => prev + 1)}
+          className="rounded-full border border-gray-300 px-4 py-2 text-body-s text-gray-800 hover:bg-gray-50"
+        >
+          다시 시도
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -347,6 +393,7 @@ export default function VideoDetailPage() {
             slideChangeTimes={slideChangeTimes}
             currentTime={currentTime}
             onSeek={requestSeekAction}
+            isLoading={false}
           />
         </div>
 
@@ -362,6 +409,7 @@ export default function VideoDetailPage() {
               onGoToRef={handleGoToRef}
               onDeleteComment={deleteComment}
               onUpdateComment={handleUpdateComment}
+              isLoading={false}
               skipReplyFetch
             />
           </div>
@@ -371,7 +419,7 @@ export default function VideoDetailPage() {
               onChange={setCommentDraft}
               onSubmit={handleAddMainComment}
               onCancel={() => setCommentDraft('')}
-              disabled={isSubmittingComment}
+              disabled={isSubmittingComment || isLoading}
               className="w-full"
             />
           </div>
@@ -388,6 +436,7 @@ export default function VideoDetailPage() {
             slideChangeTimes={slideChangeTimes}
             currentTime={currentTime}
             onSeek={requestSeekAction}
+            isLoading={false}
           />
         }
         commentTabContent={
@@ -400,6 +449,7 @@ export default function VideoDetailPage() {
                 onGoToRef={handleGoToRef}
                 onDeleteComment={deleteComment}
                 onUpdateComment={handleUpdateComment}
+                isLoading={false}
                 skipReplyFetch
               />
             </div>
@@ -409,7 +459,7 @@ export default function VideoDetailPage() {
                 onChange={setCommentDraft}
                 onSubmit={handleAddMainComment}
                 onCancel={() => setCommentDraft('')}
-                disabled={isSubmittingComment}
+                disabled={isSubmittingComment || isLoading}
                 className="w-full"
               />
             </div>
@@ -424,6 +474,8 @@ export default function VideoDetailPage() {
           slides={projectSlides}
           slideChangeTimes={slideChangeTimes}
           webcamVideoUrl={videoData?.video.hlsMasterUrl || ''}
+          isDataLoading={isLoading}
+          dataErrorMessage={loadError}
           onTimeUpdate={setCurrentTime}
           disablePip={!isDesktop}
           showLayoutToggle={!isDesktop}

@@ -10,9 +10,11 @@ import {
 import type { Presentation } from '@/types/presentation';
 
 import { CardView, ListView } from '../common';
-import PresentationCard from '../presentation/PresentationCard';
+import PresentationCardSkeleton from '../presentation/PresentationCardSkeleton';
 import PresentationHeader from '../presentation/PresentationHeader';
-import PresentationList from '../presentation/PresentationList';
+import PresentationListSkeleton from '../presentation/PresentationListSkeleton';
+import SlidePresentationCard from '../presentation/SlidePresentationCard';
+import SlidePresentationList from '../presentation/SlidePresentationList';
 
 const SKELETON_CARD_COUNT = 3;
 const SKELETON_LIST_COUNT = 3;
@@ -25,7 +27,6 @@ type Props = {
   presentations: Presentation[];
   pendingThumbnailIds: string[];
   thumbVersion: Record<string, number>;
-  mode: 'slide';
 };
 
 export default function PresentationsSection({
@@ -36,7 +37,6 @@ export default function PresentationsSection({
   presentations,
   pendingThumbnailIds,
   thumbVersion,
-  mode,
 }: Props) {
   const query = useHomeQuery();
   const sort = useHomeSort();
@@ -118,13 +118,13 @@ export default function PresentationsSection({
         viewMode === 'card' ? (
           <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
             {Array.from({ length: SKELETON_CARD_COUNT }).map((_, index) => (
-              <PresentationCard.Skeleton key={index} />
+              <PresentationCardSkeleton key={index} />
             ))}
           </div>
         ) : (
           <div className="mt-6 flex flex-col gap-3">
             {Array.from({ length: SKELETON_LIST_COUNT }).map((_, index) => (
-              <PresentationList.Skeleton key={index} />
+              <PresentationListSkeleton key={index} />
             ))}
           </div>
         )
@@ -149,12 +149,11 @@ export default function PresentationsSection({
               getKey={(item) => item.projectId}
               className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3"
               renderCard={(item) => (
-                <PresentationCard
+                <SlidePresentationCard
                   {...item}
                   highlightQuery={appliedQuery}
                   isPresentationPending={pendingSet.has(item.projectId)}
                   thumbnailVersion={thumbVersion[item.projectId] ?? 0}
-                  mode={mode}
                 />
               )}
               empty={null}
@@ -165,12 +164,11 @@ export default function PresentationsSection({
               getKey={(item) => item.projectId}
               className="mt-6 flex flex-col gap-3"
               renderInfo={(item) => (
-                <PresentationList
+                <SlidePresentationList
                   {...item}
                   highlightQuery={appliedQuery}
                   isPresentationPending={pendingSet.has(item.projectId)}
                   thumbnailVersion={thumbVersion[item.projectId] ?? 0}
-                  mode={mode}
                 />
               )}
               empty={null}

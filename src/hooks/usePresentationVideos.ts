@@ -10,6 +10,7 @@ export interface UsePresentationVideosParams {
   search?: string;
   filter?: FilterMode;
   sort?: SortMode;
+  enabled?: boolean;
 }
 
 export function usePresentationVideos({
@@ -17,11 +18,13 @@ export function usePresentationVideos({
   search,
   filter,
   sort,
+  enabled = true,
 }: UsePresentationVideosParams) {
   const normalizedFilter = filter && filter !== 'all' ? filter : undefined;
   const normalizedSort = sort || undefined;
 
   return useQuery({
+    enabled: enabled && Boolean(projectId),
     queryKey: queryKeys.videos.list(projectId, {
       search,
       filter: normalizedFilter,

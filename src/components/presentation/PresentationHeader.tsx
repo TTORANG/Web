@@ -53,18 +53,18 @@ export default function PresentationHeader({
         <SearchIcon className="h-6 w-6 text-gray-400 shrink-0" />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 sm:ml-4">
+      <div className="flex flex-wrap items-center gap-2 sm:ml-4 sm:flex-nowrap sm:shrink-0">
         {/* 필터 */}
         <Dropdown
           trigger={({ isOpen }) => (
             <button
               type="button"
               className={clsx(
-                'flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold transition-colors duration-200',
+                'flex w-[6rem] shrink-0 items-center justify-between gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold whitespace-nowrap transition-colors duration-200',
                 isOpen ? 'text-main' : 'text-gray-800',
               )}
             >
-              <span>{filterLabel}</span>
+              <span className="min-w-0 truncate">{filterLabel}</span>
               <FilterIcon className="h-5 w-5" />
             </button>
           )}
@@ -86,12 +86,12 @@ export default function PresentationHeader({
           trigger={({ isOpen }) => (
             <button
               className={clsx(
-                'flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold transition-colors duration-200',
+                'flex w-[8rem] shrink-0 items-center justify-between gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold whitespace-nowrap transition-colors duration-200',
                 isOpen ? 'text-main' : 'text-gray-800',
               )}
               type="button"
             >
-              <span>{sortLabel}</span>
+              <span className="min-w-0 truncate">{sortLabel}</span>
               <ArrowDownIcon
                 className={clsx(
                   'h-4 w-4 transition-transform duration-300',

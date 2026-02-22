@@ -7,9 +7,11 @@ import { toast } from 'sonner';
 import { videosApi } from '@/api/endpoints/videos';
 import { queryKeys } from '@/api/queryClient';
 import { CardView, ListView, Spinner } from '@/components/common';
-import PresentationCard from '@/components/presentation/PresentationCard';
+import PresentationCardSkeleton from '@/components/presentation/PresentationCardSkeleton';
 import PresentationHeader from '@/components/presentation/PresentationHeader';
-import PresentationList from '@/components/presentation/PresentationList';
+import PresentationListSkeleton from '@/components/presentation/PresentationListSkeleton';
+import VideoPresentationCard from '@/components/presentation/VideoPresentationCard';
+import VideoPresentationList from '@/components/presentation/VideoPresentationList';
 import { DeleteVideoModal, RecordingEmptySection } from '@/components/video';
 import { usePresentationVideos } from '@/hooks/usePresentationVideos';
 import type { FilterMode, SortMode, ViewMode } from '@/types/home';
@@ -95,10 +97,18 @@ export default function VideoListPage() {
     search: appliedQuery,
     filter,
     sort,
+    enabled: Boolean(projectId),
+  });
+  const hasActiveFilters = filter !== null && filter !== 'all';
+  const needsBaseTotal = hasActiveFilters || appliedQuery.trim().length > 0;
+  const { data: baseData, isLoading: isBaseLoading } = usePresentationVideos({
+    projectId: projectId!,
+    filter: 'all',
+    enabled: Boolean(projectId) && needsBaseTotal,
   });
 
   const rawVideos = useMemo(() => data?.videos ?? [], [data?.videos]);
-  const totalCount = data?.total ?? 0;
+  const totalCount = needsBaseTotal ? (baseData?.total ?? 0) : (data?.total ?? 0);
 
   // 검색 디바운스
   useEffect(() => {
@@ -367,7 +377,7 @@ export default function VideoListPage() {
       return (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: SKELETON_CARD_COUNT }).map((_, i) => (
-            <PresentationCard.Skeleton key={i} />
+            <PresentationCardSkeleton key={i} />
           ))}
         </div>
       );
@@ -375,7 +385,7 @@ export default function VideoListPage() {
     return (
       <div className="flex flex-col gap-3">
         {Array.from({ length: SKELETON_LIST_COUNT }).map((_, i) => (
-          <PresentationList.Skeleton key={i} />
+          <PresentationListSkeleton key={i} />
         ))}
       </div>
     );
@@ -415,9 +425,15 @@ export default function VideoListPage() {
   }
 
   const showInitialLoadingSpinner = !hasCompletedInitialLoad && isLoading;
+  const isWaitingForTotalCount = needsBaseTotal && isBaseLoading && rawVideos.length === 0;
   const showEmptyRecording =
-    !showInitialLoadingSpinner && !isLoading && totalCount === 0 && !hasAppliedQuery;
-  const showSkeletonUI = !showInitialLoadingSpinner && (isLoading || isDebouncing);
+    !showInitialLoadingSpinner &&
+    !isLoading &&
+    !isWaitingForTotalCount &&
+    totalCount === 0 &&
+    !hasAppliedQuery;
+  const showSkeletonUI =
+    !showInitialLoadingSpinner && (isLoading || isDebouncing || isWaitingForTotalCount);
 
   return (
     <div
@@ -425,6 +441,7 @@ export default function VideoListPage() {
       id="tabpanel-videos"
       aria-labelledby="tab-videos"
       className="relative h-full w-full overflow-y-auto bg-gray-100"
+      style={{ scrollbarGutter: 'stable' }}
     >
       <DeleteVideoModal
         isOpen={deleteModalOpen}
@@ -451,8 +468,7 @@ export default function VideoListPage() {
           <div className="mb-4 flex justify-end">
             <button
               onClick={handleStartRecording}
-              disabled={isLoading}
-              className="px-6 py-2.5 bg-main hover:bg-main-variant2 disabled:bg-gray-600 text-white rounded-lg font-semibold transition-all duration-200 active:scale-[0.98]"
+              className="px-6 py-2.5 bg-main hover:bg-main-variant2 text-white rounded-lg font-semibold transition-all duration-200 active:scale-[0.98]"
             >
               영상 녹화하기
             </button>
@@ -497,9 +513,8 @@ export default function VideoListPage() {
                       className="relative"
                       onClick={() => handleVideoClick(id, item.derivedStatus)}
                     >
-                      <PresentationCard
+                      <VideoPresentationCard
                         {...item}
-                        mode="videos"
                         isPresentationPending={isPending}
                         thumbnailVersion={thumbVersion[id] ?? 0}
                         onDelete={() => openDeleteModal(id, item.title)}
@@ -565,9 +580,8 @@ export default function VideoListPage() {
 
                   return (
                     <div onClick={() => handleVideoClick(id, item.derivedStatus)}>
-                      <PresentationList
+                      <VideoPresentationList
                         {...item}
-                        mode="videos"
                         isPresentationPending={isPending}
                         thumbnailVersion={thumbVersion[id] ?? 0}
                         onDelete={() => openDeleteModal(id, item.title)}

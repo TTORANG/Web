@@ -32,6 +32,7 @@ export default function FeedbackVideoPage({
 
   const {
     isLoading,
+    videoLoadError,
     currentTime,
     projectSlides,
     slideChangeTimes,
@@ -202,6 +203,8 @@ export default function FeedbackVideoPage({
           slides={projectSlides}
           slideChangeTimes={slideChangeTimes}
           webcamVideoUrl={webcamVideoUrl}
+          isDataLoading={isLoading}
+          dataErrorMessage={videoLoadError}
           onTimeUpdate={updateCurrentTime}
           onVideoEvent={handleVideoPlaybackEvent}
           disablePip={!isDesktop}

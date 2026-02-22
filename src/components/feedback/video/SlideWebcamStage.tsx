@@ -15,6 +15,7 @@ import clsx from 'clsx';
 import type Hls from 'hls.js';
 
 import RefreshIcon from '@/assets/icons/icon-refresh.svg?react';
+import { Spinner } from '@/components/common';
 import VideoPlaybackBar from '@/components/feedback/video/VideoPlaybackBar';
 import { useVideoSync } from '@/hooks/useVideoSync';
 import type { SlideListItem } from '@/types/slide';
@@ -23,6 +24,24 @@ import { getSlideTitle } from '@/utils/slideTitle';
 import { getSlideIndexFromTime } from '@/utils/video';
 
 const LAYOUT_STORAGE_KEY = 'feedback-video-layout';
+type VideoLoadState = 'idle' | 'loading' | 'ready' | 'error';
+
+function getVideoErrorMessage(error: MediaError | null): string {
+  if (!error) return '알 수 없는 오류가 발생했습니다.';
+
+  switch (error.code) {
+    case MediaError.MEDIA_ERR_ABORTED:
+      return '재생이 중단되었습니다.';
+    case MediaError.MEDIA_ERR_NETWORK:
+      return '네트워크 문제로 영상을 불러오지 못했습니다.';
+    case MediaError.MEDIA_ERR_DECODE:
+      return '영상 디코딩에 실패했습니다.';
+    case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+      return '지원하지 않는 영상 형식입니다.';
+    default:
+      return '영상을 재생하지 못했습니다.';
+  }
+}
 
 // 공통 미디어 컨테이너 (Slide & Webcam)
 interface MediaBoxProps {
@@ -84,6 +103,8 @@ type SlideWebcamStageProps = {
   slides: SlideListItem[];
   slideChangeTimes: number[];
   webcamVideoUrl: string;
+  isDataLoading?: boolean;
+  dataErrorMessage?: string | null;
   onTimeUpdate?: (time: number) => void;
   onVideoEvent?: (eventType: 'play' | 'pause' | 'seek', timeSeconds: number) => void;
   disablePip?: boolean;
@@ -96,6 +117,8 @@ export default function SlideWebcamStage({
   slides,
   slideChangeTimes,
   webcamVideoUrl,
+  isDataLoading = false,
+  dataErrorMessage = null,
   onTimeUpdate,
   onVideoEvent,
   disablePip = false,
@@ -111,38 +134,51 @@ export default function SlideWebcamStage({
   const clickTimeoutRef = useRef<number | null>(null);
   const hlsInstanceRef = useRef<Hls | null>(null);
   const hlsLoadTokenRef = useRef(0);
+  const [videoLoadState, setVideoLoadState] = useState<VideoLoadState>(() =>
+    webcamVideoUrl ? 'loading' : 'idle',
+  );
+  const [videoErrorMessage, setVideoErrorMessage] = useState<string | null>(null);
 
   // 비디오 동기화 훅 (콜백 ref, duration, currentTime, seekTo 처리)
   const { setVideoRef: setVideoRefSync, videoElement, duration, currentTime } = useVideoSync();
 
-  // HLS를 지원하는 비디오 ref 콜백
-  const setVideoRef = useCallback(
-    (el: HTMLVideoElement | null) => {
+  const setMediaError = useCallback((message: string) => {
+    setVideoLoadState('error');
+    setVideoErrorMessage(message);
+  }, []);
+
+  const attachVideoSource = useCallback(
+    (el: HTMLVideoElement) => {
       const loadToken = ++hlsLoadTokenRef.current;
-      // useVideoSync에 video 요소 전달
-      setVideoRefSync(el);
-      // 기존 HLS 인스턴스 정리
+
       if (hlsInstanceRef.current) {
         hlsInstanceRef.current.destroy();
         hlsInstanceRef.current = null;
       }
-      if (!el || !webcamVideoUrl) return;
 
-      // HLS(.m3u8) URL인지 확인
+      if (!webcamVideoUrl) {
+        setVideoLoadState('idle');
+        setVideoErrorMessage(null);
+        el.removeAttribute('src');
+        el.load();
+        return;
+      }
+
+      setVideoLoadState('loading');
+      setVideoErrorMessage(null);
+
       const isHls = webcamVideoUrl.includes('.m3u8');
-
       if (!isHls) {
-        // 일반 비디오 파일 (mp4, webm 등)
         el.src = webcamVideoUrl;
+        el.load();
         return;
       }
 
       void import('hls.js')
         .then(({ default: HlsLib }) => {
-          if (loadToken !== hlsLoadTokenRef.current || !el) return;
+          if (loadToken !== hlsLoadTokenRef.current) return;
 
           if (HlsLib.isSupported()) {
-            // HLS.js를 사용하여 스트리밍
             const hls = new HlsLib({
               enableWorker: true,
               lowLatencyMode: false,
@@ -156,19 +192,24 @@ export default function SlideWebcamStage({
             });
 
             hls.on(HlsLib.Events.ERROR, (_event, data) => {
-              if (data.fatal) {
-                console.error('[SlideWebcamStage] HLS 치명적 에러:', data);
-                switch (data.type) {
-                  case HlsLib.ErrorTypes.NETWORK_ERROR:
-                    hls.startLoad();
-                    break;
-                  case HlsLib.ErrorTypes.MEDIA_ERROR:
-                    hls.recoverMediaError();
-                    break;
-                  default:
-                    hls.destroy();
-                    break;
-                }
+              if (!data.fatal) return;
+              console.error('[SlideWebcamStage] HLS 치명적 에러:', data);
+
+              switch (data.type) {
+                case HlsLib.ErrorTypes.NETWORK_ERROR:
+                  setVideoLoadState('loading');
+                  setVideoErrorMessage(null);
+                  hls.startLoad();
+                  break;
+                case HlsLib.ErrorTypes.MEDIA_ERROR:
+                  setVideoLoadState('loading');
+                  setVideoErrorMessage(null);
+                  hls.recoverMediaError();
+                  break;
+                default:
+                  setMediaError('웹캠 영상을 재생하지 못했습니다.');
+                  hls.destroy();
+                  break;
               }
             });
 
@@ -177,18 +218,31 @@ export default function SlideWebcamStage({
           }
 
           if (el.canPlayType('application/vnd.apple.mpegurl')) {
-            // Safari는 네이티브 HLS 지원
             el.src = webcamVideoUrl;
-          } else {
-            console.warn('[SlideWebcamStage] HLS를 지원하지 않는 브라우저입니다.');
+            el.load();
+            return;
           }
+
+          console.warn('[SlideWebcamStage] HLS를 지원하지 않는 브라우저입니다.');
+          setMediaError('현재 브라우저가 HLS 영상을 지원하지 않습니다.');
         })
         .catch((error) => {
           if (loadToken !== hlsLoadTokenRef.current) return;
           console.error('[SlideWebcamStage] HLS 라이브러리 로드 실패:', error);
+          setMediaError('영상 플레이어를 준비하지 못했습니다.');
         });
     },
-    [setVideoRefSync, webcamVideoUrl],
+    [setMediaError, webcamVideoUrl],
+  );
+
+  // HLS를 지원하는 비디오 ref 콜백
+  const setVideoRef = useCallback(
+    (el: HTMLVideoElement | null) => {
+      setVideoRefSync(el);
+      if (!el) return;
+      attachVideoSource(el);
+    },
+    [attachVideoSource, setVideoRefSync],
   );
 
   // 컴포넌트 언마운트 시 HLS 정리
@@ -200,6 +254,49 @@ export default function SlideWebcamStage({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!webcamVideoUrl) {
+      setVideoLoadState('idle');
+      setVideoErrorMessage(null);
+      return;
+    }
+
+    setVideoLoadState('loading');
+    setVideoErrorMessage(null);
+  }, [webcamVideoUrl]);
+
+  useEffect(() => {
+    if (!videoElement) return;
+
+    const handleLoadStart = () => {
+      setVideoLoadState('loading');
+      setVideoErrorMessage(null);
+    };
+    const handleLoadedMetadata = () => {
+      setVideoLoadState('ready');
+      setVideoErrorMessage(null);
+    };
+    const handleCanPlay = () => {
+      setVideoLoadState('ready');
+      setVideoErrorMessage(null);
+    };
+    const handleError = () => {
+      setMediaError(getVideoErrorMessage(videoElement.error));
+    };
+
+    videoElement.addEventListener('loadstart', handleLoadStart);
+    videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
+    videoElement.addEventListener('canplay', handleCanPlay);
+    videoElement.addEventListener('error', handleError);
+
+    return () => {
+      videoElement.removeEventListener('loadstart', handleLoadStart);
+      videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      videoElement.removeEventListener('canplay', handleCanPlay);
+      videoElement.removeEventListener('error', handleError);
+    };
+  }, [setMediaError, videoElement]);
 
   // 레이아웃 상태 (localStorage에 저장)
   const [layout, setLayout] = useState<'slide-main' | 'webcam-main'>(() => {
@@ -258,6 +355,14 @@ export default function SlideWebcamStage({
   }, [currentTime, slideChangeTimes, slides]);
 
   const activeSlide = slides[activeIndex];
+  const isMediaReady = videoLoadState === 'ready';
+  const isMediaLoading = videoLoadState === 'loading';
+  const canControlPlayback = Boolean(videoElement) && isMediaReady;
+
+  const retryVideoLoad = useCallback(() => {
+    if (!videoElement || !webcamVideoUrl) return;
+    attachVideoSource(videoElement);
+  }, [attachVideoSource, videoElement, webcamVideoUrl]);
 
   // 스테이지 한번 클릭 → 재생/일시정지
   const handleStageClick = useCallback(() => {
@@ -302,9 +407,21 @@ export default function SlideWebcamStage({
 
   // 웹캠 비디오가 없으면 렌더링하지 않음
   if (!webcamVideoUrl) {
+    if (isDataLoading) {
+      return (
+        <div className="flex-1 min-w-0 flex flex-col justify-center">
+          <div className="relative w-full aspect-video overflow-hidden rounded-xl bg-black" />
+        </div>
+      );
+    }
+
+    const message = dataErrorMessage ?? '재생 가능한 영상이 없습니다.';
+
     return (
-      <div className="flex-1 min-w-0 flex items-center justify-center bg-gray-900 rounded-xl aspect-video">
-        <span className="text-gray-300">비디오를 불러오는 중...</span>
+      <div className="flex-1 min-w-0 flex flex-col items-center justify-center gap-3 bg-gray-900 rounded-xl aspect-video px-4 text-center">
+        <span className={clsx('text-body-s', dataErrorMessage ? 'text-red-300' : 'text-gray-300')}>
+          {message}
+        </span>
       </div>
     );
   }
@@ -360,11 +477,40 @@ export default function SlideWebcamStage({
           />
         </MediaBox>
 
+        {isMediaLoading && (
+          <div className="absolute inset-0 z-35 flex items-center justify-center pointer-events-none">
+            <div className="flex items-center gap-2 rounded-full border border-[#ffffff]/10 bg-[rgba(26,26,26,0.76)] px-4 py-2 text-caption text-[#ffffff]">
+              <Spinner size={16} color="#ffffff" className="text-white" />
+              <span>웹캠 영상을 불러오는 중...</span>
+            </div>
+          </div>
+        )}
+
+        {videoLoadState === 'error' && (
+          <div className="absolute inset-0 z-45 flex items-center justify-center bg-[#000000]/55 px-4">
+            <div className="flex max-w-[320px] flex-col items-center gap-3 rounded-lg border border-red-300/30 bg-[rgba(20,20,20,0.88)] px-4 py-5 text-center">
+              <p className="text-body-s text-red-200">
+                {videoErrorMessage ?? '웹캠 영상을 불러오지 못했습니다.'}
+              </p>
+              <button
+                type="button"
+                onClick={retryVideoLoad}
+                className="rounded-full border border-white/25 px-3 py-1.5 text-caption text-[#ffffff] hover:bg-white/10"
+              >
+                다시 시도
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* 클릭 핸들러 오버레이 */}
         <div
-          className="absolute inset-0 z-30 cursor-pointer"
-          onClick={handleStageClick}
-          onDoubleClick={handleStageDoubleClick}
+          className={clsx(
+            'absolute inset-0 z-30',
+            canControlPlayback ? 'cursor-pointer' : 'cursor-wait',
+          )}
+          onClick={canControlPlayback ? handleStageClick : undefined}
+          onDoubleClick={canControlPlayback ? handleStageDoubleClick : undefined}
         />
 
         {/* 재생바/조작 오버레이 */}
@@ -372,6 +518,7 @@ export default function SlideWebcamStage({
           <VideoPlaybackBar
             videoElement={videoElement}
             duration={duration}
+            isMediaReady={isMediaReady}
             fullscreenTargetRef={stageRootRef as React.RefObject<HTMLElement>}
             slides={slides}
             slideChangeTimes={slideChangeTimes}

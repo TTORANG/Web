@@ -189,6 +189,7 @@ export function useFeedbackVideo(
 
   // ─── 로컬 상태 ────────────────────────────────────────
   const [isLoading, setIsLoading] = useState(true);
+  const [videoLoadError, setVideoLoadError] = useState<string | null>(null);
   const [projectSlides, setProjectSlides] = useState<SlideDetail[]>([]);
   const [slideChangeTimes, setSlideChangeTimes] = useState<number[]>([]);
 
@@ -277,13 +278,17 @@ export function useFeedbackVideo(
 
       setProjectSlides(mapped.slides);
       setSlideChangeTimes(mapped.slideChangeTimes);
+      setVideoLoadError(videoUrl ? null : '재생 가능한 영상 주소를 확인하지 못했습니다.');
     };
 
     const load = async () => {
+      setIsLoading(true);
+      setVideoLoadError(null);
       try {
         await loadFromSharedContent(sharedContent);
       } catch {
         if (cancelled) return;
+        setVideoLoadError('영상 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
       } finally {
         if (!cancelled) {
           setTimeout(() => setIsLoading(false), 0);
@@ -442,6 +447,7 @@ export function useFeedbackVideo(
   // ─── Return ───────────────────────────────────────────
   return {
     isLoading,
+    videoLoadError,
     currentTime,
     projectSlides,
     slideChangeTimes,
