@@ -5,20 +5,28 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { useQueryClient } from '@tanstack/react-query';
+
 import { recordVideoEvent } from '@/api/endpoints/analytics';
-import { getSharedComments } from '@/api/endpoints/shares';
 import { videosApi } from '@/api/endpoints/videos';
+import { queryKeys } from '@/api/queryClient';
 import { createDefaultReactions } from '@/constants/reaction';
+import { useSharedComments } from '@/hooks/queries/useSharedComments';
 import { useVideoComments } from '@/hooks/useVideoComments';
 import { useVideoReactions } from '@/hooks/useVideoReactions';
 import { useAuthStore } from '@/stores/authStore';
 import { useVideoFeedbackStore } from '@/stores/videoFeedbackStore';
 import type { Comment } from '@/types/comment';
-import type { ReadSharedContentData, SharedPresentationComment } from '@/types/share';
+import type {
+  ReadSharedCommentsData,
+  ReadSharedContentData,
+  SharedPresentationComment,
+} from '@/types/share';
 import type { SlideDetail } from '@/types/slide';
 import type { VideoTimestampFeedback } from '@/types/video';
 import { formatVideoTimestamp } from '@/utils/format';
 import { SHARED_PROJECT_ID, normalizeSharedSlides } from '@/utils/sharedContent';
+import { getSlideTitle } from '@/utils/slideTitle';
 import { getSlideIndexFromTime } from '@/utils/video';
 
 // 타임라인 데이터 없을때, 슬라이드 1장당 10초로 균등분배
@@ -60,7 +68,7 @@ function toPlayableVideoUrl(url?: string | null): string {
 // 슬라이드 목록과 타임라인 배열 만드는 함수
 function mapSlidesByTimeline(
   sourceSlides: SlideDetail[],
-  timeline: Array<{ slideId: string; timestampMs: number }>,
+  timeline: Array<{ slideId: string; title?: string | null; timestampMs: number }>,
 ): { slides: SlideDetail[]; slideChangeTimes: number[] } {
   if (!timeline.length) {
     const slides = sourceSlides.map((slide, index) => ({
@@ -94,7 +102,7 @@ function mapSlidesByTimeline(
     return {
       slideId: String(item.slideId),
       projectId: fallbackProjectId,
-      title: `슬라이드 ${index + 1}`,
+      title: getSlideTitle(item.title, index + 1),
       slideNum: index + 1,
       imageUrl: '',
       createdAt: now,
@@ -165,9 +173,11 @@ export function useFeedbackVideo(
   options: UseFeedbackVideoOptions = {},
 ) {
   const { onShareExitSnapshotChange } = options;
+  const queryClient = useQueryClient();
 
   // ─── 라우트 파라미터 ───────────────────────────────────
   const { shareToken = '' } = useParams<{ shareToken?: string }>();
+  const sessionId = useAuthStore((state) => state.user?.sessionId);
 
   // ─── Store 셀렉터 ─────────────────────────────────────
   const video = useVideoFeedbackStore((s) => s.video);
@@ -206,25 +216,32 @@ export function useFeedbackVideo(
         )
         .map((slide) => ({
           slideId: String(slide.slideId),
+          title: slide.title,
           timestampMs: normalizeTimestampMs(slide.timestampMs),
         }));
 
       const videoId = content.presentationContent.video?.videoId ?? '';
       const normalizedVideoId = String(videoId);
       let videoUrl = toPlayableVideoUrl(content.presentationContent.video?.videoUrl);
-      let videoTitle = content.presentationContent.title || '공유 영상';
+      const hasOriginalTitle =
+        typeof content.presentationContent.title === 'string' &&
+        content.presentationContent.title.trim().length > 0;
+      let videoTitle = hasOriginalTitle ? content.presentationContent.title : '공유 영상';
       let duration = 0;
       let timelineSlides: Array<{ slideId: string; timestampMs: number }> = fallbackTimelineSlides;
+      const hasSharedTimeline = fallbackTimelineSlides.length > 0;
+      const needsVideoDetail = !videoUrl || !hasOriginalTitle;
 
       if (normalizedVideoId) {
         const [detailResult, timelineResult] = await Promise.allSettled([
-          videosApi.getVideoDetail(normalizedVideoId),
-          videosApi.getVideoSlides(normalizedVideoId),
+          needsVideoDetail ? videosApi.getVideoDetail(normalizedVideoId) : Promise.resolve(null),
+          !hasSharedTimeline ? videosApi.getVideoSlides(normalizedVideoId) : Promise.resolve(null),
         ]);
         if (cancelled) return;
 
         if (
           detailResult.status === 'fulfilled' &&
+          detailResult.value &&
           detailResult.value.data.resultType === 'SUCCESS'
         ) {
           const serverVideo = detailResult.value.data.success.video;
@@ -235,10 +252,12 @@ export function useFeedbackVideo(
 
         if (
           timelineResult.status === 'fulfilled' &&
+          timelineResult.value &&
           timelineResult.value.data.resultType === 'SUCCESS'
         ) {
           timelineSlides = timelineResult.value.data.success.slides.map((slide) => ({
             slideId: String(slide.slideId),
+            title: slide.title,
             timestampMs: slide.timestampMs,
           }));
         }
@@ -278,6 +297,19 @@ export function useFeedbackVideo(
     };
   }, [initVideo, sharedContent, shareToken]);
 
+  const { data: sharedCommentsData } = useSharedComments(shareToken, sessionId, {
+    enabled: !!shareToken,
+    initialData: {
+      comments: sharedContent.presentationContent.comments,
+    },
+  });
+
+  useEffect(() => {
+    if (!shareToken || !sharedCommentsData) return;
+    const sharedFeedbacks = mapSharedCommentsToFeedbacks(sharedCommentsData.comments);
+    updateFeedbacks(sharedFeedbacks);
+  }, [shareToken, sharedCommentsData, updateFeedbacks]);
+
   // ─── 리액션 ───────────────────────────────────────────
   const { reactions, addReaction } = useVideoReactions();
 
@@ -287,21 +319,21 @@ export function useFeedbackVideo(
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [capturedTimestamp, setCapturedTimestamp] = useState<number | null>(null);
 
-  const reloadComments = useCallback(async () => {
+  const invalidateSharedComments = useCallback(async (): Promise<ReadSharedCommentsData | null> => {
     if (!shareToken) return null;
-    try {
-      const { user } = useAuthStore.getState();
-      const data = await getSharedComments(shareToken, user?.sessionId);
-      const sharedFeedbacks = mapSharedCommentsToFeedbacks(data.comments);
-      updateFeedbacks(sharedFeedbacks);
-      return data.comments;
-    } catch {
-      return null;
-    }
-  }, [shareToken, updateFeedbacks]);
+    const sharedCommentsKey = queryKeys.shares.comments(shareToken, sessionId);
+
+    await queryClient.invalidateQueries({
+      queryKey: sharedCommentsKey,
+    });
+
+    return queryClient.getQueryData<ReadSharedCommentsData>(sharedCommentsKey) ?? null;
+  }, [queryClient, sessionId, shareToken]);
 
   const { comments, addComment, addReply, deleteComment, updateComment } = useVideoComments({
-    onMutationSuccess: () => void reloadComments(),
+    onMutationSuccess: () => {
+      void invalidateSharedComments();
+    },
   });
 
   const handleInputFocus = useCallback(() => {
@@ -317,13 +349,15 @@ export function useFeedbackVideo(
     try {
       const timestampToUse = capturedTimestamp ?? currentTime;
       const newCommentServerId = await addComment(commentDraft, timestampToUse);
+      if (!newCommentServerId) return;
+
       setCommentDraft('');
       setCapturedTimestamp(null);
 
-      const latestComments = await reloadComments();
+      const latestComments = await invalidateSharedComments();
 
-      if (newCommentServerId && latestComments) {
-        const newComment = latestComments.find(
+      if (latestComments) {
+        const newComment = latestComments.comments.find(
           (c: SharedPresentationComment) => c.commentId === newCommentServerId,
         );
         if (newComment) {
@@ -334,7 +368,7 @@ export function useFeedbackVideo(
     } finally {
       setIsSubmittingComment(false);
     }
-  }, [addComment, commentDraft, currentTime, capturedTimestamp, reloadComments]);
+  }, [addComment, commentDraft, currentTime, capturedTimestamp, invalidateSharedComments]);
 
   const handleCancelComment = useCallback(() => {
     setCommentDraft('');

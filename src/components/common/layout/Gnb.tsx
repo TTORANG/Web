@@ -10,6 +10,7 @@ import { Link, useLocation, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 
 import { TABS, getTabFromPathname, getTabPath } from '@/constants/navigation';
+import { useProjectEntryPrefetch } from '@/hooks/queries/useProjectEntryPrefetch';
 
 export function Gnb() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -17,6 +18,8 @@ export function Gnb() {
   const activeTab = getTabFromPathname(location.pathname);
   const activeIndex = TABS.findIndex((tab) => tab.key === activeTab);
   const safeActiveIndex = activeIndex >= 0 ? activeIndex : 0;
+
+  useProjectEntryPrefetch(projectId);
 
   if (!projectId) return null;
 

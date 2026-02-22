@@ -123,7 +123,6 @@ export default function FeedbackVideoPage({
             currentTime={currentTime}
             onSeek={requestSeek}
             isLoading={isLoading}
-            variant="inverted"
           />
         </div>
 
@@ -167,7 +166,6 @@ export default function FeedbackVideoPage({
             slideChangeTimes={slideChangeTimes}
             currentTime={currentTime}
             onSeek={requestSeek}
-            variant="inverted"
           />
         }
         commentTabContent={

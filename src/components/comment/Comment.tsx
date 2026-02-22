@@ -18,6 +18,7 @@ import { UserAvatar } from '@/components/common';
 import { useAuthStore } from '@/stores/authStore';
 import type { Comment as CommentType } from '@/types/comment';
 import { formatRelativeTime, formatVideoTimestamp } from '@/utils/format';
+import { getSlideTitle } from '@/utils/slideTitle';
 
 import { useCommentContext } from './CommentContext';
 import CommentInput from './CommentInput';
@@ -119,7 +120,7 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
   const commentRef = comment.ref;
   const refLabel = commentRef
     ? commentRef.kind === 'slide'
-      ? `슬라이드 ${commentRef.index + 1}`
+      ? getSlideTitle(undefined, commentRef.index + 1)
       : formatVideoTimestamp(commentRef.seconds)
     : null;
 

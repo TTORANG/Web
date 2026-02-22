@@ -25,6 +25,7 @@ import { useVideoSlides } from '@/hooks/queries/useVideoSlides';
 import type { DropOffSlide, DropOffTime, SummaryStat } from '@/types/insight';
 import type { SlideListItem } from '@/types/slide';
 import { formatVideoTimestamp } from '@/utils/format';
+import { getSlideTitle } from '@/utils/slideTitle';
 import { getSlideIndexFromTime } from '@/utils/video';
 
 const summaryStatLabels = ['총 조회수', '완독률', '받은 피드백', '평균 시청 시간'] as const;
@@ -42,7 +43,7 @@ export function useInsightPageModel(): InsightModel {
   const projectIdStr = projectId ?? '';
   const projectIdNum = projectIdStr ? Number(projectIdStr) : 0;
 
-  const slidesQuery = useSlides(projectIdStr);
+  const slidesQuery = useSlides(projectIdStr, { liveSync: false });
   const slideAnalyticsQuery = useSlideAnalytics(projectIdNum);
   const summaryAnalyticsQuery = usePresentationAnalyticsSummary(projectIdNum);
   const recentCommentsQuery = useRecentComments(projectIdNum);
@@ -173,7 +174,7 @@ export function useInsightPageModel(): InsightModel {
       .map((item) => {
         const slide = slideById.get(item.slideId);
         const slideIndex = slideIndexById.get(item.slideId) ?? Math.max(0, item.slideNum - 1);
-        const title = slide?.title || item.title || `슬라이드 ${slideIndex + 1}`;
+        const title = getSlideTitle(slide?.title ?? item.title, slideIndex + 1);
 
         return {
           slideId: item.slideId,
@@ -228,7 +229,7 @@ export function useInsightPageModel(): InsightModel {
       .sort((a, b) => b.exitCount - a.exitCount)
       .slice(0, 3)
       .map((item) => ({
-        label: `슬라이드 ${item.slideNum}`,
+        label: getSlideTitle(undefined, item.slideNum),
         desc: `${item.exitCount}명 이탈`,
         percent: Math.min(
           100,
@@ -264,7 +265,7 @@ export function useInsightPageModel(): InsightModel {
 
         return {
           time: formatVideoTimestamp(seconds),
-          desc: slideList.length ? `슬라이드 ${slideNum}` : '슬라이드',
+          desc: slideList.length ? getSlideTitle(undefined, slideNum) : '슬라이드',
           count: item.exitCount,
           slideIndex,
           seconds,
@@ -294,7 +295,7 @@ export function useInsightPageModel(): InsightModel {
     return slideRetentionRes.slideRetention.map((item: SlideRetentionDto) => ({
       label: `S${item.slideNum}`, // x축: S1, S2
       value: Math.round(normalizeRate(item.retentionRate)),
-      tooltipTitle: item.title || `슬라이드 ${item.slideNum}`, // 툴팁: 제목
+      tooltipTitle: getSlideTitle(item.title, item.slideNum), // 툴팁: 제목
       sessionCount: item.sessionCount,
     }));
   }, [slideRetentionRes]);

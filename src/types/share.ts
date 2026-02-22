@@ -58,7 +58,7 @@ export type ShareableVideosResponse = ApiResponse<ShareableVideosData>;
 export interface SharedPresentationSlide {
   slideId: string;
   slideNum: number;
-  title: string;
+  title: string | null;
   imageUrl: string;
   scriptText: string;
   timestampMs: number;

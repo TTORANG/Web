@@ -227,6 +227,7 @@ export interface ReadVideoCommentsAllResponseDto {
  */
 export interface VideoSlideTimelineItemDto {
   slideId: string;
+  title: string | null;
   timestampMs: number;
 }
 

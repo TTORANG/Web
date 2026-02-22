@@ -69,7 +69,8 @@ export const queryKeys = {
     all: ['scripts'] as const,
     detail: (slideId: string) => [...queryKeys.scripts.all, 'detail', slideId] as const,
     versions: (slideId: string) => [...queryKeys.scripts.all, 'versions', slideId] as const,
-    project: (projectId: string) => [...queryKeys.scripts.all, 'project', projectId] as const,
+    projects: () => [...queryKeys.scripts.all, 'project'] as const,
+    project: (projectId: string) => [...queryKeys.scripts.projects(), projectId] as const,
   },
   presentations: {
     all: ['presentations'] as const,
@@ -87,7 +88,15 @@ export const queryKeys = {
   videos: {
     all: ['videos'] as const,
     lists: () => [...queryKeys.videos.all, 'list'] as const,
-    list: (projectId: string) => [...queryKeys.videos.lists(), projectId] as const,
+    listPrefix: (projectId: string) => [...queryKeys.videos.lists(), projectId] as const,
+    list: (
+      projectId: string,
+      params?: {
+        search?: string;
+        filter?: string;
+        sort?: string;
+      },
+    ) => [...queryKeys.videos.listPrefix(projectId), params ?? {}] as const,
     details: () => [...queryKeys.videos.all, 'detail'] as const,
     detail: (videoId: string) => [...queryKeys.videos.details(), videoId] as const,
     slides: (videoId: number) => [...queryKeys.videos.all, 'slides', videoId] as const,

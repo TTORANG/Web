@@ -43,6 +43,7 @@ export interface RestoreScriptResponseDto {
  */
 export interface ProjectScriptItemDto {
   slideId: string;
+  title?: string | null;
   scriptText: string;
 }
 

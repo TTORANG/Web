@@ -3,6 +3,7 @@
  * @description 슬라이드 제목과 대본을 표시하는 패널
  */
 import SlideTitle from '@/components/slide/script/SlideTitle';
+import { getSlideTitle } from '@/utils/slideTitle';
 
 import SlideNavigation from '../SlideNavigation';
 
@@ -29,7 +30,7 @@ export default function SlideInfoPanel({
     <div className="shrink-0 flex flex-col gap-4 px-5 py-4">
       <div className="flex justify-between items-center gap-4">
         <div className="min-w-0">
-          <SlideTitle fallbackTitle={`슬라이드 ${slideIndex + 1}`} readOnly />
+          <SlideTitle fallbackTitle={getSlideTitle(undefined, slideIndex + 1)} readOnly />
         </div>
 
         <SlideNavigation

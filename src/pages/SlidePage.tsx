@@ -10,7 +10,14 @@ export default function SlidePage() {
   const { projectId, slideId: routeSlideId } = useParams<{ projectId: string; slideId?: string }>();
   const navigate = useNavigate();
 
-  const { data: slides, isLoading, isError } = useSlides(projectId ?? '');
+  const {
+    data: slides,
+    isLoading,
+    isError,
+  } = useSlides(projectId ?? '', {
+    liveSync: true,
+    pollingIntervalMs: 15000,
+  });
 
   const currentSlide = slides?.find((s) => s.slideId === routeSlideId) ?? slides?.[0];
   const currentIndex = currentSlide

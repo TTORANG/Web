@@ -4,10 +4,10 @@ import IconArrowLeft from '@/assets/icons/icon-arrow-left.svg?react';
 import IconArrowRight from '@/assets/icons/icon-arrow-right.svg?react';
 import { Logo, SlideImage } from '@/components/common';
 import { usePresentation } from '@/hooks/queries/usePresentations';
-import { useScript } from '@/hooks/queries/useScript';
+import { useProjectScripts } from '@/hooks/queries/useScript';
 import { useSlides } from '@/hooks/queries/useSlides';
+import { useRecorder } from '@/hooks/useRecorder';
 
-import { useRecorder } from '../../hooks/useRecorder';
 import StopButton from './StopButton';
 
 interface SlideData {
@@ -40,11 +40,32 @@ export const RecordingSection = ({
   const { isRecording, startRecording, stopRecording, getRecordedBlob } = useRecorder();
 
   const { data: presentation } = usePresentation(projectId);
-  const { data: slidesData } = useSlides(projectId);
-  const slidesList = useMemo(
-    () => slidesData?.map((slide) => ({ id: slide.slideId, url: slide.imageUrl })) ?? [],
-    [slidesData],
+  const { data: slidesData, isLoading: isSlidesLoading } = useSlides(projectId, {
+    liveSync: false,
+  });
+  const { data: projectScripts, isLoading: isProjectScriptsLoading } = useProjectScripts(
+    projectId,
+    {
+      enabled: !!projectId,
+      staleTime: 1000 * 60 * 10,
+    },
   );
+  const slidesList = useMemo(() => {
+    const projectScriptMap = new Map(
+      (projectScripts?.scripts ?? []).map((scriptItem) => [
+        String(scriptItem.slideId),
+        scriptItem.scriptText ?? '',
+      ]),
+    );
+
+    return (
+      slidesData?.map((slide) => ({
+        id: slide.slideId,
+        url: slide.imageUrl,
+        script: projectScriptMap.get(String(slide.slideId)) ?? slide.script ?? '',
+      })) ?? []
+    );
+  }, [projectScripts, slidesData]);
   const totalPages = slidesList.length > 0 ? slidesList.length : 1;
 
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -56,9 +77,10 @@ export const RecordingSection = ({
   const [isFinishing, setIsFinishing] = useState<boolean>(false);
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
-
-  const currentSlideId = slidesList[currentPage - 1]?.id;
-  const { data: scriptData } = useScript(currentSlideId ?? '');
+  const currentSlideScript = slidesList[currentPage - 1]?.script ?? '';
+  const isScriptLoading = isSlidesLoading || isProjectScriptsLoading;
+  const scriptDisplayText =
+    currentSlideScript || (isScriptLoading ? '대본 불러오는 중...' : '대본이 없습니다.');
 
   // 녹화 시작 및 첫 로그 생성 함수
   const startRecordingWithLog = useCallback(
@@ -316,7 +338,7 @@ export const RecordingSection = ({
               <h3 className="text-body-s-bold text-gray-800">발표 대본</h3>
             </div>
             <div className="scrollbar-hide flex-1 overflow-y-auto text-body-m leading-normal text-black whitespace-pre-wrap">
-              {scriptData?.scriptText || '대본이 없습니다.'}
+              {scriptDisplayText}
             </div>
           </div>
 

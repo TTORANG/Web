@@ -15,6 +15,7 @@ import {
 } from '@/components/video';
 import { getTabPath } from '@/constants/navigation';
 import { usePresentation } from '@/hooks/queries/usePresentations';
+import { useProjectEntryPrefetch } from '@/hooks/queries/useProjectEntryPrefetch';
 import { useVideoUpload } from '@/hooks/useVideoUpload';
 
 type RecordStep = 'TEST' | 'RECORDING';
@@ -23,6 +24,8 @@ export default function VideoRecordPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  useProjectEntryPrefetch(projectId);
 
   const { data: presentation } = usePresentation(projectId!);
 
@@ -102,7 +105,7 @@ export default function VideoRecordPage() {
         if (projectId) {
           await Promise.all([
             queryClient.invalidateQueries({ queryKey: queryKeys.shares.videos(projectId) }),
-            queryClient.invalidateQueries({ queryKey: queryKeys.videos.list(projectId) }),
+            queryClient.invalidateQueries({ queryKey: queryKeys.videos.listPrefix(projectId) }),
           ]);
         }
 

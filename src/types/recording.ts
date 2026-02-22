@@ -1,3 +1,5 @@
+import { getSlideTitle } from '@/utils/slideTitle';
+
 import type { SlideDetail } from './slide';
 
 /**
@@ -36,7 +38,7 @@ export function convertToRecordingSlides(
     page: index + 1,
     imageUrl: slide.imageUrl || `/thumbnails/${projectId}/${index}.webp`,
     script: slide.script || '',
-    title: slide.title,
+    title: getSlideTitle(slide.title, index + 1),
   }));
 }
 

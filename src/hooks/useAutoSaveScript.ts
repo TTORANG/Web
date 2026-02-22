@@ -4,7 +4,7 @@ import { useUpdateScript } from '@/hooks/queries/useScript';
 import { showToast } from '@/utils/toast';
 
 import { useDebouncedCallback } from './useDebounce';
-import { useSlideId } from './useSlideSelectors';
+import { useSlideId, useSlideProjectId } from './useSlideSelectors';
 
 const AUTOSAVE_DELAY = 300;
 
@@ -23,6 +23,7 @@ const AUTOSAVE_DELAY = 300;
  */
 export function useAutoSaveScript() {
   const slideId = useSlideId();
+  const projectId = useSlideProjectId();
   const { mutateAsync, isPending } = useUpdateScript();
   const lastSavedRef = useRef<string>('');
   const pendingScriptRef = useRef<string | null>(null);
@@ -40,7 +41,7 @@ export function useAutoSaveScript() {
     isSavingRef.current = true;
     let saveSucceeded = false;
     try {
-      await mutateAsync({ slideId, data: { script: scriptToSave } });
+      await mutateAsync({ slideId, projectId, data: { script: scriptToSave } });
 
       if (activeSlideIdRef.current !== slideId) return;
 
@@ -61,7 +62,7 @@ export function useAutoSaveScript() {
     if (saveSucceeded && nextPending !== null && nextPending !== lastSavedRef.current) {
       void flushPendingSave();
     }
-  }, [slideId, mutateAsync]);
+  }, [slideId, projectId, mutateAsync]);
 
   const scheduleFlush = useDebouncedCallback(() => {
     void flushPendingSave();
