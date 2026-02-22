@@ -278,7 +278,6 @@ export default function VideoListPage() {
 
       void queryClient.invalidateQueries({
         queryKey: queryKeys.videos.listPrefix(projectId),
-        refetchType: 'inactive',
       });
     } catch (err) {
       showToast.error(
