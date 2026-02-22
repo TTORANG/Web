@@ -179,6 +179,7 @@ export default function InsightPage() {
               title={m.retentionTitle}
               data={m.retentionData}
               isVideo={m.retentionIsVideo}
+              onVideoTimeClick={canSeekToLatestVideo ? navigateToVideoTime : undefined}
             />
 
             <div className="grid grid-cols-1 gap-12 py-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">

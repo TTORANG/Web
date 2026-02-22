@@ -298,14 +298,27 @@ export function useInsightPageModel(): InsightModel {
 
   const videoChartData = useMemo<ChartDataPoint[]>(() => {
     if (!videoRetentionRes?.videoRetention) return [];
-    return videoRetentionRes.videoRetention.map((item: VideoRetentionDto) => ({
-      label: formatVideoTimestamp(item.timestampMs / 1000), // x축: 00:00
-      value: Math.round(normalizeRate(item.retentionRate)), // y축: 0~100%
-      tooltipTitle: formatVideoTimestamp(item.timestampMs / 1000),
-      sessionCount: item.sessionCount,
-      originalTime: item.timestampMs,
-    }));
-  }, [videoRetentionRes]);
+    const { changeTimes, slideIndexes } = dropOffTimeline;
+    const hasTimeline = changeTimes.length > 0;
+
+    return videoRetentionRes.videoRetention.map((item: VideoRetentionDto) => {
+      const seconds = Math.max(0, item.timestampMs / 1000);
+      const timelineIndex = hasTimeline
+        ? getSlideIndexFromTime(seconds, changeTimes, changeTimes.length - 1)
+        : 0;
+      const slideIndex = hasTimeline ? (slideIndexes[timelineIndex] ?? 0) : 0;
+
+      return {
+        label: formatVideoTimestamp(seconds), // x축: 00:00
+        value: Math.round(normalizeRate(item.retentionRate)), // y축: 0~100%
+        tooltipTitle: formatVideoTimestamp(seconds),
+        sessionCount: item.sessionCount,
+        originalTime: item.timestampMs,
+        seekSeconds: seconds,
+        thumbUrl: slideList[slideIndex]?.imageUrl,
+      };
+    });
+  }, [dropOffTimeline, slideList, videoRetentionRes]);
 
   const slideChartData = useMemo<ChartDataPoint[]>(() => {
     if (!slideRetentionRes?.slideRetention) return [];
