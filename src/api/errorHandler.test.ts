@@ -30,7 +30,7 @@ describe('handleApiError', () => {
   });
 
   describe('401 handling', () => {
-    it('calls logout and shows toast when logged in', () => {
+    it('does not logout and falls back to generic toast when logged in', () => {
       // Set logged in state
       useAuthStore
         .getState()
@@ -38,16 +38,13 @@ describe('handleApiError', () => {
 
       handleApiError(401, '');
 
-      expect(useAuthStore.getState().accessToken).toBeNull();
-      expect(showToast.error).toHaveBeenCalledWith(
-        '로그인이 만료되었습니다.',
-        '다시 로그인해주세요.',
-      );
+      expect(useAuthStore.getState().accessToken).toBe('some-token');
+      expect(showToast.error).toHaveBeenCalledWith('요청을 처리하지 못했습니다.', '');
     });
 
-    it('does nothing when not logged in', () => {
+    it('falls back to generic toast when not logged in', () => {
       handleApiError(401, '');
-      expect(showToast.error).not.toHaveBeenCalled();
+      expect(showToast.error).toHaveBeenCalledWith('요청을 처리하지 못했습니다.', '');
     });
   });
 
