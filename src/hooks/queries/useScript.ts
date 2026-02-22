@@ -69,28 +69,9 @@ export function useUpdateScript() {
         return hasUpdated ? next : old;
       });
 
-      queryClient.setQueriesData<GetProjectScriptsResponseDto>(
-        { queryKey: queryKeys.scripts.projects() },
-        (old) => {
-          if (!old) return old;
-          if (!Array.isArray(old.scripts)) return old;
-
-          let hasUpdated = false;
-          const nextScripts = old.scripts.map((scriptItem) => {
-            if (scriptItem.slideId !== slideId) return scriptItem;
-            hasUpdated = true;
-            return { ...scriptItem, scriptText: savedScript.scriptText };
-          });
-
-          if (!hasUpdated) return old;
-
-          return {
-            ...old,
-            scripts: nextScripts,
-          };
-        },
-      );
-
+      // 프로젝트별 스크립트 목록 캐시는 직접 수정하지 않고 무효화만 수행하여
+      // queryKeys.scripts.projects() 에 매칭되는 모든 캐시에 대한 잘못된 업데이트를 방지합니다.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.scripts.projects() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.scripts.versions(slideId) });
     },
   });
