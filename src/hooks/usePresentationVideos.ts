@@ -60,6 +60,7 @@ export function usePresentationVideos({
         // VideoPresentation 고유 필드들
         videoId: video.videoId,
         commentCount: video.feedbackCount || 0,
+        downloadUrl: video.hlsMasterUrl,
         status: video.status,
       }));
 

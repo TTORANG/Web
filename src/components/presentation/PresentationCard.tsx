@@ -30,18 +30,21 @@ type Props = (Presentation | VideoPresentation) & {
   isPresentationPending?: boolean;
   thumbnailVersion?: number;
   onDelete?: () => void;
+  onDownload?: () => void;
 };
 
 type SlideCardProps = Presentation &
   Omit<Props, keyof Presentation | 'mode'> & {
     mode?: 'slide';
     onUpdateTitle?: undefined;
+    onDownload?: undefined;
   };
 
 type VideoCardProps = VideoPresentation &
   Omit<Props, keyof VideoPresentation | 'mode'> & {
     mode: 'videos';
     onUpdateTitle: (newTitle: string) => Promise<void>;
+    onDownload?: () => void;
   };
 
 type CardProps = SlideCardProps | VideoCardProps;
@@ -76,6 +79,7 @@ function PresentationCard(props: CardProps) {
     isPresentationPending = false,
     thumbnailVersion,
     onDelete,
+    onDownload,
   } = props;
   const mode = props.mode ?? 'slide';
 
@@ -88,22 +92,22 @@ function PresentationCard(props: CardProps) {
     : null;
 
   const status: PresentationStatus = props.status;
+  const isSlideProcessingStatus =
+    status === 'queued' ||
+    status === 'uploading' ||
+    status === 'processing' ||
+    status === 'partial_done';
 
   const isProcessing = (() => {
-    if (isPresentationPending) return true;
-
     if (isVideoPresentation(props)) {
       // video status: 'uploading' | 'processing' | 'ready' | 'failed'
-      return props.status === 'uploading' || props.status === 'processing';
+      return isPresentationPending || props.status === 'uploading' || props.status === 'processing';
     }
 
-    // slide status: 'queued' | 'processing' | 'failed' | 'completed' | 'partial_done' | 'ready' | 'uploading'
-    return (
-      status === 'queued' ||
-      status === 'uploading' ||
-      status === 'processing' ||
-      status === 'partial_done'
-    );
+    if (isPresentationPending) return true;
+
+    // 홈(슬라이드)에서는 진행 상태이면서 썸네일이 없을 때만 처리 중 오버레이를 표시합니다.
+    return isSlideProcessingStatus && !thumbnailUrl;
   })();
 
   const minutes = durationSeconds > 0 ? Math.ceil(durationSeconds / 60) : null;
@@ -134,6 +138,8 @@ function PresentationCard(props: CardProps) {
   const viewCount = isVideo ? (props as VideoPresentation).viewCount : 0;
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const isRenaming = isRenameModalOpen && isRenamePending;
+  const isVideoDownloadable =
+    mode === 'videos' && isVideoPresentation(props) && props.status === 'ready';
 
   const handleCardClick = () => {
     // 모달이 열려있으면 이동 안함
@@ -149,6 +155,16 @@ function PresentationCard(props: CardProps) {
 
   const dropdownItems: DropdownItem[] = [
     { id: 'rename', label: '이름 변경', onClick: openRenameModal },
+    ...(mode === 'videos'
+      ? [
+          {
+            id: 'download',
+            label: '영상 다운로드',
+            onClick: () => onDownload?.(),
+            disabled: !onDownload || !isVideoDownloadable,
+          } satisfies DropdownItem,
+        ]
+      : []),
     { id: 'delete', label: '삭제', variant: 'danger', onClick: onDelete || openDeleteModal },
   ];
 

@@ -152,7 +152,7 @@ export default function PresentationsSection({
                 <PresentationCard
                   {...item}
                   highlightQuery={appliedQuery}
-                  isPresentationPending={pendingSet.has(item.projectId) || !item.thumbnailUrl}
+                  isPresentationPending={pendingSet.has(item.projectId)}
                   thumbnailVersion={thumbVersion[item.projectId] ?? 0}
                   mode={mode}
                 />
@@ -168,7 +168,7 @@ export default function PresentationsSection({
                 <PresentationList
                   {...item}
                   highlightQuery={appliedQuery}
-                  isPresentationPending={pendingSet.has(item.projectId) || !item.thumbnailUrl}
+                  isPresentationPending={pendingSet.has(item.projectId)}
                   thumbnailVersion={thumbVersion[item.projectId] ?? 0}
                   mode={mode}
                 />

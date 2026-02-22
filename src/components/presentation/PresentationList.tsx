@@ -30,18 +30,21 @@ type Props = (Presentation | VideoPresentation) & {
   isPresentationPending?: boolean;
   thumbnailVersion?: number;
   onDelete?: () => void;
+  onDownload?: () => void;
 };
 
 type SlideListProps = Presentation &
   Omit<Props, keyof Presentation | 'mode'> & {
     mode?: 'slide';
     onUpdateTitle?: undefined;
+    onDownload?: undefined;
   };
 
 type VideoListProps = VideoPresentation &
   Omit<Props, keyof VideoPresentation | 'mode'> & {
     mode: 'videos';
     onUpdateTitle: (newTitle: string) => Promise<void>;
+    onDownload?: () => void;
   };
 
 type ListProps = SlideListProps | VideoListProps;
@@ -112,6 +115,7 @@ function PresentationList(props: ListProps) {
     isPresentationPending,
     thumbnailVersion,
     onDelete,
+    onDownload,
     highlightQuery = '',
   } = props;
   const mode = props.mode ?? 'slide';
@@ -125,19 +129,21 @@ function PresentationList(props: ListProps) {
     ? `${thumbnailUrl}${thumbnailUrl.includes('?') ? '&' : '?'}v=${thumbnailVersion}`
     : null;
 
-  const isProcessing = (() => {
-    if (isPresentationPending) return true;
+  const isSlideProcessingStatus =
+    props.status === 'queued' ||
+    props.status === 'uploading' ||
+    props.status === 'processing' ||
+    props.status === 'partial_done';
 
+  const isProcessing = (() => {
     if (isVideoPresentation(props)) {
-      return props.status === 'uploading' || props.status === 'processing';
+      return isPresentationPending || props.status === 'uploading' || props.status === 'processing';
     }
 
-    return (
-      props.status === 'queued' ||
-      props.status === 'uploading' ||
-      props.status === 'processing' ||
-      props.status === 'partial_done'
-    );
+    if (isPresentationPending) return true;
+
+    // 홈(슬라이드)에서는 진행 상태이면서 썸네일이 없을 때만 처리 중 오버레이를 표시합니다.
+    return isSlideProcessingStatus && !thumbnailUrl;
   })();
 
   const minutes = durationSeconds > 0 ? Math.ceil(durationSeconds / 60) : null;
@@ -167,6 +173,8 @@ function PresentationList(props: ListProps) {
   const reactionCount = isVideo ? (props as VideoPresentation).reactionCount : 0;
   const viewCount = isVideo ? (props as VideoPresentation).viewCount : 0;
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const isVideoDownloadable =
+    mode === 'videos' && isVideoPresentation(props) && props.status === 'ready';
 
   const isRenaming = isRenameModalOpen && isRenamePending;
 
@@ -196,6 +204,16 @@ function PresentationList(props: ListProps) {
       label: '이름 변경',
       onClick: openRenameModal,
     },
+    ...(mode === 'videos'
+      ? [
+          {
+            id: 'download',
+            label: '영상 다운로드',
+            onClick: () => onDownload?.(),
+            disabled: !onDownload || !isVideoDownloadable,
+          } satisfies DropdownItem,
+        ]
+      : []),
     {
       id: 'delete',
       label: '삭제',

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
@@ -18,9 +18,37 @@ import { showToast } from '@/utils/toast';
 
 const SKELETON_CARD_COUNT = 6;
 const SKELETON_LIST_COUNT = 4;
+const DEFAULT_VIDEO_EXTENSION = 'mp4';
 
 type DeleteTarget = { id: string; title: string } | null;
 type VideoListQueryData = { videos: VideoPresentation[]; total: number };
+
+function sanitizeFilename(fileName: string): string {
+  const sanitized = fileName.replace(/[\\/:*?"<>|]+/g, '_').trim();
+  return sanitized.length > 0 ? sanitized : 'video';
+}
+
+function parseFileExtension(url: string): string {
+  try {
+    const pathname = new URL(url, window.location.origin).pathname;
+    const fileName = pathname.split('/').pop() ?? '';
+    const matched = fileName.match(/\.([a-zA-Z0-9]+)$/);
+    return matched?.[1]?.toLowerCase() || DEFAULT_VIDEO_EXTENSION;
+  } catch {
+    return DEFAULT_VIDEO_EXTENSION;
+  }
+}
+
+function startVideoDownload(downloadUrl: string, title: string) {
+  const link = document.createElement('a');
+  link.href = downloadUrl;
+  link.download = `${sanitizeFilename(title)}.${parseFileExtension(downloadUrl)}`;
+  link.rel = 'noopener noreferrer';
+  link.target = '_blank';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
 
 function updateVideoListCache(
   queryClient: QueryClient,
@@ -56,6 +84,7 @@ export default function VideoListPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [videoToDelete, setVideoToDelete] = useState<DeleteTarget>(null);
   const [deletingVideoIds, setDeletingVideoIds] = useState<Set<string>>(new Set());
+  const downloadingVideoIdsRef = useRef<Set<string>>(new Set());
 
   // 썸네일/처리 폴링 상태
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
@@ -235,6 +264,42 @@ export default function VideoListPage() {
     },
     [projectId, queryClient],
   );
+
+  const handleDownloadVideo = useCallback(async (video: VideoPresentation) => {
+    const videoId = String(video.videoId ?? '');
+    if (!videoId) {
+      showToast.error('영상 다운로드에 실패했습니다.', '유효하지 않은 영상 ID입니다.');
+      return;
+    }
+
+    if (video.status !== 'ready') {
+      showToast.info('영상 처리 완료 후 다운로드할 수 있습니다.');
+      return;
+    }
+
+    if (downloadingVideoIdsRef.current.has(videoId)) {
+      return;
+    }
+
+    downloadingVideoIdsRef.current.add(videoId);
+
+    try {
+      const downloadUrl = video.downloadUrl?.trim();
+      if (!downloadUrl) {
+        throw new Error('목록 응답에 다운로드 URL이 없습니다.');
+      }
+
+      startVideoDownload(downloadUrl, video.title);
+      showToast.success('영상 다운로드를 시작했습니다.');
+    } catch (err) {
+      showToast.error(
+        '영상 다운로드에 실패했습니다.',
+        err instanceof Error ? err.message : '잠시 후 다시 시도해주세요.',
+      );
+    } finally {
+      downloadingVideoIdsRef.current.delete(videoId);
+    }
+  }, []);
 
   const openDeleteModal = useCallback((id: string, title: string) => {
     setVideoToDelete({ id, title });
@@ -439,6 +504,9 @@ export default function VideoListPage() {
                         thumbnailVersion={thumbVersion[id] ?? 0}
                         onDelete={() => openDeleteModal(id, item.title)}
                         onUpdateTitle={(newTitle) => handleUpdateVideoTitle(id, newTitle)}
+                        onDownload={() => {
+                          void handleDownloadVideo(item);
+                        }}
                       />
 
                       {item.isFailed && !isDeleting && (
@@ -504,6 +572,9 @@ export default function VideoListPage() {
                         thumbnailVersion={thumbVersion[id] ?? 0}
                         onDelete={() => openDeleteModal(id, item.title)}
                         onUpdateTitle={(newTitle) => handleUpdateVideoTitle(id, newTitle)}
+                        onDownload={() => {
+                          void handleDownloadVideo(item);
+                        }}
                       />
                     </div>
                   );
