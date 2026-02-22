@@ -179,20 +179,28 @@ export default function ProgressBar({
       )}
     >
       {/* 프로그레스바 위 흰색 마커 (슬라이드 전환 시점) */}
-      {slideChangeTimes?.map((time, index) => {
-        const percent = max > 0 ? (time / max) * 100 : 0;
-        return (
-          <div
-            key={`marker-${time}-${index}`}
-            className="absolute top-1/2 -translate-y-1/2 z-10 h-1.5 w-0.5 rounded-full bg-[#FFFFFF]/70"
-            style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
-          />
-        );
-      })}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
+        {slideChangeTimes?.map((time, index) => {
+          if (!Number.isFinite(time) || max <= 0 || time < 0 || time > max) return null;
+
+          const percent = clampPercent((time / max) * 100);
+          const markerTranslateX = percent <= 0 ? '0%' : percent >= 100 ? '-100%' : '-50%';
+
+          return (
+            <div
+              key={`marker-${time}-${index}`}
+              className="absolute top-1/2 z-10 h-1.5 w-0.5 rounded-full bg-[#FFFFFF]/70"
+              style={{ left: `${percent}%`, transform: `translate(${markerTranslateX}, -50%)` }}
+            />
+          );
+        })}
+      </div>
 
       {/* 세그먼트 하이라이트 (5초 버킷별 대표 리액션) */}
       {segmentHighlights?.map((segment, index) => {
-        const percent = max > 0 ? (segment.startTime / max) * 100 : 0;
+        if (!Number.isFinite(segment.startTime) || max <= 0 || segment.startTime < 0) return null;
+
+        const percent = clampPercent((segment.startTime / max) * 100);
         return (
           <div
             key={`segment-${segment.startTime}-${segment.topReactionType}-${index}`}

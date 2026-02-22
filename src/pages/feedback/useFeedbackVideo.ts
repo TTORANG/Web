@@ -25,8 +25,7 @@ import type {
 import type { SlideDetail } from '@/types/slide';
 import type { VideoTimestampFeedback } from '@/types/video';
 import { formatVideoTimestamp } from '@/utils/format';
-import { SHARED_PROJECT_ID, normalizeSharedSlides } from '@/utils/sharedContent';
-import { getSlideTitle } from '@/utils/slideTitle';
+import { normalizeSharedSlides } from '@/utils/sharedContent';
 import { getSlideIndexFromTime } from '@/utils/video';
 
 // 타임라인 데이터 없을때, 슬라이드 1장당 10초로 균등분배
@@ -70,46 +69,36 @@ function mapSlidesByTimeline(
   sourceSlides: SlideDetail[],
   timeline: Array<{ slideId: string; title?: string | null; timestampMs: number }>,
 ): { slides: SlideDetail[]; slideChangeTimes: number[] } {
-  if (!timeline.length) {
-    const slides = sourceSlides.map((slide, index) => ({
-      ...slide,
-      startTime:
-        typeof slide.startTime === 'number' && Number.isFinite(slide.startTime)
-          ? slide.startTime
-          : index * FALLBACK_SLIDE_DURATION_SECONDS,
-    }));
-    return { slides, slideChangeTimes: slides.map((slide) => slide.startTime ?? 0) };
-  }
+  const timelineStartBySlideId = new Map(
+    timeline
+      .filter((item) => item.slideId)
+      .map((item) => [String(item.slideId), Math.max(0, item.timestampMs / 1000)]),
+  );
 
-  const sortedTimeline = timeline
-    .slice()
-    .sort((a, b) => a.timestampMs - b.timestampMs)
-    .filter((item) => item.slideId);
-  const slideMap = new Map(sourceSlides.map((slide) => [String(slide.slideId), slide]));
-  const now = new Date().toISOString();
-  const fallbackProjectId = sourceSlides[0]?.projectId ?? SHARED_PROJECT_ID;
+  let previousStartTime = -1;
+  const slides = sourceSlides.map((slide, index) => {
+    const mappedStartTime = timelineStartBySlideId.get(String(slide.slideId));
+    const fallbackStartTime =
+      typeof slide.startTime === 'number' &&
+      Number.isFinite(slide.startTime) &&
+      slide.startTime >= 0
+        ? slide.startTime
+        : previousStartTime >= 0
+          ? previousStartTime + FALLBACK_SLIDE_DURATION_SECONDS
+          : index * FALLBACK_SLIDE_DURATION_SECONDS;
 
-  const slides = sortedTimeline.map((item, index) => {
-    const matchedSlide = slideMap.get(String(item.slideId)) ?? sourceSlides[index];
+    const baseStartTime = mappedStartTime ?? fallbackStartTime;
+    const normalizedStartTime =
+      previousStartTime >= 0 && baseStartTime < previousStartTime
+        ? previousStartTime + FALLBACK_SLIDE_DURATION_SECONDS
+        : baseStartTime;
 
-    if (matchedSlide) {
-      return {
-        ...matchedSlide,
-        startTime: Math.max(0, item.timestampMs / 1000),
-      };
-    }
+    previousStartTime = normalizedStartTime;
 
     return {
-      slideId: String(item.slideId),
-      projectId: fallbackProjectId,
-      title: getSlideTitle(item.title, index + 1),
-      slideNum: index + 1,
-      imageUrl: '',
-      createdAt: now,
-      updatedAt: now,
-      script: '',
-      startTime: Math.max(0, item.timestampMs / 1000),
-    } satisfies SlideDetail;
+      ...slide,
+      startTime: normalizedStartTime,
+    };
   });
 
   return {
@@ -120,6 +109,58 @@ function mapSlidesByTimeline(
 
 function normalizeTimestampMs(value: number | null | undefined): number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+}
+
+function isStrictlyIncreasingTimeline(
+  timeline: Array<{ slideId: string; timestampMs: number }>,
+): boolean {
+  if (timeline.length < 2) return timeline.length === 1;
+
+  for (let index = 1; index < timeline.length; index += 1) {
+    if (timeline[index].timestampMs <= timeline[index - 1].timestampMs) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function buildTimelineBySlideOrder(
+  sourceSlides: SlideDetail[],
+  rawSlides: ReadSharedContentData['presentationContent']['slides'],
+): Array<{ slideId: string; title?: string | null; timestampMs: number }> {
+  const timestampBySlideId = new Map<string, { title?: string | null; timestampMs: number }>();
+
+  rawSlides.forEach((slide) => {
+    if (
+      typeof slide.timestampMs !== 'number' ||
+      !Number.isFinite(slide.timestampMs) ||
+      slide.timestampMs < 0
+    ) {
+      return;
+    }
+
+    const slideId = String(slide.slideId);
+    if (timestampBySlideId.has(slideId)) return;
+
+    timestampBySlideId.set(slideId, {
+      title: slide.title,
+      timestampMs: normalizeTimestampMs(slide.timestampMs),
+    });
+  });
+
+  return sourceSlides.flatMap((slide) => {
+    const timelineItem = timestampBySlideId.get(String(slide.slideId));
+    if (!timelineItem) return [];
+
+    return [
+      {
+        slideId: String(slide.slideId),
+        title: timelineItem.title,
+        timestampMs: timelineItem.timestampMs,
+      },
+    ];
+  });
 }
 
 function mapSharedCommentsToFeedbacks(
@@ -208,18 +249,10 @@ export function useFeedbackVideo(
       const sharedSlides = normalizeSharedSlides(content.presentationContent.slides);
       const sharedComments = content.presentationContent.comments;
       const sharedFeedbacks = mapSharedCommentsToFeedbacks(sharedComments);
-      const fallbackTimelineSlides = content.presentationContent.slides
-        .filter(
-          (slide) =>
-            typeof slide.timestampMs === 'number' &&
-            Number.isFinite(slide.timestampMs) &&
-            slide.timestampMs >= 0,
-        )
-        .map((slide) => ({
-          slideId: String(slide.slideId),
-          title: slide.title,
-          timestampMs: normalizeTimestampMs(slide.timestampMs),
-        }));
+      const fallbackTimelineSlides = buildTimelineBySlideOrder(
+        sharedSlides,
+        content.presentationContent.slides,
+      );
 
       const videoId = content.presentationContent.video?.videoId ?? '';
       const normalizedVideoId = String(videoId);
@@ -229,8 +262,9 @@ export function useFeedbackVideo(
         content.presentationContent.title.trim().length > 0;
       let videoTitle = hasOriginalTitle ? content.presentationContent.title : '공유 영상';
       let duration = 0;
-      let timelineSlides: Array<{ slideId: string; timestampMs: number }> = fallbackTimelineSlides;
-      const hasSharedTimeline = fallbackTimelineSlides.length > 0;
+      const hasSharedTimeline = isStrictlyIncreasingTimeline(fallbackTimelineSlides);
+      let timelineSlides: Array<{ slideId: string; title?: string | null; timestampMs: number }> =
+        hasSharedTimeline ? fallbackTimelineSlides : [];
       const needsVideoDetail = !videoUrl || !hasOriginalTitle;
 
       if (normalizedVideoId) {
@@ -256,11 +290,22 @@ export function useFeedbackVideo(
           timelineResult.value &&
           timelineResult.value.data.resultType === 'SUCCESS'
         ) {
-          timelineSlides = timelineResult.value.data.success.slides.map((slide) => ({
-            slideId: String(slide.slideId),
-            title: slide.title,
-            timestampMs: slide.timestampMs,
-          }));
+          const timelineFromVideoApi = timelineResult.value.data.success.slides
+            .filter(
+              (slide) =>
+                typeof slide.timestampMs === 'number' &&
+                Number.isFinite(slide.timestampMs) &&
+                slide.timestampMs >= 0,
+            )
+            .map((slide) => ({
+              slideId: String(slide.slideId),
+              title: slide.title,
+              timestampMs: normalizeTimestampMs(slide.timestampMs),
+            }));
+
+          if (isStrictlyIncreasingTimeline(timelineFromVideoApi)) {
+            timelineSlides = timelineFromVideoApi;
+          }
         }
       }
 

@@ -173,6 +173,33 @@ describe('useFeedbackVideo', () => {
     expect(mockedVideosApi.getVideoDetail).not.toHaveBeenCalled();
   });
 
+  it('공유 타임라인이 비정상 정렬이면 video slides API로 타임라인을 보정한다', async () => {
+    const invalidSharedTimelineContent: ReadSharedContentData = {
+      ...baseSharedContent,
+      presentationContent: {
+        ...baseSharedContent.presentationContent,
+        slides: [
+          {
+            ...baseSharedContent.presentationContent.slides[0],
+            timestampMs: 5000,
+          },
+          {
+            ...baseSharedContent.presentationContent.slides[1],
+            timestampMs: 1000,
+          },
+        ],
+      },
+    };
+
+    const { result } = renderHook(() => useFeedbackVideo(invalidSharedTimelineContent));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(mockedVideosApi.getVideoSlides).toHaveBeenCalledTimes(1);
+    expect(result.current.projectSlides.map((slide) => slide.slideId)).toEqual(['1', '2']);
+    expect(result.current.slideChangeTimes).toEqual([0, 4]);
+  });
+
   it('타임라인/영상 URL이 없으면 필요한 API를 1회씩 호출한다', async () => {
     const contentWithoutTimeline: ReadSharedContentData = {
       ...baseSharedContent,
