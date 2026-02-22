@@ -133,8 +133,9 @@ export const useFeedbackSlide = ({
   }, [slides]);
 
   const { data: sharedCommentsData, isFetching: isCommentsLoading } = useSharedComments(
-    shareToken ?? '',
-    sessionId,
+    encodeURIComponent(shareToken ?? ''),
+    encodeURIComponent(sessionId ?? ''),
+    {
     {
       enabled: !!shareToken,
       initialData: {
