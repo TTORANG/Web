@@ -53,14 +53,14 @@ export default function PresentationHeader({
         <SearchIcon className="h-6 w-6 text-gray-400 shrink-0" />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 sm:ml-4 sm:flex-nowrap sm:shrink-0">
+      <div className="flex items-center gap-1.5 sm:ml-4 sm:gap-2 sm:shrink-0">
         {/* 필터 */}
         <Dropdown
           trigger={({ isOpen }) => (
             <button
               type="button"
               className={clsx(
-                'flex w-[6rem] shrink-0 items-center justify-between gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold whitespace-nowrap transition-colors duration-200',
+                'flex w-[5.5rem] shrink-0 items-center justify-between gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold whitespace-nowrap transition-colors duration-200 sm:w-[6rem]',
                 isOpen ? 'text-main' : 'text-gray-800',
               )}
             >
@@ -86,7 +86,7 @@ export default function PresentationHeader({
           trigger={({ isOpen }) => (
             <button
               className={clsx(
-                'flex w-[8rem] shrink-0 items-center justify-between gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold whitespace-nowrap transition-colors duration-200',
+                'flex w-[7rem] shrink-0 items-center justify-between gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold whitespace-nowrap transition-colors duration-200 sm:w-[8rem]',
                 isOpen ? 'text-main' : 'text-gray-800',
               )}
               type="button"
@@ -112,7 +112,7 @@ export default function PresentationHeader({
         />
 
         {/* 보기 방식 | 카드 or 리스트 */}
-        <div className="ml-1 flex items-center">
+        <div className="flex items-center sm:ml-1">
           <button
             aria-label="카드 보기"
             className={clsx(

@@ -14,6 +14,7 @@ import VideoPresentationCard from '@/components/presentation/VideoPresentationCa
 import VideoPresentationList from '@/components/presentation/VideoPresentationList';
 import { DeleteVideoModal, RecordingEmptySection } from '@/components/video';
 import { DEMO_SHARE_PATH, isDemoProject } from '@/constants/demoProject';
+import { useIsDesktop } from '@/hooks';
 import { usePresentationVideos } from '@/hooks/usePresentationVideos';
 import type { FilterMode, SortMode, ViewMode } from '@/types/home';
 import type { VideoPresentation } from '@/types/video';
@@ -86,6 +87,7 @@ export default function VideoListPage() {
   const location = useLocation();
   const { projectId } = useParams<{ projectId: string }>();
   const isDemoProjectId = isDemoProject(projectId);
+  const isDesktop = useIsDesktop();
   const queryClient = useQueryClient();
 
   // UI 상태
@@ -438,7 +440,7 @@ export default function VideoListPage() {
   const renderSkeleton = () => {
     if (viewMode === 'card') {
       return (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: SKELETON_CARD_COUNT }).map((_, i) => (
             <PresentationCardSkeleton key={i} />
           ))}
@@ -504,7 +506,7 @@ export default function VideoListPage() {
       id="tabpanel-videos"
       aria-labelledby="tab-videos"
       className="relative h-full w-full overflow-y-auto bg-gray-100"
-      style={{ scrollbarGutter: 'stable' }}
+      style={{ scrollbarGutter: isDesktop ? 'stable' : 'auto' }}
     >
       <DeleteVideoModal
         isOpen={deleteModalOpen}
@@ -522,16 +524,16 @@ export default function VideoListPage() {
           <RecordingEmptySection onStart={handleStartRecording} />
         </div>
       ) : (
-        <main className="flex h-full flex-col px-18 py-8">
+        <main className="flex h-full flex-col px-4 py-6 md:px-18 md:py-8">
           <div className="mb-6">
             <h1 className="text-body-l-bold text-gray-800 mb-1">녹화된 영상</h1>
             <p className="text-body-s text-gray-600">발표 연습 영상을 선택해서 확인하세요</p>
           </div>
 
-          <div className="mb-4 flex justify-end">
+          <div className="mb-4 flex justify-center md:justify-end">
             <button
               onClick={handleStartRecording}
-              className="px-6 py-2.5 bg-main hover:bg-main-variant2 text-white rounded-lg font-semibold transition-all duration-200 active:scale-[0.98]"
+              className="w-full px-6 py-2.5 bg-main hover:bg-main-variant2 text-white rounded-lg font-semibold transition-all duration-200 active:scale-[0.98] md:w-auto"
             >
               영상 녹화하기
             </button>
@@ -554,7 +556,7 @@ export default function VideoListPage() {
             {showSkeletonUI ? (
               renderSkeleton()
             ) : !hasResults ? (
-              <div className="flex items-center justify-center p-40">
+              <div className="flex items-center justify-center p-8 md:p-40">
                 <p className="text-body-m text-gray-500">
                   {hasAppliedQuery
                     ? `'${appliedQuery}'에 대한 검색 결과를 찾지 못했어요.`
@@ -565,7 +567,7 @@ export default function VideoListPage() {
               <CardView
                 items={videos}
                 getKey={(item) => String(item.videoId)}
-                className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-3"
+                className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3"
                 renderCard={(item) => {
                   const id = String(item.videoId);
                   const isDeleting = deletingVideoIds.has(id);
