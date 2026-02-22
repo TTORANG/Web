@@ -17,6 +17,7 @@ interface SlideViewerProps {
 export default function SlideViewer({ isLoading }: SlideViewerProps) {
   const thumb = useSlideThumb();
   const title = useSlideTitle();
+  const imageAlt = title ?? '슬라이드';
 
   return (
     <section className="flex flex-1 min-h-0 flex-col justify-center overflow-hidden">
@@ -30,7 +31,7 @@ export default function SlideViewer({ isLoading }: SlideViewerProps) {
             <div className="relative mx-auto w-fit shadow-sm overflow-hidden rounded-lg">
               <SlideImage
                 src={thumb}
-                alt={title}
+                alt={imageAlt}
                 maxHeight={SLIDE_MAX_HEIGHT}
                 loading="eager"
                 decoding="async"

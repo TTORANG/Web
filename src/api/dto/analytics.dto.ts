@@ -51,7 +51,7 @@ export interface RecordExitRequestDto {
 export interface SlideAnalyticsDto {
   slideId: string;
   slideNum: number;
-  title: string;
+  title: string | null;
   viewCount: number;
   exitCount: number;
   exitRate: number;
@@ -117,7 +117,7 @@ export interface ReadPresentationAnalyticsSummaryDto {
 export interface SlideRetentionDto {
   slideId: string;
   slideNum: number;
-  title: string;
+  title: string | null;
   sessionCount: number;
   retentionRate: number;
 }
@@ -185,7 +185,7 @@ export interface RecentCommentUserDto {
 export interface RecentCommentSlideDto {
   slideId: string;
   slideNum: number;
-  title: string;
+  title: string | null;
   imageUrl: string;
 }
 
