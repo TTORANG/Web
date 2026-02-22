@@ -136,7 +136,6 @@ export const useFeedbackSlide = ({
     encodeURIComponent(shareToken ?? ''),
     encodeURIComponent(sessionId ?? ''),
     {
-    {
       enabled: !!shareToken,
       initialData: {
         comments: sharedComments,
