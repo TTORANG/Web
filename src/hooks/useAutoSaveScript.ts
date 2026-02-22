@@ -1,20 +1,20 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useUpdateScript } from '@/hooks/queries/useScript';
-import { showToast } from '@/utils/toast';
 
 import { useDebouncedCallback } from './useDebounce';
 import { useSlideId, useSlideProjectId } from './useSlideSelectors';
 
 const AUTOSAVE_DELAY = 300;
+type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 /**
  * 대본 자동저장 훅
  *
- * 300ms debounce로 대본을 자동저장하고 Toast로 피드백을 제공합니다.
+ * 300ms debounce로 대본을 자동저장하고 저장 상태를 제공합니다.
  *
  * @example
- * const { autoSave, flushSave, isSaving } = useAutoSaveScript();
+ * const { autoSave, flushSave, saveStatus, lastSavedAt } = useAutoSaveScript();
  *
  * const handleChange = (value: string) => {
  *   updateScript(value);
@@ -25,6 +25,8 @@ export function useAutoSaveScript() {
   const slideId = useSlideId();
   const projectId = useSlideProjectId();
   const { mutateAsync, isPending } = useUpdateScript();
+  const [saveStatus, setSaveStatus] = useState<AutoSaveStatus>('idle');
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const lastSavedRef = useRef<string>('');
   const pendingScriptRef = useRef<string | null>(null);
   const isSavingRef = useRef(false);
@@ -39,6 +41,7 @@ export function useAutoSaveScript() {
     if (scriptToSave === null || scriptToSave === lastSavedRef.current) return;
 
     isSavingRef.current = true;
+    setSaveStatus('saving');
     let saveSucceeded = false;
     try {
       await mutateAsync({ slideId, projectId, data: { script: scriptToSave } });
@@ -50,10 +53,12 @@ export function useAutoSaveScript() {
 
       if (pendingScriptRef.current === scriptToSave) {
         pendingScriptRef.current = null;
-        showToast.success('대본을 저장했습니다.', '작성 내용이 자동으로 반영되었습니다.');
+        setLastSavedAt(Date.now());
+        setSaveStatus('saved');
       }
     } catch {
-      showToast.error('대본을 저장하지 못했습니다.', '다시 시도해주세요.');
+      if (activeSlideIdRef.current !== slideId) return;
+      setSaveStatus('error');
     } finally {
       isSavingRef.current = false;
     }
@@ -91,6 +96,8 @@ export function useAutoSaveScript() {
     lastSavedRef.current = '';
     pendingScriptRef.current = null;
     isSavingRef.current = false;
+    setSaveStatus('idle');
+    setLastSavedAt(null);
   }, [slideId]);
 
   useEffect(() => {
@@ -111,6 +118,8 @@ export function useAutoSaveScript() {
   return {
     autoSave,
     flushSave,
-    isSaving: isPending,
+    isSaving: isPending || saveStatus === 'saving',
+    saveStatus,
+    lastSavedAt,
   };
 }
