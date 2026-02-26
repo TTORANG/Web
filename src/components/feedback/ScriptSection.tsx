@@ -129,7 +129,7 @@ export default function ScriptSection({
             )}
           >
             <span className="shrink-0 text-body-s min-w-[45px]">{timeStr}</span>
-            <p className="flex-1 text-body-s leading-relaxed whitespace-pre-line">
+            <p className="flex-1 text-body-s leading-relaxed whitespace-pre-line text-wrap-readable">
               {slide.script || '(대본 없음)'}
             </p>
           </div>

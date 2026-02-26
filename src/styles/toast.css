@@ -28,8 +28,8 @@
   /* 제목/설명 텍스트 오버플로우 처리 */
   [data-sonner-toast] [data-title],
   [data-sonner-toast] [data-description] {
-    @apply break-words;
-    word-break: break-word !important;
+    word-break: keep-all !important;
+    overflow-wrap: break-word !important;
   }
 
   /* description이 있을 때 세로 배치 */

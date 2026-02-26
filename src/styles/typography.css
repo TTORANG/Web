@@ -78,3 +78,8 @@
   line-height: var(--line-height);
   letter-spacing: var(--letter-spacing);
 }
+
+.text-wrap-readable {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}

@@ -191,7 +191,7 @@ function Comment({ comment, isIndented = false, rootCommentId }: CommentProps) {
                 textareaClassName="text-body-s text-black"
               />
             ) : (
-              <div className="text-body-s text-black">
+              <div className="text-body-s text-black text-wrap-readable">
                 {shouldShowRef && commentRef && (
                   <button
                     type="button"

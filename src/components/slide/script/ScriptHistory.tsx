@@ -75,7 +75,7 @@ export default function ScriptHistory() {
         <div className="border-b border-gray-200 bg-gray-100 px-4 pb-4 pt-3">
           <div className="flex flex-col gap-3">
             <span className="text-xs font-semibold leading-4 text-gray-600">현재</span>
-            <p className="text-sm font-medium leading-5 text-gray-800">
+            <p className="text-sm font-medium leading-5 text-gray-800 text-wrap-readable">
               {script || '(대본이 비어있습니다)'}
             </p>
           </div>
@@ -114,7 +114,7 @@ export default function ScriptHistory() {
                   <RevertIcon className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
-              <p className="mt-2 text-sm font-medium leading-5 text-gray-800">
+              <p className="mt-2 text-sm font-medium leading-5 text-gray-800 text-wrap-readable">
                 {version.scriptText}
               </p>
             </div>
