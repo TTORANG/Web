@@ -144,7 +144,7 @@ export function useInsightPageModel(): InsightModel {
   const slideAnalytics = isDemoProjectId ? DEMO_SLIDE_ANALYTICS : slideAnalyticsQuery.data;
   const summaryAnalytics = isDemoProjectId ? DEMO_ANALYTICS_SUMMARY : summaryAnalyticsQuery.data;
 
-  const videoIds = useMemo(() => {
+  const summaryVideoIds = useMemo(() => {
     const sourceIds = isDemoProjectId
       ? DEMO_VIDEO_LIST_ITEMS.map((video) => String(video.videoId))
       : (summaryAnalytics?.videoIds ?? []);
@@ -162,14 +162,13 @@ export function useInsightPageModel(): InsightModel {
     return deduplicated;
   }, [isDemoProjectId, summaryAnalytics?.videoIds]);
 
-  const latestVideoId = videoIds[videoIds.length - 1] ?? null;
-  const hasVideo = videoIds.length > 0;
+  const hasSummaryVideo = summaryVideoIds.length > 0;
   const [selectedDataSourceKey, setSelectedDataSourceKey] = useState(AUTO_DATA_SOURCE_KEY);
 
   const presentationVideosQuery = usePresentationVideos({
     projectId: projectIdStr,
     sort: 'recent',
-    enabled: Boolean(projectIdStr) && (isDemoProjectId || hasVideo),
+    enabled: Boolean(projectIdStr) && (isDemoProjectId || hasSummaryVideo),
   });
 
   const videoMetaById = useMemo(() => {
@@ -181,6 +180,7 @@ export function useInsightPageModel(): InsightModel {
         viewCount: number;
         feedbackCount: number;
         thumbnailUrl?: string;
+        status: string;
       }
     >();
 
@@ -193,10 +193,19 @@ export function useInsightPageModel(): InsightModel {
         viewCount: video.viewCount,
         feedbackCount: video.feedbackCount,
         thumbnailUrl: video.thumbnailUrl || undefined,
+        status: video.status,
       });
     });
     return mapped;
   }, [presentationVideosQuery.data?.videos]);
+
+  const videoIds = useMemo(() => {
+    if (!summaryVideoIds.length) return [];
+    return summaryVideoIds.filter((videoId) => videoMetaById.get(videoId)?.status !== 'processing');
+  }, [summaryVideoIds, videoMetaById]);
+
+  const latestVideoId = videoIds[videoIds.length - 1] ?? null;
+  const hasVideo = videoIds.length > 0;
 
   const dataSourceOptions = useMemo<InsightModel['dataSourceOptions']>(() => {
     const options: InsightModel['dataSourceOptions'] = [
