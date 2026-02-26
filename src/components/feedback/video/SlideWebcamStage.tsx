@@ -9,7 +9,7 @@
  */
 /* eslint-disable no-console */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 
 import clsx from 'clsx';
 import type Hls from 'hls.js';
@@ -21,10 +21,26 @@ import { useVideoSync } from '@/hooks/useVideoSync';
 import type { SlideListItem } from '@/types/slide';
 import type { SegmentHighlight } from '@/types/video';
 import { getSlideTitle } from '@/utils/slideTitle';
-import { getSlideIndexFromTime } from '@/utils/video';
+import { clamp, getSlideIndexFromTime } from '@/utils/video';
 
 const LAYOUT_STORAGE_KEY = 'feedback-video-layout';
+const SEEK_STEP_SECONDS = 5;
+const STAGE_SINGLE_CLICK_DELAY_MS = 250;
+const STAGE_CENTER_ZONE_START = 0.35;
+const STAGE_CENTER_ZONE_END = 0.65;
 type VideoLoadState = 'idle' | 'loading' | 'ready' | 'error';
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+
+  const tagName = target.tagName;
+  return (
+    tagName === 'INPUT' ||
+    tagName === 'TEXTAREA' ||
+    tagName === 'SELECT' ||
+    target.isContentEditable
+  );
+}
 
 function getVideoErrorMessage(error: MediaError | null): string {
   if (!error) return '알 수 없는 오류가 발생했습니다.';
@@ -254,6 +270,15 @@ export default function SlideWebcamStage({
   }, []);
 
   useEffect(() => {
+    return () => {
+      if (clickTimeoutRef.current) {
+        window.clearTimeout(clickTimeoutRef.current);
+        clickTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (!webcamVideoUrl) {
       setVideoLoadState('idle');
       setVideoErrorMessage(null);
@@ -369,34 +394,89 @@ export default function SlideWebcamStage({
   const isMediaReady = videoLoadState === 'ready';
   const isMediaLoading = videoLoadState === 'loading';
   const canControlPlayback = Boolean(videoElement) && isMediaReady;
+  const seekRelative = useCallback(
+    (deltaSeconds: number) => {
+      if (!canControlPlayback || !videoElement) return;
+
+      const nextRawTime = videoElement.currentTime + deltaSeconds;
+      const maxDuration =
+        Number.isFinite(videoElement.duration) && videoElement.duration >= 0
+          ? videoElement.duration
+          : Number.isFinite(duration) && duration >= 0
+            ? duration
+            : null;
+      const nextTime =
+        maxDuration == null ? Math.max(0, nextRawTime) : clamp(nextRawTime, 0, maxDuration);
+
+      // eslint-disable-next-line react-hooks/immutability -- DOM API
+      videoElement.currentTime = nextTime;
+    },
+    [canControlPlayback, duration, videoElement],
+  );
 
   const retryVideoLoad = useCallback(() => {
     if (!videoElement || !webcamVideoUrl) return;
     attachVideoSource(videoElement);
   }, [attachVideoSource, videoElement, webcamVideoUrl]);
 
+  useEffect(() => {
+    const handleArrowSeek = (event: KeyboardEvent) => {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      if (isEditableTarget(event.target)) return;
+      if (!canControlPlayback) return;
+
+      event.preventDefault();
+      seekRelative(event.key === 'ArrowLeft' ? -SEEK_STEP_SECONDS : SEEK_STEP_SECONDS);
+    };
+
+    window.addEventListener('keydown', handleArrowSeek);
+    return () => {
+      window.removeEventListener('keydown', handleArrowSeek);
+    };
+  }, [canControlPlayback, seekRelative]);
+
   // 스테이지 한번 클릭 → 재생/일시정지
-  const handleStageClick = useCallback(() => {
-    // 더블클릭 대기 중인 타이머가 있으면 취소
-    if (clickTimeoutRef.current) {
-      window.clearTimeout(clickTimeoutRef.current);
-      clickTimeoutRef.current = null;
-    }
+  const handleStageClick = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      const clickX = event.clientX;
+      const rect = event.currentTarget.getBoundingClientRect();
 
-    // 250ms 후에 싱글클릭 동작 실행 (더블클릭 여부 확인용 딜레이)
-    clickTimeoutRef.current = window.setTimeout(() => {
-      clickTimeoutRef.current = null;
-      if (!videoElement) return;
+      if (rect.width <= 0) return;
 
-      if (videoElement.paused) {
-        videoElement.play().catch(() => {
-          // autoplay 정책 등
-        });
-      } else {
-        videoElement.pause();
+      const clickRatio = (clickX - rect.left) / rect.width;
+
+      // 더블클릭 대기 중인 타이머가 있으면 취소
+      if (clickTimeoutRef.current) {
+        window.clearTimeout(clickTimeoutRef.current);
+        clickTimeoutRef.current = null;
       }
-    }, 250);
-  }, [videoElement]);
+
+      // 지연 후 싱글클릭 동작 실행 (더블클릭 여부 확인용)
+      clickTimeoutRef.current = window.setTimeout(() => {
+        clickTimeoutRef.current = null;
+        if (!videoElement) return;
+
+        if (clickRatio < STAGE_CENTER_ZONE_START) {
+          seekRelative(-SEEK_STEP_SECONDS);
+          return;
+        }
+        if (clickRatio > STAGE_CENTER_ZONE_END) {
+          seekRelative(SEEK_STEP_SECONDS);
+          return;
+        }
+
+        if (videoElement.paused) {
+          videoElement.play().catch(() => {
+            // autoplay 정책 등
+          });
+        } else {
+          videoElement.pause();
+        }
+      }, STAGE_SINGLE_CLICK_DELAY_MS);
+    },
+    [seekRelative, videoElement],
+  );
 
   // 스테이지 더블클릭 → 전체화면 토글
   const handleStageDoubleClick = useCallback(async () => {
@@ -537,11 +617,13 @@ export default function SlideWebcamStage({
         )}
 
         {/* 클릭 핸들러 오버레이 */}
-        <div
+        <button
+          type="button"
           className={clsx(
-            'absolute inset-0 z-30',
+            'absolute inset-0 z-30 appearance-none border-0 bg-transparent p-0',
             canControlPlayback ? 'cursor-pointer' : 'cursor-wait',
           )}
+          aria-label="영상 좌우 클릭 시 5초 이동, 중앙 클릭 시 재생/일시정지"
           onClick={canControlPlayback ? handleStageClick : undefined}
           onDoubleClick={canControlPlayback ? handleStageDoubleClick : undefined}
         />
