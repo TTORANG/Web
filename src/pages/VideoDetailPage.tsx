@@ -380,10 +380,10 @@ export default function VideoDetailPage() {
       role="tabpanel"
       id="tabpanel-videos"
       aria-labelledby="tab-videos"
-      className="flex h-full w-full bg-gray-100 overflow-hidden"
+      className="flex h-full w-full min-w-0"
     >
       {/* 데스크톱 뷰 */}
-      <div className="hidden md:flex flex-1 px-35 pt-6">
+      <div className="hidden md:flex flex-1 px-35">
         <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-4">
           <div className="flex-1 min-w-0 flex flex-col justify-center">
             <div ref={desktopPlaceholderRef} className="w-full aspect-video" />
@@ -397,11 +397,8 @@ export default function VideoDetailPage() {
           />
         </div>
 
-        <aside className="ml-6 w-96 shrink-0 flex flex-col rounded-lg bg-white overflow-hidden">
-          <div className="p-4 border-b border-gray-200">
-            <h2 className="text-body-m-bold text-gray-900">의견</h2>
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto scroll-smooth">
+        <aside className="w-96 shrink-0 bg-gray-100 flex flex-col border-l border-gray-200">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <CommentList
               comments={comments}
               scrollToCommentId={scrollToCommentId}
@@ -410,17 +407,16 @@ export default function VideoDetailPage() {
               onDeleteComment={deleteComment}
               onUpdateComment={handleUpdateComment}
               isLoading={false}
-              skipReplyFetch
             />
           </div>
-          <div className="shrink-0 border-t border-gray-100 bg-white px-4 pb-6 pt-2">
+          <div className="shrink-0 border-t border-black/5 flex flex-col gap-6 px-4 pb-6 pt-2">
             <CommentInput
               value={commentDraft}
               onChange={setCommentDraft}
               onSubmit={handleAddMainComment}
               onCancel={() => setCommentDraft('')}
               disabled={isSubmittingComment || isLoading}
-              className="w-full"
+              className="items-end w-86"
             />
           </div>
         </aside>
@@ -450,7 +446,6 @@ export default function VideoDetailPage() {
                 onDeleteComment={deleteComment}
                 onUpdateComment={handleUpdateComment}
                 isLoading={false}
-                skipReplyFetch
               />
             </div>
             <div className="shrink-0 px-4 py-3">

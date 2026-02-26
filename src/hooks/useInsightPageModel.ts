@@ -25,14 +25,14 @@ import { queryKeys } from '@/api/queryClient';
 import type { ChartDataPoint, InsightModel, InsightTopSlide } from '@/components/insight/types';
 import {
   DEMO_ANALYTICS_SUMMARY,
-  DEMO_RECENT_COMMENTS,
   DEMO_SLIDE_ANALYTICS,
   DEMO_SLIDE_RETENTION,
-  DEMO_VIDEO_EXIT_ANALYTICS,
   DEMO_VIDEO_LIST_ITEMS,
-  DEMO_VIDEO_RETENTION,
   DEMO_VIDEO_SLIDES_TIMELINE,
+  getDemoRecentComments,
   getDemoSlideReactionSummary,
+  getDemoVideoExitAnalytics,
+  getDemoVideoRetention,
   isDemoProject,
 } from '@/constants/demoProject';
 import { REACTION_TYPES } from '@/constants/reaction';
@@ -288,7 +288,7 @@ export function useInsightPageModel(): InsightModel {
 
   const videoExitAnalytics: ReadVideoExitAnalyticsResponseDto | undefined = isVideoSource
     ? isDemoProjectId
-      ? DEMO_VIDEO_EXIT_ANALYTICS
+      ? getDemoVideoExitAnalytics(selectedVideoId)
       : videoAnalyticsQuery.data
     : undefined;
 
@@ -492,9 +492,9 @@ export function useInsightPageModel(): InsightModel {
 
   const recentCommentsData = useMemo<ReadRecentCommentListResponseDto | undefined>(() => {
     if (!isVideoSource) return undefined;
-    if (isDemoProjectId) return DEMO_RECENT_COMMENTS;
+    if (isDemoProjectId) return getDemoRecentComments(selectedVideoId);
     return selectedVideoRecentComments;
-  }, [isDemoProjectId, isVideoSource, selectedVideoRecentComments]);
+  }, [isDemoProjectId, isVideoSource, selectedVideoId, selectedVideoRecentComments]);
 
   const videoReactionSummary = useMemo(() => {
     const totalCounts = createEmptyReactionCounts();
@@ -535,7 +535,7 @@ export function useInsightPageModel(): InsightModel {
 
     if (isDemoProjectId) {
       slideList.forEach((slide, slideIndex) => {
-        const demoCounts = getDemoSlideReactionSummary(slide.slideId);
+        const demoCounts = getDemoSlideReactionSummary(slide.slideId, selectedVideoId);
         const slideTotal = sumReactionCounts(demoCounts);
         if (slideTotal <= 0) return;
 
@@ -548,7 +548,14 @@ export function useInsightPageModel(): InsightModel {
     }
 
     return { totalCounts, countsBySlideIndex, totalCount };
-  }, [dropOffTimeline, isDemoProjectId, isVideoSource, slideList, videoReactionBucketsQuery.data]);
+  }, [
+    dropOffTimeline,
+    isDemoProjectId,
+    isVideoSource,
+    selectedVideoId,
+    slideList,
+    videoReactionBucketsQuery.data,
+  ]);
 
   const feedbackDistributionTitle = isVideoSource
     ? '영상 이모지 피드백 분포'
@@ -728,7 +735,7 @@ export function useInsightPageModel(): InsightModel {
   const slideRetentionQuery = useSlideRetention(projectIdNum, { enabled: !isDemoProjectId });
   const videoRetentionRes: ReadVideoRetentionResponseDto | undefined = isVideoSource
     ? isDemoProjectId
-      ? DEMO_VIDEO_RETENTION
+      ? getDemoVideoRetention(selectedVideoId)
       : videoRetentionQuery.data
     : undefined;
   const slideRetentionRes = isDemoProjectId ? DEMO_SLIDE_RETENTION : slideRetentionQuery.data;
