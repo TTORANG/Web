@@ -123,7 +123,7 @@ export default function SlidePage() {
         role="tabpanel"
         id="tabpanel-slide"
         aria-labelledby="tab-slide"
-        className="hidden min-[1024px]:flex h-full gap-12 pl-14 pr-20 pt-6"
+        className="hidden h-full w-full min-[1024px]:mx-auto min-[1024px]:flex min-[1024px]:max-w-[1800px] min-[1024px]:gap-8 min-[1024px]:px-8 min-[1024px]:pt-4"
       >
         <SlideList slides={slides} currentSlideId={currentSlide?.slideId} isLoading={isLoading} />
 

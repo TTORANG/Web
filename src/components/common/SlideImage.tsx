@@ -52,10 +52,10 @@ export default function SlideImage({
       decoding={decoding}
       fetchPriority={fetchPriority}
       onLoad={() => markLoaded(src)}
-      style={maxHeight ? { maxHeight } : undefined}
+      style={maxHeight ? { maxHeight, width: '100%' } : undefined}
       className={clsx(
         'block h-auto transition-opacity duration-300',
-        maxHeight ? 'max-w-full' : 'w-full',
+        maxHeight ? 'w-full max-w-full object-contain' : 'w-full',
         !isLoaded && 'animate-pulse bg-gray-200',
         isLoaded ? 'opacity-100' : 'opacity-0',
       )}
