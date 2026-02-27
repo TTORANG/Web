@@ -2,6 +2,8 @@
  * @file snsShare.ts
  * @description SNS 공유 유틸리티 (카카오톡, X, 페이스북, 인스타그램)
  */
+import QRCode from 'qrcode';
+
 import { showToast } from '@/utils/toast';
 
 /* ─────────────────────────────────────────────────────────────
@@ -52,18 +54,32 @@ function encode(value: string) {
   return encodeURIComponent(value);
 }
 
-/** 새 탭에서 URL 열기. 팝업 차단 시 토스트 표시 */
-function openNewTab(url: string) {
+/** 새 탭에서 URL 열기. 팝업 차단 시 옵션에 따라 같은 탭 fallback/토스트 처리 */
+function openNewTab(
+  url: string,
+  options?: { silentOnBlocked?: boolean; fallbackToSameTab?: boolean },
+) {
+  const { silentOnBlocked = false, fallbackToSameTab = false } = options ?? {};
   const win = window.open(url, '_blank', 'noopener,noreferrer');
-  if (!win) showToast.error('공유 창을 열지 못했습니다.', '팝업 차단을 해제해주세요.');
+  if (!win && fallbackToSameTab) {
+    window.location.assign(url);
+    return;
+  }
+  if (!win && !silentOnBlocked) {
+    showToast.error('공유 창을 열지 못했습니다.', '팝업 차단을 해제해주세요.');
+  }
 }
 
 function isMobileDevice() {
   return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 }
 
-function buildQrCodeUrl(url: string, size = 512) {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encode(url)}`;
+export async function buildQrCodeDataUrl(url: string, size = 512) {
+  return QRCode.toDataURL(url, {
+    width: size,
+    margin: 1,
+    errorCorrectionLevel: 'M',
+  });
 }
 
 async function downloadImage(url: string, fileName: string) {
@@ -200,10 +216,20 @@ export async function shareQrToInstagram(params: { url: string }) {
     return;
   }
 
-  const qrCodeUrl = buildQrCodeUrl(url, 640);
+  let qrCodeDataUrl = '';
+  try {
+    qrCodeDataUrl = await buildQrCodeDataUrl(url, 640);
+  } catch {
+    showToast.warning(
+      'QR 코드 생성에 실패했습니다.',
+      '인스타그램에서 링크를 직접 붙여넣어 공유해주세요.',
+    );
+    openNewTab(INSTAGRAM_WEB_URL, { silentOnBlocked: true });
+    return;
+  }
 
   if (isMobileDevice()) {
-    openInstagramStoryDeepLink(qrCodeUrl);
+    openInstagramStoryDeepLink(qrCodeDataUrl);
     showToast.info(
       '인스타그램 앱으로 이동합니다.',
       '스토리 작성 화면에서 QR 이미지를 선택해 공유해주세요.',
@@ -212,18 +238,14 @@ export async function shareQrToInstagram(params: { url: string }) {
   }
 
   try {
-    await downloadImage(qrCodeUrl, 'ttorang-share-qr.png');
-    showToast.success(
-      'QR 코드를 다운로드했습니다.',
-      '인스타그램에서 이미지를 첨부해 공유해주세요.',
-    );
+    await downloadImage(qrCodeDataUrl, 'ttorang-share-qr.png');
   } catch {
     showToast.warning(
       'QR 코드 다운로드에 실패했습니다.',
       '인스타그램에서 링크를 직접 붙여넣어 공유해주세요.',
     );
   } finally {
-    openNewTab(INSTAGRAM_WEB_URL);
+    openNewTab(INSTAGRAM_WEB_URL, { silentOnBlocked: true });
   }
 }
 
@@ -236,7 +258,7 @@ export async function shareQrToInstagram(params: { url: string }) {
 export function shareToX(params: { url: string; text?: string }) {
   const { url, text = DEFAULT_SHARE_TEXT } = params;
   const shareUrl = `https://twitter.com/intent/tweet?url=${encode(url)}&text=${encode(text)}`;
-  openNewTab(shareUrl);
+  openNewTab(shareUrl, { silentOnBlocked: true, fallbackToSameTab: true });
 }
 
 /**

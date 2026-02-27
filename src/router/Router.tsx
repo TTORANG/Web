@@ -78,9 +78,9 @@ export const router = createBrowserRouter([
         }
         center={<Gnb />}
         right={
-          <div className="flex max-w-full items-center gap-2 md:gap-8">
-            <ShareButton />
+          <div className="flex max-w-full items-center gap-2 md:gap-4">
             <LoginButton />
+            <ShareButton />
           </div>
         }
       />
