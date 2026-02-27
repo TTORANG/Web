@@ -27,7 +27,6 @@ export default function IntroSection({
   progress,
   error,
   onFileSelected,
-  isEmpty,
   showDemoCtas = false,
   onGoToDemoSlide,
   onGoToDemoInsight,
@@ -36,14 +35,9 @@ export default function IntroSection({
   const isUploading = currentStep === 'uploading' || currentStep === 'finishing';
 
   return (
-    <section
-      className={clsx(
-        'flex flex-col items-center text-center',
-        isEmpty ? 'min-h-[calc(100vh-3.75rem)] justify-center' : 'py-8',
-      )}
-    >
+    <section className={clsx('flex flex-col items-center text-center')}>
       {/* 소개글 */}
-      <div className="mt-10">
+      <div className="mt-4">
         <h1 className="text-body-l-bold text-gray-900">발표 연습을 시작하세요.</h1>
         <p className="mt-2 text-body-s text-gray-700">
           파일을 업로드해서 바로 연습을 시작해보세요.

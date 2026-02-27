@@ -10,7 +10,7 @@ export default function ProgressBar({ value }: ProgressBarProps) {
   const normalizedValue = Math.min(100, Math.max(0, value));
 
   return (
-    <div className="mt-4 w-full max-w-3xl">
+    <div className="w-full">
       <div
         className="h-2 w-full overflow-hidden rounded-full bg-gray-200"
         role="progressbar"
@@ -23,7 +23,7 @@ export default function ProgressBar({ value }: ProgressBarProps) {
           style={{ width: `${normalizedValue}%` }}
         />
       </div>
-      <p className="mt-2 text-body-s text-gray-600">{normalizedValue}%</p>
+      <p className="mt-2 text-center text-body-s tabular-nums text-gray-600">{normalizedValue}%</p>
     </div>
   );
 }

@@ -200,9 +200,9 @@ export function useInsightPageModel(): InsightModel {
   }, [presentationVideosQuery.data?.videos]);
 
   const videoIds = useMemo(() => {
-    if (!summaryVideoIds.length) return [];
-    return summaryVideoIds.filter((videoId) => videoMetaById.get(videoId)?.status !== 'processing');
-  }, [summaryVideoIds, videoMetaById]);
+    if (!summaryVideoIds.length || !presentationVideosQuery.data?.videos.length) return [];
+    return summaryVideoIds.filter((videoId) => videoMetaById.get(videoId)?.status === 'ready');
+  }, [presentationVideosQuery.data?.videos.length, summaryVideoIds, videoMetaById]);
 
   const latestVideoId = videoIds[videoIds.length - 1] ?? null;
   const hasVideo = videoIds.length > 0;
@@ -267,9 +267,12 @@ export function useInsightPageModel(): InsightModel {
   const selectedDataSourceLabel = selectedDataSource?.label ?? '슬라이드 자료만';
   const selectedDataSourceSubLabel = selectedDataSource?.subLabel;
   const isVideoSource = Boolean(selectedVideoId);
+  const selectedVideoMeta = selectedVideoId ? videoMetaById.get(selectedVideoId) : undefined;
+  const isSelectedVideoReady = selectedVideoMeta?.status === 'ready';
 
   const selectedVideoIdNum = selectedVideoId ? Number(selectedVideoId) : 0;
-  const enableSelectedVideoQueries = !isDemoProjectId && isVideoSource && selectedVideoIdNum > 0;
+  const enableSelectedVideoQueries =
+    !isDemoProjectId && isVideoSource && isSelectedVideoReady && selectedVideoIdNum > 0;
 
   const onSelectDataSource = useCallback(
     (sourceKey: string) => {
@@ -564,8 +567,6 @@ export function useInsightPageModel(): InsightModel {
   const feedbackDistributionTotalCount = isVideoSource
     ? videoReactionSummary.totalCount
     : undefined;
-
-  const selectedVideoMeta = selectedVideoId ? videoMetaById.get(selectedVideoId) : undefined;
 
   // ---- Top slides ----
   const topSlides = useMemo<InsightTopSlide[]>(() => {
