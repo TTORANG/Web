@@ -190,7 +190,7 @@ export default function FileDropzone({
             }}
           >
             <p className="text-body-m-bold text-gray-900">업로드 중...</p>
-            <div className="w-full">
+            <div className="mx-auto w-full max-w-3xl">
               <ProgressBar value={progress} />
             </div>
             <button
