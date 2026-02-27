@@ -243,6 +243,7 @@ export default function DemoFeedbackPage() {
             currentTime={currentTime}
             onSeek={requestSeek}
             isLoading={false}
+            variant="inverted"
           />
         </div>
 
@@ -256,7 +257,6 @@ export default function DemoFeedbackPage() {
               onDeleteComment={handleDeleteComment}
               onUpdateComment={handleUpdateComment}
               isLoading={false}
-              skipReplyFetch
             />
           </div>
 
@@ -294,6 +294,7 @@ export default function DemoFeedbackPage() {
             slideChangeTimes={slideChangeTimes}
             currentTime={currentTime}
             onSeek={requestSeek}
+            variant="inverted"
           />
         }
         commentTabContent={
@@ -306,7 +307,6 @@ export default function DemoFeedbackPage() {
                 onGoToRef={handleGoToRef}
                 onDeleteComment={handleDeleteComment}
                 onUpdateComment={handleUpdateComment}
-                skipReplyFetch
               />
             </div>
             <div className="shrink-0 px-4 py-3">

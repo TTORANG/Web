@@ -43,7 +43,8 @@ export function LoginButton() {
   const isAnon = accessToken && isAnonymousEmail(user?.email);
   const isSocial = accessToken && user?.email && !isAnonymousEmail(user.email);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await queryClient.cancelQueries();
     logout();
     queryClient.clear();
     resetHome();
@@ -70,7 +71,7 @@ export function LoginButton() {
     setIsWithdrawing(true);
     try {
       await apiClient.delete(`/users/${user.id}`);
-      handleLogout();
+      await handleLogout();
       setIsWithdrawModalOpen(false);
       showToast.success('회원 탈퇴가 완료되었습니다.');
     } catch {
@@ -146,7 +147,7 @@ export function LoginButton() {
                 className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-body-s text-gray-800 transition-colors hover:bg-gray-100"
                 onClick={() => {
                   close();
-                  handleLogout();
+                  void handleLogout();
                 }}
               >
                 <div>

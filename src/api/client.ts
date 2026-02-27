@@ -106,8 +106,15 @@ apiClient.interceptors.response.use(
     // [401 에러 - 토큰 재발급 로직]
     // OAuth 로그인 팝업이 열려있으면 재발급을 시도하지 않음.
     // 재발급 실패 시 서버가 세션 쿠키를 무효화하여 OAuth 콜백이 실패할 수 있기 때문.
-    const isOAuthInProgress = useAuthStore.getState().isLoginModalOpen;
+    const initialAuthState = useAuthStore.getState();
+    const isOAuthInProgress = initialAuthState.isLoginModalOpen;
     if (status === 401 && originalRequest && !originalRequest._retry && !isOAuthInProgress) {
+      // 사용자가 이미 로그아웃한 상태라면 재발급을 시도하지 않고 조용히 종료합니다.
+      if (!initialAuthState.accessToken) {
+        error.isHandled = true;
+        return Promise.reject(error);
+      }
+
       // 토큰 재발급이 이미 진행 중이면 대기 (타임아웃으로 무한 대기 방지)
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -129,9 +136,12 @@ apiClient.interceptors.response.use(
           .then(() => {
             // 토큰 재발급 완료 후 원래 요청 재시도
             const { accessToken } = useAuthStore.getState();
-            if (accessToken) {
-              originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+            if (!accessToken) {
+              error.isHandled = true;
+              return Promise.reject(error);
             }
+
+            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
             return apiClient(originalRequest);
           })
           .catch((err) => Promise.reject(err));
@@ -148,8 +158,15 @@ apiClient.interceptors.response.use(
         const response = await sessionApi.reissueToken();
 
         if (response.resultType === 'SUCCESS') {
+          const authStateAfterReissue = useAuthStore.getState();
+          if (!authStateAfterReissue.accessToken) {
+            error.isHandled = true;
+            processQueue(error);
+            return Promise.reject(error);
+          }
+
           const { tokens } = response.success;
-          const { user, refreshToken } = useAuthStore.getState();
+          const { user, refreshToken } = authStateAfterReissue;
 
           // 새 accessToken 저장 (refreshToken은 쿠키로 관리되므로 기존 값 유지)
           useAuthStore.getState().setAuth({

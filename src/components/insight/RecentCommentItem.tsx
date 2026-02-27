@@ -61,20 +61,20 @@ export default function RecentCommentItem({
           </div>
 
           {/* 댓글 텍스트 */}
-          <div className="flex items-center gap-1 pl-10">
+          <div className="flex min-w-0 items-start gap-1 pl-10">
             {onTimeClick ? (
               <button
                 type="button"
                 onClick={onTimeClick}
-                className="cursor-pointer text-body-m text-main-variant1 hover:underline focus-visible:outline-2 focus-visible:outline-main"
+                className="shrink-0 cursor-pointer text-body-m text-main-variant1 hover:underline focus-visible:outline-2 focus-visible:outline-main"
                 aria-label={`영상 ${time}로 이동`}
               >
                 {time}
               </button>
             ) : (
-              <span className="text-body-m text-main-variant1">{time}</span>
+              <span className="shrink-0 text-body-m text-main-variant1">{time}</span>
             )}
-            <span className="text-body-m text-gray-800">{text}</span>
+            <span className="min-w-0 text-body-m text-gray-800 text-wrap-readable">{text}</span>
           </div>
         </div>
       </div>

@@ -23,6 +23,7 @@ describe('RecentCommentItem', () => {
 
     await user.click(screen.getByRole('button', { name: '슬라이드 2 썸네일로 이동' }));
     expect(onThumbClick).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('좋은 발표였습니다.')).toHaveClass('text-wrap-readable');
   });
 
   it('calls onTimeClick when timestamp is clicked', async () => {

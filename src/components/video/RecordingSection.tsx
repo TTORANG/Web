@@ -420,7 +420,7 @@ export const RecordingSection = ({
               </div>
             </div>
             <div
-              className={`scrollbar-hide min-h-0 flex-1 overflow-y-auto leading-normal whitespace-pre-wrap text-black ${scriptFontSizeClass}`}
+              className={`scrollbar-hide min-h-0 flex-1 overflow-y-auto leading-normal whitespace-pre-wrap text-wrap-readable text-black ${scriptFontSizeClass}`}
             >
               {scriptDisplayText}
             </div>

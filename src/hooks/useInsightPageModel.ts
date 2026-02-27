@@ -25,14 +25,14 @@ import { queryKeys } from '@/api/queryClient';
 import type { ChartDataPoint, InsightModel, InsightTopSlide } from '@/components/insight/types';
 import {
   DEMO_ANALYTICS_SUMMARY,
-  DEMO_RECENT_COMMENTS,
   DEMO_SLIDE_ANALYTICS,
   DEMO_SLIDE_RETENTION,
-  DEMO_VIDEO_EXIT_ANALYTICS,
   DEMO_VIDEO_LIST_ITEMS,
-  DEMO_VIDEO_RETENTION,
   DEMO_VIDEO_SLIDES_TIMELINE,
+  getDemoRecentComments,
   getDemoSlideReactionSummary,
+  getDemoVideoExitAnalytics,
+  getDemoVideoRetention,
   isDemoProject,
 } from '@/constants/demoProject';
 import { REACTION_TYPES } from '@/constants/reaction';
@@ -144,7 +144,7 @@ export function useInsightPageModel(): InsightModel {
   const slideAnalytics = isDemoProjectId ? DEMO_SLIDE_ANALYTICS : slideAnalyticsQuery.data;
   const summaryAnalytics = isDemoProjectId ? DEMO_ANALYTICS_SUMMARY : summaryAnalyticsQuery.data;
 
-  const videoIds = useMemo(() => {
+  const summaryVideoIds = useMemo(() => {
     const sourceIds = isDemoProjectId
       ? DEMO_VIDEO_LIST_ITEMS.map((video) => String(video.videoId))
       : (summaryAnalytics?.videoIds ?? []);
@@ -162,14 +162,13 @@ export function useInsightPageModel(): InsightModel {
     return deduplicated;
   }, [isDemoProjectId, summaryAnalytics?.videoIds]);
 
-  const latestVideoId = videoIds[videoIds.length - 1] ?? null;
-  const hasVideo = videoIds.length > 0;
+  const hasSummaryVideo = summaryVideoIds.length > 0;
   const [selectedDataSourceKey, setSelectedDataSourceKey] = useState(AUTO_DATA_SOURCE_KEY);
 
   const presentationVideosQuery = usePresentationVideos({
     projectId: projectIdStr,
     sort: 'recent',
-    enabled: Boolean(projectIdStr) && (isDemoProjectId || hasVideo),
+    enabled: Boolean(projectIdStr) && (isDemoProjectId || hasSummaryVideo),
   });
 
   const videoMetaById = useMemo(() => {
@@ -181,6 +180,7 @@ export function useInsightPageModel(): InsightModel {
         viewCount: number;
         feedbackCount: number;
         thumbnailUrl?: string;
+        status: string;
       }
     >();
 
@@ -193,10 +193,19 @@ export function useInsightPageModel(): InsightModel {
         viewCount: video.viewCount,
         feedbackCount: video.feedbackCount,
         thumbnailUrl: video.thumbnailUrl || undefined,
+        status: video.status,
       });
     });
     return mapped;
   }, [presentationVideosQuery.data?.videos]);
+
+  const videoIds = useMemo(() => {
+    if (!summaryVideoIds.length) return [];
+    return summaryVideoIds.filter((videoId) => videoMetaById.get(videoId)?.status !== 'processing');
+  }, [summaryVideoIds, videoMetaById]);
+
+  const latestVideoId = videoIds[videoIds.length - 1] ?? null;
+  const hasVideo = videoIds.length > 0;
 
   const dataSourceOptions = useMemo<InsightModel['dataSourceOptions']>(() => {
     const options: InsightModel['dataSourceOptions'] = [
@@ -279,7 +288,7 @@ export function useInsightPageModel(): InsightModel {
 
   const videoExitAnalytics: ReadVideoExitAnalyticsResponseDto | undefined = isVideoSource
     ? isDemoProjectId
-      ? DEMO_VIDEO_EXIT_ANALYTICS
+      ? getDemoVideoExitAnalytics(selectedVideoId)
       : videoAnalyticsQuery.data
     : undefined;
 
@@ -483,9 +492,9 @@ export function useInsightPageModel(): InsightModel {
 
   const recentCommentsData = useMemo<ReadRecentCommentListResponseDto | undefined>(() => {
     if (!isVideoSource) return undefined;
-    if (isDemoProjectId) return DEMO_RECENT_COMMENTS;
+    if (isDemoProjectId) return getDemoRecentComments(selectedVideoId);
     return selectedVideoRecentComments;
-  }, [isDemoProjectId, isVideoSource, selectedVideoRecentComments]);
+  }, [isDemoProjectId, isVideoSource, selectedVideoId, selectedVideoRecentComments]);
 
   const videoReactionSummary = useMemo(() => {
     const totalCounts = createEmptyReactionCounts();
@@ -526,7 +535,7 @@ export function useInsightPageModel(): InsightModel {
 
     if (isDemoProjectId) {
       slideList.forEach((slide, slideIndex) => {
-        const demoCounts = getDemoSlideReactionSummary(slide.slideId);
+        const demoCounts = getDemoSlideReactionSummary(slide.slideId, selectedVideoId);
         const slideTotal = sumReactionCounts(demoCounts);
         if (slideTotal <= 0) return;
 
@@ -539,7 +548,14 @@ export function useInsightPageModel(): InsightModel {
     }
 
     return { totalCounts, countsBySlideIndex, totalCount };
-  }, [dropOffTimeline, isDemoProjectId, isVideoSource, slideList, videoReactionBucketsQuery.data]);
+  }, [
+    dropOffTimeline,
+    isDemoProjectId,
+    isVideoSource,
+    selectedVideoId,
+    slideList,
+    videoReactionBucketsQuery.data,
+  ]);
 
   const feedbackDistributionTitle = isVideoSource
     ? '영상 이모지 피드백 분포'
@@ -648,10 +664,11 @@ export function useInsightPageModel(): InsightModel {
 
       return [...exitCountBySlideIndex.entries()]
         .map(([slideIndex, count]) => {
+          const slideTitle = slideList[slideIndex]?.title;
           const slideNum = slideList[slideIndex]?.slideNum ?? slideIndex + 1;
 
           return {
-            label: getSlideTitle(undefined, slideNum),
+            label: getSlideTitle(slideTitle, slideNum),
             desc: `${count}명 이탈`,
             percent: totalExitCount > 0 ? Math.round((count / totalExitCount) * 100) : 0,
             slideIndex,
@@ -668,7 +685,7 @@ export function useInsightPageModel(): InsightModel {
       .sort((a, b) => b.exitCount - a.exitCount)
       .slice(0, 3)
       .map((item) => ({
-        label: getSlideTitle(undefined, item.slideNum),
+        label: getSlideTitle(item.title, item.slideNum),
         desc: `${item.exitCount}명 이탈`,
         percent: Math.min(
           100,
@@ -700,11 +717,12 @@ export function useInsightPageModel(): InsightModel {
           ? getSlideIndexFromTime(seconds, changeTimes, changeTimes.length - 1)
           : 0;
         const slideIndex = hasTimeline ? (slideIndexes[timelineIndex] ?? 0) : 0;
+        const slideTitle = slideList[slideIndex]?.title;
         const slideNum = slideList[slideIndex]?.slideNum ?? slideIndex + 1;
 
         return {
           time: formatVideoTimestamp(seconds),
-          desc: slideList.length ? getSlideTitle(undefined, slideNum) : '슬라이드',
+          desc: slideList.length ? getSlideTitle(slideTitle, slideNum) : '슬라이드',
           count: item.exitCount,
           slideIndex,
           seconds,
@@ -719,7 +737,7 @@ export function useInsightPageModel(): InsightModel {
   const slideRetentionQuery = useSlideRetention(projectIdNum, { enabled: !isDemoProjectId });
   const videoRetentionRes: ReadVideoRetentionResponseDto | undefined = isVideoSource
     ? isDemoProjectId
-      ? DEMO_VIDEO_RETENTION
+      ? getDemoVideoRetention(selectedVideoId)
       : videoRetentionQuery.data
     : undefined;
   const slideRetentionRes = isDemoProjectId ? DEMO_SLIDE_RETENTION : slideRetentionQuery.data;

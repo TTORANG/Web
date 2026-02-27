@@ -1,7 +1,6 @@
 import clsx from 'clsx';
 
 import ArrowDownIcon from '@/assets/icons/icon-arrow-down.svg?react';
-import FilterIcon from '@/assets/icons/icon-filter.svg?react';
 import SearchIcon from '@/assets/icons/icon-search.svg?react';
 import ViewCardIcon from '@/assets/icons/icon-view-card.svg?react';
 import ViewListIcon from '@/assets/icons/icon-view-list.svg?react';
@@ -60,12 +59,17 @@ export default function PresentationHeader({
             <button
               type="button"
               className={clsx(
-                'flex w-[5.5rem] shrink-0 items-center justify-between gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold whitespace-nowrap transition-colors duration-200 sm:w-[6rem]',
+                'flex shrink-0 items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold whitespace-nowrap transition-colors duration-200',
                 isOpen ? 'text-main' : 'text-gray-800',
               )}
             >
-              <span className="min-w-0 truncate">{filterLabel}</span>
-              <FilterIcon className="h-5 w-5" />
+              <span>{filterLabel}</span>
+              <ArrowDownIcon
+                className={clsx(
+                  'h-4 w-4 transition-transform duration-300',
+                  isOpen && 'rotate-180',
+                )}
+              />
             </button>
           )}
           position="bottom"
@@ -86,12 +90,12 @@ export default function PresentationHeader({
           trigger={({ isOpen }) => (
             <button
               className={clsx(
-                'flex w-[7rem] shrink-0 items-center justify-between gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold whitespace-nowrap transition-colors duration-200 sm:w-[8rem]',
+                'flex shrink-0 items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-body-m-bold whitespace-nowrap transition-colors duration-200',
                 isOpen ? 'text-main' : 'text-gray-800',
               )}
               type="button"
             >
-              <span className="min-w-0 truncate">{sortLabel}</span>
+              <span>{sortLabel}</span>
               <ArrowDownIcon
                 className={clsx(
                   'h-4 w-4 transition-transform duration-300',

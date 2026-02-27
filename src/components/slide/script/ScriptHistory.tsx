@@ -9,7 +9,7 @@ import clsx from 'clsx';
 import type { GetScriptVersionHistoryResponseDto } from '@/api/dto';
 import RevertIcon from '@/assets/icons/icon-revert.svg?react';
 import { Popover, Spinner } from '@/components/common';
-import { useSlideId, useSlideScript } from '@/hooks';
+import { useSlideId } from '@/hooks';
 import { useRestoreScript, useScriptVersions } from '@/hooks/queries/useScript';
 import { useSlideStore } from '@/stores/slideStore';
 import { formatTimestamp } from '@/utils/format';
@@ -17,7 +17,6 @@ import { showToast } from '@/utils/toast';
 
 export default function ScriptHistory() {
   const slideId = useSlideId();
-  const script = useSlideScript();
   const updateScript = useSlideStore((state) => state.updateScript);
 
   const { data: versions, isLoading } = useScriptVersions(slideId ?? '');
@@ -71,16 +70,6 @@ export default function ScriptHistory() {
 
       {/* 콘텐츠 */}
       <div className="max-h-80 overflow-y-auto">
-        {/* 현재 대본 */}
-        <div className="border-b border-gray-200 bg-gray-100 px-4 pb-4 pt-3">
-          <div className="flex flex-col gap-3">
-            <span className="text-xs font-semibold leading-4 text-gray-600">현재</span>
-            <p className="text-sm font-medium leading-5 text-gray-800">
-              {script || '(대본이 비어있습니다)'}
-            </p>
-          </div>
-        </div>
-
         {/* 로딩 상태 */}
         {isLoading ? (
           <div className="flex items-center justify-center px-4 py-6">
@@ -114,7 +103,7 @@ export default function ScriptHistory() {
                   <RevertIcon className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
-              <p className="mt-2 text-sm font-medium leading-5 text-gray-800">
+              <p className="mt-2 text-sm font-medium leading-5 text-gray-800 text-wrap-readable">
                 {version.scriptText}
               </p>
             </div>
