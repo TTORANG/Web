@@ -664,10 +664,11 @@ export function useInsightPageModel(): InsightModel {
 
       return [...exitCountBySlideIndex.entries()]
         .map(([slideIndex, count]) => {
+          const slideTitle = slideList[slideIndex]?.title;
           const slideNum = slideList[slideIndex]?.slideNum ?? slideIndex + 1;
 
           return {
-            label: getSlideTitle(undefined, slideNum),
+            label: getSlideTitle(slideTitle, slideNum),
             desc: `${count}명 이탈`,
             percent: totalExitCount > 0 ? Math.round((count / totalExitCount) * 100) : 0,
             slideIndex,
@@ -684,7 +685,7 @@ export function useInsightPageModel(): InsightModel {
       .sort((a, b) => b.exitCount - a.exitCount)
       .slice(0, 3)
       .map((item) => ({
-        label: getSlideTitle(undefined, item.slideNum),
+        label: getSlideTitle(item.title, item.slideNum),
         desc: `${item.exitCount}명 이탈`,
         percent: Math.min(
           100,
@@ -716,11 +717,12 @@ export function useInsightPageModel(): InsightModel {
           ? getSlideIndexFromTime(seconds, changeTimes, changeTimes.length - 1)
           : 0;
         const slideIndex = hasTimeline ? (slideIndexes[timelineIndex] ?? 0) : 0;
+        const slideTitle = slideList[slideIndex]?.title;
         const slideNum = slideList[slideIndex]?.slideNum ?? slideIndex + 1;
 
         return {
           time: formatVideoTimestamp(seconds),
-          desc: slideList.length ? getSlideTitle(undefined, slideNum) : '슬라이드',
+          desc: slideList.length ? getSlideTitle(slideTitle, slideNum) : '슬라이드',
           count: item.exitCount,
           slideIndex,
           seconds,
