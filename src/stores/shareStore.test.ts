@@ -7,7 +7,6 @@ const { getState } = useShareStore;
 function resetStore() {
   useShareStore.setState({
     isShareModalOpen: false,
-    step: 'form',
     shareType: 'slide_script',
     selectedVideoId: null,
     shareUrl: '',
@@ -18,14 +17,12 @@ describe('useShareStore', () => {
   beforeEach(resetStore);
 
   describe('openShareModal', () => {
-    it('opens modal and resets step/url', () => {
-      getState().setStep('result');
+    it('opens modal and resets url', () => {
       getState().setShareUrl('https://old-url');
 
       getState().openShareModal();
 
       expect(getState().isShareModalOpen).toBe(true);
-      expect(getState().step).toBe('form');
       expect(getState().shareUrl).toBe('');
     });
   });
@@ -55,12 +52,6 @@ describe('useShareStore', () => {
   });
 
   describe('workflow', () => {
-    it('form → result step transition', () => {
-      expect(getState().step).toBe('form');
-      getState().setStep('result');
-      expect(getState().step).toBe('result');
-    });
-
     it('setShareUrl updates the URL', () => {
       getState().setShareUrl('https://share.url');
       expect(getState().shareUrl).toBe('https://share.url');
@@ -69,14 +60,12 @@ describe('useShareStore', () => {
 
   describe('resetForm', () => {
     it('resets all form state', () => {
-      getState().setStep('result');
       getState().setShareType('slide_script_video');
       getState().setSelectedVideoId('v1');
       getState().setShareUrl('url');
 
       getState().resetForm();
 
-      expect(getState().step).toBe('form');
       expect(getState().shareType).toBe('slide_script');
       expect(getState().selectedVideoId).toBeNull();
       expect(getState().shareUrl).toBe('');

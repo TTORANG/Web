@@ -32,7 +32,7 @@ export function HeaderButton({
       onClick={onClick}
       aria-label={shouldHideTextOnMobile ? text : undefined}
       className={clsx(
-        'flex min-h-11 min-w-11 items-center gap-1 rounded-md px-2 py-2 text-body-s-bold text-gray-800 transition-colors hover:text-gray-600 focus-visible:outline-2 focus-visible:outline-main',
+        'flex min-h-11 min-w-11 items-center gap-1 rounded-md px-2 py-2 text-body-s-bold text-gray-800 transition-colors hover:text-gray-600 focus-visible:outline-2 focus-visible:outline-main focus-visible:outline-offset-2',
         shouldHideTextOnMobile && 'justify-center',
         className,
       )}

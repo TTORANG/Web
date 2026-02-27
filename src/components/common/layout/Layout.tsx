@@ -78,7 +78,7 @@ export function Layout({
             <div className="h-12 px-2 md:hidden">
               <div className="h-full">{center}</div>
             </div>
-            <div className="hidden h-15 items-center justify-between px-4 md:flex md:px-18">
+            <div className="hidden h-15 items-center justify-between px-4 md:flex md:px-20">
               <div className="flex min-w-0 items-center gap-6">{left ?? <Logo />}</div>
               <div className="absolute left-1/2 -translate-x-1/2">{center}</div>
               <div className="flex items-center gap-8">{right}</div>

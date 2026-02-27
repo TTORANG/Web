@@ -10,20 +10,23 @@ export default function ProgressBar({ value }: ProgressBarProps) {
   const normalizedValue = Math.min(100, Math.max(0, value));
 
   return (
-    <div className="w-full">
+    <div className="flex w-full items-center gap-3">
       <div
         className="h-2 w-full overflow-hidden rounded-full bg-gray-200"
         role="progressbar"
         aria-valuenow={normalizedValue}
         aria-valuemin={0}
         aria-valuemax={100}
+        aria-valuetext={`${normalizedValue}%`}
       >
         <div
           className="h-full bg-gray-600 transition-all"
           style={{ width: `${normalizedValue}%` }}
         />
       </div>
-      <p className="mt-2 text-center text-body-s tabular-nums text-gray-600">{normalizedValue}%</p>
+      <p className="w-11 shrink-0 text-right text-body-s tabular-nums text-gray-600">
+        {normalizedValue}%
+      </p>
     </div>
   );
 }
