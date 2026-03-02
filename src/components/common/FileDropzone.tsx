@@ -56,7 +56,7 @@ export default function FileDropzone({
     const file = fileList.item(0);
     if (!file) return;
 
-    if (typeof onFileSelected != 'function') return;
+    if (typeof onFileSelected !== 'function') return;
     onFileSelected(file);
 
     if (inputRef.current) inputRef.current.value = ''; // 같은 파일 다시 선택 가능하게 (선택창 value 초기화)
@@ -101,7 +101,7 @@ export default function FileDropzone({
     const file = e.dataTransfer.files?.item(0);
     if (!file) return;
 
-    if (typeof onFileSelected != 'function') return;
+    if (typeof onFileSelected !== 'function') return;
     onFileSelected(file);
   };
 
@@ -126,7 +126,7 @@ export default function FileDropzone({
   };
 
   return (
-    <div className="w-full mt-10">
+    <div className="mt-10 w-full">
       <input
         ref={inputRef}
         type="file"
@@ -160,7 +160,7 @@ export default function FileDropzone({
             shouldBlurBase && 'blur-sm opacity-40',
           )}
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800 not-visited:transition group-hover:bg-gray-900">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800 transition group-hover:bg-gray-900">
             <UploadIcon className="h-5 w-5 text-white" />
           </div>
           <div className="space-y-2 text-center">
