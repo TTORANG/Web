@@ -109,7 +109,6 @@ export default function FileDropzone({
   const handleCancelUploading = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (typeof onCancelUpload !== 'function') return;
     onCancelUpload();
   };
 
