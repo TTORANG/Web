@@ -49,6 +49,8 @@ declare global {
 
 const DEFAULT_SHARE_TEXT = '내 발표를 확인하고 피드백을 남겨주세요!';
 const INSTAGRAM_WEB_URL = 'https://www.instagram.com/';
+const INSTAGRAM_DEEPLINK_TIMEOUT_MS = 1800;
+const INSTAGRAM_DEEPLINK_FALLBACK_DELAY_MS = 1200;
 
 function encode(value: string) {
   return encodeURIComponent(value);
@@ -104,10 +106,10 @@ function openInstagramStoryDeepLink(qrCodeUrl: string) {
 
   // 딥링크 실패(앱 미설치/미지원) 시 웹 인스타로 fallback
   window.setTimeout(() => {
-    if (Date.now() - start < 1800) {
+    if (Date.now() - start < INSTAGRAM_DEEPLINK_TIMEOUT_MS) {
       openNewTab(INSTAGRAM_WEB_URL);
     }
-  }, 1200);
+  }, INSTAGRAM_DEEPLINK_FALLBACK_DELAY_MS);
 }
 
 /** Kakao SDK 스크립트를 동적으로 로드 */
