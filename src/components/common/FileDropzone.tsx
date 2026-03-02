@@ -134,7 +134,7 @@ export default function FileDropzone({
       <div
         role="button"
         tabIndex={isBlocked ? -1 : 0}
-        aria-disabled={isBlocked ? 'true' : 'false'}
+        aria-disabled={isBlocked}
         onClick={openFileDialog}
         onKeyDown={handleKeyDown}
         onDragEnter={handleDragEnter}
