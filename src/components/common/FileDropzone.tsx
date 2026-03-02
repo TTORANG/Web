@@ -36,8 +36,7 @@ export default function FileDropzone({
   const dragCounter = useRef(0);
   const [isDragging, setIsDragging] = useState(false);
   const isUploading = currentStep === 'uploading' || currentStep === 'finishing';
-  const isDisabled = disabled;
-  const isBlocked = isDisabled || isUploading; // 업로드 중에는 모든 입력 차단
+  const isBlocked = disabled || isUploading; // 업로드 중에는 모든 입력 차단
 
   useEffect(() => {
     if (error) showToast.warning('업로드에 실패했습니다.', error);
