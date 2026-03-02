@@ -101,7 +101,6 @@ export default function FileDropzone({
     const file = e.dataTransfer.files?.item(0);
     if (!file) return;
 
-    if (typeof onFileSelected !== 'function') return;
     onFileSelected(file);
   };
 
