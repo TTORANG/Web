@@ -101,7 +101,7 @@ export default function FeedbackSlidePage({
               onGoToRef={handleGoToRef}
               onDeleteComment={deleteComment}
               onUpdateComment={updateComment}
-              isLoading={isLoading || isCommentsLoading}
+              isLoading={isCommentsLoading}
               hasNextPage={commentsHasNextPage}
               isFetchingNextPage={commentsIsFetchingNextPage}
               onLoadMore={commentsFetchNextPage}
