@@ -36,8 +36,7 @@ export default function FileDropzone({
   const dragCounter = useRef(0);
   const [isDragging, setIsDragging] = useState(false);
   const isUploading = currentStep === 'uploading' || currentStep === 'finishing';
-  const isDisabled = disabled;
-  const isBlocked = isDisabled || isUploading; // 업로드 중에는 모든 입력 차단
+  const isBlocked = disabled || isUploading; // 업로드 중에는 모든 입력 차단
 
   useEffect(() => {
     if (error) showToast.warning('업로드에 실패했습니다.', error);
@@ -56,7 +55,6 @@ export default function FileDropzone({
     const file = fileList.item(0);
     if (!file) return;
 
-    if (typeof onFileSelected !== 'function') return;
     onFileSelected(file);
 
     if (inputRef.current) inputRef.current.value = ''; // 같은 파일 다시 선택 가능하게 (선택창 value 초기화)
@@ -101,7 +99,6 @@ export default function FileDropzone({
     const file = e.dataTransfer.files?.item(0);
     if (!file) return;
 
-    if (typeof onFileSelected !== 'function') return;
     onFileSelected(file);
   };
 
@@ -109,7 +106,6 @@ export default function FileDropzone({
   const handleCancelUploading = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (typeof onCancelUpload !== 'function') return;
     onCancelUpload();
   };
 
@@ -147,7 +143,7 @@ export default function FileDropzone({
         onDrop={handleDrop}
         className={clsx(
           'group relative w-full overflow-hidden rounded-2xl border bg-white px-8 py-14 shadow-sm transition focus:ring-1 focus:ring-gray-200',
-          isDisabled && !isUploading && 'cursor-not-allowed opacity-60',
+          disabled && !isUploading && 'cursor-not-allowed opacity-60',
           isUploading && 'cursor-default',
           !isBlocked && 'cursor-pointer hover:bg-gray-100',
           showDragOverlay ? 'border-gray-900 ring-1 ring-gray-200' : 'border-gray-200',
