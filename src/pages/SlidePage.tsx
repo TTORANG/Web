@@ -22,10 +22,15 @@ export default function SlidePage() {
     pollingIntervalMs: 15000,
   });
 
-  const currentSlide = slides?.find((s) => s.slideId === routeSlideId) ?? slides?.[0];
-  const currentIndex = currentSlide
-    ? (slides?.findIndex((s) => s.slideId === currentSlide.slideId) ?? -1)
-    : -1;
+  const currentIndexFromRoute = slides?.findIndex((s) => s.slideId === routeSlideId) ?? -1;
+  const effectiveIndex =
+    slides && slides.length > 0
+      ? currentIndexFromRoute >= 0
+        ? currentIndexFromRoute
+        : 0
+      : -1;
+  const currentSlide = effectiveIndex >= 0 && slides ? slides[effectiveIndex] : undefined;
+  const currentIndex = effectiveIndex;
   const hasPrev = currentIndex > 0;
   const hasNext = !!slides && currentIndex >= 0 && currentIndex < slides.length - 1;
 
@@ -132,12 +137,7 @@ export default function SlidePage() {
         </main>
       </div>
 
-      <div
-        role="tabpanel"
-        id="tabpanel-slide-mobile"
-        aria-labelledby="tab-slide"
-        className="flex min-[1024px]:hidden h-full flex-col px-4 py-4"
-      >
+      <div className="flex min-[1024px]:hidden h-full flex-col px-4 py-4">
         <div className="flex items-center justify-between pb-3">
           <button
             type="button"
