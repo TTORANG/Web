@@ -143,7 +143,7 @@ export default function FileDropzone({
         onDrop={handleDrop}
         className={clsx(
           'group relative w-full overflow-hidden rounded-2xl border bg-white px-8 py-14 shadow-sm transition focus:ring-1 focus:ring-gray-200',
-          isDisabled && !isUploading && 'cursor-not-allowed opacity-60',
+          disabled && !isUploading && 'cursor-not-allowed opacity-60',
           isUploading && 'cursor-default',
           !isBlocked && 'cursor-pointer hover:bg-gray-100',
           showDragOverlay ? 'border-gray-900 ring-1 ring-gray-200' : 'border-gray-200',
