@@ -56,7 +56,6 @@ export default function FileDropzone({
     const file = fileList.item(0);
     if (!file) return;
 
-    if (typeof onFileSelected !== 'function') return;
     onFileSelected(file);
 
     if (inputRef.current) inputRef.current.value = ''; // 같은 파일 다시 선택 가능하게 (선택창 value 초기화)
